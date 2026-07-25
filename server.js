@@ -1266,8 +1266,10 @@ app.post('/api/clients/:id/training/confirm-session', authMiddleware, ownerOrAdm
       if (!existing) await dbInsert('training_completions', { client_id: req.params.id, day_number: dayNumber, completed_date: today, source });
     }
 
+    const phrasePool = await dbGet('phrases', { active: true });
+    const drawnPhrase = pickRandomPhrase(phrasePool, 'confirmacion');
     const streak = await computeTrainingStreakState(req.params.id, trainingDays, tz);
-    return ok(res, { streak, alreadyConfirmedToday });
+    return ok(res, { streak, alreadyConfirmedToday, phrase: drawnPhrase ? drawnPhrase.text : null });
   } catch (e) {
     console.error(e);
     return err(res, 'Error al confirmar la sesión.', 500);
