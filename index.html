@@ -5293,6 +5293,132 @@ async function markNotificationRead(id) {
 // ---------------- Módulo admin: Biblioteca de frases de mentalidad ----------------
 
 let quotesUI = { editingId: null, libraryOpen: false };
+let phrasesUI = { open: false, filter: 'all', editingId: null };
+function filteredPhrases(phrases) {
+  if (phrasesUI.filter === 'all') return phrases;
+  return phrases.filter(p => p.context === phrasesUI.filter);
+}
+function phraseContextLabel(ctx) {
+  return { confirmacion: 'Confirmación', instagram: 'Instagram', ambas: 'Ambas' }[ctx] || ctx;
+}
+function renderPhraseEditForm(p) {
+  return `
+    <div class="list-row" style="display:block;">
+      <div class="field"><label>Frase</label><textarea id="ph-edit-text-${p.id}" rows="2">${p.text}</textarea></div>
+      <div class="field" style="max-width:220px;">
+        <label>Contexto</label>
+        <select id="ph-edit-context-${p.id}">
+          <option value="confirmacion" ${p.context === 'confirmacion' ? 'selected' : ''}>Confirmación</option>
+          <option value="instagram" ${p.context === 'instagram' ? 'selected' : ''}>Instagram</option>
+          <option value="ambas" ${p.context === 'ambas' ? 'selected' : ''}>Ambas</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-primary" style="width:auto" onclick="updatePhrase('${p.id}')">Guardar</button>
+        <button class="btn btn-ghost" style="width:auto" onclick="toggleEditPhrase(null)">Cancelar</button>
+      </div>
+    </div>
+  `;
+}
+function renderPhrasesAccordion(phrases) {
+  const list = filteredPhrases(phrases);
+  const filters = [
+    ['all', 'Todas'], ['confirmacion', 'Confirmación'], ['instagram', 'Instagram'], ['ambas', 'Ambas'],
+  ];
+  return `
+    <div class="accordion-item" id="phrases-accordion-card">
+      <button class="accordion-header" type="button" onclick="togglePhrasesAccordion()">
+        Frases Card RR.SS <span style="color:var(--ink-soft);font-weight:400;">— ${phrases.length}</span>
+        <span class="accordion-toggle">Ver</span>
+      </button>
+      <div class="accordion-content ${phrasesUI.open ? 'active' : ''}">
+        <p style="color:var(--ink-soft);margin-top:0;">Estas frases rotan aleatoriamente en la pantalla de confirmación de sesión y en la tarjeta compartible de Instagram.</p>
+        <div class="pillrow" style="margin-bottom:12px;">
+          ${filters.map(([key, label]) => `
+            <button class="pill" style="cursor:pointer;${phrasesUI.filter === key ? 'background:var(--ink);color:var(--paper);border-color:var(--ink);' : ''}" onclick="setPhrasesFilter('${key}')">${label}</button>
+          `).join('')}
+        </div>
+        <div class="field"><label>Nueva frase</label><textarea id="ph-new-text" rows="2" placeholder="Ej: Cada sesión completada te acerca a tu mejor versión."></textarea></div>
+        <div class="field" style="max-width:220px;">
+          <label>Contexto</label>
+          <select id="ph-new-context">
+            <option value="confirmacion">Confirmación</option>
+            <option value="instagram">Instagram</option>
+            <option value="ambas">Ambas</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" style="width:auto;margin-bottom:16px;" onclick="createPhrase()">+ Agregar frase</button>
+        ${list.length ? list.map(p => phrasesUI.editingId === p.id ? renderPhraseEditForm(p) : `
+          <div class="list-row" style="${p.active ? '' : 'opacity:.5;'}">
+            <div>
+              <p class="serif" style="margin:0;font-style:italic;">"${p.text}"</p>
+              <span class="phrase-pill phrase-pill-${p.context}" style="margin-top:6px;">${phraseContextLabel(p.context)}</span>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <button class="small-btn" onclick="togglePhraseActive('${p.id}', ${p.active})">${p.active ? '● Activa' : '○ Inactiva'}</button>
+              <button class="small-btn" onclick="toggleEditPhrase('${p.id}')">Editar</button>
+              <button class="small-btn" onclick="deletePhrase('${p.id}')">Eliminar</button>
+            </div>
+          </div>
+        `).join('') : '<div class="empty-state">No hay frases para este filtro.</div>'}
+      </div>
+    </div>
+  `;
+}
+function togglePhrasesAccordion() {
+  phrasesUI.open = !phrasesUI.open;
+  const container = document.getElementById('phrases-accordion-card');
+  if (container) container.outerHTML = renderPhrasesAccordion(window._adminPhrases || []);
+}
+function setPhrasesFilter(ctx) {
+  phrasesUI.filter = ctx;
+  const container = document.getElementById('phrases-accordion-card');
+  if (container) container.outerHTML = renderPhrasesAccordion(window._adminPhrases || []);
+}
+function toggleEditPhrase(id) {
+  phrasesUI.editingId = id;
+  const container = document.getElementById('phrases-accordion-card');
+  if (container) container.outerHTML = renderPhrasesAccordion(window._adminPhrases || []);
+}
+async function refetchAdminPhrases() {
+  const { phrases } = await api('/api/admin/phrases');
+  window._adminPhrases = phrases;
+  const container = document.getElementById('phrases-accordion-card');
+  if (container) container.outerHTML = renderPhrasesAccordion(phrases);
+}
+async function createPhrase() {
+  const text = document.getElementById('ph-new-text').value.trim();
+  const context = document.getElementById('ph-new-context').value;
+  if (!text) return alert('Escribe el texto de la frase.');
+  try {
+    await api('/api/admin/phrases', { method: 'POST', body: JSON.stringify({ text, context }) });
+    phrasesUI.open = true;
+    await refetchAdminPhrases();
+  } catch (e) { alert('Error: ' + e.message); }
+}
+async function updatePhrase(id) {
+  const text = document.getElementById(`ph-edit-text-${id}`).value.trim();
+  const context = document.getElementById(`ph-edit-context-${id}`).value;
+  if (!text) return alert('Escribe el texto de la frase.');
+  try {
+    await api(`/api/admin/phrases/${id}`, { method: 'PATCH', body: JSON.stringify({ text, context }) });
+    phrasesUI.editingId = null;
+    await refetchAdminPhrases();
+  } catch (e) { alert('Error: ' + e.message); }
+}
+async function togglePhraseActive(id, currentlyActive) {
+  try {
+    await api(`/api/admin/phrases/${id}`, { method: 'PATCH', body: JSON.stringify({ active: !currentlyActive }) });
+    await refetchAdminPhrases();
+  } catch (e) { alert('Error: ' + e.message); }
+}
+async function deletePhrase(id) {
+  if (!confirm('¿Eliminar esta frase?')) return;
+  try {
+    await api(`/api/admin/phrases/${id}`, { method: 'DELETE' });
+    await refetchAdminPhrases();
+  } catch (e) { alert('Error: ' + e.message); }
+}
 function renderQuoteEditForm(q) {
   return `
     <div class="list-row" style="display:block;">
@@ -5331,9 +5457,13 @@ function renderQuotesLibraryCard(quotes) {
 }
 async function renderAdminQuotes(el) {
   try {
-    const { quotes } = await api('/api/admin/quotes');
+    const [{ quotes }, { phrases }] = await Promise.all([
+      api('/api/admin/quotes'),
+      api('/api/admin/phrases'),
+    ]);
     state.quotes = quotes;
     window._adminQuotes = quotes;
+    window._adminPhrases = phrases;
     el.innerHTML = `
       <div class="page-header"><h2>Frases de mentalidad</h2><p>Aparecen en el menú principal del módulo Entrenamiento, precedidas de "Hola [nombre], repite después de mí:". Escríbelas como afirmaciones en primera persona.</p></div>
       <div class="card">
@@ -5350,6 +5480,11 @@ async function renderAdminQuotes(el) {
             </div>
           </div>
           ${renderQuotesLibraryCard(quotes)}
+        </div>
+      </div>
+      <div class="card">
+        <div class="accordion">
+          ${renderPhrasesAccordion(phrases)}
         </div>
       </div>
     `;
