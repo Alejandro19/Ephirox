@@ -29,6 +29,18 @@ CREATE TABLE mindset_quotes (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Banco de frases para la pantalla de confirmación de sesión y la tarjeta
+-- compartible de Instagram. Independiente de mindset_quotes (esquema y
+-- consumidores distintos: aquí el contexto decide dónde puede salir sorteada).
+CREATE TABLE phrases (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  text TEXT NOT NULL,
+  context TEXT NOT NULL CHECK (context IN ('confirmacion', 'instagram', 'ambas')),
+  active BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 CREATE TABLE clients (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
@@ -487,7 +499,7 @@ BEGIN
     'admins','clients','personal_info','anthropometric_records','progress_photos',
     'exercises','nutrition_plans','meals','supplements','cortisol_techniques',
     'community_events','event_reservations','community_therapies','therapy_reservations',
-    'evolution_checkins','bio_inbody_records','admin_notifications','mindset_quotes','training_completions','client_notifications','sleep_logs','training_protector_uses'
+    'evolution_checkins','bio_inbody_records','admin_notifications','mindset_quotes','training_completions','client_notifications','sleep_logs','training_protector_uses','phrases'
   ])
   LOOP
     EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY;', t);

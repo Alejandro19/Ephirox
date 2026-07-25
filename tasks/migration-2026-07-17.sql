@@ -353,3 +353,30 @@ DO $$ BEGIN
   CREATE POLICY deny_all ON training_protector_uses USING (false);
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
+
+-- Banco de frases "Frases Card RR.SS": rotan en la pantalla de confirmación
+-- de sesión y (a futuro) en la tarjeta compartible de Instagram. Independiente
+-- de mindset_quotes.
+CREATE TABLE IF NOT EXISTS phrases (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  text TEXT NOT NULL,
+  context TEXT NOT NULL CHECK (context IN ('confirmacion', 'instagram', 'ambas')),
+  active BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE phrases ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY deny_all ON phrases USING (false);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+INSERT INTO phrases (text, context) VALUES
+  ('Cada sesión completada te acerca a tu mejor versión.', 'confirmacion'),
+  ('Vas mejorando cada día, aunque no siempre se note.', 'confirmacion'),
+  ('Hoy sumaste otro paso — eso ya es suficiente.', 'confirmacion'),
+  ('Sigo entrenando, aunque no siempre tenga ganas.', 'instagram'),
+  ('Cada sesión me acerca a mi mejor versión.', 'instagram'),
+  ('No es motivación. Es compromiso conmigo.', 'instagram'),
+  ('Elijo mi bienestar, un día a la vez.', 'instagram'),
+  ('Esto es constancia, no perfección.', 'ambas');
