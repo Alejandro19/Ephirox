@@ -2367,7 +2367,7 @@ async function renderTraining(el) {
       api(`/api/clients/${clientId}`),
       api(`/api/clients/${clientId}/quote-of-the-day`).catch(() => ({ quote: null })),
       api(`/api/clients/${clientId}/training-completions`).catch(() => ({ completions: [] })),
-      !isAdmin ? api(`/api/clients/${clientId}/training/streak`).catch(() => ({ streak: null })) : Promise.resolve({ streak: null }),
+      !isAdmin ? api(`/api/clients/${clientId}/training/streak?tz=${encodeURIComponent(clientTz())}`).catch(() => ({ streak: null })) : Promise.resolve({ streak: null }),
     ];
     if (isAdmin) calls.push(api('/api/admin/quotes').catch(() => ({ quotes: [] })));
     if (isAdmin) await ensureClientsLoaded();
@@ -2383,13 +2383,24 @@ async function renderTraining(el) {
   } catch (e) { el.innerHTML = `<div class="error-msg">${e.message}</div>`; }
 }
 
+// Zona horaria del dispositivo del cliente — se manda al backend para que
+// "hoy"/"esta semana" se calculen con la hora local real, no la del servidor.
+function clientTz() {
+  try { return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'; }
+  catch { return 'UTC'; }
+}
+// YYYY-MM-DD a partir de los getters locales del navegador (nunca toISOString,
+// que reconvierte a UTC y puede correr la fecha un día).
+function isoLocalDate(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
 // Semana calendario lunes→domingo: el candado de "Día N" se reinicia cada lunes.
 function getWeekStart(date = new Date()) {
   const d = new Date(date);
   const day = d.getDay();
   d.setDate(d.getDate() + ((day === 0 ? -6 : 1) - day));
   d.setHours(0, 0, 0, 0);
-  return d.toISOString().slice(0, 10);
+  return isoLocalDate(d);
 }
 function isDayCompletedThisWeek(dayNumber, completions) {
   const weekStart = getWeekStart();
@@ -2444,7 +2455,7 @@ function renderDisciplineCalendar(completions, stats) {
   const year = now.getFullYear(), month = now.getMonth();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const completedDates = new Set(completions.map(c => c.completed_date));
-  const todayStr = now.toISOString().slice(0, 10);
+  const todayStr = isoLocalDate(now);
   const cells = [];
   for (let d = 1; d <= daysInMonth; d++) {
     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
@@ -2817,7 +2828,7 @@ function renderWeekProgressCard(streak) {
 async function useTrainingProtector() {
   const clientId = currentClientId();
   try {
-    const { streak } = await api(`/api/clients/${clientId}/training/use-protector`, { method: 'POST' });
+    const { streak } = await api(`/api/clients/${clientId}/training/use-protector`, { method: 'POST', body: JSON.stringify({ tz: clientTz() }) });
     window._trainingStreak = streak;
     showToast('🛡️ Protector usado — tu racha está a salvo esta semana.');
     renderMain();
@@ -2829,7 +2840,7 @@ async function useTrainingProtector() {
 // source: 'manual' | 'nfc' — solo para analítica, nunca cambia el comportamiento.
 async function confirmarSesionEntrenamiento(source) {
   const clientId = currentClientId();
-  const { streak, alreadyConfirmedToday } = await api(`/api/clients/${clientId}/training/confirm-session`, { method: 'POST', body: JSON.stringify({ source }) });
+  const { streak, alreadyConfirmedToday } = await api(`/api/clients/${clientId}/training/confirm-session`, { method: 'POST', body: JSON.stringify({ source, tz: clientTz() }) });
   const prevStreak = window._trainingStreak;
   const weekJustCompleted = !alreadyConfirmedToday && prevStreak
     && streak.sessionsDoneThisWeek >= streak.sessionsRequiredThisWeek
