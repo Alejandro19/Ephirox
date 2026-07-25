@@ -961,6 +961,76 @@ app.delete('/api/admin/quotes/:qid', authMiddleware, adminOnly, async (req, res)
   }
 });
 
+function pickRandomPhrase(pool, context) {
+  const eligible = pool.filter(p => p.active && (p.context === context || p.context === 'ambas'));
+  if (eligible.length === 0) return null;
+  return eligible[Math.floor(Math.random() * eligible.length)];
+}
+
+app.get('/api/admin/phrases', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const phrases = await dbGet('phrases', {}, { order: { column: 'created_at', ascending: false } });
+    return ok(res, { phrases });
+  } catch (e) {
+    console.error(e);
+    return err(res, 'Error al obtener las frases.', 500);
+  }
+});
+
+app.post('/api/admin/phrases', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const { text, context } = req.body;
+    if (!text || !text.trim()) return err(res, 'Escribe el texto de la frase.', 400);
+    if (!['confirmacion', 'instagram', 'ambas'].includes(context)) return err(res, 'Contexto inválido.', 400);
+    const created = await dbInsert('phrases', { text: text.trim(), context });
+    return ok(res, { phrase: created }, 201);
+  } catch (e) {
+    console.error(e);
+    return err(res, 'Error al crear la frase.', 500);
+  }
+});
+
+app.patch('/api/admin/phrases/:id', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const patch = {};
+    if (req.body.text !== undefined) patch.text = req.body.text.trim();
+    if (req.body.context !== undefined) patch.context = req.body.context;
+    if (req.body.active !== undefined) patch.active = !!req.body.active;
+    patch.updated_at = new Date().toISOString();
+    const updated = await dbUpdate('phrases', req.params.id, patch);
+    return ok(res, { phrase: updated });
+  } catch (e) {
+    console.error(e);
+    return err(res, 'Error al actualizar la frase.', 500);
+  }
+});
+
+app.delete('/api/admin/phrases/:id', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    await dbDelete('phrases', req.params.id);
+    return ok(res, {});
+  } catch (e) {
+    console.error(e);
+    return err(res, 'Error al eliminar la frase.', 500);
+  }
+});
+
+app.get('/api/admin/phrases/random', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const context = req.query.context;
+    if (!['confirmacion', 'instagram'].includes(context)) return err(res, 'Contexto inválido.', 400);
+    const pool = await dbGet('phrases', { active: true });
+    const eligible = pool.filter(p => p.context === context || p.context === 'ambas');
+    const excludeId = req.query.exclude;
+    const candidates = (excludeId && eligible.length > 1) ? eligible.filter(p => p.id !== excludeId) : eligible;
+    const picked = candidates.length ? candidates[Math.floor(Math.random() * candidates.length)] : null;
+    return ok(res, { phrase: picked });
+  } catch (e) {
+    console.error(e);
+    return err(res, 'Error al sortear la frase.', 500);
+  }
+});
+
 // Herramientas para dormir (Descanso) — banco global, no por cliente.
 const DEFAULT_REST_TOOLS = [
   { name: 'Sonidos para dormir', meta: 'Ruido blanco + respiración guiada · 20 min', action: 'play', minutes: 20 },
@@ -2113,3 +2183,4 @@ if (require.main === module) {
 }
 
 module.exports = app;
+module.exports.pickRandomPhrase = pickRandomPhrase;
