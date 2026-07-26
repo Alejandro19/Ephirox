@@ -1,4 +1,4 @@
-# Sesión Confirmada (rediseño oscuro) + Tarjeta compartible de Instagram
+# Sesión Confirmada (rediseño oscuro) + Tarjeta compartible de Instagram + Historial de logros (admin)
 
 ## Contexto
 
@@ -16,6 +16,7 @@ Este spec reemplaza esa pantalla por un diseño oscuro tipo "take-over" (fondo `
 - Lógica de medallas/copas (`streakWeeks % 4`, `Math.floor(streakWeeks / 4)`), pura y testeable.
 - Compartir con Web Share API (`navigator.share` con archivo) si el dispositivo lo soporta; si no, descarga el PNG.
 - Endpoint nuevo `GET /api/clients/:id/training/phrase?context=` para que la tarjeta pida su propia frase de contexto `instagram` al momento de compartir (la pantalla de confirmación ya trae la de `confirmacion` desde `confirm-session`, pero no la de `instagram`).
+- Historial de logros del lado admin (Parte 3): tabla `achievement_logs`, disparo server-side dentro de `confirm-session`, endpoint de lectura y card admin con resumen + lista + filtros.
 
 **No incluye:**
 - Cambios a `confirmarSesionEntrenamiento`, `computeTrainingStreakState`, o cualquier lógica de racha/día_number ya existente — el pseudocódigo del prompt original (`confirmarSesionEntrenamiento(clientId, source)` con `{sessionsDoneThisWeek, sessionsRequiredThisWeek, streakWeeks}`) es ilustrativo; se usa la función y el shape de respuesta que ya existen en este proyecto (`streak: {sessionsDoneThisWeek, sessionsRequiredThisWeek, streakWeeks, ...}`, `phrase`, `alreadyConfirmedToday`, `weekJustCompleted`).
@@ -86,8 +87,56 @@ GET /api/clients/:id/training/phrase?context=confirmacion|instagram
 ```
 Implementación: `pickRandomPhrase(await dbGet('phrases', {active:true}), context)`, devuelve `.text` o `null`. Valida `context` contra `['confirmacion','instagram']` (400 si inválido) — la Parte 2 solo necesita `instagram`, pero se deja simétrico por si se reutiliza a futuro.
 
+## Parte 3 — Historial de medallas y copas (admin, módulo Entrenamiento)
+
+**No depende de que el cliente comparta la tarjeta** — se registra internamente cada vez que se gana una medalla o una copa, vía el mismo flujo de `confirm-session` (nunca un endpoint separado que duplique lógica de racha).
+
+### Modelo de datos
+
+Tabla nueva `achievement_logs` (independiente, aditiva, nunca se borra ni se resetea):
+
+```sql
+CREATE TABLE achievement_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  client_id UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+  type TEXT NOT NULL CHECK (type IN ('medalla', 'copa')),
+  week_number INT NOT NULL,
+  earned_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+### Disparo server-side (dentro de `confirm-session`, no un endpoint aparte)
+
+En el bloque `if (!alreadyConfirmedToday) { ... }` de `POST /api/clients/:id/training/confirm-session` (server.js:1263-1270), justo donde ya se calcula `doneThisWeek` antes de decidir `dayNumber`:
+
+1. Capturar `wasCompletedBefore = doneThisWeek >= trainingDays` **antes** del insert.
+2. Solo si el insert realmente ocurrió (`!existing`, es decir esta llamada sí creó una fila nueva — no un no-op):
+   - Si `!wasCompletedBefore && (doneThisWeek + 1) >= trainingDays` → se acaba de completar la semana con esta sesión real → insertar `achievement_logs` `type: 'medalla'`, `week_number` = el `streakWeeks` resultante (calculado después, con `computeTrainingStreakState`, que ya se llama en este handler).
+   - Si se insertó la medalla y ese mismo `streakWeeks` resultante es múltiplo de 4 (`streakWeeks % 4 === 0` y `streakWeeks > 0`) → insertar además `achievement_logs` `type: 'copa'`, mismo `week_number`, mismo `earned_at` (mismo evento).
+3. **Nunca se dispara por protector**: `use-protector` (server.js:1185-1198) es un endpoint separado que no inserta en `training_completions` ni pasa por este bloque — una semana protegida jamás genera medalla ni copa, tal como pide el prompt.
+4. **Idempotente por diseño**: si el cliente confirma una sesión extra la misma semana después de ya haberla completado, `wasCompletedBefore` ya es `true` antes de ese insert, así que no se repite el evento.
+
+### Backend — lectura
+
+```
+GET /api/clients/:id/training/achievements
+  authMiddleware, adminOnly
+  → { achievements: [{ id, type, week_number, earned_at }, ...] }  (más reciente primero)
+```
+
+Sin `requirePermission` (innecesario junto a `adminOnly`, que ya solo deja pasar `role==='admin'` — mismo patrón que otros endpoints puramente admin como `POST /api/clients/:id/exercises`). Deliberadamente `adminOnly` y no `ownerOrAdmin`: el cliente nunca ve este historial dentro de la app — el logro acumulado completo solo se ve al compartir la tarjeta de Instagram.
+
+### UI admin
+
+Card nueva "Historial de logros" dentro de `renderTrainingAdminPanel` (index.html:2571-2610, junto a "Configuración del cliente" y "Agregar ejercicio"):
+- Resumen arriba: 🏆 total de copas + 🎖️ total de medallas (conteo de filas por `type`).
+- Lista cronológica (más reciente primero): tipo, `week_number`, fecha (`earned_at`) formateada.
+- Filtro por tipo (Todas/Medallas/Copas) y por rango de fechas — client-side sobre la lista ya cargada (mismo patrón que los filtros de Frases Card RR.SS), sin re-fetch al backend.
+
 ## Testing
 
 - `computeAchievements`: casos `streakWeeks` = 0, 1, 3, 4, 5, 11, para confirmar el módulo y el piso correctos.
 - Endpoint `training/phrase`: contexto inválido → 400; banco vacío para el contexto → `{phrase: null}`.
-- Manual, sin navegador (no hay entorno de browser en esta sesión): confirmar que el botón manual navega a la pantalla completa (no solo toast) y que el botón de compartir genera/descarga un PNG — pendiente de que un humano lo pruebe en un dispositivo real, idealmente iOS para validar el share sheet nativo.
+- Disparo de logros: simular (con datos en memoria, sin pegarle a la DB real) la transición `doneThisWeek: trainingDays-1 → trainingDays` y confirmar que dispara medalla; confirmar que una llamada posterior la misma semana (`wasCompletedBefore=true`) no duplica; confirmar que `streakWeeks` múltiplo de 4 dispara copa en el mismo evento y que no múltiplo de 4 no la dispara.
+- Endpoint `training/achievements`: `adminOnly` rechaza a un cliente autenticado con 403.
+- Manual, sin navegador (no hay entorno de browser en esta sesión): confirmar que el botón manual navega a la pantalla completa (no solo toast), que el botón de compartir genera/descarga un PNG, y que la card de historial admin muestra los logros correctos tras varias semanas de un cliente de prueba — pendiente de que un humano lo pruebe en un dispositivo real, idealmente iOS para validar el share sheet nativo.
