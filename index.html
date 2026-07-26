@@ -2791,10 +2791,15 @@ function renderTrainingDay(el, exercises, client, isAdmin, completions) {
         const list = dayExercises.filter(x => x.category === cat);
         const catDone = list.filter(x => trainingUI.completed[x.id]).length;
         const isSelected = trainingUI.lastCategory === cat;
-        return `<button class="category-tile ${isSelected ? 'selected' : ''}" ${list.length ? '' : 'disabled'} onclick="openTrainingCategory('${cat}')">
-          ${categoryIcon(cat)}
+        const state = getCategoryLockState(cat, dayExercises);
+        const disabled = state === 'no_asignada' || state === 'locked';
+        const countText = state === 'no_asignada' ? 'No asignado'
+          : state === 'locked' ? 'Bloqueado'
+          : `${catDone}/${list.length} ejercicio${list.length === 1 ? '' : 's'}`;
+        return `<button class="category-tile ${isSelected ? 'selected' : ''}" ${disabled ? 'disabled' : ''} onclick="openTrainingCategory('${cat}')">
+          ${state === 'locked' ? '<span style="font-size:15px;">🔒</span>' : categoryIcon(cat)}
           <div class="label">${CATEGORY_LABELS[cat]}</div>
-          <div class="count">${list.length ? `${catDone}/${list.length} ejercicio${list.length === 1 ? '' : 's'}` : 'Sin ejercicios'}</div>
+          <div class="count">${countText}</div>
         </button>`;
       }).join('')}
     </div>
@@ -2805,7 +2810,10 @@ function renderTrainingDay(el, exercises, client, isAdmin, completions) {
       </div>
       ${alreadyMarked
         ? '<div style="text-align:center;"><span class="status-pill-live">Entrenamiento del día ya completado esta semana</span></div>'
-        : `<div style="text-align:center;margin-top:16px;"><button class="btn btn-primary" style="width:auto" ${allDone ? '' : 'disabled style="opacity:.4"'} onclick="markTrainingDayComplete(${day})">Marcar entrenamiento del día como completado</button></div>`}
+        : `<div style="text-align:center;margin-top:16px;">
+            <button class="btn btn-primary" style="width:auto" ${allDone ? '' : 'disabled style="opacity:.4"'} onclick="markTrainingDayComplete(${day})">Marcar entrenamiento del día como completado</button>
+            ${!allDone ? `<p style="font-size:11px;color:var(--ink-soft);margin-top:8px;">Completa ${joinWithY(incompleteAssignedCategoryLabels(dayExercises))} para desbloquear este botón.</p>` : ''}
+          </div>`}
     </div>
     ${isAdmin ? renderTrainingAdminExerciseList(dayExercises) : ''}
   `;
