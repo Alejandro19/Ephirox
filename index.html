@@ -163,6 +163,7 @@ td{padding:12px 8px;border-bottom:1px solid var(--line);font-size:14px;}
 .day-tile,.category-tile{background:#FFFFFF;border:1px solid #E7DFC9;border-radius:16px;padding:20px 14px;text-align:center;cursor:pointer;transition:border-color .2s ease, box-shadow .2s ease, background .2s ease;font-family:inherit;}
 .day-tile:hover,.category-tile:hover:not(:disabled){border-color:#B8935A;box-shadow:0 6px 16px rgba(184,147,90,.15);}
 .category-tile:disabled{opacity:.45;cursor:not-allowed;}
+.category-tile.no-asignada:disabled{opacity:.3;}
 .day-tile .num{font-family:'Fraunces',serif;font-size:22px;font-weight:600;color:var(--ink);}
 .day-tile .count,.category-tile .count{font-size:10px;color:#8A8377;margin-top:4px;}
 .category-tile .label{font-family:'Fraunces',serif;font-size:15px;font-weight:600;color:var(--ink);margin-top:8px;}
@@ -229,19 +230,19 @@ td{padding:12px 8px;border-bottom:1px solid var(--line);font-size:14px;}
 .scs-week-label{font-family:'Fraunces',serif;font-size:13px;font-weight:700;color:#F3EFE6;}
 .scs-week-dots{display:flex;gap:8px;}
 .scs-week-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;}
-.scs-week-dot.done{background:#D9A441;color:#1B1712;}
+.scs-week-dot.done{background:var(--accent-neutral);color:#FBF7F1;}
 .scs-week-dot:not(.done){border:1px solid rgba(243,239,230,.35);color:#B8A88A;}
 .scs-light .scs-week-box{background:var(--paper);border-color:var(--line);}
 .scs-light .scs-week-label{color:var(--ink);}
 .scs-light .scs-week-dot:not(.done){border-color:var(--line);color:var(--ink-soft);}
 .scs-streak-row{display:flex;align-items:center;gap:8px;margin-top:18px;}
-.scs-streak-num{font-family:'Fraunces',serif;font-weight:800;font-size:32px;color:#D9A441;}
+.scs-streak-num{font-family:'Fraunces',serif;font-weight:800;font-size:32px;color:var(--accent-neutral);}
 .scs-flame{font-size:24px;}
 .scs-streak-label{font-size:11px;letter-spacing:.06em;color:#B8A88A;text-transform:uppercase;text-align:center;margin-top:2px;}
 .scs-phrase{font-family:'Fraunces',serif;font-style:italic;font-size:14px;color:#D9BE8C;text-align:center;line-height:1.6;padding:0 12px;}
 .scs-actions{display:flex;align-items:center;gap:12px;}
 .scs-actions .btn-ghost{flex:1;border-color:rgba(243,239,230,.25);color:#F3EFE6;}
-.scs-share-btn{width:48px;height:48px;border-radius:50%;background:#D9A441;border:none;display:flex;align-items:center;justify-content:center;color:#1B1712;flex-shrink:0;cursor:pointer;}
+.scs-share-btn{width:48px;height:48px;border-radius:50%;background:var(--accent-neutral);border:none;display:flex;align-items:center;justify-content:center;color:#FBF7F1;flex-shrink:0;cursor:pointer;}
 .scs-share-btn:disabled{opacity:.5;cursor:default;}
 .session-confirmed-screen.scs-light{background:var(--cream);}
 .session-confirmed-screen.scs-light::before{background:rgba(43,36,32,.35);}
@@ -249,7 +250,7 @@ td{padding:12px 8px;border-bottom:1px solid var(--line);font-size:14px;}
 .scs-light .scs-ring-fraction{color:var(--ink);}
 .scs-light .scs-ring-label{color:var(--ink-soft);}
 .scs-light .scs-streak-label{color:var(--ink-soft);}
-.scs-light .scs-phrase{color:var(--ink-soft);}
+.scs-light .scs-phrase{color:var(--accent-neutral);}
 .scs-light .scs-actions .btn-ghost{border-color:var(--line);color:var(--ink);}
 
 /* ---- Nutrición: macros de solo lectura, vista de plan en tabla, suplementación ---- */
@@ -2815,10 +2816,9 @@ function renderTrainingDay(el, exercises, client, isAdmin, completions) {
         const state = isAdmin ? (list.length ? 'done' : 'no_asignada') : (alreadyMarked && list.length ? 'done' : getCategoryLockState(cat, dayExercises));
         const disabled = state === 'no_asignada' || state === 'locked';
         const countText = state === 'no_asignada' ? 'No asignado'
-          : state === 'locked' ? 'Bloqueado'
           : `${catDone}/${list.length} ejercicio${list.length === 1 ? '' : 's'}`;
-        return `<button class="category-tile ${isSelected ? 'selected' : ''}" ${disabled ? 'disabled' : ''} onclick="openTrainingCategory('${cat}')">
-          ${state === 'locked' ? '<span style="font-size:15px;">🔒</span>' : categoryIcon(cat)}
+        return `<button class="category-tile ${isSelected ? 'selected' : ''} ${state === 'no_asignada' ? 'no-asignada' : ''}" ${disabled ? 'disabled' : ''} onclick="openTrainingCategory('${cat}')">
+          ${categoryIcon(cat)}
           <div class="label">${CATEGORY_LABELS[cat]}</div>
           <div class="count">${countText}</div>
         </button>`;
@@ -3125,7 +3125,9 @@ async function shareTrainingCard(evt, streakWeeks) {
 function renderNfcConfirmationScreen(el, result) {
   if (!result) { el.innerHTML = ''; return; }
   const { streak, phrase } = result;
-  const themeClass = result.source === 'manual' ? ' scs-light' : '';
+  const isLight = result.source === 'manual';
+  const themeClass = isLight ? ' scs-light' : '';
+  const ringTrackColor = isLight ? '#E7DFC9' : '#2B2F37';
   const size = 132, strokeWidth = 10;
   const r = (size - strokeWidth) / 2;
   const circ = 2 * Math.PI * r;
@@ -3137,8 +3139,8 @@ function renderNfcConfirmationScreen(el, result) {
       <div class="scs-ring-block">
         <div class="scs-ring-wrap">
           <svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}">
-            <circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="#2B2F37" stroke-width="${strokeWidth}"></circle>
-            <circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="#D9A441" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-dasharray="${filled.toFixed(1)} ${circ.toFixed(1)}" transform="rotate(-90 ${size / 2} ${size / 2})"></circle>
+            <circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="${ringTrackColor}" stroke-width="${strokeWidth}"></circle>
+            <circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="#B8935A" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-dasharray="${filled.toFixed(1)} ${circ.toFixed(1)}" transform="rotate(-90 ${size / 2} ${size / 2})"></circle>
           </svg>
           <div class="scs-ring-center">
             <div class="scs-ring-fraction">${streak.sessionsDoneThisWeek}/${streak.sessionsRequiredThisWeek}</div>
