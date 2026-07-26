@@ -214,12 +214,22 @@ td{padding:12px 8px;border-bottom:1px solid var(--line);font-size:14px;}
 .protector-btn:disabled{opacity:.4;cursor:default;}
 .app-toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%) translateY(20px);background:#2B2621;color:#F3EFE6;padding:12px 20px;border-radius:100px;font-size:12.5px;font-weight:600;display:flex;align-items:center;gap:8px;opacity:0;transition:all .35s ease;pointer-events:none;box-shadow:0 10px 30px rgba(0,0,0,.4);z-index:2000;}
 .app-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-.nfc-confirm-screen{max-width:400px;margin:0 auto;text-align:center;padding:20px 0 40px;}
-.nfc-tap-badge{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#2B2621,#3A322A);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-size:26px;}
-.nfc-confirm-screen .title{font-family:'Fraunces',serif;font-size:21px;font-weight:700;color:#2B2621;}
-.nfc-confirm-screen .sub{font-size:12px;color:#8A8377;margin-top:6px;padding:0 20px;line-height:1.5;}
-.nfc-streak-pill{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:#FFFFFF;border:1px solid #E7DFC9;border-radius:100px;padding:10px 18px;margin:20px auto 0;}
-.nfc-confirm-screen .mantra{font-family:'Fraunces',serif;font-style:italic;font-size:13px;color:#2B2621;text-align:center;margin:20px 24px 0;line-height:1.5;}
+.session-confirmed-screen{position:fixed;inset:0;z-index:3000;background:#1B1712;display:flex;flex-direction:column;justify-content:space-between;padding:18% 24px 14%;box-sizing:border-box;overflow-y:auto;}
+.scs-title{font-family:'Fraunces',serif;font-size:23px;font-weight:700;color:#F3EFE6;text-align:center;}
+.scs-ring-block{display:flex;flex-direction:column;align-items:center;}
+.scs-ring-wrap{position:relative;width:132px;height:132px;}
+.scs-ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.scs-ring-fraction{font-family:'Fraunces',serif;font-size:26px;font-weight:700;color:#F3EFE6;}
+.scs-ring-label{font-size:9px;letter-spacing:.08em;color:#B8A88A;text-transform:uppercase;margin-top:2px;}
+.scs-streak-row{display:flex;align-items:center;gap:8px;margin-top:18px;}
+.scs-streak-num{font-family:'Fraunces',serif;font-weight:800;font-size:32px;color:#D9A441;}
+.scs-flame{font-size:24px;}
+.scs-streak-label{font-size:11px;letter-spacing:.06em;color:#B8A88A;text-transform:uppercase;text-align:center;margin-top:2px;}
+.scs-phrase{font-family:'Fraunces',serif;font-style:italic;font-size:14px;color:#D9BE8C;text-align:center;line-height:1.6;padding:0 12px;}
+.scs-actions{display:flex;align-items:center;gap:12px;}
+.scs-actions .btn-ghost{flex:1;border-color:rgba(243,239,230,.25);color:#F3EFE6;}
+.scs-share-btn{width:48px;height:48px;border-radius:50%;background:#D9A441;border:none;display:flex;align-items:center;justify-content:center;color:#1B1712;flex-shrink:0;cursor:pointer;}
+.scs-share-btn:disabled{opacity:.5;cursor:default;}
 
 /* ---- Nutrición: macros de solo lectura, vista de plan en tabla, suplementación ---- */
 .macro-stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
