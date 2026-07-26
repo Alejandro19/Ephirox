@@ -1034,6 +1034,19 @@ app.get('/api/admin/phrases/random', authMiddleware, adminOnly, async (req, res)
   }
 });
 
+app.get('/api/clients/:id/training/phrase', authMiddleware, ownerOrAdmin, requirePermission('training'), async (req, res) => {
+  try {
+    const context = req.query.context;
+    if (!['confirmacion', 'instagram'].includes(context)) return err(res, 'Contexto inválido.', 400);
+    const pool = await dbGet('phrases', { active: true });
+    const drawn = pickRandomPhrase(pool, context);
+    return ok(res, { phrase: drawn ? drawn.text : null });
+  } catch (e) {
+    console.error(e);
+    return err(res, 'Error al obtener la frase.', 500);
+  }
+});
+
 // Herramientas para dormir (Descanso) — banco global, no por cliente.
 const DEFAULT_REST_TOOLS = [
   { name: 'Sonidos para dormir', meta: 'Ruido blanco + respiración guiada · 20 min', action: 'play', minutes: 20 },
