@@ -2922,6 +2922,142 @@ function computeAchievements(streakWeeks) {
   };
 }
 
+// Fuente local (fonts/Fraunces-Variable.woff2, fonts/Fraunces-Italic-Variable.woff2)
+// para que el PNG exportado nunca dependa de Google Fonts en tiempo de ejecución.
+let _fraunceFontsLoaded = false;
+async function ensureCardFontsLoaded() {
+  if (_fraunceFontsLoaded) return;
+  const regular = new FontFace('Fraunces Card', 'url(/fonts/Fraunces-Variable.woff2)', { style: 'normal', weight: '100 900' });
+  const italic = new FontFace('Fraunces Card', 'url(/fonts/Fraunces-Italic-Variable.woff2)', { style: 'italic', weight: '100 900' });
+  const [loadedRegular, loadedItalic] = await Promise.all([regular.load(), italic.load()]);
+  document.fonts.add(loadedRegular);
+  document.fonts.add(loadedItalic);
+  _fraunceFontsLoaded = true;
+}
+
+// Base de diseño validada: 260x462. Todo se dibuja multiplicando por SCALE
+// para llegar a los 1080x1920 finales (proporción exacta de IG Stories).
+const CARD_SCALE = 1080 / 260;
+
+function drawInstagramCard(ctx, { streakWeeks, phrase }) {
+  const W = 1080, H = 1920;
+  const s = (n) => n * CARD_SCALE;
+
+  const bg = ctx.createRadialGradient(W * 0.5, H * 0.3, 0, W * 0.5, H * 0.3, W * 0.75);
+  bg.addColorStop(0, '#2A2118');
+  bg.addColorStop(1, '#14100A');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  const padTop = H * 0.185, padBottom = H * 0.145;
+  const { medalsInCurrentCycle, trophiesEarned } = computeAchievements(streakWeeks);
+
+  // Bloque 1: fila de logros
+  const rowY = padTop;
+  ctx.textBaseline = 'middle';
+  ctx.font = `${s(12)}px "Fraunces Card"`;
+  ctx.fillStyle = '#E8C97D';
+  ctx.textAlign = 'left';
+  ctx.fillText(`${'🏆'.repeat(trophiesEarned)} copas`.trim(), s(22), rowY);
+  ctx.textAlign = 'right';
+  ctx.globalAlpha = 0.85;
+  ctx.letterSpacing = `${s(2)}px`;
+  ctx.fillText(`${'🎖️'.repeat(medalsInCurrentCycle)}${'○'.repeat(3 - medalsInCurrentCycle)}`, W - s(22), rowY);
+  ctx.letterSpacing = '0px';
+  ctx.globalAlpha = 1;
+
+  // Bloque 2: sello circular
+  const sealCenterY = H * 0.42;
+  const sealR = s(75);
+  ctx.beginPath();
+  ctx.arc(W / 2, sealCenterY, sealR, 0, Math.PI * 2);
+  ctx.strokeStyle = '#E8C97D';
+  ctx.lineWidth = s(2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(W / 2, sealCenterY, sealR - s(8), 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(232,201,125,.4)';
+  ctx.lineWidth = s(1);
+  ctx.stroke();
+
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#B8A88A';
+  ctx.font = `${s(7.5)}px "Fraunces Card"`;
+  ctx.letterSpacing = `${s(0.12 * 7.5)}px`;
+  ctx.fillText('MI RACHA', W / 2, sealCenterY - s(28));
+  ctx.letterSpacing = '0px';
+
+  ctx.fillStyle = '#F8EFDD';
+  ctx.font = `800 ${s(42)}px "Fraunces Card"`;
+  ctx.fillText(String(streakWeeks), W / 2, sealCenterY);
+
+  ctx.fillStyle = '#E8C97D';
+  ctx.font = `${s(9)}px "Fraunces Card"`;
+  ctx.fillText('SEMANAS SEGUIDAS', W / 2, sealCenterY + s(28));
+
+  // Bloque 3: frase
+  if (phrase) {
+    ctx.fillStyle = '#F3E9D2';
+    ctx.font = `italic ${s(14)}px "Fraunces Card"`;
+    const maxWidth = s(200);
+    const words = `"${phrase}"`.split(' ');
+    let line = '', lines = [];
+    for (const word of words) {
+      const test = line ? `${line} ${word}` : word;
+      if (ctx.measureText(test).width > maxWidth && line) { lines.push(line); line = word; }
+      else line = test;
+    }
+    if (line) lines.push(line);
+    const lineHeight = s(14) * 1.4;
+    const phraseY = H - padBottom - s(90) - (lines.length - 1) * lineHeight / 2;
+    lines.forEach((l, i) => ctx.fillText(l, W / 2, phraseY + i * lineHeight));
+  }
+
+  // Bloque 4: marca
+  const brandY = H - padBottom;
+  ctx.fillStyle = '#E8C97D';
+  ctx.font = `700 ${s(13)}px "Fraunces Card"`;
+  ctx.fillText('La Tribu', W / 2, brandY - s(14));
+  ctx.fillStyle = '#9C8A67';
+  ctx.font = `${s(7.5)}px "Fraunces Card"`;
+  ctx.letterSpacing = `${s(0.05 * 7.5)}px`;
+  ctx.fillText('COMUNIDAD DE BIENESTAR Y ALTO RENDIMIENTO', W / 2, brandY);
+  ctx.letterSpacing = '0px';
+}
+
+async function shareTrainingCard(streakWeeks) {
+  const btn = event && event.currentTarget;
+  if (btn) btn.disabled = true;
+  try {
+    await ensureCardFontsLoaded();
+    const clientId = currentClientId();
+    const { phrase } = await api(`/api/clients/${clientId}/training/phrase?context=instagram`);
+    const canvas = document.createElement('canvas');
+    canvas.width = 1080;
+    canvas.height = 1920;
+    const ctx = canvas.getContext('2d');
+    drawInstagramCard(ctx, { streakWeeks, phrase });
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+    const file = new File([blob], 'la-tribu-racha.png', { type: 'image/png' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file] });
+    } else {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'la-tribu-racha.png';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+  } catch (e) {
+    if (e.name !== 'AbortError') alert('No pudimos generar la tarjeta: ' + e.message);
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
 function renderNfcConfirmationScreen(el, result) {
   if (!result) { el.innerHTML = ''; return; }
   const { streak, phrase } = result;
