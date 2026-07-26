@@ -3025,8 +3025,8 @@ function drawInstagramCard(ctx, { streakWeeks, phrase }) {
   ctx.letterSpacing = '0px';
 }
 
-async function shareTrainingCard(streakWeeks) {
-  const btn = event && event.currentTarget;
+async function shareTrainingCard(evt, streakWeeks) {
+  const btn = evt && evt.currentTarget;
   if (btn) btn.disabled = true;
   try {
     await ensureCardFontsLoaded();
@@ -3089,7 +3089,7 @@ function renderNfcConfirmationScreen(el, result) {
       ${phrase ? `<p class="scs-phrase">"${phrase}"</p>` : '<div></div>'}
       <div class="scs-actions">
         <button class="btn btn-ghost" onclick="closeNfcConfirmationScreen()">Cerrar</button>
-        <button class="scs-share-btn" onclick="shareTrainingCard(${streak.streakWeeks})" aria-label="Compartir">
+        <button class="scs-share-btn" onclick="shareTrainingCard(event, ${streak.streakWeeks})" aria-label="Compartir">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M8 7l4-4 4 4"/><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/></svg>
         </button>
       </div>
