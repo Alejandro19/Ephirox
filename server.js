@@ -1342,6 +1342,16 @@ app.post('/api/clients/:id/training/use-protector', authMiddleware, ownerOrAdmin
   }
 });
 
+app.get('/api/clients/:id/training/achievements', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const achievements = await dbGet('achievement_logs', { client_id: req.params.id }, { order: { column: 'earned_at', ascending: false } });
+    return ok(res, { achievements });
+  } catch (e) {
+    console.error(e);
+    return err(res, 'Error al obtener el historial de logros.', 500);
+  }
+});
+
 app.get('/api/clients/:id/exercises', authMiddleware, ownerOrAdmin, requirePermission('training'), async (req, res) => {
   try {
     const exercises = await dbGet('exercises', { client_id: req.params.id }, { order: { column: 'sort_order', ascending: true } });
