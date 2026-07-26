@@ -1266,8 +1266,13 @@ app.post('/api/clients/:id/training/confirm-session', authMiddleware, ownerOrAdm
       if (!existing) await dbInsert('training_completions', { client_id: req.params.id, day_number: dayNumber, completed_date: today, source });
     }
 
-    const phrasePool = await dbGet('phrases', { active: true });
-    const drawnPhrase = pickRandomPhrase(phrasePool, 'confirmacion');
+    let drawnPhrase = null;
+    try {
+      const phrasePool = await dbGet('phrases', { active: true });
+      drawnPhrase = pickRandomPhrase(phrasePool, 'confirmacion');
+    } catch (e) {
+      console.error('phrase draw failed (non-fatal):', e);
+    }
     const streak = await computeTrainingStreakState(req.params.id, trainingDays, tz);
     return ok(res, { streak, alreadyConfirmedToday, phrase: drawnPhrase ? drawnPhrase.text : null });
   } catch (e) {
