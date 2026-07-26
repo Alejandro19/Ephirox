@@ -1256,7 +1256,12 @@ app.post('/api/clients/:id/training/confirm-session', authMiddleware, ownerOrAdm
     const trainingDays = client.training_days || 0;
     if (!trainingDays) return err(res, 'Este cliente no tiene días de entrenamiento asignados.', 400);
     const source = req.body.source === 'nfc' ? 'nfc' : 'manual';
-    const tz = req.body.tz;
+    // El sticker NFC está atado a un lugar físico (el gym), no al reloj del
+    // celular que escanea — un cliente o tester puede tapear desde otra zona
+    // horaria (ej. probando remoto), así que para 'nfc' siempre se usa la
+    // zona horaria fija del gym en vez de confiar en el dispositivo. Para
+    // 'manual' sí se respeta la zona del cliente (relevante para online).
+    const tz = source === 'nfc' ? DEFAULT_TRAINING_TZ : req.body.tz;
     const today = todayInTz(tz);
     const weekStart = getWeekStartISO(tz);
 
