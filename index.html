@@ -2866,10 +2866,8 @@ async function confirmarSesionEntrenamiento(source) {
 async function markTrainingDayComplete(day) {
   try {
     const result = await confirmarSesionEntrenamiento('manual');
-    if (result.alreadyConfirmedToday) { /* nada nuevo que confirmar hoy */ }
-    else if (result.weekJustCompleted) showToast(`🎉 ¡Semana completa! Racha: ${result.streak.streakWeeks} semanas seguidas.`);
-    else showToast(`📲 Sesión confirmada — ${result.streak.sessionsDoneThisWeek} de ${result.streak.sessionsRequiredThisWeek} esta semana.`);
-    renderMain();
+    window._nfcConfirmResult = result;
+    setView('nfc-confirm');
   } catch (e) { alert('Error: ' + e.message); }
 }
 
@@ -2917,38 +2915,45 @@ async function consumePendingActionIfAny() {
 
 function renderNfcConfirmationScreen(el, result) {
   if (!result) { el.innerHTML = ''; return; }
-  const { streak, alreadyConfirmedToday, phrase } = result;
-  const dots = [];
-  for (let i = 0; i < streak.sessionsRequiredThisWeek; i++) {
-    if (i < streak.sessionsDoneThisWeek) {
-      const isNew = !alreadyConfirmedToday && i === streak.sessionsDoneThisWeek - 1;
-      dots.push(`<div class="wdot done${isNew ? ' new' : ''}">✓</div>`);
-    } else if (streak.protectorUsedThisWeek) dots.push('<div class="wdot shield">🛡️</div>');
-    else dots.push('<div class="wdot pending">?</div>');
-  }
+  const { streak, phrase } = result;
+  const size = 132, strokeWidth = 10;
+  const r = (size - strokeWidth) / 2;
+  const circ = 2 * Math.PI * r;
+  const pct = streak.sessionsRequiredThisWeek > 0 ? Math.min(1, streak.sessionsDoneThisWeek / streak.sessionsRequiredThisWeek) : 0;
+  const filled = pct * circ;
   el.innerHTML = `
-    <div class="nfc-confirm-screen">
-      <div class="nfc-tap-badge">📲</div>
-      <div class="title">¡Sesión confirmada!</div>
-      <div class="sub">Tocaste tu sticker en el gym — quedó registrada tu sesión de hoy.</div>
-      <div class="nfc-streak-pill">
-        <span class="flame" style="font-size:18px;">🔥</span>
-        <span class="streak-num" style="font-size:17px;">${streak.streakWeeks}</span>
-        <span class="streak-txt" style="font-size:10.5px;">semanas seguidas</span>
+    <div class="session-confirmed-screen">
+      <div class="scs-title">¡Sesión confirmada!</div>
+      <div class="scs-ring-block">
+        <div class="scs-ring-wrap">
+          <svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}">
+            <circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="#2B2F37" stroke-width="${strokeWidth}"></circle>
+            <circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="#D9A441" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-dasharray="${filled.toFixed(1)} ${circ.toFixed(1)}" transform="rotate(-90 ${size / 2} ${size / 2})"></circle>
+          </svg>
+          <div class="scs-ring-center">
+            <div class="scs-ring-fraction">${streak.sessionsDoneThisWeek}/${streak.sessionsRequiredThisWeek}</div>
+            <div class="scs-ring-label">Esta semana</div>
+          </div>
+        </div>
+        <div class="scs-streak-row">
+          <span class="scs-flame">🔥</span>
+          <span class="scs-streak-num">${streak.streakWeeks}</span>
+        </div>
+        <div class="scs-streak-label">Semanas seguidas</div>
       </div>
-      <div class="card" style="max-width:280px;margin:22px auto 0;">
-        <div class="week-progress-title" style="text-align:center;">Tu semana</div>
-        <div class="week-dots" style="justify-content:center;">${dots.join('')}</div>
+      ${phrase ? `<p class="scs-phrase">"${phrase}"</p>` : '<div></div>'}
+      <div class="scs-actions">
+        <button class="btn btn-ghost" onclick="closeNfcConfirmationScreen()">Cerrar</button>
+        <button class="scs-share-btn" onclick="shareTrainingCard(${streak.streakWeeks})" aria-label="Compartir">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M8 7l4-4 4 4"/><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/></svg>
+        </button>
       </div>
-      ${phrase ? `<p class="mantra">"${phrase}"</p>` : ''}
-      <button class="btn btn-primary" style="max-width:280px;margin:22px auto 0;" onclick="closeNfcConfirmationScreen(true)">Ver rutina de hoy</button>
-      <button class="btn btn-ghost" style="max-width:280px;margin:10px auto 0;" onclick="closeNfcConfirmationScreen(false)">Cerrar</button>
     </div>
   `;
 }
-function closeNfcConfirmationScreen(goToTraining) {
+function closeNfcConfirmationScreen() {
   window._nfcConfirmResult = null;
-  setView(goToTraining ? 'training' : (CLIENT_NAV.find(item => item.visible(state)) || CLIENT_NAV[0]).key);
+  setView((CLIENT_NAV.find(item => item.visible(state)) || CLIENT_NAV[0]).key);
 }
 
 function getCurrentTrainingList() {
