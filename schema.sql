@@ -207,7 +207,8 @@ CREATE TABLE achievement_logs (
   client_id UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
   type TEXT NOT NULL CHECK (type IN ('medalla', 'copa')),
   week_number INT NOT NULL,
-  earned_at TIMESTAMPTZ DEFAULT NOW()
+  earned_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(client_id, type, week_number)
 );
 
 -- ------------------------------------------------------------
