@@ -164,6 +164,9 @@ td{padding:12px 8px;border-bottom:1px solid var(--line);font-size:14px;}
 .day-tile:hover,.category-tile:hover:not(:disabled){border-color:#B8935A;box-shadow:0 6px 16px rgba(184,147,90,.15);}
 .category-tile:disabled{opacity:.45;cursor:not-allowed;}
 .category-tile.no-asignada:disabled{opacity:.3;}
+.category-tile.tile-done{border:2px solid var(--accent-green);background:var(--bg-green);}
+.category-tile.tile-done .category-icon{color:var(--accent-green);}
+.category-tile.tile-active{border:2px solid var(--accent-green);}
 .day-tile .num{font-family:'Fraunces',serif;font-size:22px;font-weight:600;color:var(--ink);}
 .day-tile .count,.category-tile .count{font-size:10px;color:#8A8377;margin-top:4px;}
 .category-tile .label{font-family:'Fraunces',serif;font-size:15px;font-weight:600;color:var(--ink);margin-top:8px;}
@@ -2817,7 +2820,8 @@ function renderTrainingDay(el, exercises, client, isAdmin, completions) {
         const disabled = state === 'no_asignada' || state === 'locked';
         const countText = state === 'no_asignada' ? 'No asignado'
           : `${catDone}/${list.length} ejercicio${list.length === 1 ? '' : 's'}`;
-        return `<button class="category-tile ${isSelected ? 'selected' : ''} ${state === 'no_asignada' ? 'no-asignada' : ''}" ${disabled ? 'disabled' : ''} onclick="openTrainingCategory('${cat}')">
+        const tileStateClass = state === 'no_asignada' ? 'no-asignada' : isAdmin ? '' : state === 'done' ? 'tile-done' : state === 'active' ? 'tile-active' : '';
+        return `<button class="category-tile ${isSelected ? 'selected' : ''} ${tileStateClass}" ${disabled ? 'disabled' : ''} onclick="openTrainingCategory('${cat}')">
           ${categoryIcon(cat)}
           <div class="label">${CATEGORY_LABELS[cat]}</div>
           <div class="count">${countText}</div>
