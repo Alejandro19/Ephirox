@@ -371,7 +371,8 @@ DO $$ BEGIN
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
-INSERT INTO phrases (text, context) VALUES
+INSERT INTO phrases (text, context)
+SELECT * FROM (VALUES
   ('Cada sesión completada te acerca a tu mejor versión.', 'confirmacion'),
   ('Vas mejorando cada día, aunque no siempre se note.', 'confirmacion'),
   ('Hoy sumaste otro paso — eso ya es suficiente.', 'confirmacion'),
@@ -379,4 +380,6 @@ INSERT INTO phrases (text, context) VALUES
   ('Cada sesión me acerca a mi mejor versión.', 'instagram'),
   ('No es motivación. Es compromiso conmigo.', 'instagram'),
   ('Elijo mi bienestar, un día a la vez.', 'instagram'),
-  ('Esto es constancia, no perfección.', 'ambas');
+  ('Esto es constancia, no perfección.', 'ambas')
+) AS seed(text, context)
+WHERE NOT EXISTS (SELECT 1 FROM phrases);
