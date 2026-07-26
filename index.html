@@ -216,7 +216,7 @@ td{padding:12px 8px;border-bottom:1px solid var(--line);font-size:14px;}
 .app-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 .session-confirmed-screen{position:fixed;inset:0;z-index:3000;background:#1B1712;display:flex;flex-direction:column;justify-content:space-between;padding:18% 24px 14%;box-sizing:border-box;overflow-y:auto;}
 @media(min-width:901px){
-  .session-confirmed-screen{inset:auto;top:50%;left:50%;transform:translate(-50%,-50%);width:400px;max-width:92vw;max-height:85vh;border-radius:20px;box-shadow:0 30px 80px rgba(0,0,0,.5);}
+  .session-confirmed-screen{inset:auto;top:50%;left:50%;transform:translate(-50%,-50%);width:400px;max-width:92vw;max-height:85vh;padding:32px 28px 24px;border-radius:20px;box-shadow:0 30px 80px rgba(0,0,0,.5);overflow-y:auto;}
   .session-confirmed-screen::before{content:'';position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:-1;}
 }
 .scs-title{font-family:'Fraunces',serif;font-size:23px;font-weight:700;color:#F3EFE6;text-align:center;}
@@ -225,6 +225,15 @@ td{padding:12px 8px;border-bottom:1px solid var(--line);font-size:14px;}
 .scs-ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
 .scs-ring-fraction{font-family:'Fraunces',serif;font-size:26px;font-weight:700;color:#F3EFE6;}
 .scs-ring-label{font-size:9px;letter-spacing:.08em;color:#B8A88A;text-transform:uppercase;margin-top:2px;}
+.scs-week-box{width:100%;box-sizing:border-box;background:rgba(255,255,255,.06);border:1px solid rgba(243,239,230,.15);border-radius:14px;padding:14px 16px;margin-top:16px;display:flex;flex-direction:column;align-items:center;gap:10px;}
+.scs-week-label{font-family:'Fraunces',serif;font-size:13px;font-weight:700;color:#F3EFE6;}
+.scs-week-dots{display:flex;gap:8px;}
+.scs-week-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;}
+.scs-week-dot.done{background:#D9A441;color:#1B1712;}
+.scs-week-dot:not(.done){border:1px solid rgba(243,239,230,.35);color:#B8A88A;}
+.scs-light .scs-week-box{background:var(--paper);border-color:var(--line);}
+.scs-light .scs-week-label{color:var(--ink);}
+.scs-light .scs-week-dot:not(.done){border-color:var(--line);color:var(--ink-soft);}
 .scs-streak-row{display:flex;align-items:center;gap:8px;margin-top:18px;}
 .scs-streak-num{font-family:'Fraunces',serif;font-weight:800;font-size:32px;color:#D9A441;}
 .scs-flame{font-size:24px;}
@@ -3134,6 +3143,12 @@ function renderNfcConfirmationScreen(el, result) {
           <div class="scs-ring-center">
             <div class="scs-ring-fraction">${streak.sessionsDoneThisWeek}/${streak.sessionsRequiredThisWeek}</div>
             <div class="scs-ring-label">Esta semana</div>
+          </div>
+        </div>
+        <div class="scs-week-box">
+          <div class="scs-week-label">Tu semana</div>
+          <div class="scs-week-dots">
+            ${Array.from({ length: streak.sessionsRequiredThisWeek }, (_, i) => i + 1).map(n => `<span class="scs-week-dot${n <= streak.sessionsDoneThisWeek ? ' done' : ''}">${n <= streak.sessionsDoneThisWeek ? '✓' : n}</span>`).join('')}
           </div>
         </div>
         <div class="scs-streak-row">
