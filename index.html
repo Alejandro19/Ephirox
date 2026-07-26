@@ -2734,6 +2734,34 @@ function renderTrainingAdminExercisesByDay(exercises, days) {
   </div>`;
 }
 
+// Orden fijo Warm Up -> Strength -> Cardio, pero filtrado solo a las
+// categorías que el cliente tiene asignadas ese día (= tiene ≥1 ejercicio).
+// Una categoría sin ejercicios nunca es 'locked' — es 'no_asignada' y queda
+// fuera del orden por completo.
+function getCategoryLockState(cat, dayExercises) {
+  const list = dayExercises.filter(x => x.category === cat);
+  if (!list.length) return 'no_asignada';
+  const isDone = list.every(x => trainingUI.completed[x.id]);
+  const assignedOrder = ['warmup', 'strength', 'cardio'].filter(c => dayExercises.some(x => x.category === c));
+  const idx = assignedOrder.indexOf(cat);
+  if (idx === 0) return isDone ? 'done' : 'active';
+  const prevList = dayExercises.filter(x => x.category === assignedOrder[idx - 1]);
+  const prevDone = prevList.every(x => trainingUI.completed[x.id]);
+  if (isDone) return 'done';
+  return prevDone ? 'active' : 'locked';
+}
+function incompleteAssignedCategoryLabels(dayExercises) {
+  return ['warmup', 'strength', 'cardio']
+    .filter(cat => dayExercises.some(x => x.category === cat))
+    .filter(cat => !dayExercises.filter(x => x.category === cat).every(x => trainingUI.completed[x.id]))
+    .map(cat => CATEGORY_LABELS[cat]);
+}
+function joinWithY(labels) {
+  if (labels.length === 0) return '';
+  if (labels.length === 1) return labels[0];
+  return labels.slice(0, -1).join(', ') + ' y ' + labels[labels.length - 1];
+}
+
 function renderTrainingDay(el, exercises, client, isAdmin, completions) {
   const day = trainingUI.day;
   if (!isAdmin && !isDayUnlocked(day, completions)) {
