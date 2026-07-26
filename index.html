@@ -2823,7 +2823,7 @@ function renderTrainingDay(el, exercises, client, isAdmin, completions) {
       ${alreadyMarked
         ? '<div style="text-align:center;"><span class="status-pill-live">Entrenamiento del día ya completado esta semana</span></div>'
         : `<div style="text-align:center;margin-top:16px;">
-            <button class="btn btn-primary" style="width:auto" ${allDone ? '' : 'disabled style="opacity:.4"'} onclick="markTrainingDayComplete(${day})">Marcar entrenamiento del día como completado</button>
+            <button class="btn btn-primary" style="width:auto" ${allDone ? '' : 'disabled style="opacity:.4"'} onclick="markTrainingDayComplete(${day})">Completar Entrenamiento Día ${day}</button>
             ${!allDone && incompleteAssignedCategoryLabels(dayExercises).length ? `<p style="font-size:11px;color:var(--ink-soft);margin-top:8px;">Completa ${joinWithY(incompleteAssignedCategoryLabels(dayExercises))} para desbloquear este botón.</p>` : ''}
           </div>`}
     </div>
@@ -3154,7 +3154,7 @@ function renderNfcConfirmationScreen(el, result) {
 }
 function closeNfcConfirmationScreen() {
   window._nfcConfirmResult = null;
-  setView((CLIENT_NAV.find(item => item.visible(state)) || CLIENT_NAV[0]).key);
+  setView('training');
 }
 
 function getCurrentTrainingList() {
