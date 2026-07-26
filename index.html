@@ -163,10 +163,12 @@ td{padding:12px 8px;border-bottom:1px solid var(--line);font-size:14px;}
 .day-tile,.category-tile{background:#FFFFFF;border:1px solid #E7DFC9;border-radius:16px;padding:20px 14px;text-align:center;cursor:pointer;transition:border-color .2s ease, box-shadow .2s ease, background .2s ease;font-family:inherit;}
 .day-tile:hover,.category-tile:hover:not(:disabled){border-color:#B8935A;box-shadow:0 6px 16px rgba(184,147,90,.15);}
 .category-tile:disabled{opacity:.45;cursor:not-allowed;}
-.category-tile.no-asignada:disabled{opacity:.3;}
-.category-tile.tile-done{border:2px solid var(--accent-green);background:var(--bg-green);}
-.category-tile.tile-done .category-icon{color:var(--accent-green);}
-.category-tile.tile-active{border:2px solid var(--accent-green);}
+.category-tile.no-asignada:disabled{opacity:.4;background:#F0EBE0;}
+.category-tile.tile-done{border:2px solid #5B7A4E;background:#F4F8EF;}
+.category-tile.tile-done .category-icon{color:#5B7A4E;}
+.category-tile.tile-active{border:2px solid #5B7A4E;background:#FFFFFF;}
+.day-complete-btn{background:#2B2621;color:#F3EFE6;box-shadow:0 6px 16px rgba(43,38,33,.2);}
+.day-complete-btn:disabled{background:#F0EBE0;color:#B0A99C;box-shadow:none;cursor:not-allowed;opacity:1;}
 .day-tile .num{font-family:'Fraunces',serif;font-size:22px;font-weight:600;color:var(--ink);}
 .day-tile .count,.category-tile .count{font-size:10px;color:#8A8377;margin-top:4px;}
 .category-tile .label{font-family:'Fraunces',serif;font-size:15px;font-weight:600;color:var(--ink);margin-top:8px;}
@@ -228,33 +230,36 @@ td{padding:12px 8px;border-bottom:1px solid var(--line);font-size:14px;}
 .scs-ring-wrap{position:relative;width:132px;height:132px;}
 .scs-ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
 .scs-ring-fraction{font-family:'Fraunces',serif;font-size:26px;font-weight:700;color:#F3EFE6;}
-.scs-ring-label{font-size:9px;letter-spacing:.08em;color:#B8A88A;text-transform:uppercase;margin-top:2px;}
-.scs-week-box{width:100%;box-sizing:border-box;background:rgba(255,255,255,.06);border:1px solid rgba(243,239,230,.15);border-radius:14px;padding:14px 16px;margin-top:16px;display:flex;flex-direction:column;align-items:center;gap:10px;}
+.scs-ring-label{font-size:9px;letter-spacing:.08em;color:#B0A597;text-transform:uppercase;margin-top:2px;}
+.scs-week-box{width:100%;box-sizing:border-box;background:#241E19;border:1px solid #3A322A;border-radius:14px;padding:14px 16px;margin-top:16px;display:flex;flex-direction:column;align-items:center;gap:10px;}
 .scs-week-label{font-family:'Fraunces',serif;font-size:13px;font-weight:700;color:#F3EFE6;}
 .scs-week-dots{display:flex;gap:8px;}
 .scs-week-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;}
-.scs-week-dot.done{background:var(--accent-neutral);color:#FBF7F1;}
-.scs-week-dot:not(.done){border:1px solid rgba(243,239,230,.35);color:#B8A88A;}
-.scs-light .scs-week-box{background:var(--paper);border-color:var(--line);}
-.scs-light .scs-week-label{color:var(--ink);}
-.scs-light .scs-week-dot:not(.done){border-color:var(--line);color:var(--ink-soft);}
+.scs-week-dot.done{background:#B8935A;color:#FFFFFF;}
+.scs-week-dot:not(.done){border:1px solid #4A4038;color:#B0A597;}
 .scs-streak-row{display:flex;align-items:center;gap:8px;margin-top:18px;}
-.scs-streak-num{font-family:'Fraunces',serif;font-weight:800;font-size:32px;color:var(--accent-neutral);}
+.scs-streak-num{font-family:'Fraunces',serif;font-weight:800;font-size:32px;color:#D9A441;}
 .scs-flame{font-size:24px;}
-.scs-streak-label{font-size:11px;letter-spacing:.06em;color:#B8A88A;text-transform:uppercase;text-align:center;margin-top:2px;}
+.scs-streak-label{font-size:11px;letter-spacing:.06em;color:#B0A597;text-transform:uppercase;text-align:center;margin-top:2px;}
 .scs-phrase{font-family:'Fraunces',serif;font-style:italic;font-size:14px;color:#D9BE8C;text-align:center;line-height:1.6;padding:0 12px;}
 .scs-actions{display:flex;align-items:center;gap:12px;}
-.scs-actions .btn-ghost{flex:1;border-color:rgba(243,239,230,.25);color:#F3EFE6;}
-.scs-share-btn{width:48px;height:48px;border-radius:50%;background:var(--accent-neutral);border:none;display:flex;align-items:center;justify-content:center;color:#FBF7F1;flex-shrink:0;cursor:pointer;}
+.scs-actions .btn-ghost{flex:1;border-color:rgba(255,255,255,.2);color:#F3EFE6;}
+.scs-share-btn{width:48px;height:48px;border-radius:50%;background:#D9A441;border:none;display:flex;align-items:center;justify-content:center;color:#2A1B04;flex-shrink:0;cursor:pointer;}
 .scs-share-btn:disabled{opacity:.5;cursor:default;}
-.session-confirmed-screen.scs-light{background:var(--cream);}
+.session-confirmed-screen.scs-light{background:#F5F1E9;}
 .session-confirmed-screen.scs-light::before{background:rgba(43,36,32,.35);}
-.scs-light .scs-title{color:var(--ink);}
-.scs-light .scs-ring-fraction{color:var(--ink);}
-.scs-light .scs-ring-label{color:var(--ink-soft);}
-.scs-light .scs-streak-label{color:var(--ink-soft);}
-.scs-light .scs-phrase{color:var(--accent-neutral);}
-.scs-light .scs-actions .btn-ghost{border-color:var(--line);color:var(--ink);}
+.scs-light .scs-title{color:#2B2621;}
+.scs-light .scs-ring-fraction{color:#2B2621;}
+.scs-light .scs-ring-label{color:#8A8377;}
+.scs-light .scs-week-box{background:#FFFFFF;border-color:#D9CDBF;}
+.scs-light .scs-week-label{color:#2B2621;}
+.scs-light .scs-week-dot.done{background:#7C8B6F;color:#FFFFFF;}
+.scs-light .scs-week-dot:not(.done){border-color:#D9CDBF;color:#B0A99C;}
+.scs-light .scs-streak-num{color:#BE9454;}
+.scs-light .scs-streak-label{color:#8A8377;}
+.scs-light .scs-phrase{color:#BE9454;}
+.scs-light .scs-actions .btn-ghost{border-color:#D9CDBF;color:#2B2621;}
+.scs-light .scs-share-btn{background:#BE9454;color:#FFFFFF;}
 
 /* ---- Nutrición: macros de solo lectura, vista de plan en tabla, suplementación ---- */
 .macro-stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
@@ -2819,10 +2824,12 @@ function renderTrainingDay(el, exercises, client, isAdmin, completions) {
         const state = isAdmin ? (list.length ? 'done' : 'no_asignada') : (alreadyMarked && list.length ? 'done' : getCategoryLockState(cat, dayExercises));
         const disabled = state === 'no_asignada' || state === 'locked';
         const countText = state === 'no_asignada' ? 'No asignado'
+          : state === 'locked' ? 'Bloqueado'
+          : (list.length > 0 && catDone === list.length) ? `${catDone}/${list.length} · ✓ Completado`
           : `${catDone}/${list.length} ejercicio${list.length === 1 ? '' : 's'}`;
         const tileStateClass = state === 'no_asignada' ? 'no-asignada' : isAdmin ? '' : state === 'done' ? 'tile-done' : state === 'active' ? 'tile-active' : '';
         return `<button class="category-tile ${isSelected ? 'selected' : ''} ${tileStateClass}" ${disabled ? 'disabled' : ''} onclick="openTrainingCategory('${cat}')">
-          ${categoryIcon(cat)}
+          ${state === 'locked' ? '<span style="font-size:15px;">🔒</span>' : categoryIcon(cat)}
           <div class="label">${CATEGORY_LABELS[cat]}</div>
           <div class="count">${countText}</div>
         </button>`;
@@ -2836,7 +2843,7 @@ function renderTrainingDay(el, exercises, client, isAdmin, completions) {
       ${alreadyMarked
         ? '<div style="text-align:center;"><span class="status-pill-live">Entrenamiento del día ya completado esta semana</span></div>'
         : `<div style="text-align:center;margin-top:16px;">
-            <button class="btn btn-primary" style="width:auto" ${allDone ? '' : 'disabled style="opacity:.4"'} onclick="markTrainingDayComplete(${day})">Completar Entrenamiento Día ${day}</button>
+            <button class="btn day-complete-btn" style="width:auto" ${allDone ? '' : 'disabled'} onclick="markTrainingDayComplete(${day})">Completar Entrenamiento Día ${day}</button>
             ${!allDone && incompleteAssignedCategoryLabels(dayExercises).length ? `<p style="font-size:11px;color:var(--ink-soft);margin-top:8px;">Completa ${joinWithY(incompleteAssignedCategoryLabels(dayExercises))} para desbloquear este botón.</p>` : ''}
           </div>`}
     </div>
@@ -3132,6 +3139,7 @@ function renderNfcConfirmationScreen(el, result) {
   const isLight = result.source === 'manual';
   const themeClass = isLight ? ' scs-light' : '';
   const ringTrackColor = isLight ? '#E7DFC9' : '#2B2F37';
+  const ringArcColor = isLight ? '#BE9454' : '#D9A441';
   const size = 132, strokeWidth = 10;
   const r = (size - strokeWidth) / 2;
   const circ = 2 * Math.PI * r;
@@ -3144,7 +3152,7 @@ function renderNfcConfirmationScreen(el, result) {
         <div class="scs-ring-wrap">
           <svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}">
             <circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="${ringTrackColor}" stroke-width="${strokeWidth}"></circle>
-            <circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="#B8935A" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-dasharray="${filled.toFixed(1)} ${circ.toFixed(1)}" transform="rotate(-90 ${size / 2} ${size / 2})"></circle>
+            <circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="${ringArcColor}" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-dasharray="${filled.toFixed(1)} ${circ.toFixed(1)}" transform="rotate(-90 ${size / 2} ${size / 2})"></circle>
           </svg>
           <div class="scs-ring-center">
             <div class="scs-ring-fraction">${streak.sessionsDoneThisWeek}/${streak.sessionsRequiredThisWeek}</div>
