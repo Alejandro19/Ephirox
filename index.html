@@ -5294,6 +5294,7 @@ async function markNotificationRead(id) {
 
 let quotesUI = { editingId: null, libraryOpen: false };
 let phrasesUI = { open: false, filter: 'all', editingId: null };
+let previewUI = { confirmacion: null, instagram: null };
 function filteredPhrases(phrases) {
   if (phrasesUI.filter === 'all') return phrases;
   return phrases.filter(p => p.context === phrasesUI.filter);
@@ -5361,12 +5362,42 @@ function renderPhrasesAccordion(phrases) {
             </div>
           </div>
         `).join('') : '<div class="empty-state">No hay frases para este filtro.</div>'}
+        <div class="card" style="margin-top:20px;">
+          <div class="grid-2">
+            <div>
+              <div class="page-header" style="padding:0;"><h3 style="margin:0;">Pantalla de confirmación</h3></div>
+              <p class="serif" style="font-style:italic;">${previewUI.confirmacion ? `"${previewUI.confirmacion.text}"` : 'No hay frases activas para este contexto.'}</p>
+              <button class="small-btn" onclick="drawPreview('confirmacion')">🔀 Probar otra</button>
+            </div>
+            <div>
+              <div class="page-header" style="padding:0;"><h3 style="margin:0;">Tarjeta de Instagram</h3></div>
+              <p class="serif" style="font-style:italic;">${previewUI.instagram ? `"${previewUI.instagram.text}"` : 'No hay frases activas para este contexto.'}</p>
+              <button class="small-btn" onclick="drawPreview('instagram')">🔀 Probar otra</button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   `;
 }
+async function drawPreview(context) {
+  const current = previewUI[context];
+  const qs = new URLSearchParams({ context });
+  if (current) qs.set('exclude', current.id);
+  try {
+    const { phrase } = await api(`/api/admin/phrases/random?${qs.toString()}`);
+    previewUI[context] = phrase;
+    const container = document.getElementById('phrases-accordion-card');
+    if (container) container.outerHTML = renderPhrasesAccordion(window._adminPhrases || []);
+  } catch (e) { alert('Error: ' + e.message); }
+}
 function togglePhrasesAccordion() {
   phrasesUI.open = !phrasesUI.open;
+  if (phrasesUI.open && !previewUI.confirmacion && !previewUI.instagram) {
+    drawPreview('confirmacion');
+    drawPreview('instagram');
+    return; // drawPreview re-renders the container itself once each call resolves
+  }
   const container = document.getElementById('phrases-accordion-card');
   if (container) container.outerHTML = renderPhrasesAccordion(window._adminPhrases || []);
 }
