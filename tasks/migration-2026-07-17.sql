@@ -383,3 +383,17 @@ SELECT * FROM (VALUES
   ('Esto es constancia, no perfección.', 'ambas')
 ) AS seed(text, context)
 WHERE NOT EXISTS (SELECT 1 FROM phrases);
+
+-- Historial de logros (medallas/copas) para la vista admin de Entrenamiento.
+CREATE TABLE IF NOT EXISTS achievement_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  client_id UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+  type TEXT NOT NULL CHECK (type IN ('medalla', 'copa')),
+  week_number INT NOT NULL,
+  earned_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE achievement_logs ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY deny_all ON achievement_logs USING (false);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;

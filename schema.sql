@@ -198,6 +198,18 @@ CREATE TABLE training_protector_uses (
   UNIQUE(client_id, week_start)
 );
 
+-- Historial de logros (medallas por semana completada, copas cada 4
+-- medallas) para la vista admin del módulo Entrenamiento. Aditivo, nunca se
+-- borra ni se resetea — se llena desde confirm-session (ver server.js),
+-- nunca desde use-protector (una semana protegida no genera logro nuevo).
+CREATE TABLE achievement_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  client_id UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+  type TEXT NOT NULL CHECK (type IN ('medalla', 'copa')),
+  week_number INT NOT NULL,
+  earned_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- ------------------------------------------------------------
 -- 5. NUTRICIÓN (mismas funciones que BIO360)
 --    El admin carga el plan de alimentación / protocolos.
@@ -499,7 +511,7 @@ BEGIN
     'admins','clients','personal_info','anthropometric_records','progress_photos',
     'exercises','nutrition_plans','meals','supplements','cortisol_techniques',
     'community_events','event_reservations','community_therapies','therapy_reservations',
-    'evolution_checkins','bio_inbody_records','admin_notifications','mindset_quotes','training_completions','client_notifications','sleep_logs','training_protector_uses','phrases'
+    'evolution_checkins','bio_inbody_records','admin_notifications','mindset_quotes','training_completions','client_notifications','sleep_logs','training_protector_uses','phrases','achievement_logs'
   ])
   LOOP
     EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY;', t);
