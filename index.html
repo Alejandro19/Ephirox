@@ -2374,7 +2374,7 @@ async function renderTraining(el) {
       const adminQuotes = (await api('/api/admin/quotes').catch(() => ({ quotes: [] }))).quotes || [];
       window._trainingExercises = [];
       window._trainingClientDays = 0;
-      return renderTrainingHome(el, [], { training_days: null, assigned_quote_id: null }, true, null, adminQuotes, []);
+      return renderTrainingHome(el, [], { training_days: null, assigned_quote_id: null }, true, null, adminQuotes, [], []);
     }
     const calls = [
       api(`/api/clients/${clientId}/exercises`),
@@ -2384,16 +2384,18 @@ async function renderTraining(el) {
       !isAdmin ? api(`/api/clients/${clientId}/training/streak?tz=${encodeURIComponent(clientTz())}`).catch(() => ({ streak: null })) : Promise.resolve({ streak: null }),
     ];
     if (isAdmin) calls.push(api('/api/admin/quotes').catch(() => ({ quotes: [] })));
+    if (isAdmin) calls.push(api(`/api/clients/${clientId}/training/achievements`).catch(() => ({ achievements: [] })));
     if (isAdmin) await ensureClientsLoaded();
-    const [{ exercises }, { client }, { quote }, { completions }, { streak }, quotesResult] = await Promise.all(calls);
+    const [{ exercises }, { client }, { quote }, { completions }, { streak }, quotesResult, achievementsResult] = await Promise.all(calls);
     window._trainingExercises = exercises;
     window._trainingCompletions = completions;
     window._trainingStreak = streak;
     const adminQuotes = quotesResult ? quotesResult.quotes : [];
+    const achievements = achievementsResult ? achievementsResult.achievements : [];
 
     if (trainingUI.day && trainingUI.category) return renderTrainingPlayer(el, exercises, client, isAdmin);
     if (trainingUI.day) return renderTrainingDay(el, exercises, client, isAdmin, completions);
-    return renderTrainingHome(el, exercises, client, isAdmin, quote, adminQuotes, completions);
+    return renderTrainingHome(el, exercises, client, isAdmin, quote, adminQuotes, completions, achievements);
   } catch (e) { el.innerHTML = `<div class="error-msg">${e.message}</div>`; }
 }
 
@@ -2495,11 +2497,11 @@ function getCurrentPlanWeekAndDay(client, completions) {
   return { week, day };
 }
 
-function renderTrainingHome(el, exercises, client, isAdmin, quote, adminQuotes, completions) {
+function renderTrainingHome(el, exercises, client, isAdmin, quote, adminQuotes, completions, achievements) {
   if (isAdmin) {
     window._trainingClientDays = client.training_days || 0;
     el.innerHTML = `
-      ${renderTrainingAdminPanel(client, adminQuotes)}
+      ${renderTrainingAdminPanel(client, adminQuotes, achievements || [])}
       ${renderTrainingAdminExercisesByDay(exercises, client.training_days || 0)}
     `;
     return;
@@ -2578,7 +2580,7 @@ function renderTrainingHome(el, exercises, client, isAdmin, quote, adminQuotes, 
   `;
 }
 
-function renderTrainingAdminPanel(client, adminQuotes) {
+function renderTrainingAdminPanel(client, adminQuotes, achievements) {
   return `
     <div class="card">
       <div class="card-title">Configuración del cliente</div>
@@ -2616,6 +2618,7 @@ function renderTrainingAdminPanel(client, adminQuotes) {
       <div class="field"><label>Descripción</label><textarea id="ex-desc" rows="2"></textarea></div>
       <button class="btn btn-primary" style="width:auto" onclick="createExercise()">Agregar</button>
     </div>
+    ${renderAchievementsHistoryCard(achievements)}
   `;
 }
 
@@ -5454,6 +5457,41 @@ async function markNotificationRead(id) {
 
 let quotesUI = { editingId: null, libraryOpen: false };
 let phrasesUI = { open: false, filter: 'all', editingId: null };
+let achievementsUI = { filter: 'all' };
+function filteredAchievements(achievements) {
+  if (achievementsUI.filter === 'all') return achievements;
+  return achievements.filter(a => a.type === achievementsUI.filter);
+}
+function setAchievementsFilter(type) {
+  achievementsUI.filter = type;
+  renderMain();
+}
+function renderAchievementsHistoryCard(achievements) {
+  const totalCopas = achievements.filter(a => a.type === 'copa').length;
+  const totalMedallas = achievements.filter(a => a.type === 'medalla').length;
+  const list = filteredAchievements(achievements);
+  const filters = [['all', 'Todas'], ['medalla', 'Medallas'], ['copa', 'Copas']];
+  return `
+    <div class="card">
+      <div class="card-title">Historial de logros</div>
+      <div class="grid-2" style="margin-bottom:16px;">
+        <div class="kpi-tile"><div class="val">🏆 ${totalCopas}</div><div class="lbl">Copas totales</div></div>
+        <div class="kpi-tile"><div class="val">🎖️ ${totalMedallas}</div><div class="lbl">Medallas totales</div></div>
+      </div>
+      <div class="pillrow" style="margin-bottom:12px;">
+        ${filters.map(([key, label]) => `
+          <button class="pill" style="cursor:pointer;${achievementsUI.filter === key ? 'background:var(--ink);color:var(--paper);border-color:var(--ink);' : ''}" onclick="setAchievementsFilter('${key}')">${label}</button>
+        `).join('')}
+      </div>
+      ${list.length ? list.map(a => `
+        <div class="list-row">
+          <div>${a.type === 'copa' ? '🏆' : '🎖️'} ${a.type === 'copa' ? 'Copa' : 'Medalla'} — semana ${a.week_number}</div>
+          <div style="color:var(--ink-soft);font-size:12px;">${new Date(a.earned_at).toLocaleDateString('es-MX', { year: 'numeric', month: 'short', day: 'numeric' })}</div>
+        </div>
+      `).join('') : '<div class="empty-state">Aún no hay logros registrados.</div>'}
+    </div>
+  `;
+}
 let previewUI = { confirmacion: null, instagram: null };
 function filteredPhrases(phrases) {
   if (phrasesUI.filter === 'all') return phrases;
