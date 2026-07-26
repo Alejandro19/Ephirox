@@ -5393,13 +5393,12 @@ async function drawPreview(context) {
 }
 function togglePhrasesAccordion() {
   phrasesUI.open = !phrasesUI.open;
+  const container = document.getElementById('phrases-accordion-card');
+  if (container) container.outerHTML = renderPhrasesAccordion(window._adminPhrases || []);
   if (phrasesUI.open && !previewUI.confirmacion && !previewUI.instagram) {
     drawPreview('confirmacion');
     drawPreview('instagram');
-    return; // drawPreview re-renders the container itself once each call resolves
   }
-  const container = document.getElementById('phrases-accordion-card');
-  if (container) container.outerHTML = renderPhrasesAccordion(window._adminPhrases || []);
 }
 function setPhrasesFilter(ctx) {
   phrasesUI.filter = ctx;
