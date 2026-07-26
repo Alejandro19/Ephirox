@@ -2505,8 +2505,9 @@ function renderTrainingHome(el, exercises, client, isAdmin, quote, adminQuotes, 
   if (isAdmin) {
     window._trainingClientDays = client.training_days || 0;
     el.innerHTML = `
-      ${renderTrainingAdminPanel(client, adminQuotes, achievements || [])}
+      ${renderTrainingAdminPanel(client, adminQuotes)}
       ${renderTrainingAdminExercisesByDay(exercises, client.training_days || 0)}
+      ${renderAchievementsHistoryCard(achievements || [])}
     `;
     return;
   }
@@ -2584,7 +2585,7 @@ function renderTrainingHome(el, exercises, client, isAdmin, quote, adminQuotes, 
   `;
 }
 
-function renderTrainingAdminPanel(client, adminQuotes, achievements) {
+function renderTrainingAdminPanel(client, adminQuotes) {
   return `
     <div class="card">
       <div class="card-title">Configuración del cliente</div>
@@ -2622,7 +2623,6 @@ function renderTrainingAdminPanel(client, adminQuotes, achievements) {
       <div class="field"><label>Descripción</label><textarea id="ex-desc" rows="2"></textarea></div>
       <button class="btn btn-primary" style="width:auto" onclick="createExercise()">Agregar</button>
     </div>
-    ${renderAchievementsHistoryCard(achievements)}
   `;
 }
 
