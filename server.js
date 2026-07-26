@@ -1280,11 +1280,17 @@ app.post('/api/clients/:id/training/confirm-session', authMiddleware, ownerOrAdm
 
     const completions = await dbGet('training_completions', { client_id: req.params.id });
     const alreadyConfirmedToday = completions.some(c => c.completed_date === today);
+    let justInsertedNewSession = false;
+    let wasCompletedBeforeThisCall = false;
     if (!alreadyConfirmedToday) {
       const doneThisWeek = new Set(completions.filter(c => c.completed_date >= weekStart).map(c => c.day_number)).size;
+      wasCompletedBeforeThisCall = doneThisWeek >= trainingDays;
       const dayNumber = Math.min(trainingDays, doneThisWeek + 1);
       const existing = await dbGetOne('training_completions', { client_id: req.params.id, day_number: dayNumber, completed_date: today });
-      if (!existing) await dbInsert('training_completions', { client_id: req.params.id, day_number: dayNumber, completed_date: today, source });
+      if (!existing) {
+        await dbInsert('training_completions', { client_id: req.params.id, day_number: dayNumber, completed_date: today, source });
+        justInsertedNewSession = true;
+      }
     }
 
     let drawnPhrase = null;
@@ -1295,6 +1301,24 @@ app.post('/api/clients/:id/training/confirm-session', authMiddleware, ownerOrAdm
       console.error('phrase draw failed (non-fatal):', e);
     }
     const streak = await computeTrainingStreakState(req.params.id, trainingDays, tz);
+
+    // Historial de logros (medallas/copas) para la vista admin. Nunca se
+    // dispara por el protector (endpoint separado, no pasa por aquí).
+    // Idempotente: solo registra la transición exacta de "semana incompleta"
+    // a "semana completa" causada por ESTA llamada — una sesión extra
+    // confirmada después de ya completar la semana no repite el evento,
+    // porque wasCompletedBeforeThisCall ya sería true en ese caso.
+    if (justInsertedNewSession && !wasCompletedBeforeThisCall && streak.sessionsDoneThisWeek >= trainingDays) {
+      try {
+        await dbInsert('achievement_logs', { client_id: req.params.id, type: 'medalla', week_number: streak.streakWeeks });
+        if (streak.streakWeeks > 0 && streak.streakWeeks % 4 === 0) {
+          await dbInsert('achievement_logs', { client_id: req.params.id, type: 'copa', week_number: streak.streakWeeks });
+        }
+      } catch (e) {
+        console.error('achievement log insert failed (non-fatal):', e);
+      }
+    }
+
     return ok(res, { streak, alreadyConfirmedToday, phrase: drawnPhrase ? drawnPhrase.text : null });
   } catch (e) {
     console.error(e);
