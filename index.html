@@ -5487,10 +5487,11 @@ function renderQuotesLibraryCard(quotes) {
 }
 async function renderAdminQuotes(el) {
   try {
-    const [{ quotes }, { phrases }] = await Promise.all([
+    const [{ quotes }, phrasesResult] = await Promise.all([
       api('/api/admin/quotes'),
-      api('/api/admin/phrases'),
+      api('/api/admin/phrases').catch(() => ({ phrases: [] })),
     ]);
+    const phrases = phrasesResult.phrases;
     state.quotes = quotes;
     window._adminQuotes = quotes;
     window._adminPhrases = phrases;
