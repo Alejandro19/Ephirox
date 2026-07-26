@@ -2913,6 +2913,15 @@ async function consumePendingActionIfAny() {
   }
 }
 
+// streakWeeks=11 → trophiesEarned=2 (🏆🏆), medalsInCurrentCycle=3 (🎖️🎖️🎖️ + 1 slot vacío).
+// Las copas nunca se resetean; las medallas del ciclo actual sí, cada 4.
+function computeAchievements(streakWeeks) {
+  return {
+    medalsInCurrentCycle: streakWeeks % 4,
+    trophiesEarned: Math.floor(streakWeeks / 4),
+  };
+}
+
 function renderNfcConfirmationScreen(el, result) {
   if (!result) { el.innerHTML = ''; return; }
   const { streak, phrase } = result;
