@@ -3074,7 +3074,10 @@ async function shareTrainingCard(evt, streakWeeks) {
   try {
     await ensureCardFontsLoaded();
     const clientId = currentClientId();
-    const { phrase } = await api(`/api/clients/${clientId}/training/phrase?context=instagram`);
+    let phrase = null;
+    try {
+      ({ phrase } = await api(`/api/clients/${clientId}/training/phrase?context=instagram`));
+    } catch (e) { console.error('phrase fetch failed (non-fatal):', e); }
     const canvas = document.createElement('canvas');
     canvas.width = 1080;
     canvas.height = 1920;
