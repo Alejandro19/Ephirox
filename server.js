@@ -994,7 +994,10 @@ app.patch('/api/admin/phrases/:id', authMiddleware, adminOnly, async (req, res) 
   try {
     const patch = {};
     if (req.body.text !== undefined) patch.text = req.body.text.trim();
-    if (req.body.context !== undefined) patch.context = req.body.context;
+    if (req.body.context !== undefined) {
+      if (!['confirmacion', 'instagram', 'ambas'].includes(req.body.context)) return err(res, 'Contexto inválido.', 400);
+      patch.context = req.body.context;
+    }
     if (req.body.active !== undefined) patch.active = !!req.body.active;
     patch.updated_at = new Date().toISOString();
     const updated = await dbUpdate('phrases', req.params.id, patch);
