@@ -2432,6 +2432,7 @@ async function renderTraining(el) {
   const isAdmin = state.role === 'admin';
   if (!isAdmin && state.clientType === 'lead_wellness') return renderTrainingLocked(el);
   const clientId = currentClientId();
+  el.innerHTML = '<div class="auth-loading-spinner" style="margin:80px auto;"></div>';
   try {
     if (isAdmin && !clientId) {
       await ensureClientsLoaded();
@@ -3065,11 +3066,11 @@ function drawInstagramCard(ctx, { streakWeeks, phrase }) {
   ctx.font = `${s(12)}px "Fraunces Card"`;
   ctx.fillStyle = '#E8C97D';
   ctx.textAlign = 'left';
-  ctx.fillText(`${'🏆'.repeat(trophiesEarned)} copas`.trim(), s(22), rowY);
+  if (trophiesEarned > 0) ctx.fillText(`${'🏆'.repeat(trophiesEarned)} copas`, s(22), rowY);
   ctx.textAlign = 'right';
   ctx.globalAlpha = 0.85;
   ctx.letterSpacing = `${s(2)}px`;
-  ctx.fillText(`${'🎖️'.repeat(medalsInCurrentCycle)}${'○'.repeat(3 - medalsInCurrentCycle)}`, W - s(22), rowY);
+  ctx.fillText(`${'🎖️'.repeat(medalsInCurrentCycle)}${'○'.repeat(4 - medalsInCurrentCycle)}`, W - s(22), rowY);
   ctx.letterSpacing = '0px';
   ctx.globalAlpha = 1;
 
