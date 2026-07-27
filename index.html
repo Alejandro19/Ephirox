@@ -246,20 +246,6 @@ td{padding:12px 8px;border-bottom:1px solid var(--line);font-size:14px;}
 .scs-actions .btn-ghost{flex:1;border-color:rgba(255,255,255,.2);color:#F3EFE6;}
 .scs-share-btn{width:48px;height:48px;border-radius:50%;background:#D9A441;border:none;display:flex;align-items:center;justify-content:center;color:#2A1B04;flex-shrink:0;cursor:pointer;}
 .scs-share-btn:disabled{opacity:.5;cursor:default;}
-.session-confirmed-screen.scs-light{background:#F5F1E9;color-scheme:light;}
-.session-confirmed-screen.scs-light::before{background:rgba(43,36,32,.35);}
-.scs-light .scs-title{color:#2B2621;}
-.scs-light .scs-ring-fraction{color:#2B2621;}
-.scs-light .scs-ring-label{color:#8A8377;}
-.scs-light .scs-week-box{background:#FFFFFF;border-color:#D9CDBF;}
-.scs-light .scs-week-label{color:#2B2621;}
-.scs-light .scs-week-dot.done{background:#7C8B6F;color:#FFFFFF;}
-.scs-light .scs-week-dot:not(.done){border-color:#D9CDBF;color:#B0A99C;}
-.scs-light .scs-streak-num{color:#BE9454;}
-.scs-light .scs-streak-label{color:#8A8377;}
-.scs-light .scs-phrase{color:#BE9454;}
-.scs-light .scs-actions .btn-ghost{border-color:#D9CDBF;color:#2B2621;}
-.scs-light .scs-share-btn{background:#BE9454;color:#FFFFFF;}
 
 /* ---- Nutrición: macros de solo lectura, vista de plan en tabla, suplementación ---- */
 .macro-stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
@@ -3136,17 +3122,19 @@ async function shareTrainingCard(evt, streakWeeks) {
 function renderNfcConfirmationScreen(el, result) {
   if (!result) { el.innerHTML = ''; return; }
   const { streak, phrase } = result;
-  const isLight = result.source === 'manual';
-  const themeClass = isLight ? ' scs-light' : '';
-  const ringTrackColor = isLight ? '#E7DFC9' : '#2B2F37';
-  const ringArcColor = isLight ? '#BE9454' : '#D9A441';
+  // Ambos orígenes (manual y NFC) usan siempre el tema oscuro — el
+  // tema claro se intentó y se descartó (ver git log): el fondo crema
+  // se seguía viendo gris tanto en local como en producción y no se
+  // pudo diagnosticar más a fondo sin acceso a un navegador real.
+  const ringTrackColor = '#2B2F37';
+  const ringArcColor = '#D9A441';
   const size = 132, strokeWidth = 10;
   const r = (size - strokeWidth) / 2;
   const circ = 2 * Math.PI * r;
   const pct = streak.sessionsRequiredThisWeek > 0 ? Math.min(1, streak.sessionsDoneThisWeek / streak.sessionsRequiredThisWeek) : 0;
   const filled = pct * circ;
   el.innerHTML = `
-    <div class="session-confirmed-screen${themeClass}">
+    <div class="session-confirmed-screen">
       <div class="scs-title">¡Sesión confirmada!</div>
       <div class="scs-ring-block">
         <div class="scs-ring-wrap">
