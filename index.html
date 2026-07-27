@@ -3172,6 +3172,8 @@ function renderNfcConfirmationScreen(el, result) {
 }
 function closeNfcConfirmationScreen() {
   window._nfcConfirmResult = null;
+  trainingUI.day = null;
+  trainingUI.category = null;
   setView('training');
 }
 
