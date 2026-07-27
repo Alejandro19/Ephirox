@@ -424,10 +424,18 @@ td{padding:12px 8px;border-bottom:1px solid var(--line);font-size:14px;}
 .login-divider::before,.login-divider::after{content:'';flex:1;height:1px;background:var(--lf-input-border);transition:background .6s ease;}
 .login-divider span{font-size:11px;color:var(--lf-foot);text-transform:uppercase;letter-spacing:.04em;transition:color .6s ease;}
 #google-signin-btn{display:flex;justify-content:center;}
+#auth-loading-overlay{position:fixed;inset:0;z-index:5000;background:#F5F1E9;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;}
+.auth-loading-spinner{width:36px;height:36px;border:3px solid #E7DFC9;border-top-color:#B8935A;border-radius:50%;animation:auth-spin .8s linear infinite;}
+.auth-loading-text{font-family:'Inter',sans-serif;font-size:14px;color:#6B6058;}
+@keyframes auth-spin{to{transform:rotate(360deg);}}
 </style>
 </head>
 <body>
 
+<div id="auth-loading-overlay">
+  <div class="auth-loading-spinner"></div>
+  <div class="auth-loading-text">Ingresando…</div>
+</div>
 <div id="login-view">
  <div class="login-shell">
   <div class="login-hero">
@@ -577,17 +585,32 @@ async function initGoogleSignIn(retriesLeft = 20) {
     google.accounts.id.renderButton(container, { theme: 'filled_black', size: 'large', shape: 'pill', width: 280, text: 'continue_with' });
   } catch (e) { /* login con Google no disponible, se omite el botón */ }
 }
+// Cubre el hueco entre el callback de Google y boot() (que hace su propia
+// llamada a /api/auth/me) con una pantalla de carga — sin esto, el usuario
+// veía el formulario de login sin cambios durante ese tramo y lo percibía
+// como si el login "se devolviera" antes de mostrar la app.
+function showAuthLoading() {
+  const el = document.getElementById('auth-loading-overlay');
+  if (el) el.style.display = 'flex';
+}
+function hideAuthLoading() {
+  const el = document.getElementById('auth-loading-overlay');
+  if (el) el.style.display = 'none';
+}
 async function handleGoogleCredentialResponse(response) {
   const errBox = document.getElementById('login-error');
   errBox.innerHTML = '';
+  showAuthLoading();
   try {
     const data = await api('/api/auth/google', { method: 'POST', body: JSON.stringify({ credential: response.credential }) });
     if (data.pending) {
+      hideAuthLoading();
       errBox.innerHTML = `<div class="success-msg">${data.message}</div>`;
       return;
     }
     onAuthSuccess(data);
   } catch (e) {
+    hideAuthLoading();
     errBox.innerHTML = `<div class="error-msg">${e.message}</div>`;
   }
 }
@@ -612,6 +635,7 @@ function logout() {
   state = { token: null, role: null, user: null, permissions: {}, clientType: null, onboardingComplete: false, planExpired: false, planEndDate: null, notifications: [], view: 'personal-info', clients: [], currentClientId: null, moduleClientIds: {}, adminHubOpen: false, wizardStep: 1 };
   document.getElementById('app-view').classList.remove('active');
   document.getElementById('login-view').style.display = 'flex';
+  hideAuthLoading();
   applyLoginTheme();
 }
 
@@ -639,6 +663,7 @@ async function boot() {
     state.planExpired = !!data.planExpired; state.planEndDate = data.planEndDate || null;
     document.getElementById('login-view').style.display = 'none';
     document.getElementById('app-view').classList.add('active');
+    hideAuthLoading();
     if (state.role === 'cliente' && state.planExpired) {
       renderPlanExpiredScreen();
       return;
