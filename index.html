@@ -424,7 +424,7 @@ td{padding:12px 8px;border-bottom:1px solid var(--line);font-size:14px;}
 .login-divider::before,.login-divider::after{content:'';flex:1;height:1px;background:var(--lf-input-border);transition:background .6s ease;}
 .login-divider span{font-size:11px;color:var(--lf-foot);text-transform:uppercase;letter-spacing:.04em;transition:color .6s ease;}
 #google-signin-btn{display:flex;justify-content:center;}
-#auth-loading-overlay{position:fixed;inset:0;z-index:5000;background:#F5F1E9;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;}
+#auth-loading-overlay{position:fixed;inset:0;z-index:5000;background:#F5F1E9;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;}
 .auth-loading-spinner{width:36px;height:36px;border:3px solid #E7DFC9;border-top-color:#B8935A;border-radius:50%;animation:auth-spin .8s linear infinite;}
 .auth-loading-text{font-family:'Inter',sans-serif;font-size:14px;color:#6B6058;}
 @keyframes auth-spin{to{transform:rotate(360deg);}}
@@ -679,7 +679,7 @@ applyLoginTheme();
 setInterval(applyLoginTheme, 5 * 60 * 1000);
 
 async function boot() {
-  if (!state.token) return;
+  if (!state.token) { hideAuthLoading(); return; }
   // Cubre TODO el arranque (no solo el login de Google) — app-view se marca
   // activo antes de que renderNav()/renderMain() corran, y de por medio va
   // la llamada de red de consumePendingActionIfAny() (confirmación NFC). Sin
@@ -3068,7 +3068,7 @@ function drawInstagramCard(ctx, { streakWeeks, phrase }) {
   const { medalsInCurrentCycle, trophiesEarned } = computeAchievements(streakWeeks);
 
   // Bloque 1: fila de logros
-  const rowY = padTop;
+  const rowY = padTop - s(16);
   ctx.textBaseline = 'middle';
   ctx.font = `${s(12)}px "Fraunces Card"`;
   ctx.fillStyle = '#E8C97D';
