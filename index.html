@@ -243,8 +243,8 @@ td{padding:12px 8px;border-bottom:1px solid var(--line);font-size:14px;}
 .scs-streak-label{font-size:11px;letter-spacing:.06em;color:#B0A597;text-transform:uppercase;text-align:center;margin-top:2px;}
 .scs-phrase{font-family:'Fraunces',serif;font-style:italic;font-size:14px;color:#D9BE8C;text-align:center;line-height:1.6;padding:0 12px;}
 .scs-actions{display:flex;align-items:center;gap:12px;}
-.scs-actions .btn-ghost{flex:1;border-color:rgba(255,255,255,.2);color:#F3EFE6;}
-.scs-share-btn{width:48px;height:48px;border-radius:50%;background:#D9A441;border:none;display:flex;align-items:center;justify-content:center;color:#2A1B04;flex-shrink:0;cursor:pointer;}
+.scs-actions .btn-ghost{flex:0 0 auto;border-color:rgba(255,255,255,.2);color:#F3EFE6;}
+.scs-share-btn{flex:1;height:48px;padding:0 20px;border-radius:999px;background:#D9A441;border:none;display:flex;align-items:center;justify-content:center;gap:8px;color:#2A1B04;font-weight:600;font-size:15px;cursor:pointer;}
 .scs-share-btn:disabled{opacity:.5;cursor:default;}
 
 /* ---- Nutrición: macros de solo lectura, vista de plan en tabla, suplementación ---- */
@@ -3164,7 +3164,8 @@ function renderNfcConfirmationScreen(el, result) {
       <div class="scs-actions">
         <button class="btn btn-ghost" onclick="closeNfcConfirmationScreen()">Cerrar</button>
         <button class="scs-share-btn" onclick="shareTrainingCard(event, ${streak.streakWeeks})" aria-label="Compartir">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M8 7l4-4 4 4"/><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M8 7l4-4 4 4"/><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/></svg>
+          Compartir
         </button>
       </div>
     </div>
