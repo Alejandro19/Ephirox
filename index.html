@@ -680,15 +680,21 @@ setInterval(applyLoginTheme, 5 * 60 * 1000);
 
 async function boot() {
   if (!state.token) return;
+  // Cubre TODO el arranque (no solo el login de Google) — app-view se marca
+  // activo antes de que renderNav()/renderMain() corran, y de por medio va
+  // la llamada de red de consumePendingActionIfAny() (confirmación NFC). Sin
+  // el overlay durante ese tramo, quedaba una app vacía/a medio pintar
+  // visible — se oculta solo hasta que renderMain() ya pintó contenido real.
+  showAuthLoading();
   try {
     const data = await api('/api/auth/me');
     state.role = data.role; state.user = data.user; state.permissions = data.permissions || {}; state.clientType = data.clientType || null; state.onboardingComplete = !!data.onboardingComplete;
     state.planExpired = !!data.planExpired; state.planEndDate = data.planEndDate || null;
     document.getElementById('login-view').style.display = 'none';
     document.getElementById('app-view').classList.add('active');
-    hideAuthLoading();
     if (state.role === 'cliente' && state.planExpired) {
       renderPlanExpiredScreen();
+      hideAuthLoading();
       return;
     }
     if (!state.view || (state.view === 'personal-info' && state.role === 'admin')) state.view = 'admin-home';
@@ -701,6 +707,7 @@ async function boot() {
     await consumePendingActionIfAny();
     renderNav();
     renderMain();
+    hideAuthLoading();
     if (state.role === 'cliente') loadClientAlerts();
   } catch (e) {
     logout();
@@ -3101,7 +3108,7 @@ function drawInstagramCard(ctx, { streakWeeks, phrase }) {
 
   ctx.fillStyle = '#E8C97D';
   ctx.font = `${s(9)}px "Fraunces Card"`;
-  ctx.fillText('SEMANAS SEGUIDAS', W / 2, sealCenterY + s(28));
+  ctx.fillText(streakWeeks === 1 ? 'SEMANA SEGUIDA' : 'SEMANAS SEGUIDAS', W / 2, sealCenterY + s(28));
 
   // Bloque 3: frase
   if (phrase) {
