@@ -597,6 +597,29 @@ function hideAuthLoading() {
   const el = document.getElementById('auth-loading-overlay');
   if (el) el.style.display = 'none';
 }
+// El popup de Google vive fuera de nuestra página — no podemos ocultar su
+// propia animación de cierre. Lo que sí podemos hacer es no dejar el
+// formulario de login "pelado" detrás de esa animación: en cuanto el foco
+// se va hacia el iframe del botón de Google (blur de la ventana), ya
+// mostramos "Ingresando" nosotros, para que al cerrarse el popup lo que
+// se vea detrás sea la pantalla de carga, no el formulario sin más.
+let _googleFocusPending = false;
+window.addEventListener('blur', () => {
+  const btn = document.getElementById('google-signin-btn');
+  const loginVisible = document.getElementById('login-view').style.display !== 'none';
+  if (loginVisible && btn && btn.contains(document.activeElement)) {
+    showAuthLoading();
+    _googleFocusPending = true;
+  }
+});
+window.addEventListener('focus', () => {
+  if (!_googleFocusPending) return;
+  _googleFocusPending = false;
+  // Si el usuario cerró el selector de cuentas sin completar el login, el
+  // callback de Google nunca llega — sin este respaldo, "Ingresando" se
+  // quedaría pegado en pantalla para siempre.
+  setTimeout(() => { if (!state.token) hideAuthLoading(); }, 800);
+});
 async function handleGoogleCredentialResponse(response) {
   const errBox = document.getElementById('login-error');
   errBox.innerHTML = '';
