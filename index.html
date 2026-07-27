@@ -3205,7 +3205,7 @@ function renderNfcConfirmationScreen(el, result) {
         <div class="scs-streak-row">
           <span class="scs-streak-num">${streak.streakWeeks}</span>
         </div>
-        <div class="scs-streak-label">Semanas seguidas</div>
+        <div class="scs-streak-label">${streak.streakWeeks === 1 ? 'Semana seguida' : 'Semanas seguidas'}</div>
       </div>
       ${phrase ? `<p class="scs-phrase">"${phrase}"</p>` : '<div></div>'}
       <div class="scs-actions">
