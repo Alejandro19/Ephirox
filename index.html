@@ -1825,26 +1825,17 @@ const PHOTO_ANGLES = [
 // métricas — la dirección "favorable" en Mi Evolución depende de esto, no
 // está fija en el código. `current` se aplica después, vía initModule3 /
 // applyObjetivoState, porque el cliente aún no se ha cargado en este punto.
-function renderObjetivoQuestion(metrica, label, iconSvg) {
+function renderObjetivoQuestion(metrica, label) {
   const options = [['bajar', 'Bajar'], ['mantener', 'Mantener'], ['subir', 'Subir']];
-  return `
-    <div style="margin-bottom:18px;">
-      <p style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;margin:0 0 10px;">
-        <span style="display:inline-flex;color:${EVOLUTION_KPI_COLORS[metrica] || '#5B7A4E'};"><svg width="18" height="18" viewBox="0 0 30 30" fill="none">${iconSvg}</svg></span>${label}
-      </p>
-      <div id="objetivo-${metrica}-row" style="display:flex;border:1px solid #E7DFC9;border-radius:12px;overflow:hidden;">
-        ${options.map(([val, txt], i) => `<button type="button" class="objetivo-btn" data-metrica="${metrica}" data-valor="${val}" style="flex:1;padding:12px;border:none;${i < 2 ? 'border-right:1px solid #E7DFC9;' : ''}background:transparent;color:#8A8377;font-weight:700;font-size:13px;cursor:pointer;" onclick="setObjetivo('${metrica}','${val}')">${txt}</button>`).join('')}
-      </div>
-    </div>
-  `;
+  return `<div class="field"><label>${fieldIcon('segmented')}${label}</label><div class="segmented-group" id="objetivo-${metrica}-row">
+    ${options.map(([val, txt]) => `<button type="button" class="segmented-cell objetivo-btn" data-metrica="${metrica}" data-valor="${val}" onclick="setObjetivo('${metrica}','${val}')">${txt}</button>`).join('')}
+  </div></div>`;
 }
 function applyObjetivoState(metrica, valor) {
   const row = document.getElementById(`objetivo-${metrica}-row`);
   if (!row) return;
   row.querySelectorAll('.objetivo-btn').forEach(btn => {
-    const active = btn.dataset.valor === valor;
-    btn.style.background = active ? '#2B2621' : 'transparent';
-    btn.style.color = active ? '#F3EFE6' : '#8A8377';
+    btn.classList.toggle('selected', btn.dataset.valor === valor);
   });
 }
 async function setObjetivo(metrica, valor) {
@@ -1924,12 +1915,6 @@ function openInbodyUploadAccordion() {
 }
 function renderBodyModuleBlock() {
   return `
-    <div class="card" style="margin-bottom:16px;">
-      <div class="card-title">Tus objetivos de composición corporal</div>
-      ${renderObjetivoQuestion('peso', '¿Cuál es tu objetivo de peso?', EVOLUTION_KPI_ICONS.peso)}
-      ${renderObjetivoQuestion('grasa_corporal', '¿Cuál es tu objetivo de grasa corporal?', EVOLUTION_KPI_ICONS.grasa_corporal)}
-      ${renderObjetivoQuestion('masa_muscular', '¿Cuál es tu objetivo de masa muscular?', EVOLUTION_KPI_ICONS.masa_muscular)}
-    </div>
     <div class="card" id="proximo-inbody-strip" style="margin-bottom:16px;">
       <p style="font-size:12px;color:#8A8377;margin:0;">Cargando…</p>
     </div>
@@ -1946,6 +1931,10 @@ function renderBodyModuleBlock() {
             <div class="field"><label>% Grasa corporal (si lo conoces)</label><input type="number" id="field-body_fat"></div>
           </div>
           <div id="weight-month-label" style="font-size:13px;color:var(--ink-soft);margin-top:8px;"></div>
+          <p style="font-family:'Fraunces',serif;font-weight:600;font-size:14.5px;margin:20px 0 12px;">Tus objetivos de composición corporal</p>
+          ${renderObjetivoQuestion('peso', '¿Cuál es tu objetivo de peso?')}
+          ${renderObjetivoQuestion('grasa_corporal', '¿Cuál es tu objetivo de grasa corporal?')}
+          ${renderObjetivoQuestion('masa_muscular', '¿Cuál es tu objetivo de masa muscular?')}
         </div>
       </div>
       <div class="accordion-item">
