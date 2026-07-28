@@ -848,6 +848,21 @@ app.post('/api/clients/:id/inbody-records', authMiddleware, ownerOrAdmin, blockF
 
     try {
       const record = await dbInsert('bio_inbody_records', row);
+      // Recalcula la próxima fecha esperada y reinicia el aviso de recordatorio
+      // solo para cadencias regulares — "personalizado" no tiene un intervalo
+      // fijo, así que el admin la ajusta a mano en la ficha del cliente.
+      try {
+        const client = await dbGetOne('clients', { id: req.params.id });
+        if (client && (client.inbody_cadence_type === 'mensual' || client.inbody_cadence_type === 'bimestral')) {
+          const monthsToAdd = client.inbody_cadence_type === 'bimestral' ? 2 : 1;
+          const nextDate = new Date(row.fecha + 'T00:00:00');
+          nextDate.setMonth(nextDate.getMonth() + monthsToAdd);
+          await dbUpdate('clients', req.params.id, {
+            inbody_next_expected_date: nextDate.toISOString().slice(0, 10),
+            inbody_reminder_sent_this_cycle: false,
+          });
+        }
+      } catch (e) { console.error('No se pudo recalcular inbody_next_expected_date (no fatal):', e); }
       return ok(res, { record }, 201);
     } catch (e) {
       const errorMessage = formatSupabaseError(e);
@@ -1647,6 +1662,18 @@ app.get('/api/clients/:id/cortisol-checkin', authMiddleware, ownerOrAdmin, requi
   }
 });
 
+// Historial completo — usado por Mi Evolución para promediar la regulación
+// de cortisol (emoción mapeada a escala numérica) por mes calendario.
+app.get('/api/clients/:id/cortisol-checkins', authMiddleware, ownerOrAdmin, requirePermission('cortisol'), async (req, res) => {
+  try {
+    const checkins = await dbGet('cortisol_checkins', { client_id: req.params.id }, { order: { column: 'checkin_date', ascending: true } });
+    return ok(res, { checkins });
+  } catch (e) {
+    console.error(e);
+    return err(res, 'Error al obtener el historial de cortisol.', 500);
+  }
+});
+
 app.post('/api/clients/:id/cortisol-checkin', authMiddleware, ownerOrAdmin, requirePermission('cortisol'), async (req, res) => {
   try {
     const validEmotions = ['ansioso', 'irritable', 'cansado', 'abrumado', 'tranquilo', 'energia'];
@@ -1994,6 +2021,18 @@ app.get('/api/clients/:id/sleep-log-today', authMiddleware, ownerOrAdmin, async 
   }
 });
 
+// Historial completo (no solo hoy) — usado por Mi Evolución para promediar
+// la calidad de sueño por mes calendario y compararla contra el mes anterior.
+app.get('/api/clients/:id/sleep-logs', authMiddleware, ownerOrAdmin, async (req, res) => {
+  try {
+    const logs = await dbGet('sleep_logs', { client_id: req.params.id }, { order: { column: 'date', ascending: true } });
+    return ok(res, { logs });
+  } catch (e) {
+    console.error(e);
+    return err(res, 'Error al obtener el historial de sueño.', 500);
+  }
+});
+
 app.post('/api/clients/:id/sleep-log', authMiddleware, ownerOrAdmin, async (req, res) => {
   try {
     const { hours, quality } = req.body;
@@ -2016,13 +2055,35 @@ app.post('/api/clients/:id/sleep-log', authMiddleware, ownerOrAdmin, async (req,
 // Mi Evolución: KPIs de progreso
 // ------------------------------------------------------------
 
+// Sin cron en este proyecto — se revisa de forma reactiva cada vez que se
+// carga Mi Evolución (cliente o admin), igual que otras alertas de la app.
+async function checkInbodyReminder(client) {
+  if (!client || !client.inbody_reminder_enabled || !client.inbody_next_expected_date || client.inbody_reminder_sent_this_cycle) return;
+  const daysUntil = Math.round((new Date(client.inbody_next_expected_date + 'T00:00:00') - new Date(new Date().toISOString().slice(0, 10) + 'T00:00:00')) / 86400000);
+  if (daysUntil !== 7) return;
+  try {
+    await dbInsert('client_notifications', {
+      client_id: client.id,
+      message: `Faltan 7 días para tu próxima medición (${client.inbody_next_expected_date}). Agenda tu cita de valoración con tu mentor.`,
+    });
+    await dbInsert('admin_notifications', {
+      client_id: client.id,
+      type: 'inbody_reminder',
+      message: `${client.name} — InBody en 7 días. Próxima medición esperada el ${client.inbody_next_expected_date} (cadencia: ${client.inbody_cadence_type}). Confirma que tenga su cita de valoración agendada.`,
+    });
+    await dbUpdate('clients', client.id, { inbody_reminder_sent_this_cycle: true });
+  } catch (e) { console.error('checkInbodyReminder falló (no fatal):', e); }
+}
+
 app.get('/api/clients/:id/evolution', authMiddleware, ownerOrAdmin, requireOnboardingComplete, async (req, res) => {
   try {
-    const [checkins, anthropometrics, inbody] = await Promise.all([
+    const [checkins, anthropometrics, inbody, client] = await Promise.all([
       dbGet('evolution_checkins', { client_id: req.params.id }, { order: { column: 'fecha', ascending: true } }),
       dbGet('anthropometric_records', { client_id: req.params.id }, { order: { column: 'fecha', ascending: true } }),
-      dbGet('bio_inbody_records', { client_id: req.params.id }, { order: { column: 'fecha', ascending: true } })
+      dbGet('bio_inbody_records', { client_id: req.params.id }, { order: { column: 'fecha', ascending: true } }),
+      dbGetOne('clients', { id: req.params.id }),
     ]);
+    checkInbodyReminder(client).catch(() => {});
     return ok(res, { checkins, anthropometrics, inbody });
   } catch (e) {
     console.error(e);

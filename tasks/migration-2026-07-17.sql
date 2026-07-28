@@ -398,3 +398,12 @@ DO $$ BEGIN
   CREATE POLICY deny_all ON achievement_logs USING (false);
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
+
+-- Módulo Mi Evolución v2: objetivos configurables por métrica (dirección
+-- "favorable" depende del cliente, no está fija en el código) y cadencia de
+-- InBody para el recordatorio a 7 días.
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS objetivos JSONB NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS inbody_cadence_type TEXT NOT NULL DEFAULT 'mensual' CHECK (inbody_cadence_type IN ('mensual', 'bimestral', 'personalizado'));
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS inbody_next_expected_date DATE;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS inbody_reminder_enabled BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS inbody_reminder_sent_this_cycle BOOLEAN NOT NULL DEFAULT false;

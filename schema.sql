@@ -63,6 +63,18 @@ CREATE TABLE clients (
   -- Frase de mentalidad fija asignada por el admin a este cliente en particular
   -- (si es NULL, ve una frase aleatoria del pool global de mindset_quotes).
   assigned_quote_id UUID REFERENCES mindset_quotes(id) ON DELETE SET NULL,
+  -- Mi Evolución: dirección "favorable" de cada métrica física, configurable
+  -- por cliente (ej. {"peso":"bajar","grasa_corporal":"bajar","masa_muscular":"subir"}).
+  -- Vacío hasta que el mentor/cliente lo confirme al menos una vez — nunca se
+  -- asume una dirección por defecto en silencio.
+  objetivos JSONB NOT NULL DEFAULT '{}'::jsonb,
+  -- Cadencia de InBody de este cliente — determina el texto de comparación
+  -- ("vs mes pasado" / "vs hace 2 meses" / "vs medición anterior") y cuándo
+  -- se dispara el recordatorio de 7 días antes de inbody_next_expected_date.
+  inbody_cadence_type TEXT NOT NULL DEFAULT 'mensual' CHECK (inbody_cadence_type IN ('mensual', 'bimestral', 'personalizado')),
+  inbody_next_expected_date DATE,
+  inbody_reminder_enabled BOOLEAN NOT NULL DEFAULT true,
+  inbody_reminder_sent_this_cycle BOOLEAN NOT NULL DEFAULT false,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
