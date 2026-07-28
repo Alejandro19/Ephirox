@@ -1855,7 +1855,7 @@ function proximoInbodyStatus(nextDate) {
   if (days <= 7) return { label: 'Próximo', color: '#B8794A', bg: '#FBEFE4' };
   return { label: 'Al día', color: '#5B7A4E', bg: '#EFF5E8' };
 }
-function renderProximoInbodyStrip(nextDate, cadenceType, reminderEnabled, isAdmin) {
+function renderProximoInbodyStrip(nextDate, cadenceType, reminderEnabled, isAdmin, hasInbody) {
   const status = proximoInbodyStatus(nextDate);
   const dateLabel = nextDate ? new Date(nextDate + 'T00:00:00').toLocaleDateString('es-MX', { day: 'numeric', month: 'short' }) : 'sin definir';
   return `
@@ -1866,7 +1866,7 @@ function renderProximoInbodyStrip(nextDate, cadenceType, reminderEnabled, isAdmi
       </div>
       <div style="display:flex;align-items:center;gap:10px;">
         <span style="background:${status.bg};color:${status.color};font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;">${status.label}</span>
-        <button type="button" onclick="openInbodyUploadAccordion()" style="width:32px;height:32px;border-radius:50%;background:#2B2621;color:#F3EFE6;border:none;font-size:16px;cursor:pointer;">+</button>
+        <button type="button" ${hasInbody ? 'onclick="openInbodyUploadAccordion()"' : 'disabled'} style="width:32px;height:32px;border-radius:50%;background:${hasInbody ? '#2B2621' : '#E7DFC9'};color:${hasInbody ? '#F3EFE6' : '#B0A99C'};border:none;font-size:16px;cursor:${hasInbody ? 'pointer' : 'not-allowed'};">+</button>
       </div>
     </div>
     ${isAdmin ? `
@@ -2028,7 +2028,7 @@ async function initModule3() {
         if (window._m3Objetivos[m]) applyObjetivoState(m, window._m3Objetivos[m]);
       });
       const stripEl = document.getElementById('proximo-inbody-strip');
-      if (stripEl) stripEl.innerHTML = renderProximoInbodyStrip(client.inbody_next_expected_date, client.inbody_cadence_type, client.inbody_reminder_enabled, state.role === 'admin');
+      if (stripEl) stripEl.innerHTML = renderProximoInbodyStrip(client.inbody_next_expected_date, client.inbody_cadence_type, client.inbody_reminder_enabled, state.role === 'admin', inbodyRecords.length > 0);
     }
     restoreModule3Draft(clientId);
   } catch (e) { console.error(e); }
@@ -5673,7 +5673,7 @@ function renderModule3AdminDetail(personalInfo, inbodyRecords, anthroRecords, ph
       </tbody></table>
       <p style="font-weight:700;font-size:13px;margin:16px 0 6px;">Recordatorio de InBody</p>
       <div style="background:#FBF7EC;border:1px solid #E7DFC9;border-radius:14px;padding:14px 16px;">
-        ${renderProximoInbodyStrip(client.inbody_next_expected_date, client.inbody_cadence_type, client.inbody_reminder_enabled, true)}
+        ${renderProximoInbodyStrip(client.inbody_next_expected_date, client.inbody_cadence_type, client.inbody_reminder_enabled, true, inbodyRecords.length > 0)}
       </div>
     ` : ''}
   `;
