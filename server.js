@@ -104,6 +104,13 @@ function ok(res, data, status = 200) {
 function err(res, message, status = 400) {
   return res.status(status).json({ success: false, error: message });
 }
+function logError(context, error, extra) {
+  const label = context && typeof context === 'object' && context.method
+    ? `${context.method} ${context.originalUrl}`
+    : String(context || 'unknown');
+  const suffix = extra ? ` — ${extra}` : '';
+  console.error(`[${new Date().toISOString()}] ${label}${suffix}`, error);
+}
 
 async function dbGet(table, filters = {}, opts = {}) {
   let q = supabase.from(table).select(opts.select || '*');
@@ -205,7 +212,7 @@ async function unlockModule(clientId, moduleKey) {
   const label = MODULE_LABELS[moduleKey];
   if (label) {
     try { await dbInsert('client_notifications', { client_id: clientId, message: `Ahora tienes acceso a tu módulo de ${label}.` }); }
-    catch (e) { console.error(e); }
+    catch (e) { logError('unlockModule', e); }
   }
 }
 
@@ -248,7 +255,7 @@ async function sendClientNotification(clientId, info) {
       html,
     });
   } catch (e) {
-    console.error('Error enviando notificación de cliente:', e);
+    logError('sendClientNotification', e);
   }
 }
 
@@ -272,7 +279,7 @@ async function authMiddleware(req, res, next) {
       req.client = client;
       req.planExpired = isPlanExpired(client);
     } catch (e) {
-      console.error(e);
+      logError(req, e);
       return err(res, 'Error al verificar la sesión.', 500);
     }
   }
@@ -337,7 +344,7 @@ async function requireOnboardingComplete(req, res, next) {
     }
     next();
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al verificar tu información personal.', 500);
   }
 }
@@ -400,7 +407,7 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
       onboardingComplete: !!(info && info.completed_at)
     });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al iniciar sesión.', 500);
   }
 });
@@ -470,7 +477,7 @@ app.post('/api/auth/google', async (req, res) => {
     });
     return ok(res, { pending: true, message: 'Tu cuenta fue creada y quedará activa cuando el administrador la confirme.' }, 201);
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al iniciar sesión con Google.', 500);
   }
 });
@@ -495,7 +502,7 @@ app.get('/api/auth/me', authMiddleware, async (req, res) => {
       onboardingComplete: !!(info && info.completed_at)
     });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al restaurar sesión.', 500);
   }
 });
@@ -517,7 +524,7 @@ app.post('/api/auth/register', async (req, res) => {
     });
     return ok(res, { pending: true, message: 'Tu cuenta fue creada y quedará activa cuando el administrador la confirme.' }, 201);
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al registrar.', 500);
   }
 });
@@ -535,7 +542,7 @@ app.post('/api/auth/change-password', authMiddleware, async (req, res) => {
     await dbUpdate(table, account.id, { password_hash });
     return ok(res, { message: 'Contraseña actualizada.' });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al cambiar la contraseña.', 500);
   }
 });
@@ -549,7 +556,7 @@ app.get('/api/clients', authMiddleware, adminOnly, async (req, res) => {
     const clients = await dbGet('clients', {}, { order: { column: 'created_at', ascending: false } });
     return ok(res, { clients });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al listar clientes.', 500);
   }
 });
@@ -565,7 +572,7 @@ app.post('/api/clients', authMiddleware, adminOnly, async (req, res) => {
     const client = await dbInsert('clients', { name, email: emailLower, password_hash, plan: plan || 'Miembro' });
     return ok(res, { client }, 201);
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al crear cliente.', 500);
   }
 });
@@ -576,7 +583,7 @@ app.get('/api/clients/:id', authMiddleware, ownerOrAdmin, async (req, res) => {
     if (!client) return err(res, 'Cliente no encontrado.', 404);
     return ok(res, { client });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al obtener cliente.', 500);
   }
 });
@@ -589,7 +596,7 @@ app.put('/api/clients/:id', authMiddleware, ownerOrAdmin, async (req, res) => {
     const client = await dbUpdate('clients', req.params.id, patch);
     return ok(res, { client });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al actualizar cliente.', 500);
   }
 });
@@ -599,7 +606,7 @@ app.delete('/api/clients/:id', authMiddleware, adminOnly, async (req, res) => {
     await dbDelete('clients', req.params.id);
     return ok(res, { message: 'Cliente eliminado.' });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al eliminar cliente.', 500);
   }
 });
@@ -609,7 +616,7 @@ app.patch('/api/clients/:id/permissions', authMiddleware, adminOnly, async (req,
     const client = await dbUpdate('clients', req.params.id, { permissions: req.body.permissions, updated_at: new Date().toISOString() });
     return ok(res, { client });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al actualizar permisos.', 500);
   }
 });
@@ -619,7 +626,7 @@ app.patch('/api/clients/:id/status', authMiddleware, adminOnly, async (req, res)
     const client = await dbUpdate('clients', req.params.id, { status: req.body.status, updated_at: new Date().toISOString() });
     return ok(res, { client });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al actualizar estado.', 500);
   }
 });
@@ -638,7 +645,7 @@ app.patch('/api/clients/:id/client-type', authMiddleware, adminOnly, async (req,
     const client = await dbUpdate('clients', req.params.id, patch);
     return ok(res, { client });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al clasificar cliente.', 500);
   }
 });
@@ -667,7 +674,7 @@ app.patch('/api/clients/:id/renew-plan', authMiddleware, adminOnly, async (req, 
     const client = await dbUpdate('clients', req.params.id, patch);
     return ok(res, { client });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al renovar el plan.', 500);
   }
 });
@@ -681,7 +688,7 @@ app.get('/api/clients/:id/personal-info', authMiddleware, ownerOrAdmin, blockFor
     const info = await dbGetOne('personal_info', { client_id: req.params.id });
     return ok(res, { personalInfo: info || {} });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al obtener información personal.', 500);
   }
 });
@@ -724,7 +731,7 @@ app.put('/api/clients/:id/personal-info', authMiddleware, ownerOrAdmin, blockFor
     }
     return ok(res, { personalInfo: info });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al guardar información personal.', 500);
   }
 });
@@ -749,7 +756,7 @@ app.post('/api/clients/:id/personal-info-file', authMiddleware, ownerOrAdmin, bl
     await dbUpsertByClient('personal_info', req.params.id, payload);
     return ok(res, { file_url, file_name: req.file.originalname, uploaded_at: new Date().toISOString() });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al subir el archivo de chequeo.', 500);
   }
 });
@@ -763,7 +770,7 @@ app.get('/api/clients/:id/anthropometrics', authMiddleware, ownerOrAdmin, blockF
     const records = await dbGet('anthropometric_records', { client_id: req.params.id }, { order: { column: 'fecha', ascending: true } });
     return ok(res, { records });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al obtener medidas.', 500);
   }
 });
@@ -788,7 +795,7 @@ app.post('/api/clients/:id/anthropometrics', authMiddleware, ownerOrAdmin, block
     record = await dbInsert('anthropometric_records', payload);
     return ok(res, { record }, 201);
   } catch (e) {
-    console.error('Anthropometric insert error:', e);
+    logError(req, e, 'Anthropometric insert error');
     return err(res, 'Error al guardar medidas: ' + (e.message || 'Error interno'), 500);
   }
 });
@@ -798,7 +805,7 @@ app.delete('/api/clients/:id/anthropometrics/:recordId', authMiddleware, ownerOr
     await dbDelete('anthropometric_records', req.params.recordId);
     return ok(res, { message: 'Registro eliminado.' });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al eliminar registro.', 500);
   }
 });
@@ -822,7 +829,7 @@ app.post('/api/clients/:id/photos', authMiddleware, ownerOrAdmin, blockForLeadWe
     }));
     return ok(res, { photo }, 201);
   } catch (e) {
-    console.error('Photo upload error:', e);
+    logError(req, e, 'Photo upload error');
     return err(res, 'Error al subir la foto: ' + (e.message || 'Error interno'), 500);
   }
 });
@@ -832,7 +839,7 @@ app.get('/api/clients/:id/photos', authMiddleware, ownerOrAdmin, blockForLeadWel
     const photos = await dbGet('progress_photos', { client_id: req.params.id }, { order: { column: 'fecha', ascending: false } });
     return ok(res, { photos });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al obtener fotos.', 500);
   }
 });
@@ -844,7 +851,7 @@ app.get('/api/clients/:id/inbody-records', authMiddleware, ownerOrAdmin, blockFo
     const records = await dbGet('bio_inbody_records', { client_id: req.params.id }, { order: { column: 'fecha', ascending: true } });
     return ok(res, { records });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al obtener registros InBody.', 500);
   }
 });
@@ -878,7 +885,7 @@ app.post('/api/clients/:id/inbody-records', authMiddleware, ownerOrAdmin, blockF
             inbody_reminder_sent_this_cycle: false,
           });
         }
-      } catch (e) { console.error('No se pudo recalcular inbody_next_expected_date (no fatal):', e); }
+      } catch (e) { logError(req, e, 'No se pudo recalcular inbody_next_expected_date (no fatal)'); }
       return ok(res, { record }, 201);
     } catch (e) {
       const errorMessage = formatSupabaseError(e);
@@ -900,7 +907,7 @@ app.post('/api/clients/:id/inbody-upload', authMiddleware, ownerOrAdmin, blockFo
     const { data: pub } = supabase.storage.from(BUCKET).getPublicUrl(filename);
     return ok(res, { file_url: pub.publicUrl, file_name: req.file.originalname });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al subir el archivo InBody.', 500);
   }
 });
@@ -916,7 +923,7 @@ app.patch('/api/clients/:id/training-days', authMiddleware, adminOnly, async (re
     const client = await dbUpdate('clients', req.params.id, { training_days: days, updated_at: new Date().toISOString() });
     return ok(res, { client });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al actualizar días de entrenamiento.', 500);
   }
 });
@@ -926,7 +933,7 @@ app.patch('/api/clients/:id/assigned-quote', authMiddleware, adminOnly, async (r
     const client = await dbUpdate('clients', req.params.id, { assigned_quote_id: req.body.quote_id || null, updated_at: new Date().toISOString() });
     return ok(res, { client });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al asignar la frase.', 500);
   }
 });
@@ -942,7 +949,7 @@ app.get('/api/clients/:id/quote-of-the-day', authMiddleware, ownerOrAdmin, requi
     if (!pool.length) return ok(res, { quote: null });
     return ok(res, { quote: pool[Math.floor(Math.random() * pool.length)] });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al obtener la frase del día.', 500);
   }
 });
@@ -953,7 +960,7 @@ app.get('/api/admin/quotes', authMiddleware, adminOnly, async (req, res) => {
     const quotes = await dbGet('mindset_quotes', {}, { order: { column: 'created_at', ascending: false } });
     return ok(res, { quotes });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al obtener las frases.', 500);
   }
 });
@@ -964,7 +971,7 @@ app.post('/api/admin/quotes', authMiddleware, adminOnly, async (req, res) => {
     const created = await dbInsert('mindset_quotes', { quote, author: author || null });
     return ok(res, { quote: created }, 201);
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al crear la frase.', 500);
   }
 });
@@ -978,7 +985,7 @@ app.patch('/api/admin/quotes/:qid', authMiddleware, adminOnly, async (req, res) 
     const updated = await dbUpdate('mindset_quotes', req.params.qid, patch);
     return ok(res, { quote: updated });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al actualizar la frase.', 500);
   }
 });
@@ -987,7 +994,7 @@ app.delete('/api/admin/quotes/:qid', authMiddleware, adminOnly, async (req, res)
     await dbDelete('mindset_quotes', req.params.qid);
     return ok(res, { message: 'Frase eliminada.' });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al eliminar la frase.', 500);
   }
 });
@@ -1003,7 +1010,7 @@ app.get('/api/admin/phrases', authMiddleware, adminOnly, async (req, res) => {
     const phrases = await dbGet('phrases', {}, { order: { column: 'created_at', ascending: false } });
     return ok(res, { phrases });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al obtener las frases.', 500);
   }
 });
@@ -1016,7 +1023,7 @@ app.post('/api/admin/phrases', authMiddleware, adminOnly, async (req, res) => {
     const created = await dbInsert('phrases', { text: text.trim(), context });
     return ok(res, { phrase: created }, 201);
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al crear la frase.', 500);
   }
 });
@@ -1034,7 +1041,7 @@ app.patch('/api/admin/phrases/:id', authMiddleware, adminOnly, async (req, res) 
     const updated = await dbUpdate('phrases', req.params.id, patch);
     return ok(res, { phrase: updated });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al actualizar la frase.', 500);
   }
 });
@@ -1044,7 +1051,7 @@ app.delete('/api/admin/phrases/:id', authMiddleware, adminOnly, async (req, res)
     await dbDelete('phrases', req.params.id);
     return ok(res, {});
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al eliminar la frase.', 500);
   }
 });
@@ -1060,7 +1067,7 @@ app.get('/api/admin/phrases/random', authMiddleware, adminOnly, async (req, res)
     const picked = candidates.length ? candidates[Math.floor(Math.random() * candidates.length)] : null;
     return ok(res, { phrase: picked });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al sortear la frase.', 500);
   }
 });
@@ -1073,7 +1080,7 @@ app.get('/api/clients/:id/training/phrase', authMiddleware, ownerOrAdmin, requir
     const drawn = pickRandomPhrase(pool, context);
     return ok(res, { phrase: drawn ? drawn.text : null });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al obtener la frase.', 500);
   }
 });
@@ -1094,7 +1101,7 @@ app.get('/api/rest-tools', authMiddleware, async (req, res) => {
     const tools = all.filter((t) => t.active).sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
     return ok(res, { tools });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al obtener herramientas para dormir.', 500);
   }
 });
@@ -1103,7 +1110,7 @@ app.get('/api/admin/rest-tools', authMiddleware, adminOnly, async (req, res) => 
     const tools = await dbGet('rest_tools', {}, { order: { column: 'sort_order', ascending: true } });
     return ok(res, { tools });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al obtener herramientas para dormir.', 500);
   }
 });
@@ -1112,7 +1119,7 @@ app.post('/api/admin/rest-tools', authMiddleware, adminOnly, async (req, res) =>
     const tool = await dbInsert('rest_tools', req.body);
     return ok(res, { tool }, 201);
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al crear la herramienta.', 500);
   }
 });
@@ -1125,7 +1132,7 @@ app.put('/api/admin/rest-tools/:id', authMiddleware, adminOnly, async (req, res)
     const tool = await dbUpdate('rest_tools', req.params.id, req.body);
     return ok(res, { tool });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al actualizar la herramienta.', 500);
   }
 });
@@ -1136,7 +1143,7 @@ app.delete('/api/admin/rest-tools/:id', authMiddleware, adminOnly, async (req, r
     if (existing) await deleteOldStorageFile(existing.audio_url);
     return ok(res, { message: 'Herramienta eliminada.' });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al eliminar la herramienta.', 500);
   }
 });
@@ -1152,7 +1159,7 @@ app.post('/api/admin/rest-tools/:id/upload-audio', authMiddleware, adminOnly, up
     if (existing) await deleteOldStorageFile(existing.audio_url);
     return ok(res, { tool });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al subir el audio.', 500);
   }
 });
@@ -1162,7 +1169,7 @@ app.get('/api/clients/:id/notifications', authMiddleware, ownerOrAdmin, async (r
     const notifications = await dbGet('client_notifications', { client_id: req.params.id }, { order: { column: 'created_at', ascending: false } });
     return ok(res, { notifications });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al obtener notificaciones.', 500);
   }
 });
@@ -1172,7 +1179,7 @@ app.patch('/api/clients/:id/notifications/read-all', authMiddleware, ownerOrAdmi
     await Promise.all(unread.map(n => dbUpdate('client_notifications', n.id, { read: true })));
     return ok(res, { message: 'ok' });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al marcar notificaciones como leídas.', 500);
   }
 });
@@ -1182,7 +1189,7 @@ app.get('/api/clients/:id/training-completions', authMiddleware, ownerOrAdmin, r
     const completions = await dbGet('training_completions', { client_id: req.params.id }, { order: { column: 'completed_date', ascending: false } });
     return ok(res, { completions });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al obtener el historial de entrenamiento.', 500);
   }
 });
@@ -1197,7 +1204,7 @@ app.post('/api/clients/:id/training-completions', authMiddleware, ownerOrAdmin, 
     const completion = await dbInsert('training_completions', { client_id: req.params.id, day_number: dayNumber, completed_date: today });
     return ok(res, { completion }, 201);
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al marcar el día como completado.', 500);
   }
 });
@@ -1284,7 +1291,7 @@ app.get('/api/clients/:id/training/streak', authMiddleware, ownerOrAdmin, requir
     const streak = await computeTrainingStreakState(req.params.id, client.training_days || 0, req.query.tz);
     return ok(res, { streak });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al obtener la racha.', 500);
   }
 });
@@ -1329,7 +1336,7 @@ app.post('/api/clients/:id/training/confirm-session', authMiddleware, ownerOrAdm
       const phrasePool = await dbGet('phrases', { active: true });
       drawnPhrase = pickRandomPhrase(phrasePool, 'confirmacion');
     } catch (e) {
-      console.error('phrase draw failed (non-fatal):', e);
+      logError(req, e, 'phrase draw failed (non-fatal)');
     }
     const streak = await computeTrainingStreakState(req.params.id, trainingDays, tz);
 
@@ -1346,13 +1353,13 @@ app.post('/api/clients/:id/training/confirm-session', authMiddleware, ownerOrAdm
           await dbInsert('achievement_logs', { client_id: req.params.id, type: 'copa', week_number: streak.streakWeeks });
         }
       } catch (e) {
-        console.error('achievement log insert failed (non-fatal):', e);
+        logError(req, e, 'achievement log insert failed (non-fatal)');
       }
     }
 
     return ok(res, { streak, alreadyConfirmedToday, phrase: drawnPhrase ? drawnPhrase.text : null });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al confirmar la sesión.', 500);
   }
 });
@@ -1368,7 +1375,7 @@ app.post('/api/clients/:id/training/use-protector', authMiddleware, ownerOrAdmin
     const streak = await computeTrainingStreakState(req.params.id, client.training_days || 0, tz);
     return ok(res, { streak });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al usar el protector.', 500);
   }
 });
@@ -1378,7 +1385,7 @@ app.get('/api/clients/:id/training/achievements', authMiddleware, adminOnly, asy
     const achievements = await dbGet('achievement_logs', { client_id: req.params.id }, { order: { column: 'earned_at', ascending: false } });
     return ok(res, { achievements });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al obtener el historial de logros.', 500);
   }
 });
@@ -1388,7 +1395,7 @@ app.get('/api/clients/:id/exercises', authMiddleware, ownerOrAdmin, requirePermi
     const exercises = await dbGet('exercises', { client_id: req.params.id }, { order: { column: 'sort_order', ascending: true } });
     return ok(res, { exercises });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al obtener ejercicios.', 500);
   }
 });
@@ -1399,7 +1406,7 @@ app.post('/api/clients/:id/exercises', authMiddleware, adminOnly, async (req, re
     await unlockModule(req.params.id, 'training');
     return ok(res, { exercise }, 201);
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al crear ejercicio.', 500);
   }
 });
@@ -1409,7 +1416,7 @@ app.put('/api/clients/:id/exercises/:exId', authMiddleware, adminOnly, async (re
     const exercise = await dbUpdate('exercises', req.params.exId, { ...req.body, updated_at: new Date().toISOString() });
     return ok(res, { exercise });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al actualizar ejercicio.', 500);
   }
 });
@@ -1419,7 +1426,7 @@ app.delete('/api/clients/:id/exercises/:exId', authMiddleware, adminOnly, async 
     await dbDelete('exercises', req.params.exId);
     return ok(res, { message: 'Ejercicio eliminado.' });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al eliminar ejercicio.', 500);
   }
 });
@@ -1434,7 +1441,7 @@ app.post('/api/clients/:id/exercises/:exId/upload-video', authMiddleware, adminO
     const exercise = await dbUpdate('exercises', req.params.exId, { video_url: pub.publicUrl, video_name: req.file.originalname });
     return ok(res, { exercise });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al subir el video.', 500);
   }
 });
@@ -1451,7 +1458,7 @@ app.get('/api/clients/:id/nutrition', authMiddleware, ownerOrAdmin, requirePermi
     ]);
     return ok(res, { plan: plan || {}, meals });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al obtener plan de nutrición.', 500);
   }
 });
@@ -1462,7 +1469,7 @@ app.put('/api/clients/:id/nutrition', authMiddleware, adminOnly, async (req, res
     await unlockModule(req.params.id, 'nutrition');
     return ok(res, { plan });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al guardar plan de nutrición.', 500);
   }
 });
@@ -1478,7 +1485,7 @@ app.post('/api/clients/:id/nutrition/upload-pdf', authMiddleware, adminOnly, upl
     const plan = await dbUpsertByClient('nutrition_plans', req.params.id, { pdf_url: pub.publicUrl, pdf_name: req.file.originalname });
     return ok(res, { plan });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al subir el PDF.', 500);
   }
 });
@@ -1489,7 +1496,7 @@ app.post('/api/clients/:id/meals', authMiddleware, adminOnly, async (req, res) =
     await unlockModule(req.params.id, 'nutrition');
     return ok(res, { meal }, 201);
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al crear comida.', 500);
   }
 });
@@ -1499,7 +1506,7 @@ app.put('/api/clients/:id/meals/:mealId', authMiddleware, adminOnly, async (req,
     const meal = await dbUpdate('meals', req.params.mealId, req.body);
     return ok(res, { meal });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al actualizar comida.', 500);
   }
 });
@@ -1509,7 +1516,7 @@ app.delete('/api/clients/:id/meals/:mealId', authMiddleware, adminOnly, async (r
     await dbDelete('meals', req.params.mealId);
     return ok(res, { message: 'Comida eliminada.' });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al eliminar comida.', 500);
   }
 });
@@ -1523,7 +1530,7 @@ app.get('/api/clients/:id/supplements', authMiddleware, ownerOrAdmin, requirePer
     const supplements = await dbGet('supplements', { client_id: req.params.id }, { order: { column: 'sort_order', ascending: true } });
     return ok(res, { supplements });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al obtener suplementos.', 500);
   }
 });
@@ -1536,7 +1543,7 @@ app.post('/api/clients/:id/supplements', authMiddleware, adminOnly, async (req, 
     await unlockModule(req.params.id, 'supplementation');
     return ok(res, { supplement }, 201);
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al asignar suplemento.', 500);
   }
 });
@@ -1546,7 +1553,7 @@ app.put('/api/clients/:id/supplements/:suppId', authMiddleware, adminOnly, async
     const supplement = await dbUpdate('supplements', req.params.suppId, { ...req.body, updated_at: new Date().toISOString() });
     return ok(res, { supplement });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al actualizar suplemento.', 500);
   }
 });
@@ -1556,7 +1563,7 @@ app.delete('/api/clients/:id/supplements/:suppId', authMiddleware, adminOnly, as
     await dbDelete('supplements', req.params.suppId);
     return ok(res, { message: 'Suplemento eliminado.' });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al eliminar suplemento.', 500);
   }
 });
@@ -1570,7 +1577,7 @@ app.get('/api/clients/:id/cortisol-techniques', authMiddleware, ownerOrAdmin, re
     const techniques = await dbGet('cortisol_techniques', { client_id: req.params.id }, { order: { column: 'sort_order', ascending: true } });
     return ok(res, { techniques });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al obtener técnicas.', 500);
   }
 });
@@ -1581,7 +1588,7 @@ app.post('/api/clients/:id/cortisol-techniques', authMiddleware, adminOnly, asyn
     await unlockModule(req.params.id, 'cortisol');
     return ok(res, { technique }, 201);
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al asignar técnica.', 500);
   }
 });
@@ -1595,7 +1602,7 @@ app.put('/api/clients/:id/cortisol-techniques/:techId', authMiddleware, adminOnl
     const technique = await dbUpdate('cortisol_techniques', req.params.techId, req.body);
     return ok(res, { technique });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al actualizar técnica.', 500);
   }
 });
@@ -1607,7 +1614,7 @@ app.delete('/api/clients/:id/cortisol-techniques/:techId', authMiddleware, admin
     if (existing) await deleteOldStorageFile(existing.audio_url);
     return ok(res, { message: 'Técnica eliminada.' });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al eliminar técnica.', 500);
   }
 });
@@ -1622,7 +1629,7 @@ app.post('/api/clients/:id/cortisol-techniques/:techId/upload', authMiddleware, 
     const technique = await dbUpdate('cortisol_techniques', req.params.techId, { video_url: pub.publicUrl, video_name: req.file.originalname });
     return ok(res, { technique });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al subir el video.', 500);
   }
 });
@@ -1639,7 +1646,7 @@ app.post('/api/clients/:id/cortisol-techniques/:techId/upload-audio', authMiddle
     if (existing) await deleteOldStorageFile(existing.audio_url);
     return ok(res, { technique });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al subir el audio.', 500);
   }
 });
@@ -1649,7 +1656,7 @@ app.get('/api/clients/:id/cortisol-completions', authMiddleware, ownerOrAdmin, r
     const completions = await dbGet('cortisol_completions', { client_id: req.params.id }, { order: { column: 'completed_date', ascending: false } });
     return ok(res, { completions });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al obtener el historial de cortisol.', 500);
   }
 });
@@ -1662,7 +1669,7 @@ app.post('/api/clients/:id/cortisol-completions', authMiddleware, ownerOrAdmin, 
     const completion = await dbInsert('cortisol_completions', { client_id: req.params.id, technique_id: req.body.technique_id || null, completed_date: today });
     return ok(res, { completion }, 201);
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al marcar como completado.', 500);
   }
 });
@@ -1673,7 +1680,7 @@ app.get('/api/clients/:id/cortisol-checkin', authMiddleware, ownerOrAdmin, requi
     const checkin = await dbGetOne('cortisol_checkins', { client_id: req.params.id, checkin_date: today });
     return ok(res, { checkin });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al obtener el check-in de hoy.', 500);
   }
 });
@@ -1685,7 +1692,7 @@ app.get('/api/clients/:id/cortisol-checkins', authMiddleware, ownerOrAdmin, requ
     const checkins = await dbGet('cortisol_checkins', { client_id: req.params.id }, { order: { column: 'checkin_date', ascending: true } });
     return ok(res, { checkins });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al obtener el historial de cortisol.', 500);
   }
 });
@@ -1701,7 +1708,7 @@ app.post('/api/clients/:id/cortisol-checkin', authMiddleware, ownerOrAdmin, requ
       : await dbInsert('cortisol_checkins', { client_id: req.params.id, emotion: req.body.emotion, checkin_date: today });
     return ok(res, { checkin });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al guardar el check-in.', 500);
   }
 });
@@ -1712,7 +1719,7 @@ app.get('/api/clients/:id/cortisol-tip-of-the-day', authMiddleware, ownerOrAdmin
     if (!pool.length) return ok(res, { tip: null });
     return ok(res, { tip: pool[Math.floor(Math.random() * pool.length)] });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al obtener el tip del día.', 500);
   }
 });
@@ -1724,7 +1731,7 @@ app.get('/api/admin/cortisol-tips', authMiddleware, adminOnly, async (req, res) 
     const tips = await dbGet('cortisol_tips', {}, { order: { column: 'created_at', ascending: false } });
     return ok(res, { tips });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al obtener los tips.', 500);
   }
 });
@@ -1735,7 +1742,7 @@ app.post('/api/admin/cortisol-tips', authMiddleware, adminOnly, async (req, res)
     const created = await dbInsert('cortisol_tips', { content });
     return ok(res, { tip: created }, 201);
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al crear el tip.', 500);
   }
 });
@@ -1748,7 +1755,7 @@ app.patch('/api/admin/cortisol-tips/:tipId', authMiddleware, adminOnly, async (r
     const updated = await dbUpdate('cortisol_tips', req.params.tipId, patch);
     return ok(res, { tip: updated });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al actualizar el tip.', 500);
   }
 });
@@ -1757,7 +1764,7 @@ app.delete('/api/admin/cortisol-tips/:tipId', authMiddleware, adminOnly, async (
     await dbDelete('cortisol_tips', req.params.tipId);
     return ok(res, { message: 'Tip eliminado.' });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al eliminar el tip.', 500);
   }
 });
@@ -1775,7 +1782,7 @@ app.get('/api/community/events', authMiddleware, requireEventsAccess, async (req
     const eventsWithCounts = events.map((e) => ({ ...e, confirmed_count: countByEvent[e.id] || 0 }));
     return ok(res, { events: eventsWithCounts });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al obtener eventos.', 500);
   }
 });
@@ -1785,7 +1792,7 @@ app.post('/api/community/events', authMiddleware, adminOnly, async (req, res) =>
     const event = await dbInsert('community_events', req.body);
     return ok(res, { event }, 201);
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al crear evento.', 500);
   }
 });
@@ -1795,7 +1802,7 @@ app.put('/api/community/events/:eventId', authMiddleware, adminOnly, async (req,
     const event = await dbUpdate('community_events', req.params.eventId, req.body);
     return ok(res, { event });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al actualizar evento.', 500);
   }
 });
@@ -1805,7 +1812,7 @@ app.delete('/api/community/events/:eventId', authMiddleware, adminOnly, async (r
     await dbDelete('community_events', req.params.eventId);
     return ok(res, { message: 'Evento eliminado.' });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al eliminar evento.', 500);
   }
 });
@@ -1820,7 +1827,7 @@ app.post('/api/community/events/:eventId/reserve', authMiddleware, requireEvents
       : await dbInsert('event_reservations', { event_id: req.params.eventId, client_id: req.user.id });
     return ok(res, { reservation }, 201);
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al reservar evento.', 500);
   }
 });
@@ -1832,7 +1839,7 @@ app.delete('/api/community/events/:eventId/reserve', authMiddleware, requireEven
     await dbUpdate('event_reservations', reservation.id, { status: 'cancelada' });
     return ok(res, { message: 'Reserva cancelada.' });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al cancelar reserva.', 500);
   }
 });
@@ -1842,7 +1849,7 @@ app.get('/api/clients/:id/event-reservations', authMiddleware, ownerOrAdmin, req
     const reservations = await dbGet('event_reservations', { client_id: req.params.id });
     return ok(res, { reservations });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al obtener reservas.', 500);
   }
 });
@@ -1860,7 +1867,7 @@ app.get('/api/community/therapies', authMiddleware, requireEventsAccess, async (
     const therapiesWithCounts = therapies.map((t) => ({ ...t, confirmed_count: countByTherapy[t.id] || 0 }));
     return ok(res, { therapies: therapiesWithCounts });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al obtener terapias.', 500);
   }
 });
@@ -1870,7 +1877,7 @@ app.post('/api/community/therapies', authMiddleware, adminOnly, async (req, res)
     const therapy = await dbInsert('community_therapies', req.body);
     return ok(res, { therapy }, 201);
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al crear terapia.', 500);
   }
 });
@@ -1880,7 +1887,7 @@ app.put('/api/community/therapies/:therapyId', authMiddleware, adminOnly, async 
     const therapy = await dbUpdate('community_therapies', req.params.therapyId, req.body);
     return ok(res, { therapy });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al actualizar terapia.', 500);
   }
 });
@@ -1890,7 +1897,7 @@ app.delete('/api/community/therapies/:therapyId', authMiddleware, adminOnly, asy
     await dbDelete('community_therapies', req.params.therapyId);
     return ok(res, { message: 'Terapia eliminada.' });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al eliminar terapia.', 500);
   }
 });
@@ -1905,7 +1912,7 @@ app.post('/api/community/therapies/:therapyId/reserve', authMiddleware, requireC
       : await dbInsert('therapy_reservations', { therapy_id: req.params.therapyId, client_id: req.user.id });
     return ok(res, { reservation }, 201);
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al reservar terapia.', 500);
   }
 });
@@ -1917,7 +1924,7 @@ app.delete('/api/community/therapies/:therapyId/reserve', authMiddleware, requir
     await dbUpdate('therapy_reservations', reservation.id, { status: 'cancelada' });
     return ok(res, { message: 'Reserva cancelada.' });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al cancelar reserva.', 500);
   }
 });
@@ -1927,7 +1934,7 @@ app.get('/api/clients/:id/therapy-reservations', authMiddleware, ownerOrAdmin, r
     const reservations = await dbGet('therapy_reservations', { client_id: req.params.id });
     return ok(res, { reservations });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al obtener reservas.', 500);
   }
 });
@@ -1993,7 +2000,7 @@ app.get('/api/community/reservations', authMiddleware, adminOnly, async (req, re
 
     return ok(res, { eventReservations, therapyReservations });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al obtener reservas.', 500);
   }
 });
@@ -2007,7 +2014,7 @@ app.get('/api/clients/:id/sleep-protocol', authMiddleware, ownerOrAdmin, async (
     const protocol = await dbGetOne('sleep_protocols', { client_id: req.params.id });
     return ok(res, { protocol: protocol || null });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al obtener el protocolo de sueño.', 500);
   }
 });
@@ -2018,7 +2025,7 @@ app.put('/api/clients/:id/sleep-protocol', authMiddleware, adminOnly, async (req
     const protocol = await dbUpsertByClient('sleep_protocols', req.params.id, { protocol_text, sleep_window, supplement });
     return ok(res, { protocol });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al guardar el protocolo de sueño.', 500);
   }
 });
@@ -2032,7 +2039,7 @@ app.get('/api/clients/:id/sleep-log-today', authMiddleware, ownerOrAdmin, async 
     const log = await dbGetOne('sleep_logs', { client_id: req.params.id, date: today });
     return ok(res, { log: log || null });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al obtener el registro de sueño.', 500);
   }
 });
@@ -2044,7 +2051,7 @@ app.get('/api/clients/:id/sleep-logs', authMiddleware, ownerOrAdmin, async (req,
     const logs = await dbGet('sleep_logs', { client_id: req.params.id }, { order: { column: 'date', ascending: true } });
     return ok(res, { logs });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al obtener el historial de sueño.', 500);
   }
 });
@@ -2062,7 +2069,7 @@ app.post('/api/clients/:id/sleep-log', authMiddleware, ownerOrAdmin, async (req,
     if (error) throw error;
     return ok(res, { log: data });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al guardar el registro de sueño.', 500);
   }
 });
@@ -2088,7 +2095,7 @@ async function checkInbodyReminder(client) {
       message: `${client.name} — InBody en 7 días. Próxima medición esperada el ${client.inbody_next_expected_date} (cadencia: ${client.inbody_cadence_type}). Confirma que tenga su cita de valoración agendada.`,
     });
     await dbUpdate('clients', client.id, { inbody_reminder_sent_this_cycle: true });
-  } catch (e) { console.error('checkInbodyReminder falló (no fatal):', e); }
+  } catch (e) { logError('checkInbodyReminder', e, 'no fatal'); }
 }
 
 app.get('/api/clients/:id/evolution', authMiddleware, ownerOrAdmin, requireOnboardingComplete, async (req, res) => {
@@ -2102,7 +2109,7 @@ app.get('/api/clients/:id/evolution', authMiddleware, ownerOrAdmin, requireOnboa
     checkInbodyReminder(client).catch(() => {});
     return ok(res, { checkins, anthropometrics, inbody });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al obtener evolución.', 500);
   }
 });
@@ -2115,7 +2122,7 @@ app.post('/api/clients/:id/evolution', authMiddleware, ownerOrAdmin, requireOnbo
     });
     return ok(res, { checkin }, 201);
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al guardar check-in de evolución.', 500);
   }
 });
@@ -2125,7 +2132,7 @@ app.get('/api/clients/:id/personal-records', authMiddleware, ownerOrAdmin, requi
     const records = await dbGet('personal_records', { client_id: req.params.id }, { order: { column: 'sort_order', ascending: true } });
     return ok(res, { records });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al obtener récords personales.', 500);
   }
 });
@@ -2135,7 +2142,7 @@ app.post('/api/clients/:id/personal-records', authMiddleware, adminOnly, async (
     const record = await dbInsert('personal_records', { client_id: req.params.id, ...req.body });
     return ok(res, { record }, 201);
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al crear récord personal.', 500);
   }
 });
@@ -2145,7 +2152,7 @@ app.put('/api/clients/:id/personal-records/:recordId', authMiddleware, adminOnly
     const record = await dbUpdate('personal_records', req.params.recordId, req.body);
     return ok(res, { record });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al actualizar récord personal.', 500);
   }
 });
@@ -2155,7 +2162,7 @@ app.delete('/api/clients/:id/personal-records/:recordId', authMiddleware, adminO
     await dbDelete('personal_records', req.params.recordId);
     return ok(res, { message: 'Récord eliminado.' });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al eliminar récord personal.', 500);
   }
 });
@@ -2165,7 +2172,7 @@ app.patch('/api/clients/:id/next-checkin-date', authMiddleware, adminOnly, async
     const client = await dbUpdate('clients', req.params.id, { next_checkin_date: req.body.next_checkin_date || null });
     return ok(res, { client });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al actualizar la próxima medición.', 500);
   }
 });
@@ -2179,7 +2186,7 @@ app.get('/api/admin/notifications', authMiddleware, adminOnly, async (req, res) 
     const notifications = await dbGet('admin_notifications', {}, { order: { column: 'created_at', ascending: false } });
     return ok(res, { notifications });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al obtener notificaciones.', 500);
   }
 });
@@ -2189,7 +2196,7 @@ app.patch('/api/admin/notifications/:id/read', authMiddleware, adminOnly, async 
     const notification = await dbUpdate('admin_notifications', req.params.id, { read: true });
     return ok(res, { notification });
   } catch (e) {
-    console.error(e);
+    logError(req, e);
     return err(res, 'Error al marcar la notificación como leída.', 500);
   }
 });
