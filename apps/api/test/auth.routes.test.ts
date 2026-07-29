@@ -3,7 +3,7 @@ import request from 'supertest';
 import { eq } from 'drizzle-orm';
 import { createApp } from '../src/app.js';
 import { db } from '../src/db/index.js';
-import { admins, clients, adminNotifications } from '../src/models/schema.js';
+import { admins, clients, adminNotifications, personalInfo } from '../src/models/schema.js';
 import { hashPassword, signToken } from '../src/services/auth.service.js';
 
 describe('auth routes', () => {
@@ -54,6 +54,21 @@ describe('auth routes', () => {
     expect(res.status).toBe(200);
     expect(res.body.role).toBe('cliente');
     expect(res.body.permissions).toBeDefined();
+  });
+
+  it('reports onboardingComplete as false for a client with no personal-info row', async () => {
+    const res = await request(app).post('/api/auth/login').send({ email: clientEmail, password: 'client-pass' });
+    expect(res.status).toBe(200);
+    expect(res.body.onboardingComplete).toBe(false);
+  });
+
+  it('reports onboardingComplete as true on /me once personal-info is completed', async () => {
+    await db.insert(personalInfo).values({ clientId, completedAt: new Date() });
+    const token = signToken({ id: clientId, role: 'cliente', name: 'Test Client', email: clientEmail });
+    const res = await request(app).get('/api/auth/me').set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.onboardingComplete).toBe(true);
+    await db.delete(personalInfo).where(eq(personalInfo.clientId, clientId));
   });
 
   it('rejects a login for an inactive client', async () => {

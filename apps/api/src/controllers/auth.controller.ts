@@ -4,6 +4,7 @@ import * as authService from '../services/auth.service.js';
 import * as clientsService from '../services/clients.service.js';
 import * as adminsService from '../services/admins.service.js';
 import * as googleAuthService from '../services/google-auth.service.js';
+import { getPersonalInfoByClientId } from '../services/personal-info.service.js';
 
 function ok(res: Response, data: Record<string, unknown>, status = 200) {
   return res.status(status).json({ success: true, ...data });
@@ -31,6 +32,7 @@ export async function login(req: Request, res: Response) {
   if (!valid) return err(res, 'Credenciales incorrectas.', 401);
 
   const token = authService.signToken({ id: client.id, role: 'cliente', name: client.name, email: client.email, plan: client.plan });
+  const clientInfo = await getPersonalInfoByClientId(client.id);
   return ok(res, {
     token,
     role: 'cliente',
@@ -39,6 +41,7 @@ export async function login(req: Request, res: Response) {
     clientType: client.clientType,
     planExpired: authService.isPlanExpired(client),
     planEndDate: client.planEndDate,
+    onboardingComplete: Boolean(clientInfo?.completedAt),
   });
 }
 
@@ -63,6 +66,7 @@ export async function me(req: Request, res: Response) {
   }
   const client = await clientsService.findClientById(req.user!.id);
   if (!client) return err(res, 'No encontrado.', 404);
+  const clientInfo = await getPersonalInfoByClientId(client.id);
   return ok(res, {
     role: 'cliente',
     user: { id: client.id, name: client.name, email: client.email, plan: client.plan },
@@ -70,6 +74,7 @@ export async function me(req: Request, res: Response) {
     clientType: client.clientType,
     planExpired: authService.isPlanExpired(client),
     planEndDate: client.planEndDate,
+    onboardingComplete: Boolean(clientInfo?.completedAt),
   });
 }
 
