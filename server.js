@@ -66,6 +66,7 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SER
 });
 
 const app = express();
+app.set('trust proxy', 1);
 // crossOriginOpenerPolicy en 'same-origin-allow-popups': el valor por defecto
 // de helmet ('same-origin') bloquea la comunicación del popup de Google
 // Sign-In con esta página, dejándolo en blanco sin completar el login.
@@ -91,6 +92,7 @@ const loginLimiter = rateLimit({
   max: 10,
   standardHeaders: true,
   legacyHeaders: false,
+  skipSuccessfulRequests: true,
   message: { success: false, error: 'Demasiados intentos de inicio de sesión. Intenta de nuevo en unos minutos.' },
 });
 
