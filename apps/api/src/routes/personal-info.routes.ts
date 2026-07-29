@@ -5,6 +5,7 @@ import {
   AnthropometricRecordInputSchema,
   PhotoUploadMetadataSchema,
   InbodyRecordInputSchema,
+  OcrInputSchema,
 } from '@latribu/shared-types';
 import { validateBody } from '../middleware/validate.js';
 import { asyncHandler } from '../middleware/async-handler.js';
@@ -14,6 +15,7 @@ import * as personalInfoController from '../controllers/personal-info.controller
 import * as anthropometricsController from '../controllers/anthropometrics.controller.js';
 import * as photosController from '../controllers/photos.controller.js';
 import * as inbodyController from '../controllers/inbody.controller.js';
+import * as ocrController from '../controllers/ocr.controller.js';
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } });
 
@@ -112,4 +114,13 @@ personalInfoRouter.post(
   blockForLeadWellness,
   upload.single('file'),
   asyncHandler(inbodyController.uploadInbodyFile)
+);
+
+personalInfoRouter.post(
+  '/:id/ocr-vision',
+  authMiddleware,
+  ownerOrAdmin,
+  blockForLeadWellness,
+  validateBody(OcrInputSchema),
+  asyncHandler(ocrController.ocrVision)
 );
