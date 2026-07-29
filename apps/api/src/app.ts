@@ -1,6 +1,8 @@
 import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
+import type { Request, Response, NextFunction } from 'express';
+import { authRouter } from './routes/auth.routes.js';
 
 const ALLOWED_ORIGINS = ['https://latribu-oficial.vercel.app', 'http://localhost:3001'];
 
@@ -17,6 +19,13 @@ export function createApp() {
 
   app.get('/api/health', (_req, res) => {
     res.status(200).json({ success: true, status: 'ok' });
+  });
+
+  app.use('/api/auth', authRouter);
+
+  app.use((error: unknown, req: Request, res: Response, _next: NextFunction) => {
+    console.error(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`, error);
+    res.status(500).json({ success: false, error: 'Error interno del servidor.' });
   });
 
   return app;

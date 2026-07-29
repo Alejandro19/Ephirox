@@ -1,0 +1,92 @@
+import type { Request, Response } from 'express';
+import type { LoginInput, RegisterInput, ChangePasswordInput } from '@latribu/shared-types';
+import * as authService from '../services/auth.service.js';
+import * as clientsService from '../services/clients.service.js';
+import * as adminsService from '../services/admins.service.js';
+
+function ok(res: Response, data: Record<string, unknown>, status = 200) {
+  return res.status(status).json({ success: true, ...data });
+}
+function err(res: Response, message: string, status = 400) {
+  return res.status(status).json({ success: false, error: message });
+}
+
+export async function login(req: Request, res: Response) {
+  const { email, password } = req.body as LoginInput;
+  const emailLower = email.toLowerCase().trim();
+
+  const admin = await adminsService.findAdminByEmail(emailLower);
+  if (admin) {
+    const valid = await authService.verifyPassword(password, admin.passwordHash);
+    if (!valid) return err(res, 'Credenciales incorrectas.', 401);
+    const token = authService.signToken({ id: admin.id, role: 'admin', name: admin.name, email: admin.email });
+    return ok(res, { token, role: 'admin', user: { id: admin.id, name: admin.name, email: admin.email } });
+  }
+
+  const client = await clientsService.findClientByEmail(emailLower);
+  if (!client) return err(res, 'Credenciales incorrectas.', 401);
+  if (client.status === 'inactive') return err(res, 'Tu cuenta está inactiva. Contacta al administrador.', 403);
+  const valid = await authService.verifyPassword(password, client.passwordHash ?? '');
+  if (!valid) return err(res, 'Credenciales incorrectas.', 401);
+
+  const token = authService.signToken({ id: client.id, role: 'cliente', name: client.name, email: client.email, plan: client.plan });
+  return ok(res, {
+    token,
+    role: 'cliente',
+    user: { id: client.id, name: client.name, email: client.email, plan: client.plan },
+    permissions: client.permissions,
+    clientType: client.clientType,
+    planExpired: authService.isPlanExpired(client),
+    planEndDate: client.planEndDate,
+  });
+}
+
+export async function register(req: Request, res: Response) {
+  const { name, email, password } = req.body as RegisterInput;
+  const emailLower = email.toLowerCase().trim();
+  const [existingAdmin, existingClient] = await Promise.all([
+    adminsService.findAdminByEmail(emailLower),
+    clientsService.findClientByEmail(emailLower),
+  ]);
+  if (existingAdmin || existingClient) return err(res, 'Ese email ya está registrado.', 409);
+
+  await clientsService.createInactiveClient({ name, email: emailLower, password });
+  return ok(res, { pending: true, message: 'Tu cuenta fue creada y quedará activa cuando el administrador la confirme.' }, 201);
+}
+
+export async function me(req: Request, res: Response) {
+  if (req.user?.role === 'admin') {
+    const admin = await adminsService.findAdminById(req.user.id);
+    if (!admin) return err(res, 'No encontrado.', 404);
+    return ok(res, { role: 'admin', user: { id: admin.id, name: admin.name, email: admin.email } });
+  }
+  const client = await clientsService.findClientById(req.user!.id);
+  if (!client) return err(res, 'No encontrado.', 404);
+  return ok(res, {
+    role: 'cliente',
+    user: { id: client.id, name: client.name, email: client.email, plan: client.plan },
+    permissions: client.permissions,
+    clientType: client.clientType,
+    planExpired: authService.isPlanExpired(client),
+    planEndDate: client.planEndDate,
+  });
+}
+
+export async function changePassword(req: Request, res: Response) {
+  const { currentPassword, newPassword } = req.body as ChangePasswordInput;
+  const isAdmin = req.user?.role === 'admin';
+  const account = isAdmin
+    ? await adminsService.findAdminById(req.user!.id)
+    : await clientsService.findClientById(req.user!.id);
+  if (!account) return err(res, 'No encontrado.', 404);
+  const currentHash = 'passwordHash' in account ? account.passwordHash ?? '' : '';
+  const valid = await authService.verifyPassword(currentPassword, currentHash);
+  if (!valid) return err(res, 'Contraseña actual incorrecta.', 401);
+  const passwordHash = await authService.hashPassword(newPassword);
+  if (isAdmin) {
+    await adminsService.updateAdminPassword(account.id, passwordHash);
+  } else {
+    await clientsService.updateClientPassword(account.id, passwordHash);
+  }
+  return ok(res, { message: 'Contraseña actualizada.' });
+}
