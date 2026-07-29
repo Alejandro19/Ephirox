@@ -1,8 +1,9 @@
 import type { Request, Response } from 'express';
-import type { LoginInput, RegisterInput, ChangePasswordInput } from '@latribu/shared-types';
+import type { LoginInput, RegisterInput, ChangePasswordInput, GoogleAuthInput } from '@latribu/shared-types';
 import * as authService from '../services/auth.service.js';
 import * as clientsService from '../services/clients.service.js';
 import * as adminsService from '../services/admins.service.js';
+import * as googleAuthService from '../services/google-auth.service.js';
 
 function ok(res: Response, data: Record<string, unknown>, status = 200) {
   return res.status(status).json({ success: true, ...data });
@@ -89,4 +90,44 @@ export async function changePassword(req: Request, res: Response) {
     await clientsService.updateClientPassword(account.id, passwordHash);
   }
   return ok(res, { message: 'Contraseña actualizada.' });
+}
+
+export async function googleLogin(req: Request, res: Response) {
+  if (!process.env.GOOGLE_CLIENT_ID) return err(res, 'Login con Google no está configurado en el servidor.', 503);
+  const { credential } = req.body as GoogleAuthInput;
+
+  const payload = await googleAuthService.verifyGoogleCredential(credential);
+  if (!payload || !payload.email_verified || !payload.email) {
+    return err(res, 'Token de Google inválido.', 401);
+  }
+
+  const emailLower = payload.email.toLowerCase().trim();
+  const googleId = payload.sub;
+  const displayName = payload.name || emailLower;
+
+  const admin = await adminsService.findAdminByEmail(emailLower);
+  if (admin) {
+    if (!admin.googleId) await adminsService.updateAdminGoogleId(admin.id, googleId);
+    const token = authService.signToken({ id: admin.id, role: 'admin', name: admin.name, email: admin.email });
+    return ok(res, { token, role: 'admin', user: { id: admin.id, name: admin.name, email: admin.email } });
+  }
+
+  const client = await clientsService.findClientByEmail(emailLower);
+  if (client) {
+    if (client.status === 'inactive') return err(res, 'Tu cuenta está inactiva. Contacta al administrador.', 403);
+    if (!client.googleId) await clientsService.updateClientGoogleId(client.id, googleId);
+    const token = authService.signToken({ id: client.id, role: 'cliente', name: client.name, email: client.email, plan: client.plan });
+    return ok(res, {
+      token,
+      role: 'cliente',
+      user: { id: client.id, name: client.name, email: client.email, plan: client.plan },
+      permissions: client.permissions,
+      clientType: client.clientType,
+      planExpired: authService.isPlanExpired(client),
+      planEndDate: client.planEndDate,
+    });
+  }
+
+  await clientsService.createInactiveClient({ name: displayName, email: emailLower, googleId });
+  return ok(res, { pending: true, message: 'Tu cuenta fue creada y quedará activa cuando el administrador la confirme.' }, 201);
 }
