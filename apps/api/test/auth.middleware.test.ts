@@ -66,4 +66,10 @@ describe('auth.middleware', () => {
     expect(res.status).toBe(403);
     await db.update(clients).set({ status: 'active' }).where(eq(clients.id, clientId));
   });
+
+  it('rejects a valid token whose id is not a UUID instead of hanging or 500ing', async () => {
+    const token = signToken({ id: 'not-a-uuid', role: 'cliente', name: 'Test Client', email });
+    const res = await request(buildTestApp()).get('/owner/not-a-uuid').set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(403);
+  });
 });

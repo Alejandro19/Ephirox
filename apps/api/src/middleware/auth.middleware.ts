@@ -52,8 +52,13 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
         .where(eq(clients.id, payload.id))
         .limit(1);
       client = rows[0] as ClientAuthRow | undefined;
-    } catch {
-      return unauthorized(res, 'Tu cuenta está inactiva. Contacta al administrador.', 403);
+    } catch (error) {
+      if (error && typeof error === 'object' && 'code' in error && error.code === '22P02') {
+        // El id del JWT no tiene forma de UUID válido — tratar igual que
+        // "cliente no encontrado", nunca dejar la petición colgada.
+        return unauthorized(res, 'Tu cuenta está inactiva. Contacta al administrador.', 403);
+      }
+      return next(error);
     }
     if (!client || client.status === 'inactive') {
       return unauthorized(res, 'Tu cuenta está inactiva. Contacta al administrador.', 403);
