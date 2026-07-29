@@ -52,6 +52,8 @@ export async function createOrUpdateAnthropometric(
   return { record: inserted, status: 201 };
 }
 
-export async function deleteAnthropometric(recordId: string): Promise<void> {
-  await db.delete(anthropometricRecords).where(eq(anthropometricRecords.id, recordId));
+export async function deleteAnthropometric(clientId: string, recordId: string): Promise<void> {
+  await db
+    .delete(anthropometricRecords)
+    .where(and(eq(anthropometricRecords.id, recordId), eq(anthropometricRecords.clientId, clientId)));
 }

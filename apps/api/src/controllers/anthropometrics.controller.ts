@@ -18,6 +18,6 @@ export async function createOrUpdateAnthropometric(req: Request, res: Response) 
 }
 
 export async function deleteAnthropometric(req: Request, res: Response) {
-  await anthropometricsService.deleteAnthropometric(req.params.recordId);
+  await anthropometricsService.deleteAnthropometric(req.params.id, req.params.recordId);
   return ok(res, { message: 'Registro eliminado.' });
 }

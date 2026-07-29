@@ -11,6 +11,8 @@ describe('anthropometrics routes', () => {
   let clientId: string;
   let token: string;
   let firstRecordId: string;
+  let secondClientId: string;
+  let secondClientRecordId: string;
 
   beforeAll(async () => {
     const [client] = await db
@@ -19,11 +21,24 @@ describe('anthropometrics routes', () => {
       .returning();
     clientId = client.id;
     token = signToken({ id: clientId, role: 'cliente', name: 'Anthro Client', email: client.email });
+
+    const [secondClient] = await db
+      .insert(clients)
+      .values({ name: 'Anthro Client 2', email: `anthro2-${Date.now()}@example.com`, passwordHash: 'x', clientType: 'coaching_1_1' })
+      .returning();
+    secondClientId = secondClient.id;
+    const [secondRecord] = await db
+      .insert(anthropometricRecords)
+      .values({ clientId: secondClientId, fecha: '2026-01-01', mesNum: 1, peso: 55 })
+      .returning();
+    secondClientRecordId = secondRecord.id;
   });
 
   afterAll(async () => {
     await db.delete(anthropometricRecords).where(eq(anthropometricRecords.clientId, clientId));
     await db.delete(clients).where(eq(clients.id, clientId));
+    await db.delete(anthropometricRecords).where(eq(anthropometricRecords.clientId, secondClientId));
+    await db.delete(clients).where(eq(clients.id, secondClientId));
   });
 
   it('creates a new anthropometric record', async () => {
@@ -66,5 +81,14 @@ describe('anthropometrics routes', () => {
     expect(res.status).toBe(200);
     const remaining = await db.select().from(anthropometricRecords).where(eq(anthropometricRecords.id, firstRecordId));
     expect(remaining).toHaveLength(0);
+  });
+
+  it('does not delete another client\'s record (IDOR guard)', async () => {
+    const res = await request(app)
+      .delete(`/api/clients/${clientId}/anthropometrics/${secondClientRecordId}`)
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    const remaining = await db.select().from(anthropometricRecords).where(eq(anthropometricRecords.id, secondClientRecordId));
+    expect(remaining).toHaveLength(1);
   });
 });
