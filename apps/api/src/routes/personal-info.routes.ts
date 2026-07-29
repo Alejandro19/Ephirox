@@ -1,11 +1,12 @@
 import { Router } from 'express';
 import multer from 'multer';
-import { PersonalInfoUpdateSchema } from '@latribu/shared-types';
+import { PersonalInfoUpdateSchema, AnthropometricRecordInputSchema } from '@latribu/shared-types';
 import { validateBody } from '../middleware/validate.js';
 import { asyncHandler } from '../middleware/async-handler.js';
 import { authMiddleware, ownerOrAdmin } from '../middleware/auth.middleware.js';
 import { blockForLeadWellness } from '../middleware/block-for-lead-wellness.js';
 import * as personalInfoController from '../controllers/personal-info.controller.js';
+import * as anthropometricsController from '../controllers/anthropometrics.controller.js';
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } });
 
@@ -35,4 +36,29 @@ personalInfoRouter.post(
   blockForLeadWellness,
   upload.single('checkup_file'),
   asyncHandler(personalInfoController.uploadPersonalInfoFile)
+);
+
+personalInfoRouter.get(
+  '/:id/anthropometrics',
+  authMiddleware,
+  ownerOrAdmin,
+  blockForLeadWellness,
+  asyncHandler(anthropometricsController.listAnthropometrics)
+);
+
+personalInfoRouter.post(
+  '/:id/anthropometrics',
+  authMiddleware,
+  ownerOrAdmin,
+  blockForLeadWellness,
+  validateBody(AnthropometricRecordInputSchema),
+  asyncHandler(anthropometricsController.createOrUpdateAnthropometric)
+);
+
+personalInfoRouter.delete(
+  '/:id/anthropometrics/:recordId',
+  authMiddleware,
+  ownerOrAdmin,
+  blockForLeadWellness,
+  asyncHandler(anthropometricsController.deleteAnthropometric)
 );
