@@ -19,6 +19,7 @@
     "country-state-city": "^3.2.1",
     "dotenv": "^16.6.1",
     "express": "^4.18.3",
+    "express-rate-limit": "^7.5.1",
     "google-auth-library": "^10.9.0",
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",

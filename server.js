@@ -85,6 +85,15 @@ app.use(express.static(path.join(__dirname), {
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } });
 
+const rateLimit = require('express-rate-limit');
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: 'Demasiados intentos de inicio de sesión. Intenta de nuevo en unos minutos.' },
+});
+
 // ------------------------------------------------------------
 // Helpers de respuesta y de acceso a datos (Supabase)
 // ------------------------------------------------------------
@@ -355,7 +364,7 @@ async function requireCommunityAccess(req, res, next) {
   return requireOnboardingComplete(req, res, next);
 }
 
-app.post('/api/auth/login', async (req, res) => {
+app.post('/api/auth/login', loginLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) return err(res, 'Email y contraseña requeridos.');
