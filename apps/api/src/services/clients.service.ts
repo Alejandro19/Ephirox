@@ -14,6 +14,29 @@ export async function findClientById(id: string): Promise<Client | null> {
   return rows[0] ?? null;
 }
 
+export type ClientAuthRow = {
+  id: string;
+  status: string;
+  clientType: string;
+  permissions: Record<string, boolean>;
+  planEndDate: string | null;
+};
+
+export async function findClientAuthRowById(id: string): Promise<ClientAuthRow | null> {
+  const rows = await db
+    .select({
+      id: clients.id,
+      status: clients.status,
+      clientType: clients.clientType,
+      permissions: clients.permissions,
+      planEndDate: clients.planEndDate,
+    })
+    .from(clients)
+    .where(eq(clients.id, id))
+    .limit(1);
+  return (rows[0] as ClientAuthRow | undefined) ?? null;
+}
+
 export async function createInactiveClient(input: { name: string; email: string; password?: string; googleId?: string }): Promise<Client> {
   const passwordHash = input.password ? await hashPassword(input.password) : null;
   const [client] = await db

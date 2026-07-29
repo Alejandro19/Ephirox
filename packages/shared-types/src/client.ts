@@ -42,8 +42,8 @@ export type ClientTypePatch = z.infer<typeof ClientTypePatchSchema>;
 
 export const RenewPlanPatchSchema = z.union([
   z.object({
-    plan_start_date: z.string(),
-    plan_end_date: z.string(),
+    plan_start_date: z.string().date(),
+    plan_end_date: z.string().date(),
   }),
   z.object({
     duration_days: z.coerce.number().refine((v) => v === 30 || v === 90, {

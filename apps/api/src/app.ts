@@ -5,7 +5,7 @@ import type { Request, Response, NextFunction } from 'express';
 import { authRouter } from './routes/auth.routes.js';
 import { clientsRouter } from './routes/clients.routes.js';
 
-const ALLOWED_ORIGINS = ['https://latribu-oficial.vercel.app', 'http://localhost:3001'];
+const ALLOWED_ORIGINS = ['https://latribu-oficial.vercel.app', 'http://localhost:3000'];
 
 export function createApp() {
   const app = express();

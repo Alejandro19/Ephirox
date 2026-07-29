@@ -48,6 +48,11 @@ describe('client schemas', () => {
     expect(result.success).toBe(true);
   });
 
+  it('rejects a renew-plan patch with malformed explicit dates', () => {
+    const result = RenewPlanPatchSchema.safeParse({ plan_start_date: 'abc', plan_end_date: 'xyz' });
+    expect(result.success).toBe(false);
+  });
+
   it('accepts a renew-plan patch with duration_days as a string', () => {
     const result = RenewPlanPatchSchema.safeParse({ duration_days: '30' });
     expect(result.success).toBe(true);

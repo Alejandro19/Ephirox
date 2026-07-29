@@ -1,16 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
-import { eq } from 'drizzle-orm';
-import { db } from '../db/index.js';
-import { clients } from '../models/schema.js';
 import { verifyToken, isPlanExpired, type TokenPayload } from '../services/auth.service.js';
-
-type ClientAuthRow = {
-  id: string;
-  status: string;
-  clientType: string;
-  permissions: Record<string, boolean>;
-  planEndDate: string | null;
-};
+import { findClientAuthRowById, type ClientAuthRow } from '../services/clients.service.js';
 
 declare global {
   namespace Express {
@@ -38,20 +28,9 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
   }
 
   if (payload.role === 'cliente') {
-    let client: ClientAuthRow | undefined;
+    let client: ClientAuthRow | null;
     try {
-      const rows = await db
-        .select({
-          id: clients.id,
-          status: clients.status,
-          clientType: clients.clientType,
-          permissions: clients.permissions,
-          planEndDate: clients.planEndDate,
-        })
-        .from(clients)
-        .where(eq(clients.id, payload.id))
-        .limit(1);
-      client = rows[0] as ClientAuthRow | undefined;
+      client = await findClientAuthRowById(payload.id);
     } catch (error) {
       if (error && typeof error === 'object' && 'code' in error && error.code === '22P02') {
         // El id del JWT no tiene forma de UUID válido — tratar igual que
