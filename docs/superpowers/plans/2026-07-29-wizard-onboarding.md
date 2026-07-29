@@ -752,9 +752,7 @@ git commit -m "feat(web): port ONBOARDING_MODULES config and conditional rules"
 
 - [ ] **Step 1: Create the fixtures**
 
-```
-```
-(file: `apps/web/test/fixtures/inbody-report-full.txt` — exact contents below, no leading/trailing blank-line changes)
+File `apps/web/test/fixtures/inbody-report-full.txt` — exact contents below, no leading/trailing blank-line changes:
 
 ```
 InBody 770
@@ -796,8 +794,7 @@ Tasa Metabólica Basal 1450 kcal
 altura 168 cm
 ```
 
-```
-(file: `apps/web/test/fixtures/inbody-report-fallback-weight.txt` — exact contents below)
+File `apps/web/test/fixtures/inbody-report-fallback-weight.txt` — exact contents below:
 
 ```
 InBody270
