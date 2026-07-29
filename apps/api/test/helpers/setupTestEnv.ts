@@ -20,6 +20,9 @@ const testEnv = dotenv.parse(fs.readFileSync(testEnvPath));
 if (!testEnv.TEST_DATABASE_URL || !testEnv.JWT_SECRET) {
   throw new Error('.env.test debe definir TEST_DATABASE_URL y JWT_SECRET.');
 }
+if (!testEnv.SUPABASE_URL || !testEnv.SUPABASE_SERVICE_ROLE_KEY) {
+  throw new Error('.env.test debe definir SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY (para subir archivos de prueba a Supabase Storage).');
+}
 
 let prodEnv: Record<string, string> = {};
 if (fs.existsSync(prodEnvPath)) {
