@@ -1,5 +1,12 @@
 import type { Request, Response } from 'express';
-import type { ClientCreateInput, ClientUpdateInput } from '@latribu/shared-types';
+import type {
+  ClientCreateInput,
+  ClientUpdateInput,
+  PermissionsPatch,
+  StatusPatch,
+  ClientTypePatch,
+  RenewPlanPatch,
+} from '@latribu/shared-types';
 import * as clientsService from '../services/clients.service.js';
 
 function ok(res: Response, data: Record<string, unknown>, status = 200) {
@@ -41,4 +48,37 @@ export async function updateClient(req: Request, res: Response) {
 export async function deleteClient(req: Request, res: Response) {
   await clientsService.deleteClient(req.params.id);
   return ok(res, { message: 'Cliente eliminado.' });
+}
+
+export async function updatePermissions(req: Request, res: Response) {
+  const { permissions } = req.body as PermissionsPatch;
+  const client = await clientsService.updatePermissions(req.params.id, permissions);
+  if (!client) return err(res, 'Cliente no encontrado.', 404);
+  return ok(res, { client });
+}
+
+export async function updateStatus(req: Request, res: Response) {
+  const { status } = req.body as StatusPatch;
+  const client = await clientsService.updateStatus(req.params.id, status);
+  if (!client) return err(res, 'Cliente no encontrado.', 404);
+  return ok(res, { client });
+}
+
+export async function updateClientType(req: Request, res: Response) {
+  const { client_type } = req.body as ClientTypePatch;
+  const client = await clientsService.updateClientType(req.params.id, client_type);
+  if (!client) return err(res, 'Cliente no encontrado.', 404);
+  return ok(res, { client });
+}
+
+export async function renewPlan(req: Request, res: Response) {
+  const input = req.body as RenewPlanPatch;
+  try {
+    const client = await clientsService.renewPlan(req.params.id, input);
+    if (!client) return err(res, 'Cliente no encontrado.', 404);
+    return ok(res, { client });
+  } catch (e) {
+    if (e instanceof clientsService.InvalidPlanDatesError) return err(res, e.message, 400);
+    throw e;
+  }
 }

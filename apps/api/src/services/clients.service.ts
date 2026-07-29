@@ -77,3 +77,50 @@ export async function updateClient(id: string, patch: Record<string, unknown>): 
 export async function deleteClient(id: string): Promise<void> {
   await db.delete(clients).where(eq(clients.id, id));
 }
+
+export async function updatePermissions(id: string, permissions: Record<string, boolean>): Promise<Client | null> {
+  return updateClient(id, { permissions });
+}
+
+export async function updateStatus(id: string, status: 'active' | 'inactive'): Promise<Client | null> {
+  return updateClient(id, { status });
+}
+
+export async function updateClientType(id: string, clientType: string): Promise<Client | null> {
+  const existing = await findClientById(id);
+  if (!existing) return null;
+  const patch: Record<string, unknown> = { clientType };
+  if (clientType === 'lead_wellness') {
+    patch.permissions = { ...(existing.permissions as Record<string, boolean>), cortisol: true, community: true };
+  }
+  return updateClient(id, patch);
+}
+
+export async function renewPlan(id: string, input: { plan_start_date: string; plan_end_date: string } | { duration_days: number }): Promise<Client | null> {
+  if ('plan_start_date' in input) {
+    if (input.plan_end_date <= input.plan_start_date) {
+      throw new InvalidPlanDatesError();
+    }
+    const days = Math.round((new Date(input.plan_end_date).getTime() - new Date(input.plan_start_date).getTime()) / 86400000);
+    return updateClient(id, {
+      planDurationDays: days,
+      planStartDate: input.plan_start_date,
+      planEndDate: input.plan_end_date,
+    });
+  }
+  const today = new Date();
+  const endDate = new Date(today);
+  endDate.setDate(endDate.getDate() + input.duration_days);
+  return updateClient(id, {
+    planDurationDays: input.duration_days,
+    planStartDate: today.toISOString().slice(0, 10),
+    planEndDate: endDate.toISOString().slice(0, 10),
+  });
+}
+
+export class InvalidPlanDatesError extends Error {
+  constructor() {
+    super('La fecha de vencimiento debe ser posterior a la de inicio.');
+    this.name = 'InvalidPlanDatesError';
+  }
+}
