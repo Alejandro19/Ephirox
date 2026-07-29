@@ -3,6 +3,7 @@ import helmet from 'helmet';
 import cors from 'cors';
 import type { Request, Response, NextFunction } from 'express';
 import { authRouter } from './routes/auth.routes.js';
+import { clientsRouter } from './routes/clients.routes.js';
 
 const ALLOWED_ORIGINS = ['https://latribu-oficial.vercel.app', 'http://localhost:3001'];
 
@@ -22,6 +23,7 @@ export function createApp() {
   });
 
   app.use('/api/auth', authRouter);
+  app.use('/api/clients', clientsRouter);
 
   app.use((error: unknown, req: Request, res: Response, _next: NextFunction) => {
     console.error(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`, error);

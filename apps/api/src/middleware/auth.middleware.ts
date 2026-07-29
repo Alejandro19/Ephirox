@@ -38,18 +38,23 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
   }
 
   if (payload.role === 'cliente') {
-    const rows = await db
-      .select({
-        id: clients.id,
-        status: clients.status,
-        clientType: clients.clientType,
-        permissions: clients.permissions,
-        planEndDate: clients.planEndDate,
-      })
-      .from(clients)
-      .where(eq(clients.id, payload.id))
-      .limit(1);
-    const client = rows[0] as ClientAuthRow | undefined;
+    let client: ClientAuthRow | undefined;
+    try {
+      const rows = await db
+        .select({
+          id: clients.id,
+          status: clients.status,
+          clientType: clients.clientType,
+          permissions: clients.permissions,
+          planEndDate: clients.planEndDate,
+        })
+        .from(clients)
+        .where(eq(clients.id, payload.id))
+        .limit(1);
+      client = rows[0] as ClientAuthRow | undefined;
+    } catch {
+      return unauthorized(res, 'Tu cuenta está inactiva. Contacta al administrador.', 403);
+    }
     if (!client || client.status === 'inactive') {
       return unauthorized(res, 'Tu cuenta está inactiva. Contacta al administrador.', 403);
     }
