@@ -1,12 +1,13 @@
 import { Router } from 'express';
 import multer from 'multer';
-import { PersonalInfoUpdateSchema, AnthropometricRecordInputSchema } from '@latribu/shared-types';
+import { PersonalInfoUpdateSchema, AnthropometricRecordInputSchema, PhotoUploadMetadataSchema } from '@latribu/shared-types';
 import { validateBody } from '../middleware/validate.js';
 import { asyncHandler } from '../middleware/async-handler.js';
 import { authMiddleware, ownerOrAdmin } from '../middleware/auth.middleware.js';
 import { blockForLeadWellness } from '../middleware/block-for-lead-wellness.js';
 import * as personalInfoController from '../controllers/personal-info.controller.js';
 import * as anthropometricsController from '../controllers/anthropometrics.controller.js';
+import * as photosController from '../controllers/photos.controller.js';
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } });
 
@@ -61,4 +62,22 @@ personalInfoRouter.delete(
   ownerOrAdmin,
   blockForLeadWellness,
   asyncHandler(anthropometricsController.deleteAnthropometric)
+);
+
+personalInfoRouter.post(
+  '/:id/photos',
+  authMiddleware,
+  ownerOrAdmin,
+  blockForLeadWellness,
+  upload.single('photo'),
+  validateBody(PhotoUploadMetadataSchema),
+  asyncHandler(photosController.createPhoto)
+);
+
+personalInfoRouter.get(
+  '/:id/photos',
+  authMiddleware,
+  ownerOrAdmin,
+  blockForLeadWellness,
+  asyncHandler(photosController.listPhotos)
 );
