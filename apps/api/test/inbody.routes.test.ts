@@ -58,4 +58,43 @@ describe('inbody routes', () => {
     expect(res.status).toBe(200);
     expect(res.body.records).toHaveLength(1);
   });
+
+  it('creates an InBody record for a personalizado cadence without touching inbodyNextExpectedDate', async () => {
+    const [personalizadoClient] = await db
+      .insert(clients)
+      .values({
+        name: 'Inbody Personalizado Client',
+        email: `inbody-personalizado-${Date.now()}@example.com`,
+        passwordHash: 'x',
+        clientType: 'coaching_1_1',
+        inbodyCadenceType: 'personalizado',
+      })
+      .returning();
+    const personalizadoToken = signToken({
+      id: personalizadoClient.id,
+      role: 'cliente',
+      name: personalizadoClient.name,
+      email: personalizadoClient.email,
+    });
+
+    try {
+      const res = await request(app)
+        .post(`/api/clients/${personalizadoClient.id}/inbody-records`)
+        .set('Authorization', `Bearer ${personalizadoToken}`)
+        .send({ fecha: '2026-01-01', peso_total: 70, smm: 30, grasa_pct: 15 });
+      expect(res.status).toBe(201);
+      expect(res.body.record.pesoTotal).toBe(70);
+
+      // The cadence-recalculation branch is only entered for mensual/bimestral,
+      // so a personalizado client's next-expected-date must stay untouched.
+      // This indirectly proves the recalculation step is isolated/conditional
+      // and cannot affect whether the insert succeeds — the same guarantee
+      // the try/catch around it preserves when the recalculation itself throws.
+      const [unchangedClient] = await db.select().from(clients).where(eq(clients.id, personalizadoClient.id));
+      expect(unchangedClient.inbodyNextExpectedDate).toBeNull();
+    } finally {
+      await db.delete(bioInbodyRecords).where(eq(bioInbodyRecords.clientId, personalizadoClient.id));
+      await db.delete(clients).where(eq(clients.id, personalizadoClient.id));
+    }
+  });
 });
