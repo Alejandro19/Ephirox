@@ -42,7 +42,16 @@ describe('parseOcrText', () => {
   });
 
   it('nulls out an implausible smm value that exceeds calculated lean mass', () => {
-    const parsed = parseOcrText('Peso\n68.5\nPGC (%)\n5.0\nMasa de Músculo Esquelético\n68.0\nMME\n');
+    // peso_total=68.5 (Músculo-Grasa zone before first "MME"), grasa_pct=50.3
+    // (PGC (%) window), smm=59.0 (línea "Músculo Esquelético", individually
+    // plausible within its own 10-60 range). masaMagra = 68.5*(1-0.503) ≈
+    // 34.04; threshold ≈ 35.75. 59.0 > 35.75, so cross-validation must null
+    // out smm even though it passed its own primary-extraction range check.
+    const parsed = parseOcrText(
+      'Músculo-Grasa\nPeso 68.5 kg\nMME\nPGC (%)\n50.3\nMasa de Músculo Esquelético\n59.0\nMME\n'
+    );
+    expect(parsed.peso_total).toBe(68.5);
+    expect(parsed.grasa_pct).toBe(50.3);
     expect(parsed.smm).toBeUndefined();
   });
 });
