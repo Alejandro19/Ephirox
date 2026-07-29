@@ -20,7 +20,13 @@ let CSC;
 try { CSC = require('country-state-city'); } catch (e) { CSC = null; }
 
 const PORT = process.env.PORT || 3000;
-const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret_change_in_production';
+if (!process.env.JWT_SECRET) {
+  throw new Error(
+    'JWT_SECRET no está configurada. Define esta variable de entorno antes ' +
+    'de arrancar el servidor — nunca debe operar con un secreto por defecto.'
+  );
+}
+const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRES = process.env.JWT_EXPIRES_IN || '8h';
 const BUCKET = process.env.SUPABASE_BUCKET || 'latribu-files';
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || null;
