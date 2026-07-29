@@ -13,5 +13,15 @@ function requireDatabaseUrl(): string {
   return url;
 }
 
-const queryClient = postgres(requireDatabaseUrl(), { max: 10 });
+const queryClient = postgres(requireDatabaseUrl(), {
+  max: 10,
+  types: {
+    numeric: {
+      to: 1700,
+      from: [1700],
+      serialize: (value: number) => String(value),
+      parse: (value: string) => Number.parseFloat(value),
+    },
+  },
+});
 export const db = drizzle(queryClient, { schema });
