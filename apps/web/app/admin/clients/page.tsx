@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { fetchClients, type ClientSummary } from '../../../lib/clients-client';
 
 export default function AdminClientsPage() {
@@ -26,6 +27,7 @@ export default function AdminClientsPage() {
           <th>Email</th>
           <th>Plan</th>
           <th>Estado</th>
+          <th></th>
         </tr>
       </thead>
       <tbody>
@@ -35,6 +37,9 @@ export default function AdminClientsPage() {
             <td>{client.email}</td>
             <td>{client.plan}</td>
             <td>{client.status}</td>
+            <td>
+              <Link href={`/admin/clients/${client.id}`}>Ver detalle</Link>
+            </td>
           </tr>
         ))}
       </tbody>
