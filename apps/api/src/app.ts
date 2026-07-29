@@ -5,6 +5,7 @@ import type { Request, Response, NextFunction } from 'express';
 import { authRouter } from './routes/auth.routes.js';
 import { clientsRouter } from './routes/clients.routes.js';
 import { personalInfoRouter } from './routes/personal-info.routes.js';
+import { geoRouter } from './routes/geo.routes.js';
 
 const ALLOWED_ORIGINS = ['https://latribu-oficial.vercel.app', 'http://localhost:3000'];
 
@@ -23,6 +24,7 @@ export function createApp() {
     res.status(200).json({ success: true, status: 'ok' });
   });
 
+  app.use('/api', geoRouter);
   app.use('/api/auth', authRouter);
   app.use('/api/clients', clientsRouter);
   app.use('/api/clients', personalInfoRouter);
