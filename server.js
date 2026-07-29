@@ -74,7 +74,8 @@ app.use(helmet({
   referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
   crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
 }));
-app.use(cors({ origin: '*', methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'] }));
+const ALLOWED_ORIGINS = ['https://latribu-oficial.vercel.app', 'http://localhost:3001'];
+app.use(cors({ origin: ALLOWED_ORIGINS, methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'] }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static(path.join(__dirname), {
   setHeaders: (res, filePath) => {
