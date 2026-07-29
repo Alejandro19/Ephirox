@@ -62,8 +62,8 @@ export function WizardField({ field, value, otroValue, hidden, invalid, onChange
     return (
       <div>
         <label htmlFor={`field-${field.id}`}>{field.label}</label>
-        <output htmlFor={`field-${field.id}`}>{current}</output>
-        <input type="hidden" id={`field-${field.id}`} value={current} readOnly />
+        <output id={`field-${field.id}`}>{current}</output>
+        <input type="hidden" value={current} readOnly />
         <button type="button" aria-label={`Aumentar ${field.label}`} onClick={() => onChange(field.id, String(Math.max(min, Math.round((current + step) * 10) / 10)))}>
           ▲
         </button>

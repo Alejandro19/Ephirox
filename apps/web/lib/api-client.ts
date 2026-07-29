@@ -5,6 +5,7 @@ export type LoginResult = {
   token?: string;
   role?: 'admin' | 'cliente';
   user?: { id: string; name: string; email: string };
+  onboardingComplete?: boolean;
   error?: string;
 };
 

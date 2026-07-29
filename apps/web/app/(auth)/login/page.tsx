@@ -22,6 +22,10 @@ export default function LoginPage() {
       return;
     }
     saveSession(result.token);
+    if (result.role === 'cliente' && !result.onboardingComplete) {
+      router.push('/onboarding');
+      return;
+    }
     router.push('/admin/clients');
   }
 
