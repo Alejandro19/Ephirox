@@ -64,6 +64,27 @@ describe('LoginPage', () => {
     await waitFor(() => expect(pushMock).toHaveBeenCalledWith('/admin/clients'));
   });
 
+  it('redirects a lead_wellness client with incomplete onboarding to /admin/clients (never to /onboarding)', async () => {
+    (fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+      json: async () => ({
+        success: true,
+        token: 'abc.def.ghi',
+        role: 'cliente',
+        user: { id: '4', name: 'Cliente', email: 'c3@c.com' },
+        clientType: 'lead_wellness',
+        onboardingComplete: false,
+      }),
+    });
+
+    render(<LoginPage />);
+    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'c3@c.com' } });
+    fireEvent.change(screen.getByLabelText('Contraseña'), { target: { value: 'secret' } });
+    fireEvent.click(screen.getByRole('button', { name: /entrar/i }));
+
+    await waitFor(() => expect(pushMock).toHaveBeenCalledWith('/admin/clients'));
+    expect(pushMock).not.toHaveBeenCalledWith('/onboarding');
+  });
+
   it('shows an error message on failed login', async () => {
     (fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       json: async () => ({ success: false, error: 'Credenciales incorrectas.' }),

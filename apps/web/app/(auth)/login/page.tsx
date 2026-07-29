@@ -22,7 +22,7 @@ export default function LoginPage() {
       return;
     }
     saveSession(result.token);
-    if (result.role === 'cliente' && !result.onboardingComplete) {
+    if (result.role === 'cliente' && result.clientType !== 'lead_wellness' && !result.onboardingComplete) {
       router.push('/onboarding');
       return;
     }
