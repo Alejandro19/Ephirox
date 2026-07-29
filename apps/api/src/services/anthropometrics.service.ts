@@ -57,3 +57,8 @@ export async function deleteAnthropometric(clientId: string, recordId: string): 
     .delete(anthropometricRecords)
     .where(and(eq(anthropometricRecords.id, recordId), eq(anthropometricRecords.clientId, clientId)));
 }
+
+export async function findAnthropometricById(recordId: string): Promise<AnthropometricRecord | undefined> {
+  const rows = await db.select().from(anthropometricRecords).where(eq(anthropometricRecords.id, recordId)).limit(1);
+  return rows[0];
+}
