@@ -1827,21 +1827,24 @@ const PHOTO_ANGLES = [
 // applyObjetivoState, porque el cliente aún no se ha cargado en este punto.
 function renderObjetivoQuestion(metrica, label) {
   const options = [['bajar', 'Bajar'], ['mantener', 'Mantener'], ['subir', 'Subir']];
-  return `<div class="field"><label>${fieldIcon('segmented')}${label}</label><div class="segmented-group" id="objetivo-${metrica}-row">
-    ${options.map(([val, txt]) => `<button type="button" class="segmented-cell objetivo-btn" data-metrica="${metrica}" data-valor="${val}" onclick="setObjetivo('${metrica}','${val}')">${txt}</button>`).join('')}
+  return `<div class="field"><label>${fieldIcon('select')}${label}</label><div class="select-field">
+    <select id="objetivo-${metrica}" onchange="setObjetivo('${metrica}', this.value)">
+      <option value="">Selecciona…</option>
+      ${options.map(([val, txt]) => `<option value="${val}">${txt}</option>`).join('')}
+    </select>
+    <span class="select-arrow">⌄</span>
   </div></div>`;
 }
 function applyObjetivoState(metrica, valor) {
-  const row = document.getElementById(`objetivo-${metrica}-row`);
-  if (!row) return;
-  row.querySelectorAll('.objetivo-btn').forEach(btn => {
-    btn.classList.toggle('selected', btn.dataset.valor === valor);
-  });
+  const select = document.getElementById(`objetivo-${metrica}`);
+  if (!select) return;
+  select.value = valor || '';
+  clearFieldError(select);
 }
 async function setObjetivo(metrica, valor) {
   const clientId = currentClientId();
   if (!clientId) return;
-  applyObjetivoState(metrica, valor);
+  clearFieldError(document.getElementById(`objetivo-${metrica}`));
   window._m3Objetivos = { ...(window._m3Objetivos || {}), [metrica]: valor };
   try {
     await api(`/api/clients/${clientId}`, { method: 'PUT', body: JSON.stringify({ objetivos: window._m3Objetivos }) });
@@ -2167,6 +2170,7 @@ async function commitModule3Draft(clientId) {
 // que quedan opcionales por decisión explícita.
 const MODULE3_REQUIRED_FIELDS = [
   'field-weight', 'field-height', 'field-body_fat',
+  'objetivo-peso', 'objetivo-grasa_corporal', 'objetivo-masa_muscular',
   'm3-peso-total', 'm3-smm', 'm3-grasa-pct', 'm3-peso-objetivo',
   'm3-grasa-visceral', 'm3-bmr', 'm3-ecw-tbw', 'm3-masa-osea', 'm3-height',
 ];
@@ -5225,6 +5229,37 @@ function renderEvolutionKpiCard(label, value, unit, delta, metrica, client, comp
     </div>
   `;
 }
+// Cuarto KPI: Adherencia de entrenamiento — reutiliza el mismo dato que ya
+// alimenta el 40% del índice de bienestar general (calculateDisciplineStats),
+// solo que expuesto también como su propia tarjeta para que el cliente vea de
+// dónde sale ese componente. No usa objetivo configurable: más adherencia
+// siempre es mejor, para todos.
+function renderAdherenciaKpiCard(doneDays, expected, streakWeeks) {
+  const size = 64, strokeWidth = 7, r = (size - strokeWidth) / 2, circ = 2 * Math.PI * r;
+  const hasSessions = expected > 0;
+  const pct = hasSessions ? Math.max(0, Math.min(100, Math.round((doneDays / expected) * 100))) : 0;
+  const frac = pct / 100;
+  return `
+    <div class="card" style="display:flex;align-items:center;gap:16px;">
+      <div style="position:relative;width:${size}px;height:${size}px;flex-shrink:0;">
+        <svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}">
+          <circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="#EFE7D4" stroke-width="${strokeWidth}"></circle>
+          ${hasSessions ? `<circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="#D9A441" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-dasharray="${(frac * circ).toFixed(1)} ${circ.toFixed(1)}" transform="rotate(-90 ${size / 2} ${size / 2})"></circle>` : ''}
+        </svg>
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+          <span style="font-family:'Fraunces',serif;font-weight:700;font-size:16px;">${hasSessions ? pct + '%' : '—'}</span>
+          <span style="font-size:7px;color:#8A8377;">ESTE MES</span>
+        </div>
+      </div>
+      <div>
+        <p style="font-family:'Fraunces',serif;font-weight:700;font-size:14.5px;margin:0 0 4px;">Adherencia de entrenamiento</p>
+        <p style="font-size:11px;color:#8A8377;margin:0;">${hasSessions
+          ? `${doneDays} de ${expected} sesiones programadas completadas este mes${streakWeeks != null ? ` · racha actual: ${streakWeeks} semana${streakWeeks === 1 ? '' : 's'}` : ''}`
+          : 'Aún no hay sesiones programadas este mes'}</p>
+      </div>
+    </div>
+  `;
+}
 function renderMedidaTile(label, value, firstValue) {
   const delta = (value != null && firstValue != null) ? Number(value) - Number(firstValue) : null;
   return `
@@ -5336,7 +5371,7 @@ function toggleCheckinAccordion() {
 // "Tu evolución física" — todo lo que el mentor registra en sesión (KPIs,
 // medidas, récords). Es la única sección de Mi Evolución que se bloquea
 // para lead_wellness, porque depende de que exista un mentor tomando datos.
-function renderEvolucionFisicaContent(anthropometrics, inbody, isAdmin, client) {
+function renderEvolucionFisicaContent(anthropometrics, inbody, isAdmin, client, disciplineStats, streakWeeks) {
   const firstAnthro = anthropometrics[0] || {};
   const lastAnthro = anthropometrics[anthropometrics.length - 1] || {};
   const lastInbody = inbody[inbody.length - 1] || {};
@@ -5373,6 +5408,7 @@ function renderEvolucionFisicaContent(anthropometrics, inbody, isAdmin, client) 
       </div>
       <p style="font-size:10.5px;color:#8A8377;text-align:center;margin:12px 0 0;">${lastMeasurementDate ? `Última medición: ${lastMeasurementDate}` : 'Sin mediciones aún'}${nextLabel}</p>
     </div>
+    ${renderAdherenciaKpiCard(disciplineStats ? disciplineStats.doneDays : 0, disciplineStats ? disciplineStats.expected : 0, streakWeeks)}
     <div class="card">
       <div class="card-title">Composición corporal</div>
       ${renderCompositionDonut(lastInbody.peso_total ?? lastAnthro.peso ?? null, lastInbody.smm, lastInbody.grasa_pct)}
@@ -5413,6 +5449,7 @@ function renderEvolucionFisicaLocked() {
           ${renderEvolutionKpiCard('Masa muscular', 28, ' kg', 0.8, 'masa_muscular', { objetivos: { peso: 'bajar', grasa_corporal: 'bajar', masa_muscular: 'subir' } }, 'vs mes pasado')}
         </div>
       </div>
+      ${renderAdherenciaKpiCard(9, 12, 3)}
       <div class="card">
         <div class="card-title">Medidas corporales</div>
         <div class="grid-4" style="gap:10px;">
@@ -5473,13 +5510,14 @@ async function renderEvolution(el) {
     if (isAdmin) await ensureClientsLoaded();
     const clientType = currentClientType();
     const accesoEvolucionFisica = clientType !== 'lead_wellness';
-    const [{ checkins, anthropometrics, inbody }, { completions: cortisolCompletions }, { client: fullClient }, { logs: sleepLogs }, { checkins: cortisolCheckins }, { completions: trainingCompletions }] = await Promise.all([
+    const [{ checkins, anthropometrics, inbody }, { completions: cortisolCompletions }, { client: fullClient }, { logs: sleepLogs }, { checkins: cortisolCheckins }, { completions: trainingCompletions }, { streak }] = await Promise.all([
       api(`/api/clients/${clientId}/evolution`),
       api(`/api/clients/${clientId}/cortisol-completions`).catch(() => ({ completions: [] })),
       api(`/api/clients/${clientId}`).catch(() => ({ client: {} })),
       api(`/api/clients/${clientId}/sleep-logs`).catch(() => ({ logs: [] })),
       api(`/api/clients/${clientId}/cortisol-checkins`).catch(() => ({ checkins: [] })),
       api(`/api/clients/${clientId}/training-completions`).catch(() => ({ completions: [] })),
+      !isAdmin ? api(`/api/clients/${clientId}/training/streak?tz=${encodeURIComponent(clientTz())}`).catch(() => ({ streak: null })) : Promise.resolve({ streak: null }),
     ]);
     const sleepAvg = calculateSleepQualityAvg(checkins);
     const weeklyRegulation = calculateCortisolWeeklyStats(cortisolCompletions).count;
@@ -5499,8 +5537,10 @@ async function renderEvolution(el) {
     const cortisolDelta = (cortisolLast != null && cortisolPrev != null) ? cortisolLast - cortisolPrev : null;
     const cortisolChip = renderTrendChip(cortisolDelta, '', getWellnessTrendStatus(cortisolDelta), 'vs mes pasado');
 
-    const trainingPct = fullClient && fullClient.training_days ? calculateDisciplineStats(trainingCompletions, fullClient.training_days).pct : null;
+    const disciplineStats = fullClient && fullClient.training_days ? calculateDisciplineStats(trainingCompletions, fullClient.training_days) : null;
+    const trainingPct = disciplineStats ? disciplineStats.pct : null;
     const wellnessIndex = computeWellnessIndex({ trainingPct, sleepAvg: sleepLast, cortisolAvg: cortisolLast });
+    const streakWeeks = streak ? streak.streakWeeks : null;
 
     const hasEnoughForChart = inbody.length >= 2;
     el.innerHTML = `
@@ -5509,7 +5549,7 @@ async function renderEvolution(el) {
       ${renderWellnessIndexHero(wellnessIndex)}
       ${renderBienestarGeneral(sleepAvg, weeklyRegulation, sleepChip, cortisolChip)}
       ${accesoEvolucionFisica
-        ? renderEvolucionFisicaContent(anthropometrics, inbody, isAdmin, fullClient)
+        ? renderEvolucionFisicaContent(anthropometrics, inbody, isAdmin, fullClient, disciplineStats, streakWeeks)
         : renderEvolucionFisicaLocked()}
       ${renderCheckinAccordion(false)}
     `;
@@ -5671,10 +5711,6 @@ function renderModule3AdminDetail(personalInfo, inbodyRecords, anthroRecords, ph
         <tr><td style="padding:8px;font-weight:700;">Grasa corporal</td><td style="padding:8px;text-transform:capitalize;">${(client.objetivos && client.objetivos.grasa_corporal) || '—'}</td></tr>
         <tr><td style="padding:8px;font-weight:700;">Masa muscular</td><td style="padding:8px;text-transform:capitalize;">${(client.objetivos && client.objetivos.masa_muscular) || '—'}</td></tr>
       </tbody></table>
-      <p style="font-weight:700;font-size:13px;margin:16px 0 6px;">Recordatorio de InBody</p>
-      <div style="background:#FBF7EC;border:1px solid #E7DFC9;border-radius:14px;padding:14px 16px;">
-        ${renderProximoInbodyStrip(client.inbody_next_expected_date, client.inbody_cadence_type, client.inbody_reminder_enabled, true, inbodyRecords.length > 0)}
-      </div>
     ` : ''}
   `;
 }
@@ -5717,6 +5753,7 @@ async function renderAdminClientDetail(el) {
       client = fetchedClient;
     }
     const { personalInfo } = await api(`/api/clients/${state.currentClientId}/personal-info`);
+    const { records: inbodyRecords } = await api(`/api/clients/${state.currentClientId}/inbody-records`).catch(() => ({ records: [] }));
     const summaryRows = [
       ['Nombre completo', client && client.name],
       ['Edad', calculateAge(personalInfo.birthdate) != null ? `${calculateAge(personalInfo.birthdate)} años` : null],
@@ -5763,6 +5800,10 @@ async function renderAdminClientDetail(el) {
           </select></div>
           <button class="small-btn" onclick="renewClientPlan('${state.currentClientId}')">Marcar pago recibido hoy / Renovar</button>
         </div>
+      </div>` : ''}
+      ${client ? `<div class="card">
+        <div class="card-title">Recordatorio de InBody</div>
+        ${renderProximoInbodyStrip(client.inbody_next_expected_date, client.inbody_cadence_type, client.inbody_reminder_enabled, true, inbodyRecords.length > 0)}
       </div>` : ''}
       <div class="card">
         <div class="card-title">Módulos asignados</div>
