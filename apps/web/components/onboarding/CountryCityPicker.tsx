@@ -30,16 +30,6 @@ export function CountryCityPicker({ value, onChange }: CountryCityPickerProps) {
       .catch((e: Error) => setLoadError(e.message));
   }, []);
 
-  useEffect(() => {
-    if (!value.country) {
-      setCities([]);
-      return;
-    }
-    getCities(value.country)
-      .then(setCities)
-      .catch((e: Error) => setLoadError(e.message));
-  }, [value.country]);
-
   const allCountries = [...priority, ...rest];
   const phoneCodes = Array.from(new Map(allCountries.filter((c) => c.phonecode).map((c) => [c.phonecode, c])).values());
 
