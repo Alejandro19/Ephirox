@@ -22,9 +22,9 @@ export async function listTrainingCompletions(req: Request, res: Response) {
 }
 
 export async function confirmSession(req: Request, res: Response) {
-  const { tz } = req.body as ConfirmSessionInput;
+  const { tz, source } = req.body as ConfirmSessionInput;
   try {
-    const result = await trainingService.confirmSession(req.params.id, tz);
+    const result = await trainingService.confirmSession(req.params.id, tz, source === 'nfc' ? 'nfc' : 'manual');
     return ok(res, result);
   } catch (e) {
     if (e instanceof trainingService.NoTrainingDaysError) return err(res, e.message, 400);
@@ -42,4 +42,9 @@ export async function useProtector(req: Request, res: Response) {
   const { tz } = req.body as ConfirmSessionInput;
   const streak = await trainingService.useProtector(req.params.id, tz);
   return ok(res, { streak });
+}
+
+export async function listAchievements(req: Request, res: Response) {
+  const achievements = await trainingService.listAchievements(req.params.id);
+  return ok(res, { achievements });
 }

@@ -55,4 +55,12 @@ describe('ConfirmSessionInputSchema', () => {
     expect(ConfirmSessionInputSchema.safeParse({ tz: 'America/Mexico_City' }).success).toBe(true);
     expect(ConfirmSessionInputSchema.safeParse({ tz: '' }).success).toBe(false);
   });
+  it('accepts an optional source of manual or nfc, defaults to nothing when omitted', () => {
+    expect(ConfirmSessionInputSchema.safeParse({ tz: 'America/Mexico_City', source: 'nfc' }).success).toBe(true);
+    expect(ConfirmSessionInputSchema.safeParse({ tz: 'America/Mexico_City', source: 'manual' }).success).toBe(true);
+    expect(ConfirmSessionInputSchema.safeParse({ tz: 'America/Mexico_City' }).success).toBe(true);
+  });
+  it('rejects an invalid source value', () => {
+    expect(ConfirmSessionInputSchema.safeParse({ tz: 'America/Mexico_City', source: 'web' }).success).toBe(false);
+  });
 });

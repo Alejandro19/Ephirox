@@ -49,3 +49,10 @@ trainingRouter.post(
   validateBody(ConfirmSessionInputSchema),
   asyncHandler(trainingController.useProtector)
 );
+
+trainingRouter.get(
+  '/:id/training/achievements',
+  authMiddleware,
+  adminOnly,
+  asyncHandler(trainingController.listAchievements)
+);

@@ -30,5 +30,6 @@ export type TrainingDaysPatch = z.infer<typeof TrainingDaysPatchSchema>;
 
 export const ConfirmSessionInputSchema = z.object({
   tz: z.string().min(1),
+  source: z.enum(['manual', 'nfc']).optional(),
 });
 export type ConfirmSessionInput = z.infer<typeof ConfirmSessionInputSchema>;

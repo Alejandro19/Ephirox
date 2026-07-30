@@ -1,6 +1,16 @@
-import { and, eq } from 'drizzle-orm';
+import { and, desc, eq } from 'drizzle-orm';
 import { db } from '../db/index.js';
-import { clients, trainingCompletions, trainingProtectorUses, type TrainingCompletion, type Client } from '../models/schema.js';
+import {
+  clients,
+  trainingCompletions,
+  trainingProtectorUses,
+  phrases,
+  achievementLogs,
+  type TrainingCompletion,
+  type Client,
+  type Phrase,
+  type AchievementLog,
+} from '../models/schema.js';
 
 export async function updateTrainingDays(clientId: string, trainingDays: number): Promise<Client | null> {
   const [client] = await db.update(clients).set({ trainingDays, updatedAt: new Date() }).where(eq(clients.id, clientId)).returning();
@@ -54,43 +64,87 @@ export class NoTrainingDaysError extends Error {
   }
 }
 
-// Versión mínima del confirm-session del legacy (server.js:1305-1334): inserta
-// el día que corresponde de la semana, sin racha/protector/frase/achievements
-// — esos se agregan en un sub-proyecto futuro que EXTIENDE esta respuesta.
-export async function confirmSession(clientId: string, tz: string): Promise<{ alreadyConfirmedToday: boolean; dayNumber: number | null }> {
+export function pickRandomPhrase(pool: Phrase[], context: string): Phrase | null {
+  const eligible = pool.filter((p) => p.active && (p.context === context || p.context === 'ambas'));
+  if (eligible.length === 0) return null;
+  return eligible[Math.floor(Math.random() * eligible.length)];
+}
+
+// Puerto del confirm-session del legacy (server.js:1305-1367), ahora completo:
+// además de insertar training_completions, dibuja una frase (non-fatal) y
+// calcula la racha; registra achievement_logs solo en la transición exacta
+// de "semana incompleta" a "semana completa" causada por ESTA llamada — el
+// protector nunca dispara un logro (no pasa por este código).
+export async function confirmSession(
+  clientId: string,
+  tz: string,
+  source: 'manual' | 'nfc' = 'manual'
+): Promise<{ alreadyConfirmedToday: boolean; dayNumber: number | null; streak: TrainingStreak; phrase: string | null }> {
   const rows = await db.select().from(clients).where(eq(clients.id, clientId)).limit(1);
   const client = rows[0];
   const trainingDays = client?.trainingDays || 0;
   if (!trainingDays) throw new NoTrainingDaysError();
 
-  const today = todayInTz(tz);
-  const weekStart = weekStartInTz(tz);
+  const effectiveTz = source === 'nfc' ? DEFAULT_TRAINING_TZ : tz;
+  const today = todayInTz(effectiveTz);
+  const weekStart = weekStartInTz(effectiveTz);
   const completions = await listTrainingCompletions(clientId);
   const alreadyConfirmedToday = completions.some((c) => c.completedDate === today);
-  if (alreadyConfirmedToday) {
-    return { alreadyConfirmedToday: true, dayNumber: null };
-  }
 
-  const doneThisWeek = new Set(completions.filter((c) => c.completedDate >= weekStart).map((c) => c.dayNumber)).size;
-  const dayNumber = Math.min(trainingDays, doneThisWeek + 1);
+  let dayNumber: number | null = null;
+  let justInsertedNewSession = false;
+  let wasCompletedBeforeThisCall = false;
 
-  const existing = await db
-    .select()
-    .from(trainingCompletions)
-    .where(
-      and(
-        eq(trainingCompletions.clientId, clientId),
-        eq(trainingCompletions.dayNumber, dayNumber),
-        eq(trainingCompletions.completedDate, today)
+  if (!alreadyConfirmedToday) {
+    const doneThisWeek = new Set(completions.filter((c) => c.completedDate >= weekStart).map((c) => c.dayNumber)).size;
+    wasCompletedBeforeThisCall = doneThisWeek >= trainingDays;
+    dayNumber = Math.min(trainingDays, doneThisWeek + 1);
+
+    const existing = await db
+      .select()
+      .from(trainingCompletions)
+      .where(
+        and(
+          eq(trainingCompletions.clientId, clientId),
+          eq(trainingCompletions.dayNumber, dayNumber),
+          eq(trainingCompletions.completedDate, today)
+        )
       )
-    )
-    .limit(1);
+      .limit(1);
 
-  if (existing.length === 0) {
-    await db.insert(trainingCompletions).values({ clientId, dayNumber, completedDate: today, source: 'manual' });
+    if (existing.length === 0) {
+      await db.insert(trainingCompletions).values({ clientId, dayNumber, completedDate: today, source });
+      justInsertedNewSession = true;
+    }
   }
 
-  return { alreadyConfirmedToday: false, dayNumber };
+  let phrase: string | null = null;
+  try {
+    const pool = await db.select().from(phrases).where(eq(phrases.active, true));
+    const drawn = pickRandomPhrase(pool, 'confirmacion');
+    phrase = drawn ? drawn.text : null;
+  } catch {
+    phrase = null;
+  }
+
+  const streak = await computeTrainingStreakState(clientId, trainingDays, effectiveTz);
+
+  if (justInsertedNewSession && !wasCompletedBeforeThisCall && streak.sessionsDoneThisWeek >= trainingDays) {
+    try {
+      await db.insert(achievementLogs).values({ clientId, type: 'medalla', weekNumber: streak.streakWeeks });
+      if (streak.streakWeeks > 0 && streak.streakWeeks % 4 === 0) {
+        await db.insert(achievementLogs).values({ clientId, type: 'copa', weekNumber: streak.streakWeeks });
+      }
+    } catch {
+      // non-fatal, igual que el legacy
+    }
+  }
+
+  return { alreadyConfirmedToday, dayNumber, streak, phrase };
+}
+
+export async function listAchievements(clientId: string): Promise<AchievementLog[]> {
+  return db.select().from(achievementLogs).where(eq(achievementLogs.clientId, clientId)).orderBy(desc(achievementLogs.earnedAt));
 }
 
 export type TrainingStreak = {

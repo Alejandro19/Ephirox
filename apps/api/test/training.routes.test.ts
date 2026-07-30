@@ -3,7 +3,7 @@ import request from 'supertest';
 import { eq } from 'drizzle-orm';
 import { createApp } from '../src/app.js';
 import { db } from '../src/db/index.js';
-import { clients, trainingCompletions, trainingProtectorUses } from '../src/models/schema.js';
+import { clients, trainingCompletions, trainingProtectorUses, phrases, achievementLogs } from '../src/models/schema.js';
 import { signToken } from '../src/services/auth.service.js';
 
 describe('training routes', () => {
@@ -226,6 +226,114 @@ describe('training routes', () => {
 
       await db.delete(clients).where(eq(clients.id, victim.id));
       await db.delete(clients).where(eq(clients.id, attacker.id));
+    });
+  });
+
+  describe('POST /training/confirm-session (extended)', () => {
+    it('returns a streak object and a null phrase when there are no active phrases', async () => {
+      const [freshClient] = await db
+        .insert(clients)
+        .values({ name: 'Confirm Ext Client', email: `confirmext-${Date.now()}@example.com`, passwordHash: 'x', clientType: 'coaching_1_1', trainingDays: 1, permissions: { training: true } })
+        .returning();
+      const freshToken = signToken({ id: freshClient.id, role: 'cliente', name: freshClient.name, email: freshClient.email });
+
+      const res = await request(app)
+        .post(`/api/clients/${freshClient.id}/training/confirm-session`)
+        .set('Authorization', `Bearer ${freshToken}`)
+        .send({ tz: 'America/Mexico_City' });
+      expect(res.status).toBe(200);
+      expect(res.body.dayNumber).toBe(1);
+      expect(res.body.streak.streakWeeks).toBe(1);
+      expect(res.body.phrase).toBeNull();
+
+      await db.delete(clients).where(eq(clients.id, freshClient.id));
+    });
+
+    it('draws an active "confirmacion"-context phrase when one exists', async () => {
+      const [phraseRow] = await db.insert(phrases).values({ text: 'Cada sesión cuenta.', context: 'confirmacion', active: true }).returning();
+      const [freshClient] = await db
+        .insert(clients)
+        .values({ name: 'Phrase Client', email: `phrase-${Date.now()}@example.com`, passwordHash: 'x', clientType: 'coaching_1_1', trainingDays: 1, permissions: { training: true } })
+        .returning();
+      const freshToken = signToken({ id: freshClient.id, role: 'cliente', name: freshClient.name, email: freshClient.email });
+
+      const res = await request(app)
+        .post(`/api/clients/${freshClient.id}/training/confirm-session`)
+        .set('Authorization', `Bearer ${freshToken}`)
+        .send({ tz: 'America/Mexico_City' });
+      expect(res.status).toBe(200);
+      expect(res.body.phrase).toBe('Cada sesión cuenta.');
+
+      await db.delete(phrases).where(eq(phrases.id, phraseRow.id));
+      await db.delete(clients).where(eq(clients.id, freshClient.id));
+    });
+
+    it('inserts an achievement_logs medalla only on the transition to a completed week, never twice', async () => {
+      const [twoDayClient] = await db
+        .insert(clients)
+        .values({ name: 'Achievement Client', email: `achievement-${Date.now()}@example.com`, passwordHash: 'x', clientType: 'coaching_1_1', trainingDays: 1, permissions: { training: true } })
+        .returning();
+      const token = signToken({ id: twoDayClient.id, role: 'cliente', name: twoDayClient.name, email: twoDayClient.email });
+
+      await request(app).post(`/api/clients/${twoDayClient.id}/training/confirm-session`).set('Authorization', `Bearer ${token}`).send({ tz: 'America/Mexico_City' });
+      // Segunda llamada el mismo día: alreadyConfirmedToday=true, no debe insertar otra medalla.
+      await request(app).post(`/api/clients/${twoDayClient.id}/training/confirm-session`).set('Authorization', `Bearer ${token}`).send({ tz: 'America/Mexico_City' });
+
+      const logs = await db.select().from(achievementLogs).where(eq(achievementLogs.clientId, twoDayClient.id));
+      expect(logs).toHaveLength(1);
+      expect(logs[0].type).toBe('medalla');
+
+      await db.delete(achievementLogs).where(eq(achievementLogs.clientId, twoDayClient.id));
+      await db.delete(clients).where(eq(clients.id, twoDayClient.id));
+    });
+
+    it('does not insert an achievement when the week is completed via the protector', async () => {
+      const [protClient] = await db
+        .insert(clients)
+        .values({ name: 'No Achievement Client', email: `noachievement-${Date.now()}@example.com`, passwordHash: 'x', clientType: 'coaching_1_1', trainingDays: 2, permissions: { training: true } })
+        .returning();
+      const token = signToken({ id: protClient.id, role: 'cliente', name: protClient.name, email: protClient.email });
+
+      await request(app).post(`/api/clients/${protClient.id}/training/use-protector`).set('Authorization', `Bearer ${token}`).send({ tz: 'America/Mexico_City' });
+      await request(app).post(`/api/clients/${protClient.id}/training/confirm-session`).set('Authorization', `Bearer ${token}`).send({ tz: 'America/Mexico_City' });
+
+      const logs = await db.select().from(achievementLogs).where(eq(achievementLogs.clientId, protClient.id));
+      expect(logs).toHaveLength(0);
+
+      await db.delete(clients).where(eq(clients.id, protClient.id));
+    });
+  });
+
+  describe('GET /training/achievements', () => {
+    it('is admin-only', async () => {
+      const [freshClient] = await db
+        .insert(clients)
+        .values({ name: 'Achievements View Client', email: `achview-${Date.now()}@example.com`, passwordHash: 'x', clientType: 'coaching_1_1' })
+        .returning();
+      const clientToken = signToken({ id: freshClient.id, role: 'cliente', name: freshClient.name, email: freshClient.email });
+
+      const res = await request(app).get(`/api/clients/${freshClient.id}/training/achievements`).set('Authorization', `Bearer ${clientToken}`);
+      expect(res.status).toBe(403);
+
+      await db.delete(clients).where(eq(clients.id, freshClient.id));
+    });
+
+    it('lists achievements ordered by earned_at descending', async () => {
+      const [freshClient] = await db
+        .insert(clients)
+        .values({ name: 'Achievements List Client', email: `achlist-${Date.now()}@example.com`, passwordHash: 'x', clientType: 'coaching_1_1' })
+        .returning();
+      await db.insert(achievementLogs).values([
+        { clientId: freshClient.id, type: 'medalla', weekNumber: 1 },
+        { clientId: freshClient.id, type: 'medalla', weekNumber: 2 },
+      ]);
+
+      const res = await request(app).get(`/api/clients/${freshClient.id}/training/achievements`).set('Authorization', `Bearer ${adminToken}`);
+      expect(res.status).toBe(200);
+      expect(res.body.achievements).toHaveLength(2);
+
+      await db.delete(achievementLogs).where(eq(achievementLogs.clientId, freshClient.id));
+      await db.delete(clients).where(eq(clients.id, freshClient.id));
     });
   });
 });
