@@ -164,3 +164,31 @@ export const clientNotifications = pgTable('client_notifications', {
 export type Exercise = typeof exercises.$inferSelect;
 export type TrainingCompletion = typeof trainingCompletions.$inferSelect;
 export type ClientNotification = typeof clientNotifications.$inferSelect;
+
+export const phrases = pgTable('phrases', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  text: text('text').notNull(),
+  context: text('context').notNull(),
+  active: boolean('active').notNull().default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+});
+
+export const trainingProtectorUses = pgTable('training_protector_uses', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  clientId: uuid('client_id').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+  weekStart: date('week_start').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+export const achievementLogs = pgTable('achievement_logs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  clientId: uuid('client_id').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+  type: text('type').notNull(),
+  weekNumber: integer('week_number').notNull(),
+  earnedAt: timestamp('earned_at', { withTimezone: true }).defaultNow(),
+});
+
+export type Phrase = typeof phrases.$inferSelect;
+export type TrainingProtectorUse = typeof trainingProtectorUses.$inferSelect;
+export type AchievementLog = typeof achievementLogs.$inferSelect;

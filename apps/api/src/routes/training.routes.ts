@@ -32,3 +32,11 @@ trainingRouter.post(
   validateBody(ConfirmSessionInputSchema),
   asyncHandler(trainingController.confirmSession)
 );
+
+trainingRouter.get(
+  '/:id/training/streak',
+  authMiddleware,
+  ownerOrAdmin,
+  requirePermission('training'),
+  asyncHandler(trainingController.getStreak)
+);

@@ -31,3 +31,9 @@ export async function confirmSession(req: Request, res: Response) {
     throw e;
   }
 }
+
+export async function getStreak(req: Request, res: Response) {
+  const tz = typeof req.query.tz === 'string' ? req.query.tz : '';
+  const streak = await trainingService.getStreak(req.params.id, tz);
+  return ok(res, { streak });
+}

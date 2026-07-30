@@ -1,6 +1,6 @@
 import { and, eq } from 'drizzle-orm';
 import { db } from '../db/index.js';
-import { clients, trainingCompletions, type TrainingCompletion, type Client } from '../models/schema.js';
+import { clients, trainingCompletions, trainingProtectorUses, type TrainingCompletion, type Client } from '../models/schema.js';
 
 export async function updateTrainingDays(clientId: string, trainingDays: number): Promise<Client | null> {
   const [client] = await db.update(clients).set({ trainingDays, updatedAt: new Date() }).where(eq(clients.id, clientId)).returning();
@@ -11,18 +11,40 @@ export async function listTrainingCompletions(clientId: string): Promise<Trainin
   return db.select().from(trainingCompletions).where(eq(trainingCompletions.clientId, clientId));
 }
 
+export const DEFAULT_TRAINING_TZ = 'America/Mexico_City';
+const WEEKDAY_INDEX: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+
+function safeTz(tz: string | undefined): string {
+  if (!tz) return DEFAULT_TRAINING_TZ;
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone: tz });
+    return tz;
+  } catch {
+    return DEFAULT_TRAINING_TZ;
+  }
+}
+
 function todayInTz(tz: string): string {
-  return new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+  return new Intl.DateTimeFormat('en-CA', { timeZone: safeTz(tz), year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+}
+
+function dowInTz(tz: string): number {
+  const short = new Intl.DateTimeFormat('en-US', { timeZone: safeTz(tz), weekday: 'short' }).format(new Date());
+  return WEEKDAY_INDEX[short];
+}
+
+function addDaysISO(iso: string, days: number): string {
+  const [y, m, d] = iso.split('-').map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d + days));
+  return dt.toISOString().slice(0, 10);
 }
 
 // Semana calendario lunes→domingo, calculada en la tz dada — mismo criterio
 // que getWeekStart() en el legacy (index.html).
 function weekStartInTz(tz: string): string {
   const today = todayInTz(tz);
-  const d = new Date(`${today}T00:00:00`);
-  const day = d.getDay();
-  d.setDate(d.getDate() + ((day === 0 ? -6 : 1) - day));
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const dow = dowInTz(tz);
+  return addDaysISO(today, (dow === 0 ? -6 : 1) - dow);
 }
 
 export class NoTrainingDaysError extends Error {
@@ -69,4 +91,55 @@ export async function confirmSession(clientId: string, tz: string): Promise<{ al
   }
 
   return { alreadyConfirmedToday: false, dayNumber };
+}
+
+export type TrainingStreak = {
+  streakWeeks: number;
+  sessionsDoneThisWeek: number;
+  sessionsRequiredThisWeek: number;
+  protectorAvailable: boolean;
+  protectorUsedThisWeek: boolean;
+  atRisk: boolean;
+};
+
+// Puerto de computeTrainingStreakState (server.js:1254-1287).
+export async function computeTrainingStreakState(clientId: string, trainingDays: number, tz: string): Promise<TrainingStreak> {
+  const [completions, protectorUses] = await Promise.all([
+    listTrainingCompletions(clientId),
+    db.select().from(trainingProtectorUses).where(eq(trainingProtectorUses.clientId, clientId)),
+  ]);
+  const protectorWeeks = new Set(protectorUses.map((p) => p.weekStart));
+  const weekStart = weekStartInTz(tz);
+  const sessionsDoneThisWeek = new Set(completions.filter((c) => c.completedDate >= weekStart).map((c) => c.dayNumber)).size;
+  const protectorUsedThisWeek = protectorWeeks.has(weekStart);
+
+  let streakWeeks = trainingDays > 0 && (sessionsDoneThisWeek >= trainingDays || protectorUsedThisWeek) ? 1 : 0;
+  let cStart = addDaysISO(weekStart, -7);
+  for (let i = 0; i < 208 && trainingDays > 0; i++) {
+    const cEnd = addDaysISO(cStart, 7);
+    const doneInWeek = new Set(completions.filter((c) => c.completedDate >= cStart && c.completedDate < cEnd).map((c) => c.dayNumber)).size;
+    if (doneInWeek >= trainingDays || protectorWeeks.has(cStart)) {
+      streakWeeks++;
+      cStart = addDaysISO(cStart, -7);
+    } else break;
+  }
+
+  const dow = dowInTz(tz);
+  const daysLeftInWeek = dow === 0 ? 1 : 8 - dow;
+  const atRisk = trainingDays > 0 && !protectorUsedThisWeek && sessionsDoneThisWeek < trainingDays && daysLeftInWeek <= 2;
+
+  return {
+    streakWeeks,
+    sessionsDoneThisWeek,
+    sessionsRequiredThisWeek: trainingDays,
+    protectorAvailable: !protectorUsedThisWeek,
+    protectorUsedThisWeek,
+    atRisk,
+  };
+}
+
+export async function getStreak(clientId: string, tz: string): Promise<TrainingStreak> {
+  const rows = await db.select().from(clients).where(eq(clients.id, clientId)).limit(1);
+  const trainingDays = rows[0]?.trainingDays || 0;
+  return computeTrainingStreakState(clientId, trainingDays, tz);
 }
