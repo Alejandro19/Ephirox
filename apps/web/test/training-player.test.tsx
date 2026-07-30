@@ -70,7 +70,7 @@ describe('TrainingPlayer', () => {
     expect(onExit).toHaveBeenCalled();
   });
 
-  it('shows series/reps KPIs for a non-cardio exercise and duration for cardio', () => {
+  it('shows series/reps KPIs for a non-cardio exercise and an Iniciar button for cardio', () => {
     const { rerender } = render(
       <TrainingPlayer exercises={[exercise('e1', { series: 4, reps: '12' })]} completedIds={new Set()} onMarkComplete={vi.fn()} onExit={vi.fn()} />
     );
@@ -85,6 +85,33 @@ describe('TrainingPlayer', () => {
         onExit={vi.fn()}
       />
     );
-    expect(screen.getByText('05:00')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Iniciar' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Marcar completado' })).not.toBeInTheDocument();
+  });
+
+  it('always shows a Volver al día button that calls onExit regardless of position', () => {
+    const onExit = vi.fn();
+    render(<TrainingPlayer exercises={[exercise('e1'), exercise('e2')]} completedIds={new Set()} onMarkComplete={vi.fn()} onExit={onExit} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Volver al día' }));
+    expect(onExit).toHaveBeenCalled();
+  });
+
+  it('runs a cardio duration countdown, then auto-completes and starts the rest timer', () => {
+    const onMarkComplete = vi.fn();
+    render(
+      <TrainingPlayer
+        exercises={[exercise('e1', { category: 'cardio', duration: '00:02', series: null, reps: null })]}
+        completedIds={new Set()}
+        onMarkComplete={onMarkComplete}
+        onExit={vi.fn()}
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Iniciar' }));
+    expect(screen.getByText(/Duración: 2s/)).toBeInTheDocument();
+    act(() => {
+      vi.advanceTimersByTime(2000);
+    });
+    expect(onMarkComplete).toHaveBeenCalledWith('e1');
+    expect(screen.getByText(/Descanso/)).toBeInTheDocument();
   });
 });
