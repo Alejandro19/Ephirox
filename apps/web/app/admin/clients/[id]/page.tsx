@@ -12,6 +12,7 @@ import {
   type ProgressPhoto,
   type InbodyRecord,
 } from '../../../../lib/personal-info-client';
+import { AdminExercisePanel } from '../../../../components/training/AdminExercisePanel';
 
 export default function ClientDetailPage() {
   const params = useParams<{ id: string }>();
@@ -56,6 +57,11 @@ export default function ClientDetailPage() {
         <p>
           <span>Altura:</span> <span>{personalInfo?.height ?? '—'}</span>
         </p>
+      </section>
+
+      <section>
+        <h2>Entrenamiento</h2>
+        <AdminExercisePanel clientId={clientId} />
       </section>
 
       <section>
