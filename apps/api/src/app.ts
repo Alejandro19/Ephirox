@@ -6,6 +6,7 @@ import { authRouter } from './routes/auth.routes.js';
 import { clientsRouter } from './routes/clients.routes.js';
 import { personalInfoRouter } from './routes/personal-info.routes.js';
 import { geoRouter } from './routes/geo.routes.js';
+import { exercisesRouter } from './routes/exercises.routes.js';
 
 const ALLOWED_ORIGINS = ['https://latribu-oficial.vercel.app', 'http://localhost:3000'];
 
@@ -28,6 +29,7 @@ export function createApp() {
   app.use('/api/auth', authRouter);
   app.use('/api/clients', clientsRouter);
   app.use('/api/clients', personalInfoRouter);
+  app.use('/api/clients', exercisesRouter);
 
   app.use((error: unknown, req: Request, res: Response, _next: NextFunction) => {
     console.error(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`, error);
