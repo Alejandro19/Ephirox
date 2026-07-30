@@ -125,3 +125,42 @@ export type PersonalInfo = typeof personalInfo.$inferSelect;
 export type AnthropometricRecord = typeof anthropometricRecords.$inferSelect;
 export type ProgressPhoto = typeof progressPhotos.$inferSelect;
 export type BioInbodyRecord = typeof bioInbodyRecords.$inferSelect;
+
+export const exercises = pgTable('exercises', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  clientId: uuid('client_id').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+  title: text('title').notNull(),
+  dayNumber: integer('day_number').notNull().default(1),
+  category: text('category').notNull().default('strength'),
+  series: integer('series'),
+  reps: text('reps'),
+  duration: text('duration'),
+  restTime: text('rest_time'),
+  description: text('description'),
+  recommendations: text('recommendations'),
+  youtubeUrl: text('youtube_url'),
+  sortOrder: integer('sort_order').notNull().default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+});
+
+export const trainingCompletions = pgTable('training_completions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  clientId: uuid('client_id').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+  dayNumber: integer('day_number').notNull(),
+  completedDate: date('completed_date').notNull().defaultNow(),
+  source: text('source').notNull().default('manual'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+export const clientNotifications = pgTable('client_notifications', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  clientId: uuid('client_id').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+  message: text('message').notNull(),
+  read: boolean('read').notNull().default(false),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+export type Exercise = typeof exercises.$inferSelect;
+export type TrainingCompletion = typeof trainingCompletions.$inferSelect;
+export type ClientNotification = typeof clientNotifications.$inferSelect;
