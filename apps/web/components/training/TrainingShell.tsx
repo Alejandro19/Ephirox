@@ -1,12 +1,20 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import type { Exercise, ExerciseCategory, TrainingCompletion } from '../../lib/training-client';
-import { getClientTrainingDays, listExercises, listTrainingCompletions, confirmSession } from '../../lib/training-client';
+import type { Exercise, ExerciseCategory, TrainingCompletion, TrainingStreak } from '../../lib/training-client';
+import {
+  getClientTrainingDays,
+  listExercises,
+  listTrainingCompletions,
+  confirmSession,
+  getStreak,
+  useProtector,
+} from '../../lib/training-client';
 import { isDayCompletedThisWeek } from '../../lib/training-home-logic';
 import { TrainingHome } from './TrainingHome';
 import { TrainingDayView } from './TrainingDayView';
 import { TrainingPlayer } from './TrainingPlayer';
+import { SessionConfirmedScreen } from './SessionConfirmedScreen';
 
 export type TrainingShellProps = {
   clientId: string;
@@ -24,22 +32,28 @@ export function TrainingShell({ clientId }: TrainingShellProps) {
   const [trainingDays, setTrainingDays] = useState(0);
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [completions, setCompletions] = useState<TrainingCompletion[]>([]);
+  const [streak, setStreak] = useState<TrainingStreak | null>(null);
   const [day, setDay] = useState<number | null>(null);
   const [category, setCategory] = useState<ExerciseCategory | null>(null);
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
   const [completingDay, setCompletingDay] = useState(false);
+  const [protectorPending, setProtectorPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [completionNotice, setCompletionNotice] = useState<string | null>(null);
+  const [confirmedResult, setConfirmedResult] = useState<{ streak: TrainingStreak; phrase: string | null } | null>(null);
 
   const load = useCallback(async () => {
-    const [days, exerciseList, completionList] = await Promise.all([
+    const tz = clientTz();
+    const [days, exerciseList, completionList, streakState] = await Promise.all([
       getClientTrainingDays(clientId),
       listExercises(clientId),
       listTrainingCompletions(clientId),
+      getStreak(clientId, tz),
     ]);
     setTrainingDays(days);
     setExercises(exerciseList);
     setCompletions(completionList);
+    setStreak(streakState);
   }, [clientId]);
 
   useEffect(() => {
@@ -66,16 +80,35 @@ export function TrainingShell({ clientId }: TrainingShellProps) {
   async function handleCompleteDay() {
     setCompletingDay(true);
     try {
-      const { alreadyConfirmedToday } = await confirmSession(clientId, clientTz());
+      const result = await confirmSession(clientId, clientTz());
       await load();
-      backToHome();
-      setCompletionNotice(
-        alreadyConfirmedToday ? 'Ya confirmaste tu sesión de hoy — vuelve mañana para el siguiente día.' : null
-      );
+      if (result.alreadyConfirmedToday) {
+        backToHome();
+        setCompletionNotice('Ya confirmaste tu sesión de hoy — vuelve mañana para el siguiente día.');
+      } else {
+        setConfirmedResult({ streak: result.streak, phrase: result.phrase });
+      }
     } catch (e) {
       setError((e as Error).message);
     } finally {
       setCompletingDay(false);
+    }
+  }
+
+  function closeConfirmedScreen() {
+    setConfirmedResult(null);
+    backToHome();
+  }
+
+  async function handleUseProtector() {
+    setProtectorPending(true);
+    try {
+      const streakState = await useProtector(clientId, clientTz());
+      setStreak(streakState);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setProtectorPending(false);
     }
   }
 
@@ -84,6 +117,10 @@ export function TrainingShell({ clientId }: TrainingShellProps) {
   }
 
   if (error) return <p role="alert">{error}</p>;
+
+  if (confirmedResult) {
+    return <SessionConfirmedScreen streak={confirmedResult.streak} phrase={confirmedResult.phrase} onClose={closeConfirmedScreen} />;
+  }
 
   if (day && category) {
     const categoryExercises = exercises
@@ -120,7 +157,15 @@ export function TrainingShell({ clientId }: TrainingShellProps) {
           </button>
         </p>
       )}
-      <TrainingHome trainingDays={trainingDays} exercises={exercises} completions={completions} onOpenDay={openDay} />
+      <TrainingHome
+        trainingDays={trainingDays}
+        exercises={exercises}
+        completions={completions}
+        streak={streak}
+        onOpenDay={openDay}
+        onUseProtector={handleUseProtector}
+        protectorPending={protectorPending}
+      />
     </>
   );
 }

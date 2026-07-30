@@ -28,7 +28,20 @@ describe('TrainingShell', () => {
     vi.mocked(trainingClient.getClientTrainingDays).mockResolvedValue(1);
     vi.mocked(trainingClient.listExercises).mockResolvedValue([exercise('e1', 1)]);
     vi.mocked(trainingClient.listTrainingCompletions).mockResolvedValue([]);
-    vi.mocked(trainingClient.confirmSession).mockResolvedValue({ alreadyConfirmedToday: false, dayNumber: 1 });
+    vi.mocked(trainingClient.getStreak).mockResolvedValue({
+      streakWeeks: 0,
+      sessionsDoneThisWeek: 0,
+      sessionsRequiredThisWeek: 1,
+      protectorAvailable: true,
+      protectorUsedThisWeek: false,
+      atRisk: false,
+    });
+    vi.mocked(trainingClient.confirmSession).mockResolvedValue({
+      alreadyConfirmedToday: false,
+      dayNumber: 1,
+      streak: { streakWeeks: 1, sessionsDoneThisWeek: 1, sessionsRequiredThisWeek: 1, protectorAvailable: true, protectorUsedThisWeek: false, atRisk: false },
+      phrase: 'Vas muy bien.',
+    });
   });
 
   it('loads training data and shows the home screen', async () => {
@@ -45,7 +58,7 @@ describe('TrainingShell', () => {
     await waitFor(() => expect(screen.getByText(/Descanso/)).toBeInTheDocument());
   });
 
-  it('calls confirmSession when completing the day and returns to home', async () => {
+  it('calls confirmSession when completing the day and returns to home after closing the confirmed screen', async () => {
     vi.mocked(trainingClient.listExercises).mockResolvedValue([exercise('e1', 1, 'warmup')]);
     render(<TrainingShell clientId="c1" />);
     fireEvent.click(await screen.findByRole('button', { name: /Día 1/ }));
@@ -55,13 +68,20 @@ describe('TrainingShell', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Volver al día' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Completar Entrenamiento Día 1' }));
     await waitFor(() => expect(trainingClient.confirmSession).toHaveBeenCalledWith('c1', expect.any(String)));
+    // A real (non-duplicate) confirmation shows the SessionConfirmedScreen first.
+    fireEvent.click(await screen.findByRole('button', { name: 'Cerrar' }));
     // Confirms the shell actually returns to the home screen afterwards.
     await screen.findByRole('button', { name: /Día 1/ });
   });
 
   it('shows a notice when confirmSession reports the session was already confirmed today', async () => {
     vi.mocked(trainingClient.listExercises).mockResolvedValue([exercise('e1', 1, 'warmup')]);
-    vi.mocked(trainingClient.confirmSession).mockResolvedValue({ alreadyConfirmedToday: true, dayNumber: null });
+    vi.mocked(trainingClient.confirmSession).mockResolvedValue({
+      alreadyConfirmedToday: true,
+      dayNumber: null,
+      streak: { streakWeeks: 1, sessionsDoneThisWeek: 1, sessionsRequiredThisWeek: 1, protectorAvailable: true, protectorUsedThisWeek: false, atRisk: false },
+      phrase: null,
+    });
     render(<TrainingShell clientId="c1" />);
     fireEvent.click(await screen.findByRole('button', { name: /Día 1/ }));
     fireEvent.click(await screen.findByRole('button', { name: /Calentamiento/ }));
@@ -84,5 +104,62 @@ describe('TrainingShell', () => {
     fireEvent.click(await screen.findByRole('button', { name: /Día 1/ }));
     await screen.findByRole('button', { name: /Completar Entrenamiento/ });
     expect(screen.queryByText('Día completado esta semana.')).not.toBeInTheDocument();
+  });
+
+  it('shows SessionConfirmedScreen after a real (non-duplicate) day completion', async () => {
+    vi.mocked(trainingClient.listExercises).mockResolvedValue([exercise('e1', 1, 'warmup')]);
+    render(<TrainingShell clientId="c1" />);
+    fireEvent.click(await screen.findByRole('button', { name: /Día 1/ }));
+    fireEvent.click(await screen.findByRole('button', { name: /Calentamiento/ }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Marcar completado' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Volver al día' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Completar Entrenamiento Día 1' }));
+    expect(await screen.findByText('¡Sesión confirmada!')).toBeInTheDocument();
+    expect(screen.getByText('"Vas muy bien."')).toBeInTheDocument();
+  });
+
+  it('returns to home when Cerrar is clicked on the confirmed screen', async () => {
+    vi.mocked(trainingClient.listExercises).mockResolvedValue([exercise('e1', 1, 'warmup')]);
+    render(<TrainingShell clientId="c1" />);
+    fireEvent.click(await screen.findByRole('button', { name: /Día 1/ }));
+    fireEvent.click(await screen.findByRole('button', { name: /Calentamiento/ }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Marcar completado' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Volver al día' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Completar Entrenamiento Día 1' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Cerrar' }));
+    expect(await screen.findByRole('button', { name: /Día 1/ })).toBeInTheDocument();
+  });
+
+  it('shows the completionNotice (not the confirmed screen) when alreadyConfirmedToday is true', async () => {
+    vi.mocked(trainingClient.listExercises).mockResolvedValue([exercise('e1', 1, 'warmup')]);
+    vi.mocked(trainingClient.confirmSession).mockResolvedValue({
+      alreadyConfirmedToday: true,
+      dayNumber: null,
+      streak: { streakWeeks: 1, sessionsDoneThisWeek: 1, sessionsRequiredThisWeek: 1, protectorAvailable: true, protectorUsedThisWeek: false, atRisk: false },
+      phrase: null,
+    });
+    render(<TrainingShell clientId="c1" />);
+    fireEvent.click(await screen.findByRole('button', { name: /Día 1/ }));
+    fireEvent.click(await screen.findByRole('button', { name: /Calentamiento/ }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Marcar completado' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Volver al día' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Completar Entrenamiento Día 1' }));
+    expect(await screen.findByText(/Ya confirmaste tu sesión de hoy/)).toBeInTheDocument();
+    expect(screen.queryByText('¡Sesión confirmada!')).not.toBeInTheDocument();
+  });
+
+  it('calls useProtector and updates the displayed streak', async () => {
+    vi.mocked(trainingClient.useProtector).mockResolvedValue({
+      streakWeeks: 1,
+      sessionsDoneThisWeek: 0,
+      sessionsRequiredThisWeek: 1,
+      protectorAvailable: false,
+      protectorUsedThisWeek: true,
+      atRisk: false,
+    });
+    render(<TrainingShell clientId="c1" />);
+    fireEvent.click(await screen.findByRole('button', { name: /usar protector/i }));
+    await waitFor(() => expect(trainingClient.useProtector).toHaveBeenCalledWith('c1', expect.any(String)));
+    expect(await screen.findByRole('button', { name: /^usado$/i })).toBeInTheDocument();
   });
 });
