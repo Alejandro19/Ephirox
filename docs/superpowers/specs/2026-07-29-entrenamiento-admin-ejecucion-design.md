@@ -25,6 +25,7 @@ Portar al nuevo stack:
 | Punto | Decisión |
 |---|---|
 | Botón "Completar día" vs. dependencia de racha/protector (sub-proyecto #2) | Incluir un `confirm-session` **mínimo** ahora: inserta `training_completions` calculando el día automáticamente (siguiente no completado de la semana), sin streak/protector/phrase/achievements. El sub-proyecto #2 extenderá la respuesta de este mismo endpoint. |
+| `ClientUpdateInputSchema` (código ya fusionado, fuera del alcance original de este spec) acepta `trainingDays`/`assignedQuoteId` vía `PUT /api/clients/:id`, que es `ownerOrAdmin` — un cliente podría auto-asignarse sus propios días de entrenamiento, saltándose el endpoint admin-only dedicado. Hallazgo surgido al planear este sub-proyecto, sin UI que lo explote hoy. | **Corregir ahora**: quitar ambos campos de `ClientUpdateInputSchema` como parte de este plan. |
 | Subida de video propio (`upload-video`, sin UI legacy conectada) | **No portar.** Solo `youtubeUrl` en el formulario de ejercicio. |
 | Reorder de ejercicios (legacy no tiene ninguno; `sort_order` nunca se setea) | **Agregar reorder simple**: botones subir/bajar en el panel admin que hacen swap de `sort_order` entre el ejercicio y su vecino. |
 | Persistencia de "ejercicio completado" (legacy es memory-only, se pierde al recargar) | **Mantener session-only** — estado en memoria del componente cliente, no se persiste en backend. |
@@ -62,13 +63,13 @@ export const ExerciseCategorySchema = z.enum(['warmup', 'strength', 'cardio']);
 
 export const ExerciseInputSchema = z.object({
   title: z.string().min(1),
-  dayNumber: z.number().int().min(1).max(7),
+  day_number: z.coerce.number().int().min(1).max(7),
   category: ExerciseCategorySchema,
-  series: z.number().int().min(1).nullable().optional(),
+  series: z.coerce.number().int().min(1).nullable().optional(),
   reps: z.string().nullable().optional(),
   duration: z.string().nullable().optional(),
-  restTime: z.string().nullable().optional(),
-  youtubeUrl: z.string().url().nullable().optional(),
+  rest_time: z.string().nullable().optional(),
+  youtube_url: z.string().url().nullable().optional(),
   description: z.string().nullable().optional(),
   recommendations: z.string().nullable().optional(),
 });
@@ -78,14 +79,14 @@ export const ExerciseOrderPatchSchema = z.object({
 });
 
 export const TrainingDaysPatchSchema = z.object({
-  trainingDays: z.number().int().min(1).max(7),
+  training_days: z.coerce.number().int().min(1).max(7),
 });
 
 export const ConfirmSessionInputSchema = z.object({
   tz: z.string().min(1),
 });
 ```
-Nota: `series`/`reps` obligatorios solo cuando `category !== 'cardio'`; `duration` obligatorio solo cuando `category === 'cardio'` — esta validación condicional se hace en el frontend (mismo patrón `toggleExerciseCategoryFields` unificado) y no se codifica como refinement de Zod, ya que el legacy tampoco lo valida server-side (los campos llegan como texto libre opcional en ambos casos).
+Nota: request bodies siguen la convención snake_case ya establecida por `personal-info.ts` (coincide con los JSON bodies del legacy); las respuestas GET son filas crudas de Drizzle y por lo tanto camelCase (`dayNumber`, `youtubeUrl`, etc.) — ambas convenciones conviven en el codebase y no se normalizan entre sí. `series`/`reps` obligatorios solo cuando `category !== 'cardio'`; `duration` obligatorio solo cuando `category === 'cardio'` — esta validación condicional se hace en el frontend (mismo patrón `toggleExerciseCategoryFields` unificado) y no se codifica como refinement de Zod, ya que el legacy tampoco lo valida server-side (los campos llegan como texto libre opcional en ambos casos).
 
 ### Frontend (`apps/web`)
 
