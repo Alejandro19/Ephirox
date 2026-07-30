@@ -51,10 +51,24 @@ describe('TrainingShell', () => {
     fireEvent.click(await screen.findByRole('button', { name: /Día 1/ }));
     fireEvent.click(await screen.findByRole('button', { name: /Calentamiento/ }));
     fireEvent.click(await screen.findByRole('button', { name: 'Marcar completado' }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Anterior' })); // no-op, stays; then exit via day-view back path
-    // Return to day view directly through the player's back-to-day affordance is exercised in Task 9;
-    // here we assert the shell wires onCompleteDay to confirmSession once all exercises are done.
-    expect(trainingClient.confirmSession).not.toHaveBeenCalled();
+    // Leave the category via the always-present "Volver al día" button, back to day view.
+    fireEvent.click(await screen.findByRole('button', { name: 'Volver al día' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Completar Entrenamiento Día 1' }));
+    await waitFor(() => expect(trainingClient.confirmSession).toHaveBeenCalledWith('c1', expect.any(String)));
+    // Confirms the shell actually returns to the home screen afterwards.
+    await screen.findByRole('button', { name: /Día 1/ });
+  });
+
+  it('shows a notice when confirmSession reports the session was already confirmed today', async () => {
+    vi.mocked(trainingClient.listExercises).mockResolvedValue([exercise('e1', 1, 'warmup')]);
+    vi.mocked(trainingClient.confirmSession).mockResolvedValue({ alreadyConfirmedToday: true, dayNumber: null });
+    render(<TrainingShell clientId="c1" />);
+    fireEvent.click(await screen.findByRole('button', { name: /Día 1/ }));
+    fireEvent.click(await screen.findByRole('button', { name: /Calentamiento/ }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Marcar completado' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Volver al día' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Completar Entrenamiento Día 1' }));
+    await screen.findByText('Ya confirmaste tu sesión de hoy — vuelve mañana para el siguiente día.');
   });
 
   it('does not treat an old (prior-week) completion as completed this week', async () => {

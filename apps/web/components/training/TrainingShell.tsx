@@ -29,6 +29,7 @@ export function TrainingShell({ clientId }: TrainingShellProps) {
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
   const [completingDay, setCompletingDay] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [completionNotice, setCompletionNotice] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const [days, exerciseList, completionList] = await Promise.all([
@@ -49,6 +50,7 @@ export function TrainingShell({ clientId }: TrainingShellProps) {
     setDay(d);
     setCategory(null);
     setCompletedIds(new Set());
+    setCompletionNotice(null);
   }
 
   function backToHome() {
@@ -64,9 +66,12 @@ export function TrainingShell({ clientId }: TrainingShellProps) {
   async function handleCompleteDay() {
     setCompletingDay(true);
     try {
-      await confirmSession(clientId, clientTz());
+      const { alreadyConfirmedToday } = await confirmSession(clientId, clientTz());
       await load();
       backToHome();
+      setCompletionNotice(
+        alreadyConfirmedToday ? 'Ya confirmaste tu sesión de hoy — vuelve mañana para el siguiente día.' : null
+      );
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -105,5 +110,17 @@ export function TrainingShell({ clientId }: TrainingShellProps) {
     );
   }
 
-  return <TrainingHome trainingDays={trainingDays} exercises={exercises} completions={completions} onOpenDay={openDay} />;
+  return (
+    <>
+      {completionNotice && (
+        <p>
+          {completionNotice}
+          <button type="button" onClick={() => setCompletionNotice(null)}>
+            Cerrar
+          </button>
+        </p>
+      )}
+      <TrainingHome trainingDays={trainingDays} exercises={exercises} completions={completions} onOpenDay={openDay} />
+    </>
+  );
 }
