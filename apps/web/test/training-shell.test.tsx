@@ -56,4 +56,19 @@ describe('TrainingShell', () => {
     // here we assert the shell wires onCompleteDay to confirmSession once all exercises are done.
     expect(trainingClient.confirmSession).not.toHaveBeenCalled();
   });
+
+  it('does not treat an old (prior-week) completion as completed this week', async () => {
+    const oldCompletion: trainingClient.TrainingCompletion = {
+      id: 'c1',
+      clientId: 'c1',
+      dayNumber: 1,
+      completedDate: '2020-01-01',
+      source: 'manual',
+    };
+    vi.mocked(trainingClient.listTrainingCompletions).mockResolvedValue([oldCompletion]);
+    render(<TrainingShell clientId="c1" />);
+    fireEvent.click(await screen.findByRole('button', { name: /Día 1/ }));
+    await screen.findByRole('button', { name: /Completar Entrenamiento/ });
+    expect(screen.queryByText('Día completado esta semana.')).not.toBeInTheDocument();
+  });
 });

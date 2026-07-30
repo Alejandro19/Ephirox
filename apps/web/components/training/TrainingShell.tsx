@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import type { Exercise, ExerciseCategory, TrainingCompletion } from '../../lib/training-client';
 import { getClientTrainingDays, listExercises, listTrainingCompletions, confirmSession } from '../../lib/training-client';
+import { isDayCompletedThisWeek } from '../../lib/training-home-logic';
 import { TrainingHome } from './TrainingHome';
 import { TrainingDayView } from './TrainingDayView';
 import { TrainingPlayer } from './TrainingPlayer';
@@ -90,7 +91,7 @@ export function TrainingShell({ clientId }: TrainingShellProps) {
 
   if (day) {
     const dayExercises = exercises.filter((ex) => ex.dayNumber === day);
-    const alreadyCompletedThisWeek = completions.some((c) => c.dayNumber === day);
+    const alreadyCompletedThisWeek = isDayCompletedThisWeek(day, completions);
     return (
       <TrainingDayView
         day={day}
