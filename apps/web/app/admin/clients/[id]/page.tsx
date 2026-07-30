@@ -12,6 +12,7 @@ import {
   type ProgressPhoto,
   type InbodyRecord,
 } from '../../../../lib/personal-info-client';
+import { getAchievements, type Achievement } from '../../../../lib/training-client';
 import { AdminExercisePanel } from '../../../../components/training/AdminExercisePanel';
 
 export default function ClientDetailPage() {
@@ -21,16 +22,24 @@ export default function ClientDetailPage() {
   const [anthropometrics, setAnthropometrics] = useState<AnthropometricRecord[]>([]);
   const [photos, setPhotos] = useState<ProgressPhoto[]>([]);
   const [inbodyRecords, setInbodyRecords] = useState<InbodyRecord[]>([]);
+  const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([getPersonalInfo(clientId), getAnthropometrics(clientId), getPhotos(clientId), getInbodyRecords(clientId)])
-      .then(([info, records, photoList, inbody]) => {
+    Promise.all([
+      getPersonalInfo(clientId),
+      getAnthropometrics(clientId),
+      getPhotos(clientId),
+      getInbodyRecords(clientId),
+      getAchievements(clientId),
+    ])
+      .then(([info, records, photoList, inbody, achievementList]) => {
         setPersonalInfo(info);
         setAnthropometrics(records);
         setPhotos(photoList);
         setInbodyRecords(inbody);
+        setAchievements(achievementList);
       })
       .catch((e: Error) => setError(e.message))
       .finally(() => setLoading(false));
@@ -62,6 +71,21 @@ export default function ClientDetailPage() {
       <section>
         <h2>Entrenamiento</h2>
         <AdminExercisePanel clientId={clientId} />
+      </section>
+
+      <section>
+        <h2>Logros</h2>
+        {achievements.length === 0 ? (
+          <p>Sin logros todavía.</p>
+        ) : (
+          <ul>
+            {achievements.map((achievement) => (
+              <li key={achievement.id}>
+                <span>{achievement.type === 'medalla' ? '🎖️ Medalla' : '🏆 Copa'}</span> — <span>Semana {achievement.weekNumber}</span>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
 
       <section>
