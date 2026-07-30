@@ -86,7 +86,7 @@ export function TrainingPlayer({ exercises, completedIds, onMarkComplete, onExit
           </button>
         </div>
       ) : (
-        <button type="button" onClick={handleMarkComplete}>
+        <button type="button" disabled={isCurrentDone} onClick={handleMarkComplete}>
           Marcar completado
         </button>
       )}

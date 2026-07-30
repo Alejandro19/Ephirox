@@ -42,7 +42,7 @@ describe('TrainingPlayer', () => {
     render(
       <TrainingPlayer
         exercises={[exercise('e1'), exercise('e2')]}
-        completedIds={new Set(['e1'])}
+        completedIds={new Set()}
         onMarkComplete={vi.fn()}
         onExit={vi.fn()}
       />
