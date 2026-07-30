@@ -1,13 +1,16 @@
 'use client';
 
-import type { Exercise, TrainingCompletion } from '../../lib/training-client';
+import type { Exercise, TrainingCompletion, TrainingStreak } from '../../lib/training-client';
 import { isDayUnlocked, isDayCompletedThisWeek, calculateDisciplineStats } from '../../lib/training-home-logic';
 
 export type TrainingHomeProps = {
   trainingDays: number;
   exercises: Exercise[];
   completions: TrainingCompletion[];
+  streak: TrainingStreak | null;
   onOpenDay: (day: number) => void;
+  onUseProtector: () => void;
+  protectorPending: boolean;
 };
 
 function monthCalendarCells(completions: TrainingCompletion[]): { day: number; completed: boolean }[] {
@@ -30,7 +33,7 @@ function nextActionableDay(trainingDays: number, completions: TrainingCompletion
   return null;
 }
 
-export function TrainingHome({ trainingDays, exercises, completions, onOpenDay }: TrainingHomeProps) {
+export function TrainingHome({ trainingDays, exercises, completions, streak, onOpenDay, onUseProtector, protectorPending }: TrainingHomeProps) {
   const days = Array.from({ length: trainingDays }, (_, i) => i + 1);
   const stats = calculateDisciplineStats(completions, trainingDays);
   const calendarCells = monthCalendarCells(completions);
@@ -39,6 +42,35 @@ export function TrainingHome({ trainingDays, exercises, completions, onOpenDay }
   return (
     <div>
       <h1>Entrenamiento</h1>
+
+      {streak && (
+        <div>
+          <span>🔥</span>
+          <span>{streak.streakWeeks}</span>
+          <span>{streak.atRisk ? 'en riesgo' : streak.streakWeeks === 1 ? 'semana seguida' : 'semanas seguidas'}</span>
+        </div>
+      )}
+
+      {streak && (
+        <section>
+          <h2>Tu semana</h2>
+          <div>
+            {Array.from({ length: streak.sessionsRequiredThisWeek }, (_, i) => i + 1).map((n) => (
+              <span key={n}>
+                {n <= streak.sessionsDoneThisWeek ? '✓' : streak.protectorUsedThisWeek ? '🛡️' : '?'}
+              </span>
+            ))}
+          </div>
+          <p>
+            {streak.protectorUsedThisWeek
+              ? 'Semana protegida — no necesitas completar más sesiones para conservar tu racha.'
+              : `${streak.sessionsDoneThisWeek} de ${streak.sessionsRequiredThisWeek} sesiones completadas.`}
+          </p>
+          <button type="button" disabled={streak.protectorUsedThisWeek || protectorPending} onClick={onUseProtector}>
+            {streak.protectorUsedThisWeek ? 'Usado' : 'Usar protector'}
+          </button>
+        </section>
+      )}
 
       {heroDay !== null && (
         <section>

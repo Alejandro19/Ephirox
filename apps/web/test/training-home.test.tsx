@@ -29,7 +29,10 @@ describe('TrainingHome', () => {
         trainingDays={2}
         exercises={[exercise('e1', 1), exercise('e2', 2)]}
         completions={[]}
+        streak={null}
         onOpenDay={onOpenDay}
+        onUseProtector={vi.fn()}
+        protectorPending={false}
       />
     );
     expect(screen.getByRole('button', { name: /Día 1/ })).toBeEnabled();
@@ -38,12 +41,32 @@ describe('TrainingHome', () => {
   });
 
   it('disables a locked day', () => {
-    render(<TrainingHome trainingDays={2} exercises={[exercise('e1', 1), exercise('e2', 2)]} completions={[]} onOpenDay={vi.fn()} />);
+    render(
+      <TrainingHome
+        trainingDays={2}
+        exercises={[exercise('e1', 1), exercise('e2', 2)]}
+        completions={[]}
+        streak={null}
+        onOpenDay={vi.fn()}
+        onUseProtector={vi.fn()}
+        protectorPending={false}
+      />
+    );
     expect(screen.getByRole('button', { name: /Día 2/ })).toBeDisabled();
   });
 
   it('shows the discipline calendar section', () => {
-    render(<TrainingHome trainingDays={1} exercises={[]} completions={[]} onOpenDay={vi.fn()} />);
+    render(
+      <TrainingHome
+        trainingDays={1}
+        exercises={[]}
+        completions={[]}
+        streak={null}
+        onOpenDay={vi.fn()}
+        onUseProtector={vi.fn()}
+        protectorPending={false}
+      />
+    );
     expect(screen.getByText('Nivel de disciplina')).toBeInTheDocument();
   });
 
@@ -55,7 +78,17 @@ describe('TrainingHome', () => {
     const completedIso = `${year}-${String(month + 1).padStart(2, '0')}-01`;
     const completion: TrainingCompletion = { id: 'c1', clientId: 'c1', dayNumber: 1, completedDate: completedIso, source: 'manual' };
 
-    render(<TrainingHome trainingDays={1} exercises={[]} completions={[completion]} onOpenDay={vi.fn()} />);
+    render(
+      <TrainingHome
+        trainingDays={1}
+        exercises={[]}
+        completions={[completion]}
+        streak={null}
+        onOpenDay={vi.fn()}
+        onUseProtector={vi.fn()}
+        protectorPending={false}
+      />
+    );
 
     // One cell per day of the month (day "1" appears as a marked <strong>).
     expect(screen.getAllByText(String(daysInMonth)).length).toBeGreaterThan(0);
@@ -70,7 +103,10 @@ describe('TrainingHome', () => {
         trainingDays={2}
         exercises={[exercise('e1', 1), exercise('e2', 2)]}
         completions={[]}
+        streak={null}
         onOpenDay={onOpenDay}
+        onUseProtector={vi.fn()}
+        protectorPending={false}
       />
     );
     fireEvent.click(screen.getByRole('button', { name: 'Comenzar sesión' }));
@@ -78,7 +114,81 @@ describe('TrainingHome', () => {
   });
 
   it('does not render the hero button when there is no next actionable day', () => {
-    render(<TrainingHome trainingDays={0} exercises={[]} completions={[]} onOpenDay={vi.fn()} />);
+    render(
+      <TrainingHome
+        trainingDays={0}
+        exercises={[]}
+        completions={[]}
+        streak={null}
+        onOpenDay={vi.fn()}
+        onUseProtector={vi.fn()}
+        protectorPending={false}
+      />
+    );
     expect(screen.queryByRole('button', { name: 'Comenzar sesión' })).not.toBeInTheDocument();
+  });
+
+  it('renders the streak badge with the current streakWeeks', () => {
+    render(
+      <TrainingHome
+        trainingDays={2}
+        exercises={[]}
+        completions={[]}
+        streak={{ streakWeeks: 3, sessionsDoneThisWeek: 1, sessionsRequiredThisWeek: 2, protectorAvailable: true, protectorUsedThisWeek: false, atRisk: false }}
+        onOpenDay={vi.fn()}
+        onUseProtector={vi.fn()}
+        protectorPending={false}
+      />
+    );
+    // Scoped to the streak badge container: a bare getByText('3') is ambiguous here because
+    // the pre-existing discipline calendar also renders an unmarked "3" span for day 3 of the month.
+    const badge = screen.getByText('🔥').closest('div');
+    expect(badge).toHaveTextContent('3');
+    expect(badge).toHaveTextContent(/semanas seguidas/);
+  });
+
+  it('shows an "en riesgo" label when atRisk is true', () => {
+    render(
+      <TrainingHome
+        trainingDays={2}
+        exercises={[]}
+        completions={[]}
+        streak={{ streakWeeks: 1, sessionsDoneThisWeek: 0, sessionsRequiredThisWeek: 2, protectorAvailable: true, protectorUsedThisWeek: false, atRisk: true }}
+        onOpenDay={vi.fn()}
+        onUseProtector={vi.fn()}
+        protectorPending={false}
+      />
+    );
+    expect(screen.getByText(/en riesgo/)).toBeInTheDocument();
+  });
+
+  it('calls onUseProtector when the protector button is clicked, and disables it once used', () => {
+    const onUseProtector = vi.fn();
+    const { rerender } = render(
+      <TrainingHome
+        trainingDays={2}
+        exercises={[]}
+        completions={[]}
+        streak={{ streakWeeks: 1, sessionsDoneThisWeek: 0, sessionsRequiredThisWeek: 2, protectorAvailable: true, protectorUsedThisWeek: false, atRisk: false }}
+        onOpenDay={vi.fn()}
+        onUseProtector={onUseProtector}
+        protectorPending={false}
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: /usar/i }));
+    expect(onUseProtector).toHaveBeenCalled();
+
+    rerender(
+      <TrainingHome
+        trainingDays={2}
+        exercises={[]}
+        completions={[]}
+        streak={{ streakWeeks: 1, sessionsDoneThisWeek: 0, sessionsRequiredThisWeek: 2, protectorAvailable: false, protectorUsedThisWeek: true, atRisk: false }}
+        onOpenDay={vi.fn()}
+        onUseProtector={onUseProtector}
+        protectorPending={false}
+      />
+    );
+    expect(screen.getByRole('button', { name: /usar|usado/i })).toBeDisabled();
   });
 });
