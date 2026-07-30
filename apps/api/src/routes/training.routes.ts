@@ -40,3 +40,12 @@ trainingRouter.get(
   requirePermission('training'),
   asyncHandler(trainingController.getStreak)
 );
+
+trainingRouter.post(
+  '/:id/training/use-protector',
+  authMiddleware,
+  ownerOrAdmin,
+  requirePermission('training'),
+  validateBody(ConfirmSessionInputSchema),
+  asyncHandler(trainingController.useProtector)
+);

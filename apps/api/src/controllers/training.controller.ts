@@ -37,3 +37,9 @@ export async function getStreak(req: Request, res: Response) {
   const streak = await trainingService.getStreak(req.params.id, tz);
   return ok(res, { streak });
 }
+
+export async function useProtector(req: Request, res: Response) {
+  const { tz } = req.body as ConfirmSessionInput;
+  const streak = await trainingService.useProtector(req.params.id, tz);
+  return ok(res, { streak });
+}

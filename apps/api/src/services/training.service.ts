@@ -143,3 +143,18 @@ export async function getStreak(clientId: string, tz: string): Promise<TrainingS
   const trainingDays = rows[0]?.trainingDays || 0;
   return computeTrainingStreakState(clientId, trainingDays, tz);
 }
+
+export async function useProtector(clientId: string, tz: string): Promise<TrainingStreak> {
+  const rows = await db.select().from(clients).where(eq(clients.id, clientId)).limit(1);
+  const trainingDays = rows[0]?.trainingDays || 0;
+  const weekStart = weekStartInTz(tz);
+  const existing = await db
+    .select()
+    .from(trainingProtectorUses)
+    .where(and(eq(trainingProtectorUses.clientId, clientId), eq(trainingProtectorUses.weekStart, weekStart)))
+    .limit(1);
+  if (existing.length === 0) {
+    await db.insert(trainingProtectorUses).values({ clientId, weekStart });
+  }
+  return computeTrainingStreakState(clientId, trainingDays, tz);
+}

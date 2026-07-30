@@ -171,4 +171,61 @@ describe('training routes', () => {
       await db.delete(clients).where(eq(clients.id, freshClient.id));
     });
   });
+
+  describe('POST /training/use-protector', () => {
+    it('marks the current week protected and reflects it in the streak', async () => {
+      const [protClient] = await db
+        .insert(clients)
+        .values({ name: 'Protector Client', email: `protector-${Date.now()}@example.com`, passwordHash: 'x', clientType: 'coaching_1_1', trainingDays: 4, permissions: { training: true } })
+        .returning();
+      const protToken = signToken({ id: protClient.id, role: 'cliente', name: protClient.name, email: protClient.email });
+
+      const res = await request(app)
+        .post(`/api/clients/${protClient.id}/training/use-protector`)
+        .set('Authorization', `Bearer ${protToken}`)
+        .send({ tz: 'America/Mexico_City' });
+      expect(res.status).toBe(200);
+      expect(res.body.streak.protectorUsedThisWeek).toBe(true);
+      expect(res.body.streak.streakWeeks).toBe(1);
+
+      await db.delete(clients).where(eq(clients.id, protClient.id));
+    });
+
+    it('does not insert a duplicate protector row for the same week', async () => {
+      const [protClient] = await db
+        .insert(clients)
+        .values({ name: 'Protector Client 2', email: `protector2-${Date.now()}@example.com`, passwordHash: 'x', clientType: 'coaching_1_1', trainingDays: 4, permissions: { training: true } })
+        .returning();
+      const protToken = signToken({ id: protClient.id, role: 'cliente', name: protClient.name, email: protClient.email });
+
+      await request(app).post(`/api/clients/${protClient.id}/training/use-protector`).set('Authorization', `Bearer ${protToken}`).send({ tz: 'America/Mexico_City' });
+      await request(app).post(`/api/clients/${protClient.id}/training/use-protector`).set('Authorization', `Bearer ${protToken}`).send({ tz: 'America/Mexico_City' });
+
+      const rows = await db.select().from(trainingProtectorUses).where(eq(trainingProtectorUses.clientId, protClient.id));
+      expect(rows).toHaveLength(1);
+
+      await db.delete(clients).where(eq(clients.id, protClient.id));
+    });
+
+    it('rejects a client using another client\'s protector (IDOR guard via ownerOrAdmin)', async () => {
+      const [victim] = await db
+        .insert(clients)
+        .values({ name: 'Victim Client', email: `victim-${Date.now()}@example.com`, passwordHash: 'x', clientType: 'coaching_1_1', trainingDays: 3, permissions: { training: true } })
+        .returning();
+      const [attacker] = await db
+        .insert(clients)
+        .values({ name: 'Attacker Client', email: `attacker-${Date.now()}@example.com`, passwordHash: 'x', clientType: 'coaching_1_1', trainingDays: 3, permissions: { training: true } })
+        .returning();
+      const attackerToken = signToken({ id: attacker.id, role: 'cliente', name: attacker.name, email: attacker.email });
+
+      const res = await request(app)
+        .post(`/api/clients/${victim.id}/training/use-protector`)
+        .set('Authorization', `Bearer ${attackerToken}`)
+        .send({ tz: 'America/Mexico_City' });
+      expect(res.status).toBe(403);
+
+      await db.delete(clients).where(eq(clients.id, victim.id));
+      await db.delete(clients).where(eq(clients.id, attacker.id));
+    });
+  });
 });
