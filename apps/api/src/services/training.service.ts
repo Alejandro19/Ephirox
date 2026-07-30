@@ -57,6 +57,18 @@ function weekStartInTz(tz: string): string {
   return addDaysISO(today, (dow === 0 ? -6 : 1) - dow);
 }
 
+// Identificador único de semana calendario ISO (año*100 + número de semana ISO),
+// usado como week_number en achievement_logs — streak.streakWeeks NO sirve para
+// esto porque se reinicia cada vez que se rompe una racha, causando colisiones
+// contra el UNIQUE(client_id, type, week_number) de la tabla.
+function isoWeekIdentifier(dateISO: string): number {
+  const d = new Date(`${dateISO}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  const weekNo = Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+  return d.getUTCFullYear() * 100 + weekNo;
+}
+
 export class NoTrainingDaysError extends Error {
   constructor() {
     super('Este cliente no tiene días de entrenamiento asignados.');
@@ -123,7 +135,8 @@ export async function confirmSession(
     const pool = await db.select().from(phrases).where(eq(phrases.active, true));
     const drawn = pickRandomPhrase(pool, 'confirmacion');
     phrase = drawn ? drawn.text : null;
-  } catch {
+  } catch (e) {
+    console.error('[training] phrase draw failed (non-fatal):', e);
     phrase = null;
   }
 
@@ -131,12 +144,13 @@ export async function confirmSession(
 
   if (justInsertedNewSession && !wasCompletedBeforeThisCall && streak.sessionsDoneThisWeek >= trainingDays) {
     try {
-      await db.insert(achievementLogs).values({ clientId, type: 'medalla', weekNumber: streak.streakWeeks });
+      const weekNumber = isoWeekIdentifier(weekStart);
+      await db.insert(achievementLogs).values({ clientId, type: 'medalla', weekNumber });
       if (streak.streakWeeks > 0 && streak.streakWeeks % 4 === 0) {
-        await db.insert(achievementLogs).values({ clientId, type: 'copa', weekNumber: streak.streakWeeks });
+        await db.insert(achievementLogs).values({ clientId, type: 'copa', weekNumber });
       }
-    } catch {
-      // non-fatal, igual que el legacy
+    } catch (e) {
+      console.error('[training] achievement log insert failed (non-fatal):', e);
     }
   }
 

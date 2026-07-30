@@ -302,6 +302,53 @@ describe('training routes', () => {
 
       await db.delete(clients).where(eq(clients.id, protClient.id));
     });
+
+    it('records a medalla for two separate streak cycles that both reach streakWeeks=1 (week_number must not collide)', async () => {
+      const [twoDayClient] = await db
+        .insert(clients)
+        .values({ name: 'Weeknum Client', email: `weeknum-${Date.now()}@example.com`, passwordHash: 'x', clientType: 'coaching_1_1', trainingDays: 1, permissions: { training: true } })
+        .returning();
+      const token = signToken({ id: twoDayClient.id, role: 'cliente', name: twoDayClient.name, email: twoDayClient.email });
+
+      // Ciclo 1: "hoy" se fija hace 4 semanas — confirm-session inserta la sesión del día 1,
+      // completa la semana y dispara la primera medalla (streakWeeks=1).
+      vi.useFakeTimers({ toFake: ['Date'] });
+      try {
+        const fourWeeksAgo = new Date();
+        fourWeeksAgo.setUTCDate(fourWeeksAgo.getUTCDate() - 28);
+        vi.setSystemTime(fourWeeksAgo);
+
+        const res1 = await request(app)
+          .post(`/api/clients/${twoDayClient.id}/training/confirm-session`)
+          .set('Authorization', `Bearer ${token}`)
+          .send({ tz: 'America/Mexico_City' });
+        expect(res1.status).toBe(200);
+        expect(res1.body.streak.streakWeeks).toBe(1);
+      } finally {
+        // Ciclo 2 se ejecuta con el reloj real: sin ninguna sesión en las semanas
+        // intermedias, la racha se rompió y arranca de nuevo en streakWeeks=1, con
+        // el mismo valor de streakWeeks que el ciclo anterior pero una semana calendario
+        // real distinta.
+        vi.useRealTimers();
+      }
+
+      const res2 = await request(app)
+        .post(`/api/clients/${twoDayClient.id}/training/confirm-session`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ tz: 'America/Mexico_City' });
+      expect(res2.status).toBe(200);
+      expect(res2.body.streak.streakWeeks).toBe(1);
+
+      const logs = await db.select().from(achievementLogs).where(eq(achievementLogs.clientId, twoDayClient.id));
+      expect(logs).toHaveLength(2);
+      expect(logs.every((l) => l.type === 'medalla')).toBe(true);
+      const weekNumbers = new Set(logs.map((l) => l.weekNumber));
+      expect(weekNumbers.size).toBe(2);
+
+      await db.delete(achievementLogs).where(eq(achievementLogs.clientId, twoDayClient.id));
+      await db.delete(trainingCompletions).where(eq(trainingCompletions.clientId, twoDayClient.id));
+      await db.delete(clients).where(eq(clients.id, twoDayClient.id));
+    });
   });
 
   describe('GET /training/achievements', () => {
