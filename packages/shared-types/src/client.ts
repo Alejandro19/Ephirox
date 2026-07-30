@@ -15,8 +15,6 @@ export const ClientUpdateInputSchema = z.object({
   name: z.string().min(1).optional(),
   email: z.string().email().optional(),
   plan: z.string().optional(),
-  trainingDays: z.number().int().min(1).max(7).optional(),
-  assignedQuoteId: z.string().uuid().nullable().optional(),
   objetivos: z.record(z.string(), z.string()).optional(),
   inbodyCadenceType: z.enum(['mensual', 'bimestral', 'personalizado']).optional(),
   inbodyNextExpectedDate: z.string().nullable().optional(),
