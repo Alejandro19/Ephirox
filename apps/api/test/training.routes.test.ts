@@ -16,7 +16,13 @@ describe('training routes', () => {
     adminToken = signToken({ id: 'admin-1', role: 'admin', name: 'Admin', email: 'admin@example.com' });
     const [client] = await db
       .insert(clients)
-      .values({ name: 'Training Client', email: `training-${Date.now()}@example.com`, passwordHash: 'x', clientType: 'coaching_1_1' })
+      .values({
+        name: 'Training Client',
+        email: `training-${Date.now()}@example.com`,
+        passwordHash: 'x',
+        clientType: 'coaching_1_1',
+        permissions: { training: true },
+      })
       .returning();
     clientId = client.id;
     clientToken = signToken({ id: clientId, role: 'cliente', name: client.name, email: client.email });
@@ -55,7 +61,13 @@ describe('training routes', () => {
   it('fails confirm-session when the client has no training_days', async () => {
     const [noDaysClient] = await db
       .insert(clients)
-      .values({ name: 'No Days Client', email: `nodays-${Date.now()}@example.com`, passwordHash: 'x', clientType: 'coaching_1_1' })
+      .values({
+        name: 'No Days Client',
+        email: `nodays-${Date.now()}@example.com`,
+        passwordHash: 'x',
+        clientType: 'coaching_1_1',
+        permissions: { training: true },
+      })
       .returning();
     const noDaysToken = signToken({ id: noDaysClient.id, role: 'cliente', name: noDaysClient.name, email: noDaysClient.email });
     const res = await request(app)

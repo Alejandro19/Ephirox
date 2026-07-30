@@ -1,24 +1,10 @@
 import { and, eq } from 'drizzle-orm';
 import { db } from '../db/index.js';
-import { clients, trainingCompletions, clientNotifications, type TrainingCompletion, type Client } from '../models/schema.js';
-
-// Igual que unlockModule() en exercises.service.ts: asignar días de
-// entrenamiento es la señal de que el módulo debe desbloquearse para el
-// cliente, al igual que crear el primer ejercicio.
-async function unlockTrainingModule(client: Client): Promise<Record<string, boolean>> {
-  const permissions = (client.permissions as Record<string, boolean>) || {};
-  if (permissions.training === true) return permissions;
-  const updatedPermissions = { ...permissions, training: true };
-  await db.update(clients).set({ permissions: updatedPermissions }).where(eq(clients.id, client.id));
-  await db.insert(clientNotifications).values({ clientId: client.id, message: 'Ahora tienes acceso a tu módulo de entrenamiento.' });
-  return updatedPermissions;
-}
+import { clients, trainingCompletions, type TrainingCompletion, type Client } from '../models/schema.js';
 
 export async function updateTrainingDays(clientId: string, trainingDays: number): Promise<Client | null> {
   const [client] = await db.update(clients).set({ trainingDays, updatedAt: new Date() }).where(eq(clients.id, clientId)).returning();
-  if (!client) return null;
-  const permissions = await unlockTrainingModule(client);
-  return { ...client, permissions };
+  return client ?? null;
 }
 
 export async function listTrainingCompletions(clientId: string): Promise<TrainingCompletion[]> {

@@ -24,16 +24,11 @@ trainingRouter.get(
   asyncHandler(trainingController.listTrainingCompletions)
 );
 
-// Nota: sin requirePermission('training') aquí a propósito — a diferencia del
-// listado, confirm-session ya tiene su propio gate de negocio más preciso
-// (NoTrainingDaysError cuando el cliente no tiene días asignados) y el flag
-// de permissions.training por defecto es false hasta que un admin asigna
-// días (ver unlockTrainingModule en training.service.ts), así que gatear
-// aquí también bloquearía con 403 antes de llegar a ese chequeo específico.
 trainingRouter.post(
   '/:id/training/confirm-session',
   authMiddleware,
   ownerOrAdmin,
+  requirePermission('training'),
   validateBody(ConfirmSessionInputSchema),
   asyncHandler(trainingController.confirmSession)
 );
