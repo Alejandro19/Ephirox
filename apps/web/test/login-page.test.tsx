@@ -11,6 +11,7 @@ describe('LoginPage', () => {
   beforeEach(() => {
     pushMock.mockClear();
     vi.stubGlobal('fetch', vi.fn());
+    window.localStorage.clear();
   });
 
   it('redirects an admin to /admin/clients', async () => {
@@ -96,5 +97,26 @@ describe('LoginPage', () => {
     fireEvent.click(screen.getByRole('button', { name: /entrar/i }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Credenciales incorrectas.');
+  });
+
+  it('redirects to /training when a pending NFC confirm action exists, ahead of the onboarding check', async () => {
+    window.localStorage.setItem('lt_pending_action', JSON.stringify({ m: 'entrenamiento', a: 'confirmar' }));
+    (fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+      json: async () => ({
+        success: true,
+        token: 'abc.def.ghi',
+        role: 'cliente',
+        user: { id: '5', name: 'Cliente', email: 'c5@c.com' },
+        onboardingComplete: false,
+      }),
+    });
+
+    render(<LoginPage />);
+    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'c5@c.com' } });
+    fireEvent.change(screen.getByLabelText('Contraseña'), { target: { value: 'secret' } });
+    fireEvent.click(screen.getByRole('button', { name: /entrar/i }));
+
+    await waitFor(() => expect(pushMock).toHaveBeenCalledWith('/training'));
+    expect(pushMock).not.toHaveBeenCalledWith('/onboarding');
   });
 });

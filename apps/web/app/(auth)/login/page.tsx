@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { loginRequest, saveSession } from '../../../lib/api-client';
+import { getPendingAction, isTrainingConfirmAction } from '../../../lib/deep-link';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -22,6 +23,12 @@ export default function LoginPage() {
       return;
     }
     saveSession(result.token);
+
+    if (result.role === 'cliente' && isTrainingConfirmAction(getPendingAction())) {
+      router.push('/training');
+      return;
+    }
+
     if (result.role === 'cliente' && result.clientType !== 'lead_wellness' && !result.onboardingComplete) {
       router.push('/onboarding');
       return;
