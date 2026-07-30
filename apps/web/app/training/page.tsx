@@ -34,13 +34,17 @@ export default function TrainingPage() {
   const [ready, setReady] = useState(false);
   const [clientId, setClientId] = useState<string | null>(null);
   const [nfcResult, setNfcResult] = useState<{ streak: TrainingStreak; phrase: string | null } | null>(null);
-  const [nfcError, setNfcError] = useState<string | null>(null);
+  const [nfcAlreadyConfirmed, setNfcAlreadyConfirmed] = useState(false);
 
   useEffect(() => {
     const token = getSessionToken();
 
     captureIncomingDeepLink(window.location.search);
+    // Se lee una sola vez y se limpia de inmediato si existe (consumir-o-descartar):
+    // cualquier acción pendiente, reconocida o no, no debe quedar viva para una
+    // próxima visita.
     const pending = getPendingAction();
+    if (pending) clearPendingAction();
     const hasNfcAction = isTrainingConfirmAction(pending);
 
     if (!token) {
@@ -52,11 +56,21 @@ export default function TrainingPage() {
     setClientId(id);
 
     if (hasNfcAction) {
-      clearPendingAction();
       router.replace('/training');
       confirmSession(id ?? '', clientTz(), 'nfc')
-        .then((result) => setNfcResult({ streak: result.streak, phrase: result.phrase }))
-        .catch((e: Error) => setNfcError(e.message))
+        .then((result) => {
+          if (result.alreadyConfirmedToday) {
+            setNfcAlreadyConfirmed(true);
+          } else {
+            setNfcResult({ streak: result.streak, phrase: result.phrase });
+          }
+        })
+        .catch((e: Error) => {
+          // El deep-link nunca bloquea el login normal: si falla al consumirse
+          // (red, permisos, cliente sin training_days), se descarta silenciosamente
+          // y el cliente cae al flujo normal de /training.
+          console.error('[training] NFC confirm-session failed (non-fatal):', e);
+        })
         .finally(() => setReady(true));
       return;
     }
@@ -65,7 +79,9 @@ export default function TrainingPage() {
   }, [router]);
 
   if (!ready) return null;
-  if (nfcError) return <p role="alert">{nfcError}</p>;
+  if (nfcAlreadyConfirmed) {
+    return <p>Ya confirmaste tu sesión de hoy — vuelve mañana para el siguiente día.</p>;
+  }
   if (nfcResult) {
     return <SessionConfirmedScreen streak={nfcResult.streak} phrase={nfcResult.phrase} onClose={() => setNfcResult(null)} />;
   }
