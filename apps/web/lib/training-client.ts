@@ -120,15 +120,64 @@ export async function listTrainingCompletions(clientId: string): Promise<Trainin
   return body.completions;
 }
 
-export async function confirmSession(
-  clientId: string,
-  tz: string
-): Promise<{ alreadyConfirmedToday: boolean; dayNumber: number | null }> {
-  const body = await authorizedRequest<{ success: boolean; alreadyConfirmedToday: boolean; dayNumber: number | null; error?: string }>(
-    `/api/clients/${clientId}/training/confirm-session`,
+export type TrainingStreak = {
+  streakWeeks: number;
+  sessionsDoneThisWeek: number;
+  sessionsRequiredThisWeek: number;
+  protectorAvailable: boolean;
+  protectorUsedThisWeek: boolean;
+  atRisk: boolean;
+};
+
+export async function getStreak(clientId: string, tz: string): Promise<TrainingStreak> {
+  const body = await authorizedRequest<{ success: boolean; streak: TrainingStreak; error?: string }>(
+    `/api/clients/${clientId}/training/streak?tz=${encodeURIComponent(tz)}`,
+    'GET'
+  );
+  if (!body.success) throw new Error(body.error || 'Error al obtener la racha.');
+  return body.streak;
+}
+
+export async function useProtector(clientId: string, tz: string): Promise<TrainingStreak> {
+  const body = await authorizedRequest<{ success: boolean; streak: TrainingStreak; error?: string }>(
+    `/api/clients/${clientId}/training/use-protector`,
     'POST',
     { tz }
   );
+  if (!body.success) throw new Error(body.error || 'Error al usar el protector.');
+  return body.streak;
+}
+
+export type Achievement = {
+  id: string;
+  clientId: string;
+  type: 'medalla' | 'copa';
+  weekNumber: number;
+  earnedAt: string;
+};
+
+export async function getAchievements(clientId: string): Promise<Achievement[]> {
+  const body = await authorizedRequest<{ success: boolean; achievements: Achievement[]; error?: string }>(
+    `/api/clients/${clientId}/training/achievements`,
+    'GET'
+  );
+  if (!body.success) throw new Error(body.error || 'Error al obtener los logros.');
+  return body.achievements;
+}
+
+export async function confirmSession(
+  clientId: string,
+  tz: string,
+  source: 'manual' | 'nfc' = 'manual'
+): Promise<{ alreadyConfirmedToday: boolean; dayNumber: number | null; streak: TrainingStreak; phrase: string | null }> {
+  const body = await authorizedRequest<{
+    success: boolean;
+    alreadyConfirmedToday: boolean;
+    dayNumber: number | null;
+    streak: TrainingStreak;
+    phrase: string | null;
+    error?: string;
+  }>(`/api/clients/${clientId}/training/confirm-session`, 'POST', { tz, source });
   if (!body.success) throw new Error(body.error || 'Error al confirmar la sesión.');
-  return { alreadyConfirmedToday: body.alreadyConfirmedToday, dayNumber: body.dayNumber };
+  return { alreadyConfirmedToday: body.alreadyConfirmedToday, dayNumber: body.dayNumber, streak: body.streak, phrase: body.phrase };
 }

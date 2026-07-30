@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as apiClient from '../lib/api-client';
-import { listExercises, createExercise, reorderExercise, confirmSession } from '../lib/training-client';
+import { listExercises, createExercise, reorderExercise, confirmSession, getStreak, useProtector, getAchievements } from '../lib/training-client';
 
 beforeEach(() => {
   vi.spyOn(apiClient, 'getSessionToken').mockReturnValue('fake-token');
@@ -35,11 +35,54 @@ describe('training-client', () => {
     expect(JSON.parse(options.body)).toEqual({ direction: 'down' });
   });
 
-  it('confirmSession returns alreadyConfirmedToday and dayNumber', async () => {
+  it('confirmSession returns alreadyConfirmedToday, dayNumber, streak, and phrase', async () => {
     (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
-      json: async () => ({ success: true, alreadyConfirmedToday: false, dayNumber: 2 }),
+      json: async () => ({
+        success: true,
+        alreadyConfirmedToday: false,
+        dayNumber: 2,
+        streak: { streakWeeks: 1, sessionsDoneThisWeek: 2, sessionsRequiredThisWeek: 2, protectorAvailable: true, protectorUsedThisWeek: false, atRisk: false },
+        phrase: 'Sigue así.',
+      }),
     });
     const result = await confirmSession('client-1', 'America/Mexico_City');
-    expect(result).toEqual({ alreadyConfirmedToday: false, dayNumber: 2 });
+    expect(result).toEqual({
+      alreadyConfirmedToday: false,
+      dayNumber: 2,
+      streak: { streakWeeks: 1, sessionsDoneThisWeek: 2, sessionsRequiredThisWeek: 2, protectorAvailable: true, protectorUsedThisWeek: false, atRisk: false },
+      phrase: 'Sigue así.',
+    });
+  });
+
+  it('getStreak returns the streak object', async () => {
+    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+      json: async () => ({
+        success: true,
+        streak: { streakWeeks: 2, sessionsDoneThisWeek: 1, sessionsRequiredThisWeek: 3, protectorAvailable: true, protectorUsedThisWeek: false, atRisk: false },
+      }),
+    });
+    const result = await getStreak('client-1', 'America/Mexico_City');
+    expect(result.streakWeeks).toBe(2);
+    const [url] = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0];
+    expect(url).toContain('/training/streak?tz=');
+  });
+
+  it('useProtector posts tz and returns the updated streak', async () => {
+    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+      json: async () => ({
+        success: true,
+        streak: { streakWeeks: 1, sessionsDoneThisWeek: 0, sessionsRequiredThisWeek: 3, protectorAvailable: false, protectorUsedThisWeek: true, atRisk: false },
+      }),
+    });
+    const result = await useProtector('client-1', 'America/Mexico_City');
+    expect(result.protectorUsedThisWeek).toBe(true);
+  });
+
+  it('getAchievements returns the achievements array', async () => {
+    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+      json: async () => ({ success: true, achievements: [{ id: 'a1', clientId: 'client-1', type: 'medalla', weekNumber: 1, earnedAt: '2026-01-01' }] }),
+    });
+    const result = await getAchievements('client-1');
+    expect(result).toHaveLength(1);
   });
 });
