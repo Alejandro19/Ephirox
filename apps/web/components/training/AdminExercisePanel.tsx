@@ -73,8 +73,8 @@ export function AdminExercisePanel({ clientId }: AdminExercisePanelProps) {
 
   async function handleReorder(exerciseId: string, direction: 'up' | 'down') {
     try {
-      const updated = await reorderExercise(clientId, exerciseId, direction);
-      setExercises((prev) => prev.map((ex) => updated.find((u) => u.id === ex.id) ?? ex));
+      await reorderExercise(clientId, exerciseId, direction);
+      await refetch();
     } catch (e) {
       setError((e as Error).message);
     }
@@ -95,7 +95,12 @@ export function AdminExercisePanel({ clientId }: AdminExercisePanelProps) {
     };
   }
 
-  const days = Array.from({ length: trainingDays || 0 }, (_, i) => i + 1);
+  // Union of 1..trainingDays with any day numbers that actually have exercises
+  // assigned — so lowering trainingDays or creating an exercise for a day
+  // outside the current range never hides it from the admin (it would
+  // otherwise be uneditable/undeletable, but still returned to the client).
+  const configuredDays = Array.from({ length: trainingDays || 0 }, (_, i) => i + 1);
+  const days = Array.from(new Set([...configuredDays, ...exercises.map((e) => e.dayNumber)])).sort((a, b) => a - b);
 
   return (
     <section>
@@ -133,6 +138,7 @@ export function AdminExercisePanel({ clientId }: AdminExercisePanelProps) {
                         initial={toExerciseInput(ex)}
                         onSubmit={(input) => handleUpdate(ex.id, input)}
                         submitLabel="Guardar"
+                        idPrefix={`edit-${ex.id}-`}
                       />
                     ) : (
                       <>

@@ -127,4 +127,63 @@ describe('exercises routes', () => {
     const remaining = await db.select().from(exercises).where(eq(exercises.id, exerciseId));
     expect(remaining).toHaveLength(0);
   });
+
+  it('normalizes duplicate legacy sort_order values (both 0) before reordering', async () => {
+    const [exA] = await db
+      .insert(exercises)
+      .values({ clientId, title: 'Plancha', dayNumber: 2, category: 'warmup' })
+      .returning();
+    const [exB] = await db
+      .insert(exercises)
+      .values({ clientId, title: 'Jumping jacks', dayNumber: 2, category: 'warmup' })
+      .returning();
+
+    // exB auto-increments to sortOrder 1 on create; simulate legacy data where
+    // both rows are stuck at sort_order = 0 (schema.sql's default, never set
+    // by the legacy app), which makes swapping them a permanent no-op.
+    await db.update(exercises).set({ sortOrder: 0 }).where(eq(exercises.id, exB.id));
+
+    const res = await request(app)
+      .patch(`/api/clients/${clientId}/exercises/${exA.id}/order`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ direction: 'down' });
+    expect(res.status).toBe(200);
+
+    const resultA = res.body.exercises.find((e: { id: string }) => e.id === exA.id);
+    const resultB = res.body.exercises.find((e: { id: string }) => e.id === exB.id);
+    // Which of the two ends up first after normalization depends on the id
+    // tiebreak (both started at sort_order 0), but the two must end up with
+    // genuinely different, dense 0/1 sortOrders — never a no-op tie.
+    expect(resultA.sortOrder).not.toBe(resultB.sortOrder);
+    expect(new Set([resultA.sortOrder, resultB.sortOrder])).toEqual(new Set([0, 1]));
+
+    await db.delete(exercises).where(eq(exercises.id, exA.id));
+    await db.delete(exercises).where(eq(exercises.id, exB.id));
+  });
+
+  it('recomputes sortOrder when updateExercise moves an exercise to a different day/category group', async () => {
+    const [movedEx] = await db
+      .insert(exercises)
+      .values({ clientId, title: 'Curl', dayNumber: 1, category: 'strength' })
+      .returning();
+    const [warmup1] = await db
+      .insert(exercises)
+      .values({ clientId, title: 'Estiramiento 1', dayNumber: 1, category: 'warmup', sortOrder: 0 })
+      .returning();
+    const [warmup2] = await db
+      .insert(exercises)
+      .values({ clientId, title: 'Estiramiento 2', dayNumber: 1, category: 'warmup', sortOrder: 1 })
+      .returning();
+
+    const res = await request(app)
+      .put(`/api/clients/${clientId}/exercises/${movedEx.id}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ title: 'Curl', day_number: 1, category: 'warmup' });
+    expect(res.status).toBe(200);
+    expect(res.body.exercise.sortOrder).toBe(2);
+
+    await db.delete(exercises).where(eq(exercises.id, movedEx.id));
+    await db.delete(exercises).where(eq(exercises.id, warmup1.id));
+    await db.delete(exercises).where(eq(exercises.id, warmup2.id));
+  });
 });

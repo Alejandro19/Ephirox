@@ -7,9 +7,10 @@ export type ExerciseFormProps = {
   initial?: Partial<ExerciseInput>;
   onSubmit: (input: ExerciseInput) => Promise<void>;
   submitLabel: string;
+  idPrefix?: string;
 };
 
-export function ExerciseForm({ initial, onSubmit, submitLabel }: ExerciseFormProps) {
+export function ExerciseForm({ initial, onSubmit, submitLabel, idPrefix = '' }: ExerciseFormProps) {
   const [title, setTitle] = useState(initial?.title ?? '');
   const [dayNumber, setDayNumber] = useState(initial?.day_number ?? 1);
   const [category, setCategory] = useState<ExerciseCategory>(initial?.category ?? 'strength');
@@ -45,11 +46,11 @@ export function ExerciseForm({ initial, onSubmit, submitLabel }: ExerciseFormPro
 
   return (
     <form onSubmit={handleSubmit}>
-      <label htmlFor="ex-title">Título</label>
-      <input id="ex-title" value={title} onChange={(e) => setTitle(e.target.value)} required />
+      <label htmlFor={`${idPrefix}ex-title`}>Título</label>
+      <input id={`${idPrefix}ex-title`} value={title} onChange={(e) => setTitle(e.target.value)} required />
 
-      <label htmlFor="ex-day">Día</label>
-      <select id="ex-day" value={dayNumber} onChange={(e) => setDayNumber(Number(e.target.value))}>
+      <label htmlFor={`${idPrefix}ex-day`}>Día</label>
+      <select id={`${idPrefix}ex-day`} value={dayNumber} onChange={(e) => setDayNumber(Number(e.target.value))}>
         {[1, 2, 3, 4, 5, 6, 7].map((d) => (
           <option key={d} value={d}>
             Día {d}
@@ -57,8 +58,8 @@ export function ExerciseForm({ initial, onSubmit, submitLabel }: ExerciseFormPro
         ))}
       </select>
 
-      <label htmlFor="ex-category">Categoría</label>
-      <select id="ex-category" value={category} onChange={(e) => setCategory(e.target.value as ExerciseCategory)}>
+      <label htmlFor={`${idPrefix}ex-category`}>Categoría</label>
+      <select id={`${idPrefix}ex-category`} value={category} onChange={(e) => setCategory(e.target.value as ExerciseCategory)}>
         <option value="warmup">Calentamiento</option>
         <option value="strength">Fuerza</option>
         <option value="cardio">Cardio</option>
@@ -66,27 +67,27 @@ export function ExerciseForm({ initial, onSubmit, submitLabel }: ExerciseFormPro
 
       {isCardio ? (
         <>
-          <label htmlFor="ex-duration">Duración</label>
-          <input id="ex-duration" value={duration} onChange={(e) => setDuration(e.target.value)} placeholder="mm:ss" />
+          <label htmlFor={`${idPrefix}ex-duration`}>Duración</label>
+          <input id={`${idPrefix}ex-duration`} value={duration} onChange={(e) => setDuration(e.target.value)} placeholder="mm:ss" />
         </>
       ) : (
         <>
-          <label htmlFor="ex-series">Series</label>
-          <input id="ex-series" type="number" value={series} onChange={(e) => setSeries(e.target.value)} />
+          <label htmlFor={`${idPrefix}ex-series`}>Series</label>
+          <input id={`${idPrefix}ex-series`} type="number" value={series} onChange={(e) => setSeries(e.target.value)} />
 
-          <label htmlFor="ex-reps">Repeticiones</label>
-          <input id="ex-reps" value={reps} onChange={(e) => setReps(e.target.value)} />
+          <label htmlFor={`${idPrefix}ex-reps`}>Repeticiones</label>
+          <input id={`${idPrefix}ex-reps`} value={reps} onChange={(e) => setReps(e.target.value)} />
         </>
       )}
 
-      <label htmlFor="ex-rest">Descanso</label>
-      <input id="ex-rest" value={restTime} onChange={(e) => setRestTime(e.target.value)} placeholder="mm:ss" />
+      <label htmlFor={`${idPrefix}ex-rest`}>Descanso</label>
+      <input id={`${idPrefix}ex-rest`} value={restTime} onChange={(e) => setRestTime(e.target.value)} placeholder="mm:ss" />
 
-      <label htmlFor="ex-youtube">Video de YouTube (URL)</label>
-      <input id="ex-youtube" value={youtubeUrl} onChange={(e) => setYoutubeUrl(e.target.value)} />
+      <label htmlFor={`${idPrefix}ex-youtube`}>Video de YouTube (URL)</label>
+      <input id={`${idPrefix}ex-youtube`} value={youtubeUrl} onChange={(e) => setYoutubeUrl(e.target.value)} />
 
-      <label htmlFor="ex-description">Descripción</label>
-      <textarea id="ex-description" value={description} onChange={(e) => setDescription(e.target.value)} />
+      <label htmlFor={`${idPrefix}ex-description`}>Descripción</label>
+      <textarea id={`${idPrefix}ex-description`} value={description} onChange={(e) => setDescription(e.target.value)} />
 
       <button type="submit" disabled={submitting}>
         {submitLabel}

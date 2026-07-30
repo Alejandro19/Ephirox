@@ -84,4 +84,71 @@ describe('AdminExercisePanel', () => {
     await waitFor(() => expect(trainingClient.deleteExercise).toHaveBeenCalledWith('c1', 'e1'));
     expect(trainingClient.listExercises).toHaveBeenCalledTimes(2);
   });
+
+  it('refetches (instead of merging the response in place) after reordering, so the new order actually renders', async () => {
+    vi.mocked(trainingClient.reorderExercise).mockResolvedValue([
+      {
+        id: 'e2',
+        clientId: 'c1',
+        title: 'Peso muerto',
+        dayNumber: 1,
+        category: 'strength',
+        series: 3,
+        reps: '8',
+        duration: null,
+        restTime: '01:30',
+        youtubeUrl: null,
+        description: null,
+        recommendations: null,
+        sortOrder: 0,
+      },
+      {
+        id: 'e1',
+        clientId: 'c1',
+        title: 'Sentadilla',
+        dayNumber: 1,
+        category: 'strength',
+        series: 4,
+        reps: '10',
+        duration: null,
+        restTime: '01:00',
+        youtubeUrl: null,
+        description: null,
+        recommendations: null,
+        sortOrder: 1,
+      },
+    ]);
+    render(<AdminExercisePanel clientId="c1" />);
+    await screen.findByText('Sentadilla');
+    fireEvent.click(screen.getAllByRole('button', { name: 'Bajar' })[0]);
+    await waitFor(() => expect(trainingClient.reorderExercise).toHaveBeenCalledWith('c1', 'e1', 'down'));
+    // handleReorder must call refetch() rather than manually merging sortOrder
+    // fields into place-holding array positions (which never changes render
+    // order until a reload).
+    await waitFor(() => expect(trainingClient.listExercises).toHaveBeenCalledTimes(2));
+  });
+
+  it('still renders a day group beyond the configured trainingDays if an exercise is assigned to it', async () => {
+    vi.mocked(trainingClient.getClientTrainingDays).mockResolvedValue(1);
+    vi.mocked(trainingClient.listExercises).mockResolvedValue([
+      {
+        id: 'e3',
+        clientId: 'c1',
+        title: 'Ejercicio huérfano',
+        dayNumber: 3,
+        category: 'strength',
+        series: 3,
+        reps: '10',
+        duration: null,
+        restTime: '01:00',
+        youtubeUrl: null,
+        description: null,
+        recommendations: null,
+        sortOrder: 0,
+      },
+    ]);
+    render(<AdminExercisePanel clientId="c1" />);
+    await screen.findByText('Ejercicio huérfano');
+    expect(screen.getByRole('heading', { name: 'Día 3' })).toBeInTheDocument();
+  });
 });

@@ -42,4 +42,10 @@ describe('ExerciseForm', () => {
       expect.objectContaining({ title: 'Sentadilla', day_number: 2, category: 'strength', series: 4, reps: '10' })
     );
   });
+
+  it('prefixes field ids/labels with idPrefix so two instances can coexist without id collisions', () => {
+    render(<ExerciseForm onSubmit={vi.fn()} submitLabel="Guardar" idPrefix="edit-e1-" />);
+    const titleInput = screen.getByLabelText('Título');
+    expect(titleInput).toHaveAttribute('id', 'edit-e1-ex-title');
+  });
 });
