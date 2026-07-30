@@ -85,4 +85,38 @@ describe('TrainingDayView', () => {
     fireEvent.click(screen.getByRole('button', { name: /Completar Entrenamiento/ }));
     expect(onCompleteDay).toHaveBeenCalled();
   });
+
+  it('shows the "already completed this week" status and hides the complete button, even with empty completedIds', () => {
+    const exercises = [exercise('e1', 'warmup')];
+    render(
+      <TrainingDayView
+        day={1}
+        exercises={exercises}
+        completedIds={new Set()}
+        alreadyCompletedThisWeek={true}
+        onOpenCategory={vi.fn()}
+        onCompleteDay={vi.fn()}
+        completingDay={false}
+      />
+    );
+    expect(screen.getByText('Día completado esta semana.')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Completar Entrenamiento/ })).toBeNull();
+    expect(screen.getByRole('button', { name: /Calentamiento ✓/ })).toBeInTheDocument();
+  });
+
+  it('keeps an unassigned category disabled even when the day is already completed this week', () => {
+    const exercises = [exercise('e1', 'strength')];
+    render(
+      <TrainingDayView
+        day={1}
+        exercises={exercises}
+        completedIds={new Set()}
+        alreadyCompletedThisWeek={true}
+        onOpenCategory={vi.fn()}
+        onCompleteDay={vi.fn()}
+        completingDay={false}
+      />
+    );
+    expect(screen.getByRole('button', { name: /Cardio/ })).toBeDisabled();
+  });
 });
