@@ -37,10 +37,12 @@ export function SessionConfirmedScreen({ streak, phrase, clientId, onClose }: Se
       }
       const canvas = canvasRef.current;
       const ctx = canvas.getContext('2d');
-      if (ctx) drawInstagramCard(ctx, { streakWeeks: streak.streakWeeks, phrase: cardPhrase });
+      if (!ctx) throw new Error('No se pudo inicializar el canvas.');
+      drawInstagramCard(ctx, { streakWeeks: streak.streakWeeks, phrase: cardPhrase });
 
       await shareCanvasAsImage(canvas, 'la-tribu-racha.png');
     } catch (e) {
+      console.error('[training] share failed:', e);
       setShareError('No pudimos generar la tarjeta. Intenta de nuevo.');
     } finally {
       setSharing(false);

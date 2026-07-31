@@ -75,6 +75,7 @@ describe('SessionConfirmedScreen — Compartir', () => {
     await waitFor(() => expect(button).toBeEnabled());
     expect(shareCard.shareCanvasAsImage).toHaveBeenCalledWith(expect.any(HTMLCanvasElement), 'la-tribu-racha.png');
     expect(trainingCard.drawInstagramCard).toHaveBeenCalledWith(expect.anything(), { streakWeeks: 2, phrase: 'Vamos con todo' });
+    expect(trainingClient.getPhraseByContext).toHaveBeenCalledWith('client-1', 'instagram');
   });
 
   it('draws the card with a null phrase when the phrase fetch fails (non-fatal)', async () => {
@@ -99,6 +100,24 @@ describe('SessionConfirmedScreen — Compartir', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Compartir' }));
 
     await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument());
+    const closeButton = screen.getByRole('button', { name: 'Cerrar' });
+    expect(closeButton).toBeEnabled();
+    fireEvent.click(closeButton);
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it('shows a short error message without blocking Cerrar when getContext returns null', async () => {
+    HTMLCanvasElement.prototype.getContext = vi.fn().mockReturnValue(null) as unknown as typeof HTMLCanvasElement.prototype.getContext;
+    vi.spyOn(trainingClient, 'getPhraseByContext').mockResolvedValue(null);
+    vi.spyOn(trainingCard, 'drawInstagramCard').mockImplementation(() => {});
+    vi.spyOn(shareCard, 'shareCanvasAsImage').mockResolvedValue(undefined);
+
+    const onClose = vi.fn();
+    render(<SessionConfirmedScreen streak={streak} phrase={null} clientId="client-1" onClose={onClose} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Compartir' }));
+
+    await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument());
+    expect(trainingCard.drawInstagramCard).not.toHaveBeenCalled();
     const closeButton = screen.getByRole('button', { name: 'Cerrar' });
     expect(closeButton).toBeEnabled();
     fireEvent.click(closeButton);

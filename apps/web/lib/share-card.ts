@@ -2,7 +2,7 @@
 // del dibujo del canvas para poder testearlo de forma aislada.
 export async function shareCanvasAsImage(canvas: HTMLCanvasElement, filename: string): Promise<void> {
   const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
-  if (!blob) return;
+  if (!blob) throw new Error('No se pudo generar la imagen.');
   const file = new File([blob], filename, { type: 'image/png' });
 
   const nav = navigator as Navigator & { canShare?: (data: { files: File[] }) => boolean; share?: (data: { files: File[] }) => Promise<void> };

@@ -77,4 +77,10 @@ describe('shareCanvasAsImage', () => {
 
     await expect(shareCanvasAsImage(canvas, 'la-tribu-racha.png')).rejects.toThrow('boom');
   });
+
+  it('throws when canvas.toBlob yields a null blob', async () => {
+    const canvas = createMockCanvas(null);
+
+    await expect(shareCanvasAsImage(canvas, 'la-tribu-racha.png')).rejects.toThrow();
+  });
 });
