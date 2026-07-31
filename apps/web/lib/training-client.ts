@@ -181,3 +181,12 @@ export async function confirmSession(
   if (!body.success) throw new Error(body.error || 'Error al confirmar la sesión.');
   return { alreadyConfirmedToday: body.alreadyConfirmedToday, dayNumber: body.dayNumber, streak: body.streak, phrase: body.phrase };
 }
+
+export async function getPhraseByContext(clientId: string, context: 'confirmacion' | 'instagram'): Promise<string | null> {
+  const body = await authorizedRequest<{ success: boolean; phrase: string | null; error?: string }>(
+    `/api/clients/${clientId}/training/phrase?context=${context}`,
+    'GET'
+  );
+  if (!body.success) throw new Error(body.error || 'Error al obtener la frase.');
+  return body.phrase;
+}

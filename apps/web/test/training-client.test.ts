@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as apiClient from '../lib/api-client';
-import { listExercises, createExercise, reorderExercise, confirmSession, getStreak, useProtector, getAchievements } from '../lib/training-client';
+import { listExercises, createExercise, reorderExercise, confirmSession, getStreak, useProtector, getAchievements, getPhraseByContext } from '../lib/training-client';
 
 beforeEach(() => {
   vi.spyOn(apiClient, 'getSessionToken').mockReturnValue('fake-token');
@@ -84,5 +84,37 @@ describe('training-client', () => {
     });
     const result = await getAchievements('client-1');
     expect(result).toHaveLength(1);
+  });
+
+  describe('getPhraseByContext', () => {
+    it('returns the phrase text on success', async () => {
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+        json: async () => ({ success: true, phrase: 'Vamos con todo' }),
+      });
+
+      const result = await getPhraseByContext('client-1', 'instagram');
+      expect(result).toBe('Vamos con todo');
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/clients/client-1/training/phrase?context=instagram'),
+        expect.anything()
+      );
+    });
+
+    it('returns null when the backend has no eligible phrase', async () => {
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+        json: async () => ({ success: true, phrase: null }),
+      });
+
+      const result = await getPhraseByContext('client-1', 'confirmacion');
+      expect(result).toBeNull();
+    });
+
+    it('throws when the backend reports failure', async () => {
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+        json: async () => ({ success: false, error: 'Contexto inválido.' }),
+      });
+
+      await expect(getPhraseByContext('client-1', 'instagram')).rejects.toThrow('Contexto inválido.');
+    });
   });
 });
