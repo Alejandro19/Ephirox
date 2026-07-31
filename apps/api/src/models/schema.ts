@@ -189,6 +189,16 @@ export const achievementLogs = pgTable('achievement_logs', {
   earnedAt: timestamp('earned_at', { withTimezone: true }).defaultNow(),
 });
 
+export const mindsetQuotes = pgTable('mindset_quotes', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  quote: text('quote').notNull(),
+  author: text('author'),
+  active: boolean('active').notNull().default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+});
+
 export type Phrase = typeof phrases.$inferSelect;
 export type TrainingProtectorUse = typeof trainingProtectorUses.$inferSelect;
 export type AchievementLog = typeof achievementLogs.$inferSelect;
+export type MindsetQuote = typeof mindsetQuotes.$inferSelect;

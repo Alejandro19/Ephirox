@@ -8,6 +8,7 @@ import { personalInfoRouter } from './routes/personal-info.routes.js';
 import { geoRouter } from './routes/geo.routes.js';
 import { exercisesRouter } from './routes/exercises.routes.js';
 import { trainingRouter } from './routes/training.routes.js';
+import { adminPhrasesRouter } from './routes/admin-phrases.routes.js';
 
 const ALLOWED_ORIGINS = ['https://latribu-oficial.vercel.app', 'http://localhost:3000'];
 
@@ -27,6 +28,7 @@ export function createApp() {
   });
 
   app.use('/api', geoRouter);
+  app.use('/api', adminPhrasesRouter);
   app.use('/api/auth', authRouter);
   app.use('/api/clients', clientsRouter);
   app.use('/api/clients', personalInfoRouter);

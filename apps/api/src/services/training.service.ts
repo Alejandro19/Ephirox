@@ -232,3 +232,36 @@ export async function useProtector(clientId: string, tz: string): Promise<Traini
   }
   return computeTrainingStreakState(clientId, trainingDays, tz);
 }
+
+export async function listAllPhrases(): Promise<Phrase[]> {
+  return db.select().from(phrases);
+}
+
+export async function createPhrase(text: string, context: string): Promise<Phrase> {
+  const [created] = await db.insert(phrases).values({ text, context }).returning();
+  return created;
+}
+
+export async function updatePhrase(
+  id: string,
+  patch: { text?: string; context?: string; active?: boolean }
+): Promise<Phrase | null> {
+  const [updated] = await db
+    .update(phrases)
+    .set({ ...patch, updatedAt: new Date() })
+    .where(eq(phrases.id, id))
+    .returning();
+  return updated ?? null;
+}
+
+export async function deletePhrase(id: string): Promise<void> {
+  await db.delete(phrases).where(eq(phrases.id, id));
+}
+
+export async function drawPreviewPhrase(context: string, excludeId?: string): Promise<Phrase | null> {
+  const pool = await db.select().from(phrases).where(eq(phrases.active, true));
+  const eligible = pool.filter((p) => p.context === context || p.context === 'ambas');
+  const candidates = excludeId && eligible.length > 1 ? eligible.filter((p) => p.id !== excludeId) : eligible;
+  if (candidates.length === 0) return null;
+  return candidates[Math.floor(Math.random() * candidates.length)];
+}
