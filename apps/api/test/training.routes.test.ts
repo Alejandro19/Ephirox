@@ -230,6 +230,11 @@ describe('training routes', () => {
   });
 
   describe('POST /training/confirm-session (extended)', () => {
+    beforeAll(async () => {
+      // Clean up any lingering phrases before this describe block
+      await db.delete(phrases);
+    });
+
     it('returns a streak object and a null phrase when there are no active phrases', async () => {
       const [freshClient] = await db
         .insert(clients)
@@ -381,6 +386,75 @@ describe('training routes', () => {
 
       await db.delete(achievementLogs).where(eq(achievementLogs.clientId, freshClient.id));
       await db.delete(clients).where(eq(clients.id, freshClient.id));
+    });
+  });
+
+  describe('GET /training/phrase', () => {
+    beforeAll(async () => {
+      // Clean up any lingering phrases from previous test runs
+      await db.delete(phrases);
+    });
+
+    it('rejects an invalid context', async () => {
+      const res = await request(app)
+        .get(`/api/clients/${clientId}/training/phrase?context=bogus`)
+        .set('Authorization', `Bearer ${clientToken}`);
+      expect(res.status).toBe(400);
+    });
+
+    it('returns null when there are no eligible phrases', async () => {
+      const res = await request(app)
+        .get(`/api/clients/${clientId}/training/phrase?context=instagram`)
+        .set('Authorization', `Bearer ${clientToken}`);
+      expect(res.status).toBe(200);
+      expect(res.body.phrase).toBeNull();
+    });
+
+    it('draws a phrase matching the requested context', async () => {
+      const [igPhrase] = await db
+        .insert(phrases)
+        .values({ text: 'Frase de Instagram', context: 'instagram', active: true })
+        .returning();
+      const [confirmPhrase] = await db
+        .insert(phrases)
+        .values({ text: 'Frase de confirmación', context: 'confirmacion', active: true })
+        .returning();
+
+      const res = await request(app)
+        .get(`/api/clients/${clientId}/training/phrase?context=instagram`)
+        .set('Authorization', `Bearer ${clientToken}`);
+      expect(res.status).toBe(200);
+      expect(res.body.phrase).toBe('Frase de Instagram');
+
+      await db.delete(phrases).where(eq(phrases.id, igPhrase.id));
+      await db.delete(phrases).where(eq(phrases.id, confirmPhrase.id));
+    });
+
+    it('draws a phrase whose context is "ambas" for either context', async () => {
+      const [bothPhrase] = await db
+        .insert(phrases)
+        .values({ text: 'Frase para ambas', context: 'ambas', active: true })
+        .returning();
+
+      const res = await request(app)
+        .get(`/api/clients/${clientId}/training/phrase?context=confirmacion`)
+        .set('Authorization', `Bearer ${clientToken}`);
+      expect(res.status).toBe(200);
+      expect(res.body.phrase).toBe('Frase para ambas');
+
+      await db.delete(phrases).where(eq(phrases.id, bothPhrase.id));
+    });
+
+    it('rejects a client requesting another client\'s phrase', async () => {
+      const [otherClient] = await db
+        .insert(clients)
+        .values({ name: 'Other Phrase Client', email: `otherphrase-${Date.now()}@example.com`, passwordHash: 'x', clientType: 'coaching_1_1', permissions: { training: true } })
+        .returning();
+      const res = await request(app)
+        .get(`/api/clients/${otherClient.id}/training/phrase?context=instagram`)
+        .set('Authorization', `Bearer ${clientToken}`);
+      expect(res.status).toBe(403);
+      await db.delete(clients).where(eq(clients.id, otherClient.id));
     });
   });
 });

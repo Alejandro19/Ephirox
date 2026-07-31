@@ -48,3 +48,12 @@ export async function listAchievements(req: Request, res: Response) {
   const achievements = await trainingService.listAchievements(req.params.id);
   return ok(res, { achievements });
 }
+
+export async function getPhraseByContext(req: Request, res: Response) {
+  const context = typeof req.query.context === 'string' ? req.query.context : '';
+  if (context !== 'confirmacion' && context !== 'instagram') {
+    return err(res, 'Contexto inválido.', 400);
+  }
+  const phrase = await trainingService.getPhraseByContext(context);
+  return ok(res, { phrase });
+}

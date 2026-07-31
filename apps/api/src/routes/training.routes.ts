@@ -56,3 +56,11 @@ trainingRouter.get(
   adminOnly,
   asyncHandler(trainingController.listAchievements)
 );
+
+trainingRouter.get(
+  '/:id/training/phrase',
+  authMiddleware,
+  ownerOrAdmin,
+  requirePermission('training'),
+  asyncHandler(trainingController.getPhraseByContext)
+);

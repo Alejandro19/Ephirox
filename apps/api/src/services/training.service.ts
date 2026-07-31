@@ -82,6 +82,12 @@ export function pickRandomPhrase(pool: Phrase[], context: string): Phrase | null
   return eligible[Math.floor(Math.random() * eligible.length)];
 }
 
+export async function getPhraseByContext(context: string): Promise<string | null> {
+  const pool = await db.select().from(phrases).where(eq(phrases.active, true));
+  const drawn = pickRandomPhrase(pool, context);
+  return drawn ? drawn.text : null;
+}
+
 // Puerto del confirm-session del legacy (server.js:1305-1367), ahora completo:
 // además de insertar training_completions, dibuja una frase (non-fatal) y
 // calcula la racha; registra achievement_logs solo en la transición exacta
