@@ -119,7 +119,14 @@ export function TrainingShell({ clientId }: TrainingShellProps) {
   if (error) return <p role="alert">{error}</p>;
 
   if (confirmedResult) {
-    return <SessionConfirmedScreen streak={confirmedResult.streak} phrase={confirmedResult.phrase} onClose={closeConfirmedScreen} />;
+    return (
+      <SessionConfirmedScreen
+        streak={confirmedResult.streak}
+        phrase={confirmedResult.phrase}
+        clientId={clientId}
+        onClose={closeConfirmedScreen}
+      />
+    );
   }
 
   if (day && category) {

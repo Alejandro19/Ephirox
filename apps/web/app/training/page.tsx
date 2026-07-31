@@ -83,7 +83,14 @@ export default function TrainingPage() {
     return <p>Ya confirmaste tu sesión de hoy — vuelve mañana para el siguiente día.</p>;
   }
   if (nfcResult) {
-    return <SessionConfirmedScreen streak={nfcResult.streak} phrase={nfcResult.phrase} onClose={() => setNfcResult(null)} />;
+    return (
+      <SessionConfirmedScreen
+        streak={nfcResult.streak}
+        phrase={nfcResult.phrase}
+        clientId={clientId ?? ''}
+        onClose={() => setNfcResult(null)}
+      />
+    );
   }
 
   return <TrainingShell clientId={clientId ?? ''} />;
