@@ -35,3 +35,15 @@ export async function deleteQuote(req: Request, res: Response) {
   await quotesService.deleteQuote(req.params.id);
   return ok(res, { message: 'Frase eliminada.' });
 }
+
+export async function getQuoteOfTheDay(req: Request, res: Response) {
+  const quote = await quotesService.getQuoteOfTheDay(req.params.id);
+  return ok(res, { quote });
+}
+
+export async function assignQuote(req: Request, res: Response) {
+  const { quote_id } = req.body as { quote_id: string | null };
+  const client = await quotesService.assignQuote(req.params.id, quote_id);
+  if (!client) return err(res, 'Cliente no encontrado.', 404);
+  return ok(res, { client });
+}

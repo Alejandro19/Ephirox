@@ -3,7 +3,7 @@ import request from 'supertest';
 import { eq } from 'drizzle-orm';
 import { createApp } from '../src/app.js';
 import { db } from '../src/db/index.js';
-import { clients, trainingCompletions, trainingProtectorUses, phrases, achievementLogs } from '../src/models/schema.js';
+import { clients, trainingCompletions, trainingProtectorUses, phrases, achievementLogs, mindsetQuotes } from '../src/models/schema.js';
 import { signToken } from '../src/services/auth.service.js';
 
 describe('training routes', () => {
@@ -455,6 +455,50 @@ describe('training routes', () => {
         .set('Authorization', `Bearer ${clientToken}`);
       expect(res.status).toBe(403);
       await db.delete(clients).where(eq(clients.id, otherClient.id));
+    });
+  });
+
+  describe('GET /quote-of-the-day and PATCH /assigned-quote', () => {
+    it('rejects a client using assigned-quote (admin-only)', async () => {
+      const res = await request(app)
+        .patch(`/api/clients/${clientId}/assigned-quote`)
+        .set('Authorization', `Bearer ${clientToken}`)
+        .send({ quote_id: null });
+      expect(res.status).toBe(403);
+    });
+
+    it('returns null from quote-of-the-day when there is no assignment and no active pool', async () => {
+      const res = await request(app)
+        .get(`/api/clients/${clientId}/quote-of-the-day`)
+        .set('Authorization', `Bearer ${clientToken}`);
+      expect(res.status).toBe(200);
+      expect(res.body.quote).toBeNull();
+    });
+
+    it('assigns a quote and returns it from quote-of-the-day even when inactive', async () => {
+      const [created] = await db.insert(mindsetQuotes).values({ quote: 'Frase asignada', active: false }).returning();
+
+      const assignRes = await request(app)
+        .patch(`/api/clients/${clientId}/assigned-quote`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ quote_id: created.id });
+      expect(assignRes.status).toBe(200);
+      expect(assignRes.body.client.assignedQuoteId).toBe(created.id);
+
+      const qotdRes = await request(app)
+        .get(`/api/clients/${clientId}/quote-of-the-day`)
+        .set('Authorization', `Bearer ${clientToken}`);
+      expect(qotdRes.status).toBe(200);
+      expect(qotdRes.body.quote.id).toBe(created.id);
+
+      const clearRes = await request(app)
+        .patch(`/api/clients/${clientId}/assigned-quote`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ quote_id: null });
+      expect(clearRes.status).toBe(200);
+      expect(clearRes.body.client.assignedQuoteId).toBeNull();
+
+      await db.delete(mindsetQuotes).where(eq(mindsetQuotes.id, created.id));
     });
   });
 });

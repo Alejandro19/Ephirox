@@ -1,10 +1,11 @@
 import { Router } from 'express';
-import { TrainingDaysPatchSchema, ConfirmSessionInputSchema } from '@latribu/shared-types';
+import { TrainingDaysPatchSchema, ConfirmSessionInputSchema, AssignedQuotePatchSchema } from '@latribu/shared-types';
 import { validateBody } from '../middleware/validate.js';
 import { asyncHandler } from '../middleware/async-handler.js';
 import { authMiddleware, adminOnly, ownerOrAdmin } from '../middleware/auth.middleware.js';
 import { requirePermission } from '../middleware/require-permission.middleware.js';
 import * as trainingController from '../controllers/training.controller.js';
+import * as quotesController from '../controllers/quotes.controller.js';
 
 export const trainingRouter = Router();
 
@@ -63,4 +64,20 @@ trainingRouter.get(
   ownerOrAdmin,
   requirePermission('training'),
   asyncHandler(trainingController.getPhraseByContext)
+);
+
+trainingRouter.get(
+  '/:id/quote-of-the-day',
+  authMiddleware,
+  ownerOrAdmin,
+  requirePermission('training'),
+  asyncHandler(quotesController.getQuoteOfTheDay)
+);
+
+trainingRouter.patch(
+  '/:id/assigned-quote',
+  authMiddleware,
+  adminOnly,
+  validateBody(AssignedQuotePatchSchema),
+  asyncHandler(quotesController.assignQuote)
 );

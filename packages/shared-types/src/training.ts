@@ -33,3 +33,8 @@ export const ConfirmSessionInputSchema = z.object({
   source: z.enum(['manual', 'nfc']).optional(),
 });
 export type ConfirmSessionInput = z.infer<typeof ConfirmSessionInputSchema>;
+
+export const AssignedQuotePatchSchema = z.object({
+  quote_id: z.string().uuid().nullable(),
+});
+export type AssignedQuotePatch = z.infer<typeof AssignedQuotePatchSchema>;
