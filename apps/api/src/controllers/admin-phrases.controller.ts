@@ -26,6 +26,7 @@ export async function createPhrase(req: Request, res: Response) {
 export async function updatePhrase(req: Request, res: Response) {
   const { text, context, active } = req.body as { text?: string; context?: string; active?: boolean };
   if (context !== undefined && !VALID_CONTEXTS.includes(context)) return err(res, 'Contexto inválido.');
+  if (text !== undefined && !text.trim()) return err(res, 'La frase no puede estar vacía.');
   const patch: { text?: string; context?: string; active?: boolean } = {};
   if (text !== undefined) patch.text = text.trim();
   if (context !== undefined) patch.context = context;

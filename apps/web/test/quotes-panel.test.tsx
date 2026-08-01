@@ -75,6 +75,19 @@ describe('QuotesPanel', () => {
     await waitFor(() => expect(updateSpy).toHaveBeenCalledWith('q1', { quote: 'Editada', author: 'La Tribu' }));
   });
 
+  it('blocks saving an edit with empty text', async () => {
+    const updateSpy = vi.spyOn(quotesClient, 'updateQuote');
+    render(<QuotesPanel />);
+    await waitFor(() => expect(screen.getByText('Estoy en mi mejor momento')).toBeInTheDocument());
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'Editar' })[0]);
+    const frasFields = screen.getAllByLabelText('Frase');
+    fireEvent.change(frasFields[frasFields.length - 1], { target: { value: '   ' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar' }));
+
+    expect(updateSpy).not.toHaveBeenCalled();
+  });
+
   it('does not render an active/inactive toggle button', async () => {
     render(<QuotesPanel />);
     await waitFor(() => expect(screen.getByText('Estoy en mi mejor momento')).toBeInTheDocument());

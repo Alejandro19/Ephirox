@@ -56,6 +56,21 @@ describe('admin phrases routes', () => {
     expect(res.status).toBe(400);
   });
 
+  it('rejects an empty text on update', async () => {
+    const [created] = await db.insert(phrases).values({ text: 'Frase editable', context: 'ambas', active: true }).returning();
+
+    const res = await request(app)
+      .patch(`/api/admin/phrases/${created.id}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ text: '   ' });
+    expect(res.status).toBe(400);
+
+    const unchanged = await db.select().from(phrases).where(eq(phrases.id, created.id));
+    expect(unchanged[0].text).toBe('Frase editable');
+
+    await db.delete(phrases).where(eq(phrases.id, created.id));
+  });
+
   it('creates, lists (including inactive), updates, and deletes a phrase', async () => {
     const createRes = await request(app)
       .post('/api/admin/phrases')

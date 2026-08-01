@@ -64,6 +64,7 @@ export function PhrasesPanel() {
   }
 
   async function handleSaveEdit(id: string) {
+    if (!editText.trim()) return;
     try {
       await updatePhrase(id, { text: editText, context: editContext });
       setEditingId(null);

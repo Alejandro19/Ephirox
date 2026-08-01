@@ -22,6 +22,7 @@ export async function createQuote(req: Request, res: Response) {
 
 export async function updateQuote(req: Request, res: Response) {
   const { quote, author, active } = req.body as { quote?: string; author?: string | null; active?: boolean };
+  if (quote !== undefined && !quote.trim()) return err(res, 'La frase no puede estar vacía.');
   const patch: { quote?: string; author?: string | null; active?: boolean } = {};
   if (quote !== undefined) patch.quote = quote.trim();
   if (author !== undefined) patch.author = author;

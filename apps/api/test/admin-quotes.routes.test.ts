@@ -48,6 +48,20 @@ describe('admin quotes routes', () => {
     expect(res.status).toBe(400);
   });
 
+  it('rejects an empty quote on update', async () => {
+    const [created] = await db.insert(mindsetQuotes).values({ quote: 'Frase editable', active: true }).returning();
+    createdQuoteIds.push(created.id);
+
+    const res = await request(app)
+      .patch(`/api/admin/quotes/${created.id}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ quote: '   ' });
+    expect(res.status).toBe(400);
+
+    const unchanged = await db.select().from(mindsetQuotes).where(eq(mindsetQuotes.id, created.id));
+    expect(unchanged[0].quote).toBe('Frase editable');
+  });
+
   it('creates, lists, updates, and deletes a quote', async () => {
     const createRes = await request(app)
       .post('/api/admin/quotes')

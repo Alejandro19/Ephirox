@@ -73,6 +73,18 @@ describe('PhrasesPanel', () => {
     expect(createSpy).not.toHaveBeenCalled();
   });
 
+  it('blocks saving an edit with empty text', async () => {
+    const updateSpy = vi.spyOn(phrasesClient, 'updatePhrase');
+    render(<PhrasesPanel />);
+    await waitFor(() => expect(screen.getByText('Frase de confirmación')).toBeInTheDocument());
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'Editar' })[0]);
+    fireEvent.change(screen.getByLabelText('Frase'), { target: { value: '   ' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar' }));
+
+    expect(updateSpy).not.toHaveBeenCalled();
+  });
+
   it('draws a preview phrase for a context', async () => {
     const previewSpy = vi
       .spyOn(phrasesClient, 'drawPreviewPhrase')

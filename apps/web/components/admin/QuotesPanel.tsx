@@ -40,6 +40,7 @@ export function QuotesPanel() {
   }
 
   async function handleSaveEdit(id: string) {
+    if (!editQuote.trim()) return;
     try {
       await updateQuote(id, { quote: editQuote, author: editAuthor.trim() || null });
       setEditingId(null);
