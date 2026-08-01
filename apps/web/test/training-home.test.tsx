@@ -31,6 +31,7 @@ describe('TrainingHome', () => {
         completions={[]}
         streak={null}
         quote={null}
+        clientName="Ana"
         onOpenDay={onOpenDay}
         onUseProtector={vi.fn()}
         protectorPending={false}
@@ -49,6 +50,7 @@ describe('TrainingHome', () => {
         completions={[]}
         streak={null}
         quote={null}
+        clientName="Ana"
         onOpenDay={vi.fn()}
         onUseProtector={vi.fn()}
         protectorPending={false}
@@ -65,6 +67,7 @@ describe('TrainingHome', () => {
         completions={[]}
         streak={null}
         quote={null}
+        clientName="Ana"
         onOpenDay={vi.fn()}
         onUseProtector={vi.fn()}
         protectorPending={false}
@@ -88,6 +91,7 @@ describe('TrainingHome', () => {
         completions={[completion]}
         streak={null}
         quote={null}
+        clientName="Ana"
         onOpenDay={vi.fn()}
         onUseProtector={vi.fn()}
         protectorPending={false}
@@ -109,6 +113,7 @@ describe('TrainingHome', () => {
         completions={[]}
         streak={null}
         quote={null}
+        clientName="Ana"
         onOpenDay={onOpenDay}
         onUseProtector={vi.fn()}
         protectorPending={false}
@@ -126,6 +131,7 @@ describe('TrainingHome', () => {
         completions={[]}
         streak={null}
         quote={null}
+        clientName="Ana"
         onOpenDay={vi.fn()}
         onUseProtector={vi.fn()}
         protectorPending={false}
@@ -142,6 +148,7 @@ describe('TrainingHome', () => {
         completions={[]}
         streak={{ streakWeeks: 3, sessionsDoneThisWeek: 1, sessionsRequiredThisWeek: 2, protectorAvailable: true, protectorUsedThisWeek: false, atRisk: false }}
         quote={null}
+        clientName="Ana"
         onOpenDay={vi.fn()}
         onUseProtector={vi.fn()}
         protectorPending={false}
@@ -162,6 +169,7 @@ describe('TrainingHome', () => {
         completions={[]}
         streak={{ streakWeeks: 1, sessionsDoneThisWeek: 0, sessionsRequiredThisWeek: 2, protectorAvailable: true, protectorUsedThisWeek: false, atRisk: true }}
         quote={null}
+        clientName="Ana"
         onOpenDay={vi.fn()}
         onUseProtector={vi.fn()}
         protectorPending={false}
@@ -179,6 +187,7 @@ describe('TrainingHome', () => {
         completions={[]}
         streak={{ streakWeeks: 1, sessionsDoneThisWeek: 0, sessionsRequiredThisWeek: 2, protectorAvailable: true, protectorUsedThisWeek: false, atRisk: false }}
         quote={null}
+        clientName="Ana"
         onOpenDay={vi.fn()}
         onUseProtector={onUseProtector}
         protectorPending={false}
@@ -194,6 +203,7 @@ describe('TrainingHome', () => {
         completions={[]}
         streak={{ streakWeeks: 1, sessionsDoneThisWeek: 0, sessionsRequiredThisWeek: 2, protectorAvailable: false, protectorUsedThisWeek: true, atRisk: false }}
         quote={null}
+        clientName="Ana"
         onOpenDay={vi.fn()}
         onUseProtector={onUseProtector}
         protectorPending={false}
@@ -210,13 +220,35 @@ describe('TrainingHome', () => {
         completions={[]}
         streak={null}
         quote={{ id: 'q1', quote: 'Estoy en mi mejor momento', author: 'La Tribu', active: true }}
+        clientName="Ana"
         onOpenDay={vi.fn()}
         onUseProtector={vi.fn()}
         protectorPending={false}
       />
     );
+    expect(screen.getByText(/Hola Ana/)).toBeInTheDocument();
     expect(screen.getByText(/Estoy en mi mejor momento/)).toBeInTheDocument();
     expect(screen.getByText(/La Tribu/)).toBeInTheDocument();
+  });
+
+  it('renders the affirmation banner with the quote but no author line when the quote has no author', () => {
+    render(
+      <TrainingHome
+        trainingDays={2}
+        exercises={[]}
+        completions={[]}
+        streak={null}
+        quote={{ id: 'q1', quote: 'Estoy en mi mejor momento', author: null, active: true }}
+        clientName="Ana"
+        onOpenDay={vi.fn()}
+        onUseProtector={vi.fn()}
+        protectorPending={false}
+      />
+    );
+    expect(screen.getByText(/Hola Ana/)).toBeInTheDocument();
+    expect(screen.getByText(/Estoy en mi mejor momento/)).toBeInTheDocument();
+    const banner = screen.getByText(/Hola Ana/).closest('div');
+    expect(banner).not.toHaveTextContent('—');
   });
 
   it('renders no banner when quote is null', () => {
@@ -227,6 +259,7 @@ describe('TrainingHome', () => {
         completions={[]}
         streak={null}
         quote={null}
+        clientName="Ana"
         onOpenDay={vi.fn()}
         onUseProtector={vi.fn()}
         protectorPending={false}

@@ -28,6 +28,7 @@ function exercise(id: string, dayNumber: number, category: trainingClient.Exerci
 describe('TrainingShell', () => {
   beforeEach(() => {
     vi.mocked(trainingClient.getClientTrainingDays).mockResolvedValue(1);
+    vi.mocked(trainingClient.getClientName).mockResolvedValue('Ana');
     vi.mocked(trainingClient.listExercises).mockResolvedValue([exercise('e1', 1)]);
     vi.mocked(trainingClient.listTrainingCompletions).mockResolvedValue([]);
     vi.mocked(trainingClient.getStreak).mockResolvedValue({

@@ -500,5 +500,18 @@ describe('training routes', () => {
 
       await db.delete(mindsetQuotes).where(eq(mindsetQuotes.id, created.id));
     });
+
+    it('falls back to the active pool for quote-of-the-day when the client has no assignment', async () => {
+      const [created] = await db.insert(mindsetQuotes).values({ quote: 'Frase del pool activo', active: true }).returning();
+
+      const res = await request(app)
+        .get(`/api/clients/${clientId}/quote-of-the-day`)
+        .set('Authorization', `Bearer ${clientToken}`);
+      expect(res.status).toBe(200);
+      expect(res.body.quote).not.toBeNull();
+      expect(res.body.quote.id).toBe(created.id);
+
+      await db.delete(mindsetQuotes).where(eq(mindsetQuotes.id, created.id));
+    });
   });
 });

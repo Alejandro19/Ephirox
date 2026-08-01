@@ -10,6 +10,7 @@ export type TrainingHomeProps = {
   completions: TrainingCompletion[];
   streak: TrainingStreak | null;
   quote: MindsetQuote | null;
+  clientName: string;
   onOpenDay: (day: number) => void;
   onUseProtector: () => void;
   protectorPending: boolean;
@@ -35,7 +36,17 @@ function nextActionableDay(trainingDays: number, completions: TrainingCompletion
   return null;
 }
 
-export function TrainingHome({ trainingDays, exercises, completions, streak, quote, onOpenDay, onUseProtector, protectorPending }: TrainingHomeProps) {
+export function TrainingHome({
+  trainingDays,
+  exercises,
+  completions,
+  streak,
+  quote,
+  clientName,
+  onOpenDay,
+  onUseProtector,
+  protectorPending,
+}: TrainingHomeProps) {
   const days = Array.from({ length: trainingDays }, (_, i) => i + 1);
   const stats = calculateDisciplineStats(completions, trainingDays);
   const calendarCells = monthCalendarCells(completions);
@@ -47,7 +58,9 @@ export function TrainingHome({ trainingDays, exercises, completions, streak, quo
 
       {quote && (
         <div>
-          <p>repite después de mí: &quot;{quote.quote}&quot;</p>
+          <p>
+            Hola {clientName}, repite después de mí: &quot;{quote.quote}&quot;
+          </p>
           {quote.author && <p>— {quote.author}</p>}
         </div>
       )}

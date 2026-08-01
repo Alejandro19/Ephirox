@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import type { Exercise, ExerciseCategory, TrainingCompletion, TrainingStreak } from '../../lib/training-client';
 import {
   getClientTrainingDays,
+  getClientName,
   listExercises,
   listTrainingCompletions,
   confirmSession,
@@ -35,6 +36,7 @@ export function TrainingShell({ clientId }: TrainingShellProps) {
   const [completions, setCompletions] = useState<TrainingCompletion[]>([]);
   const [streak, setStreak] = useState<TrainingStreak | null>(null);
   const [quote, setQuote] = useState<MindsetQuote | null>(null);
+  const [clientName, setClientName] = useState('');
   const [day, setDay] = useState<number | null>(null);
   const [category, setCategory] = useState<ExerciseCategory | null>(null);
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
@@ -46,14 +48,16 @@ export function TrainingShell({ clientId }: TrainingShellProps) {
 
   const load = useCallback(async () => {
     const tz = clientTz();
-    const [days, exerciseList, completionList, streakState, quoteOfTheDay] = await Promise.all([
+    const [days, name, exerciseList, completionList, streakState, quoteOfTheDay] = await Promise.all([
       getClientTrainingDays(clientId),
+      getClientName(clientId),
       listExercises(clientId),
       listTrainingCompletions(clientId),
       getStreak(clientId, tz),
       getQuoteOfTheDay(clientId).catch(() => null),
     ]);
     setTrainingDays(days);
+    setClientName(name);
     setExercises(exerciseList);
     setCompletions(completionList);
     setStreak(streakState);
@@ -174,6 +178,7 @@ export function TrainingShell({ clientId }: TrainingShellProps) {
         completions={completions}
         streak={streak}
         quote={quote}
+        clientName={clientName}
         onOpenDay={openDay}
         onUseProtector={handleUseProtector}
         protectorPending={protectorPending}

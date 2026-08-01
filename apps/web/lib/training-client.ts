@@ -52,6 +52,15 @@ export async function getClientTrainingDays(clientId: string): Promise<number> {
   return body.client.trainingDays || 0;
 }
 
+export async function getClientName(clientId: string): Promise<string> {
+  const body = await authorizedRequest<{ success: boolean; client: { name: string }; error?: string }>(
+    `/api/clients/${clientId}`,
+    'GET'
+  );
+  if (!body.success) throw new Error(body.error || 'Error al obtener el cliente.');
+  return body.client.name;
+}
+
 export async function listExercises(clientId: string): Promise<Exercise[]> {
   const body = await authorizedRequest<{ success: boolean; exercises: Exercise[]; error?: string }>(
     `/api/clients/${clientId}/exercises`,
