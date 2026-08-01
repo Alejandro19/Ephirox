@@ -11,6 +11,7 @@ import {
   useProtector,
 } from '../../lib/training-client';
 import { isDayCompletedThisWeek } from '../../lib/training-home-logic';
+import { getQuoteOfTheDay, type MindsetQuote } from '../../lib/quotes-client';
 import { TrainingHome } from './TrainingHome';
 import { TrainingDayView } from './TrainingDayView';
 import { TrainingPlayer } from './TrainingPlayer';
@@ -33,6 +34,7 @@ export function TrainingShell({ clientId }: TrainingShellProps) {
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [completions, setCompletions] = useState<TrainingCompletion[]>([]);
   const [streak, setStreak] = useState<TrainingStreak | null>(null);
+  const [quote, setQuote] = useState<MindsetQuote | null>(null);
   const [day, setDay] = useState<number | null>(null);
   const [category, setCategory] = useState<ExerciseCategory | null>(null);
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
@@ -44,16 +46,18 @@ export function TrainingShell({ clientId }: TrainingShellProps) {
 
   const load = useCallback(async () => {
     const tz = clientTz();
-    const [days, exerciseList, completionList, streakState] = await Promise.all([
+    const [days, exerciseList, completionList, streakState, quoteOfTheDay] = await Promise.all([
       getClientTrainingDays(clientId),
       listExercises(clientId),
       listTrainingCompletions(clientId),
       getStreak(clientId, tz),
+      getQuoteOfTheDay(clientId).catch(() => null),
     ]);
     setTrainingDays(days);
     setExercises(exerciseList);
     setCompletions(completionList);
     setStreak(streakState);
+    setQuote(quoteOfTheDay);
   }, [clientId]);
 
   useEffect(() => {
@@ -169,6 +173,7 @@ export function TrainingShell({ clientId }: TrainingShellProps) {
         exercises={exercises}
         completions={completions}
         streak={streak}
+        quote={quote}
         onOpenDay={openDay}
         onUseProtector={handleUseProtector}
         protectorPending={protectorPending}

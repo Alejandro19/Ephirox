@@ -1,6 +1,7 @@
 'use client';
 
 import type { Exercise, TrainingCompletion, TrainingStreak } from '../../lib/training-client';
+import type { MindsetQuote } from '../../lib/quotes-client';
 import { isDayUnlocked, isDayCompletedThisWeek, calculateDisciplineStats } from '../../lib/training-home-logic';
 
 export type TrainingHomeProps = {
@@ -8,6 +9,7 @@ export type TrainingHomeProps = {
   exercises: Exercise[];
   completions: TrainingCompletion[];
   streak: TrainingStreak | null;
+  quote: MindsetQuote | null;
   onOpenDay: (day: number) => void;
   onUseProtector: () => void;
   protectorPending: boolean;
@@ -33,7 +35,7 @@ function nextActionableDay(trainingDays: number, completions: TrainingCompletion
   return null;
 }
 
-export function TrainingHome({ trainingDays, exercises, completions, streak, onOpenDay, onUseProtector, protectorPending }: TrainingHomeProps) {
+export function TrainingHome({ trainingDays, exercises, completions, streak, quote, onOpenDay, onUseProtector, protectorPending }: TrainingHomeProps) {
   const days = Array.from({ length: trainingDays }, (_, i) => i + 1);
   const stats = calculateDisciplineStats(completions, trainingDays);
   const calendarCells = monthCalendarCells(completions);
@@ -42,6 +44,13 @@ export function TrainingHome({ trainingDays, exercises, completions, streak, onO
   return (
     <div>
       <h1>Entrenamiento</h1>
+
+      {quote && (
+        <div>
+          <p>repite después de mí: &quot;{quote.quote}&quot;</p>
+          {quote.author && <p>— {quote.author}</p>}
+        </div>
+      )}
 
       {streak && (
         <div>
