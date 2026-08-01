@@ -202,3 +202,20 @@ export type Phrase = typeof phrases.$inferSelect;
 export type TrainingProtectorUse = typeof trainingProtectorUses.$inferSelect;
 export type AchievementLog = typeof achievementLogs.$inferSelect;
 export type MindsetQuote = typeof mindsetQuotes.$inferSelect;
+
+export const restTools = pgTable('rest_tools', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: text('name').notNull(),
+  meta: text('meta'),
+  action: text('action').notNull(),
+  minutes: integer('minutes'),
+  seconds: integer('seconds'),
+  audioUrl: text('audio_url'),
+  audioName: text('audio_name'),
+  active: boolean('active').notNull().default(true),
+  sortOrder: integer('sort_order').notNull().default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+});
+
+export type RestTool = typeof restTools.$inferSelect;

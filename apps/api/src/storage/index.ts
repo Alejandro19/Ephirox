@@ -39,3 +39,18 @@ export async function uploadFile(
   const { data } = storageClient.storage.from(BUCKET).getPublicUrl(filename);
   return data.publicUrl;
 }
+
+export async function deleteFile(publicUrl: string | null | undefined): Promise<void> {
+  if (!publicUrl) return;
+  const marker = `/storage/v1/object/public/${BUCKET}/`;
+  const idx = publicUrl.indexOf(marker);
+  if (idx === -1) return;
+  const path = decodeURIComponent(publicUrl.slice(idx + marker.length));
+  try {
+    await storageClient.storage.from(BUCKET).remove([path]);
+  } catch {
+    // Best-effort cleanup — mismo comportamiento no-fatal que el legacy
+    // (server.js:36-42): un archivo huérfano no debe romper la operación
+    // principal (guardar/eliminar la herramienta).
+  }
+}

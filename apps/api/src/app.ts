@@ -10,6 +10,7 @@ import { exercisesRouter } from './routes/exercises.routes.js';
 import { trainingRouter } from './routes/training.routes.js';
 import { adminPhrasesRouter } from './routes/admin-phrases.routes.js';
 import { adminQuotesRouter } from './routes/admin-quotes.routes.js';
+import { restToolsRouter } from './routes/rest-tools.routes.js';
 
 const ALLOWED_ORIGINS = ['https://latribu-oficial.vercel.app', 'http://localhost:3000'];
 
@@ -31,6 +32,7 @@ export function createApp() {
   app.use('/api', geoRouter);
   app.use('/api', adminPhrasesRouter);
   app.use('/api', adminQuotesRouter);
+  app.use('/api', restToolsRouter);
   app.use('/api/auth', authRouter);
   app.use('/api/clients', clientsRouter);
   app.use('/api/clients', personalInfoRouter);
