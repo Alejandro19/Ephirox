@@ -32,10 +32,24 @@ describe('nutrition routes', () => {
   });
 
   it('a client with no plan yet gets an empty object back, not a 404', async () => {
+    // This client has nutrition access unlocked (permissions.nutrition = true) but has
+    // never had a plan/meal saved for them yet — the empty-state response, not the
+    // requirePermission('nutrition') gate, is what's under test here.
+    await db
+      .update(clients)
+      .set({ permissions: { training: false, nutrition: true, supplementation: false, cortisol: false, community: true, evolution: true } })
+      .where(eq(clients.id, clientId));
+
     const res = await request(app).get(`/api/clients/${clientId}/nutrition`).set('Authorization', `Bearer ${clientToken}`);
     expect(res.status).toBe(200);
     expect(res.body.plan).toEqual({});
     expect(res.body.meals).toEqual([]);
+
+    // Revert so downstream tests still observe the false -> true unlock transition.
+    await db
+      .update(clients)
+      .set({ permissions: { training: false, nutrition: false, supplementation: false, cortisol: false, community: true, evolution: true } })
+      .where(eq(clients.id, clientId));
   });
 
   it('rejects a client from saving their own plan (admin-only)', async () => {
