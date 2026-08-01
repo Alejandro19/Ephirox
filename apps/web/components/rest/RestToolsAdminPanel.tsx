@@ -117,30 +117,26 @@ export function RestToolsAdminPanel() {
       <h2>Herramientas para dormir</h2>
       {error && <p role="alert">{error}</p>}
 
-      {editingId === null && (
+      <label htmlFor="rt-new-name">Nombre</label>
+      <input id="rt-new-name" value={newName} onChange={(e) => setNewName(e.target.value)} />
+      <label htmlFor="rt-new-action">Tipo</label>
+      <select id="rt-new-action" value={newAction} onChange={(e) => setNewAction(e.target.value)}>
+        <option value="play">Reproducir (con temporizador)</option>
+        <option value="write">Escribir (diario)</option>
+      </select>
+      {newAction === 'play' && (
         <>
-          <label htmlFor="rt-new-name">Nombre</label>
-          <input id="rt-new-name" value={newName} onChange={(e) => setNewName(e.target.value)} />
-          <label htmlFor="rt-new-action">Tipo</label>
-          <select id="rt-new-action" value={newAction} onChange={(e) => setNewAction(e.target.value)}>
-            <option value="play">Reproducir (con temporizador)</option>
-            <option value="write">Escribir (diario)</option>
-          </select>
-          {newAction === 'play' && (
-            <>
-              <label htmlFor="rt-new-minutes">Minutos</label>
-              <input id="rt-new-minutes" type="number" value={newMinutes} onChange={(e) => setNewMinutes(e.target.value)} />
-              <label htmlFor="rt-new-seconds">Segundos</label>
-              <input id="rt-new-seconds" type="number" value={newSeconds} onChange={(e) => setNewSeconds(e.target.value)} />
-            </>
-          )}
-          <label htmlFor="rt-new-meta">Descripción</label>
-          <input id="rt-new-meta" value={newMeta} onChange={(e) => setNewMeta(e.target.value)} />
-          <button type="button" onClick={handleCreate}>
-            + Agregar herramienta
-          </button>
+          <label htmlFor="rt-new-minutes">Minutos</label>
+          <input id="rt-new-minutes" type="number" value={newMinutes} onChange={(e) => setNewMinutes(e.target.value)} />
+          <label htmlFor="rt-new-seconds">Segundos</label>
+          <input id="rt-new-seconds" type="number" value={newSeconds} onChange={(e) => setNewSeconds(e.target.value)} />
         </>
       )}
+      <label htmlFor="rt-new-meta">Descripción</label>
+      <input id="rt-new-meta" value={newMeta} onChange={(e) => setNewMeta(e.target.value)} />
+      <button type="button" onClick={handleCreate}>
+        + Agregar herramienta
+      </button>
 
       {tools.length === 0 && <p>Aún no hay herramientas.</p>}
       {tools.map((tool) =>

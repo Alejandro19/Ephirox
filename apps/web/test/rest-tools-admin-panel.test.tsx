@@ -55,7 +55,8 @@ describe('RestToolsAdminPanel', () => {
     render(<RestToolsAdminPanel />);
     await waitFor(() => expect(screen.getByText('Sonidos para dormir')).toBeInTheDocument());
     fireEvent.click(screen.getAllByRole('button', { name: 'Editar' })[0]);
-    fireEvent.change(screen.getByLabelText('Nombre'), { target: { value: 'Editada' } });
+    const nameInputs = screen.getAllByLabelText('Nombre');
+    fireEvent.change(nameInputs[nameInputs.length - 1], { target: { value: 'Editada' } });
     fireEvent.click(screen.getByRole('button', { name: 'Guardar' }));
     await waitFor(() => expect(updateSpy).toHaveBeenCalled());
   });
