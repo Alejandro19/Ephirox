@@ -219,3 +219,54 @@ export const restTools = pgTable('rest_tools', {
 });
 
 export type RestTool = typeof restTools.$inferSelect;
+
+export const nutritionPlans = pgTable('nutrition_plans', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  clientId: uuid('client_id').notNull().unique().references(() => clients.id, { onDelete: 'cascade' }),
+  dailyCals: integer('daily_cals').default(0),
+  proteinG: integer('protein_g').default(0),
+  carbsG: integer('carbs_g').default(0),
+  fatG: integer('fat_g').default(0),
+  notes: text('notes'),
+  clientObservations: text('client_observations'),
+  pdfUrl: text('pdf_url'),
+  pdfName: text('pdf_name'),
+  summary: text('summary'),
+  menuPlan: jsonb('menu_plan').default([]),
+  recommendations: jsonb('recommendations').default([]),
+  closingMessage: text('closing_message'),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+});
+
+export const meals = pgTable('meals', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  clientId: uuid('client_id').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+  mealTime: text('meal_time').notNull(),
+  name: text('name').notNull(),
+  calories: integer('calories').default(0),
+  proteinG: integer('protein_g').default(0),
+  carbsG: integer('carbs_g').default(0),
+  fatG: integer('fat_g').default(0),
+  tags: text('tags').array().default([]),
+  sortOrder: integer('sort_order').default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+export const supplements = pgTable('supplements', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  clientId: uuid('client_id').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  brand: text('brand'),
+  dose: text('dose'),
+  timing: text('timing'),
+  benefit: text('benefit'),
+  category: text('category'),
+  active: boolean('active').default(true),
+  sortOrder: integer('sort_order').default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+});
+
+export type NutritionPlan = typeof nutritionPlans.$inferSelect;
+export type Meal = typeof meals.$inferSelect;
+export type Supplement = typeof supplements.$inferSelect;
