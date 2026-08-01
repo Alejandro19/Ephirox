@@ -8,6 +8,7 @@ import { personalInfoRouter } from './routes/personal-info.routes.js';
 import { geoRouter } from './routes/geo.routes.js';
 import { exercisesRouter } from './routes/exercises.routes.js';
 import { trainingRouter } from './routes/training.routes.js';
+import { nutritionRouter } from './routes/nutrition.routes.js';
 import { adminPhrasesRouter } from './routes/admin-phrases.routes.js';
 import { adminQuotesRouter } from './routes/admin-quotes.routes.js';
 import { restToolsRouter } from './routes/rest-tools.routes.js';
@@ -38,6 +39,7 @@ export function createApp() {
   app.use('/api/clients', personalInfoRouter);
   app.use('/api/clients', exercisesRouter);
   app.use('/api/clients', trainingRouter);
+  app.use('/api/clients', nutritionRouter);
 
   app.use((error: unknown, req: Request, res: Response, _next: NextFunction) => {
     console.error(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`, error);
