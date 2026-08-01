@@ -128,4 +128,32 @@ describe('rest-tools routes', () => {
     const res = await request(app).delete(`/api/admin/rest-tools/${tool.id}`).set('Authorization', `Bearer ${adminToken}`);
     expect(res.status).toBe(200);
   });
+
+  describe('POST /admin/rest-tools/:id/upload-audio', () => {
+    it('rejects a client', async () => {
+      const [tool] = await db.insert(restTools).values({ name: 'Para audio', action: 'play' }).returning();
+      const res = await request(app)
+        .post(`/api/admin/rest-tools/${tool.id}/upload-audio`)
+        .set('Authorization', `Bearer ${clientToken}`)
+        .attach('audio', Buffer.from('fake-audio-bytes'), 'clip.mp3');
+      expect(res.status).toBe(403);
+    });
+
+    it('rejects a request with no file attached', async () => {
+      const [tool] = await db.insert(restTools).values({ name: 'Para audio', action: 'play' }).returning();
+      const res = await request(app).post(`/api/admin/rest-tools/${tool.id}/upload-audio`).set('Authorization', `Bearer ${adminToken}`);
+      expect(res.status).toBe(400);
+    });
+
+    it('uploads audio and updates audioUrl/audioName', async () => {
+      const [tool] = await db.insert(restTools).values({ name: 'Para audio', action: 'play' }).returning();
+      const res = await request(app)
+        .post(`/api/admin/rest-tools/${tool.id}/upload-audio`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .attach('audio', Buffer.from('fake-audio-bytes'), 'clip.mp3');
+      expect(res.status).toBe(200);
+      expect(res.body.tool.audioUrl).toEqual(expect.stringContaining('http'));
+      expect(res.body.tool.audioName).toBe('clip.mp3');
+    });
+  });
 });

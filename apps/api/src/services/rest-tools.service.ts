@@ -1,7 +1,7 @@
 import { asc, eq } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import { restTools, type RestTool } from '../models/schema.js';
-import { deleteFile } from '../storage/index.js';
+import { deleteFile, uploadFile } from '../storage/index.js';
 
 const DEFAULT_REST_TOOLS = [
   { name: 'Sonidos para dormir', meta: 'Ruido blanco + respiración guiada · 20 min', action: 'play', minutes: 20, seconds: null },
@@ -65,4 +65,19 @@ export async function deleteTool(id: string): Promise<void> {
   const [existing] = await db.select().from(restTools).where(eq(restTools.id, id)).limit(1);
   await db.delete(restTools).where(eq(restTools.id, id));
   if (existing) await deleteFile(existing.audioUrl);
+}
+
+export async function uploadAudio(
+  id: string,
+  file: { buffer: Buffer; mimetype: string; originalname: string }
+): Promise<RestTool> {
+  const [existing] = await db.select().from(restTools).where(eq(restTools.id, id)).limit(1);
+  const audioUrl = await uploadFile(`rest-tools/${id}`, file.buffer, file.mimetype, file.originalname);
+  const [updated] = await db
+    .update(restTools)
+    .set({ audioUrl, audioName: file.originalname, updatedAt: new Date() })
+    .where(eq(restTools.id, id))
+    .returning();
+  if (existing?.audioUrl) await deleteFile(existing.audioUrl);
+  return updated;
 }

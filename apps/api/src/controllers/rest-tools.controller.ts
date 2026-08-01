@@ -62,3 +62,9 @@ export async function deleteTool(req: Request, res: Response) {
   await restToolsService.deleteTool(req.params.id);
   return ok(res, { message: 'Herramienta eliminada.' });
 }
+
+export async function uploadAudio(req: Request, res: Response) {
+  if (!req.file) return err(res, 'No se recibió ningún audio.');
+  const tool = await restToolsService.uploadAudio(req.params.id, req.file);
+  return ok(res, { tool });
+}
