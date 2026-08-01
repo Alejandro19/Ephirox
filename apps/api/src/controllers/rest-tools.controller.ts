@@ -66,5 +66,6 @@ export async function deleteTool(req: Request, res: Response) {
 export async function uploadAudio(req: Request, res: Response) {
   if (!req.file) return err(res, 'No se recibió ningún audio.');
   const tool = await restToolsService.uploadAudio(req.params.id, req.file);
+  if (!tool) return err(res, 'Herramienta no encontrada.', 404);
   return ok(res, { tool });
 }

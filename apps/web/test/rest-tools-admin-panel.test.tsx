@@ -34,6 +34,26 @@ describe('RestToolsAdminPanel', () => {
     expect(createSpy.mock.calls[0][0]).toMatchObject({ name: 'Nueva' });
   });
 
+  it('creates a tool with an attached audio file and uploads it after creation', async () => {
+    const createSpy = vi.spyOn(restToolsClient, 'createRestTool').mockResolvedValue({
+      id: 't4', name: 'Nueva con audio', meta: '', action: 'write', minutes: null, seconds: null, audioUrl: null, audioName: null, active: true, sortOrder: 3,
+    });
+    const uploadSpy = vi.spyOn(restToolsClient, 'uploadRestToolAudio').mockResolvedValue({
+      id: 't4', name: 'Nueva con audio', meta: '', action: 'write', minutes: null, seconds: null, audioUrl: 'https://x/new.mp3', audioName: 'new.mp3', active: true, sortOrder: 3,
+    });
+    render(<RestToolsAdminPanel />);
+    await waitFor(() => expect(screen.getByText('Sonidos para dormir')).toBeInTheDocument());
+
+    fireEvent.change(screen.getByLabelText('Nombre'), { target: { value: 'Nueva con audio' } });
+    const file = new File(['fake'], 'new.mp3', { type: 'audio/mpeg' });
+    const fileInput = screen.getByLabelText('Audio propio') as HTMLInputElement;
+    fireEvent.change(fileInput, { target: { files: [file] } });
+    fireEvent.click(screen.getByRole('button', { name: '+ Agregar herramienta' }));
+
+    await waitFor(() => expect(createSpy).toHaveBeenCalled());
+    await waitFor(() => expect(uploadSpy).toHaveBeenCalledWith('t4', file));
+  });
+
   it('blocks creating a tool with empty name', async () => {
     const createSpy = vi.spyOn(restToolsClient, 'createRestTool');
     render(<RestToolsAdminPanel />);
@@ -68,7 +88,8 @@ describe('RestToolsAdminPanel', () => {
     fireEvent.click(screen.getAllByRole('button', { name: 'Editar' })[0]);
 
     const file = new File(['fake'], 'z.mp3', { type: 'audio/mpeg' });
-    const fileInput = screen.getByLabelText('Audio propio') as HTMLInputElement;
+    const audioInputs = screen.getAllByLabelText('Audio propio') as HTMLInputElement[];
+    const fileInput = audioInputs[audioInputs.length - 1];
     fireEvent.change(fileInput, { target: { files: [file] } });
     fireEvent.click(screen.getByRole('button', { name: 'Subir audio' }));
 

@@ -70,14 +70,15 @@ export async function deleteTool(id: string): Promise<void> {
 export async function uploadAudio(
   id: string,
   file: { buffer: Buffer; mimetype: string; originalname: string }
-): Promise<RestTool> {
+): Promise<RestTool | null> {
   const [existing] = await db.select().from(restTools).where(eq(restTools.id, id)).limit(1);
+  if (!existing) return null;
   const audioUrl = await uploadFile(`rest-tools/${id}`, file.buffer, file.mimetype, file.originalname);
   const [updated] = await db
     .update(restTools)
     .set({ audioUrl, audioName: file.originalname, updatedAt: new Date() })
     .where(eq(restTools.id, id))
     .returning();
-  if (existing?.audioUrl) await deleteFile(existing.audioUrl);
+  if (existing.audioUrl) await deleteFile(existing.audioUrl);
   return updated;
 }

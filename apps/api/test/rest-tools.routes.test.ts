@@ -1,10 +1,11 @@
-import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeAll, afterAll, afterEach } from 'vitest';
 import request from 'supertest';
 import { eq } from 'drizzle-orm';
 import { createApp } from '../src/app.js';
 import { db } from '../src/db/index.js';
 import { clients, restTools } from '../src/models/schema.js';
 import { signToken } from '../src/services/auth.service.js';
+import * as storageModule from '../src/storage/index.js';
 
 describe('rest-tools routes', () => {
   const app = createApp();
@@ -24,6 +25,7 @@ describe('rest-tools routes', () => {
 
   afterEach(async () => {
     await db.delete(restTools);
+    vi.restoreAllMocks();
   });
 
   afterAll(async () => {
@@ -105,7 +107,8 @@ describe('rest-tools routes', () => {
     expect(listRes.body.tools.some((t: { id: string }) => t.id === toolId)).toBe(false);
   });
 
-  it('PUT with audioUrl: null clears the audio fields (and best-effort cleans up storage)', async () => {
+  it('PUT with audioUrl: null clears the audio fields and calls deleteFile with the existing audio URL', async () => {
+    const deleteSpy = vi.spyOn(storageModule, 'deleteFile').mockResolvedValue(undefined);
     const [tool] = await db
       .insert(restTools)
       .values({ name: 'Con audio', action: 'play', audioUrl: 'https://x.supabase.co/storage/v1/object/public/latribu-files/rest-tools/abc/song.mp3', audioName: 'song.mp3' })
@@ -118,15 +121,18 @@ describe('rest-tools routes', () => {
     expect(updateRes.status).toBe(200);
     expect(updateRes.body.tool.audioUrl).toBeNull();
     expect(updateRes.body.tool.audioName).toBeNull();
+    expect(deleteSpy).toHaveBeenCalledWith(tool.audioUrl);
   });
 
-  it('deleting a tool with audio does not throw even if the file is already gone', async () => {
+  it('deleting a tool with audio does not throw even if the file is already gone, and calls deleteFile with the audio URL', async () => {
+    const deleteSpy = vi.spyOn(storageModule, 'deleteFile').mockResolvedValue(undefined);
     const [tool] = await db
       .insert(restTools)
       .values({ name: 'Con audio a borrar', action: 'play', audioUrl: 'https://x.supabase.co/storage/v1/object/public/latribu-files/rest-tools/xyz/gone.mp3', audioName: 'gone.mp3' })
       .returning();
     const res = await request(app).delete(`/api/admin/rest-tools/${tool.id}`).set('Authorization', `Bearer ${adminToken}`);
     expect(res.status).toBe(200);
+    expect(deleteSpy).toHaveBeenCalledWith(tool.audioUrl);
   });
 
   describe('POST /admin/rest-tools/:id/upload-audio', () => {
@@ -154,6 +160,34 @@ describe('rest-tools routes', () => {
       expect(res.status).toBe(200);
       expect(res.body.tool.audioUrl).toEqual(expect.stringContaining('http'));
       expect(res.body.tool.audioName).toBe('clip.mp3');
+    });
+
+    it('returns 404 when the rest tool does not exist', async () => {
+      const res = await request(app)
+        .post('/api/admin/rest-tools/00000000-0000-0000-0000-000000000000/upload-audio')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .attach('audio', Buffer.from('fake-audio-bytes'), 'clip.mp3');
+      expect(res.status).toBe(404);
+    });
+
+    it('replaces an existing audio file: deletes the old file via storage and stores the new one', async () => {
+      const oldAudioUrl = 'https://x.supabase.co/storage/v1/object/public/latribu-files/rest-tools/old-id/old-clip.mp3';
+      const [tool] = await db
+        .insert(restTools)
+        .values({ name: 'Con audio previo', action: 'play', audioUrl: oldAudioUrl, audioName: 'old-clip.mp3' })
+        .returning();
+      const deleteSpy = vi.spyOn(storageModule, 'deleteFile').mockResolvedValue(undefined);
+
+      const res = await request(app)
+        .post(`/api/admin/rest-tools/${tool.id}/upload-audio`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .attach('audio', Buffer.from('fake-audio-bytes-2'), 'new-clip.mp3');
+
+      expect(res.status).toBe(200);
+      expect(res.body.tool.audioName).toBe('new-clip.mp3');
+      expect(res.body.tool.audioUrl).toEqual(expect.stringContaining('http'));
+      expect(res.body.tool.audioUrl).not.toBe(oldAudioUrl);
+      expect(deleteSpy).toHaveBeenCalledWith(oldAudioUrl);
     });
   });
 });

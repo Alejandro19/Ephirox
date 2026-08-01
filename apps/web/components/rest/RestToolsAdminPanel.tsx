@@ -18,6 +18,7 @@ export function RestToolsAdminPanel() {
   const [newAction, setNewAction] = useState('play');
   const [newMinutes, setNewMinutes] = useState('');
   const [newSeconds, setNewSeconds] = useState('');
+  const [newAudioFile, setNewAudioFile] = useState<File | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [editMeta, setEditMeta] = useState('');
@@ -39,17 +40,21 @@ export function RestToolsAdminPanel() {
   async function handleCreate() {
     if (!newName.trim()) return;
     try {
-      await createRestTool({
+      const created = await createRestTool({
         name: newName.trim(),
         meta: newMeta,
         action: newAction,
         minutes: newAction === 'play' ? (newMinutes ? Number(newMinutes) : null) : null,
         seconds: newAction === 'play' ? (newSeconds ? Number(newSeconds) : null) : null,
       });
+      if (newAudioFile) {
+        await uploadRestToolAudio(created.id, newAudioFile);
+      }
       setNewName('');
       setNewMeta('');
       setNewMinutes('');
       setNewSeconds('');
+      setNewAudioFile(null);
       await refetch();
     } catch (e) {
       setError((e as Error).message);
@@ -134,6 +139,13 @@ export function RestToolsAdminPanel() {
       )}
       <label htmlFor="rt-new-meta">Descripción</label>
       <input id="rt-new-meta" value={newMeta} onChange={(e) => setNewMeta(e.target.value)} />
+      <label htmlFor="rt-new-audio">Audio propio</label>
+      <input
+        id="rt-new-audio"
+        type="file"
+        accept="audio/*"
+        onChange={(e) => setNewAudioFile(e.target.files?.[0] ?? null)}
+      />
       <button type="button" onClick={handleCreate}>
         + Agregar herramienta
       </button>
