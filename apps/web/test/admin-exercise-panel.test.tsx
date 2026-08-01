@@ -2,8 +2,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { AdminExercisePanel } from '../components/training/AdminExercisePanel';
 import * as trainingClient from '../lib/training-client';
+import * as quotesClient from '../lib/quotes-client';
 
 vi.mock('../lib/training-client');
+vi.mock('../lib/quotes-client');
 
 describe('AdminExercisePanel', () => {
   beforeEach(() => {
@@ -41,6 +43,16 @@ describe('AdminExercisePanel', () => {
         sortOrder: 1,
       },
     ]);
+    vi.mocked(quotesClient.listQuotes).mockResolvedValue([
+      { id: 'q1', quote: 'Frase corta', author: null, active: true },
+      {
+        id: 'q2',
+        quote: 'Una frase muy larga que definitivamente supera los sesenta caracteres de límite visual',
+        author: null,
+        active: true,
+      },
+    ]);
+    vi.mocked(quotesClient.getClientAssignedQuoteId).mockResolvedValue(null);
   });
 
   it('lists exercises grouped by day and disables reorder at the extremes', async () => {
@@ -150,5 +162,39 @@ describe('AdminExercisePanel', () => {
     render(<AdminExercisePanel clientId="c1" />);
     await screen.findByText('Ejercicio huérfano');
     expect(screen.getByRole('heading', { name: 'Día 3' })).toBeInTheDocument();
+  });
+});
+
+describe('AdminExercisePanel — Frase asignada', () => {
+  it('renders the assigned-quote select with a random option and truncated long options', async () => {
+    render(<AdminExercisePanel clientId="client-1" />);
+    await waitFor(() => expect(screen.getByLabelText('Frase asignada a este cliente')).toBeInTheDocument());
+    expect(screen.getByRole('option', { name: 'Aleatoria del pool general' })).toBeInTheDocument();
+    expect(screen.getByText(/Una frase muy larga.*…/)).toBeInTheDocument();
+  });
+
+  it("pre-selects the client's currently assigned quote", async () => {
+    vi.mocked(quotesClient.getClientAssignedQuoteId).mockResolvedValue('q1');
+    render(<AdminExercisePanel clientId="client-1" />);
+    const select = (await screen.findByLabelText('Frase asignada a este cliente')) as HTMLSelectElement;
+    await waitFor(() => expect(select.value).toBe('q1'));
+  });
+
+  it('calls assignQuote with the selected quote id', async () => {
+    vi.mocked(quotesClient.assignQuote).mockResolvedValue(undefined);
+    render(<AdminExercisePanel clientId="client-1" />);
+    const select = await screen.findByLabelText('Frase asignada a este cliente');
+    fireEvent.change(select, { target: { value: 'q1' } });
+    await waitFor(() => expect(quotesClient.assignQuote).toHaveBeenCalledWith('client-1', 'q1'));
+  });
+
+  it('calls assignQuote with null when "Aleatoria del pool general" is selected', async () => {
+    vi.mocked(quotesClient.getClientAssignedQuoteId).mockResolvedValue('q1');
+    vi.mocked(quotesClient.assignQuote).mockResolvedValue(undefined);
+    render(<AdminExercisePanel clientId="client-1" />);
+    const select = await screen.findByLabelText('Frase asignada a este cliente');
+    await waitFor(() => expect((select as HTMLSelectElement).value).toBe('q1'));
+    fireEvent.change(select, { target: { value: '' } });
+    await waitFor(() => expect(quotesClient.assignQuote).toHaveBeenCalledWith('client-1', null));
   });
 });

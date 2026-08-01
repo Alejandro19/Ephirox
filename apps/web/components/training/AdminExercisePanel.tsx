@@ -13,6 +13,7 @@ import {
   reorderExercise,
   updateTrainingDays,
 } from '../../lib/training-client';
+import { type MindsetQuote, listQuotes, getClientAssignedQuoteId, assignQuote } from '../../lib/quotes-client';
 
 export type AdminExercisePanelProps = {
   clientId: string;
@@ -23,11 +24,20 @@ export function AdminExercisePanel({ clientId }: AdminExercisePanelProps) {
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [quotes, setQuotes] = useState<MindsetQuote[]>([]);
+  const [assignedQuoteId, setAssignedQuoteId] = useState<string | null>(null);
 
   const refetch = useCallback(async () => {
-    const [days, list] = await Promise.all([getClientTrainingDays(clientId), listExercises(clientId)]);
+    const [days, list, quoteList, assignedId] = await Promise.all([
+      getClientTrainingDays(clientId),
+      listExercises(clientId),
+      listQuotes(),
+      getClientAssignedQuoteId(clientId),
+    ]);
     setTrainingDays(days);
     setExercises(list);
+    setQuotes(quoteList);
+    setAssignedQuoteId(assignedId);
   }, [clientId]);
 
   useEffect(() => {
@@ -38,6 +48,16 @@ export function AdminExercisePanel({ clientId }: AdminExercisePanelProps) {
     try {
       await updateTrainingDays(clientId, value);
       setTrainingDays(value);
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
+
+  async function handleAssignedQuoteChange(quoteId: string) {
+    const value = quoteId || null;
+    try {
+      await assignQuote(clientId, value);
+      setAssignedQuoteId(value);
     } catch (e) {
       setError((e as Error).message);
     }
@@ -113,6 +133,20 @@ export function AdminExercisePanel({ clientId }: AdminExercisePanelProps) {
         {[1, 2, 3, 4, 5, 6, 7].map((d) => (
           <option key={d} value={d}>
             {d}
+          </option>
+        ))}
+      </select>
+
+      <label htmlFor="assigned-quote">Frase asignada a este cliente</label>
+      <select
+        id="assigned-quote"
+        value={assignedQuoteId ?? ''}
+        onChange={(e) => handleAssignedQuoteChange(e.target.value)}
+      >
+        <option value="">Aleatoria del pool general</option>
+        {quotes.map((q) => (
+          <option key={q.id} value={q.id}>
+            {q.quote.length > 60 ? `${q.quote.slice(0, 60)}…` : q.quote}
           </option>
         ))}
       </select>
