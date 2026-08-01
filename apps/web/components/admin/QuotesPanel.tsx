@@ -63,17 +63,13 @@ export function QuotesPanel() {
       <h2>Frases de mentalidad</h2>
       {error && <p role="alert">{error}</p>}
 
-      {editingId === null && (
-        <>
-          <label htmlFor="qt-new-quote">Frase</label>
-          <textarea id="qt-new-quote" value={newQuote} onChange={(e) => setNewQuote(e.target.value)} />
-          <label htmlFor="qt-new-author">Autor (opcional)</label>
-          <input id="qt-new-author" value={newAuthor} onChange={(e) => setNewAuthor(e.target.value)} />
-          <button type="button" onClick={handleCreate}>
-            Agregar
-          </button>
-        </>
-      )}
+      <label htmlFor="qt-new-quote">Frase</label>
+      <textarea id="qt-new-quote" value={newQuote} onChange={(e) => setNewQuote(e.target.value)} />
+      <label htmlFor="qt-new-author">Autor (opcional)</label>
+      <input id="qt-new-author" value={newAuthor} onChange={(e) => setNewAuthor(e.target.value)} />
+      <button type="button" onClick={handleCreate}>
+        Agregar
+      </button>
 
       {quotes.length === 0 && <p>Aún no hay frases en la biblioteca.</p>}
       {quotes.map((quote) =>

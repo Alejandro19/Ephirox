@@ -61,7 +61,15 @@ describe('QuotesPanel', () => {
     await waitFor(() => expect(screen.getByText('Estoy en mi mejor momento')).toBeInTheDocument());
 
     fireEvent.click(screen.getAllByRole('button', { name: 'Editar' })[0]);
-    fireEvent.change(screen.getByLabelText('Frase'), { target: { value: 'Editada' } });
+    // The create form ("Agregar") must remain visible/usable while a row is
+    // being edited — editing one quote should not hide quote creation.
+    expect(screen.getByRole('button', { name: 'Agregar' })).toBeInTheDocument();
+    // Both the "Nueva frase" create form and the row's edit form share the
+    // visible label text "Frase" (different htmlFor/id). The create form is
+    // always the first one in the DOM, so the edit form's textarea is the
+    // last match.
+    const frasFields = screen.getAllByLabelText('Frase');
+    fireEvent.change(frasFields[frasFields.length - 1], { target: { value: 'Editada' } });
     fireEvent.click(screen.getByRole('button', { name: 'Guardar' }));
 
     await waitFor(() => expect(updateSpy).toHaveBeenCalledWith('q1', { quote: 'Editada', author: 'La Tribu' }));
