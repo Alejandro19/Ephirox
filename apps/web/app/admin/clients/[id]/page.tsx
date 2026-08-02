@@ -14,6 +14,8 @@ import {
 } from '../../../../lib/personal-info-client';
 import { getAchievements, type Achievement } from '../../../../lib/training-client';
 import { AdminExercisePanel } from '../../../../components/training/AdminExercisePanel';
+import { AdminNutritionPanel } from '../../../../components/nutrition/AdminNutritionPanel';
+import { AdminSupplementsPanel } from '../../../../components/supplements/AdminSupplementsPanel';
 
 export default function ClientDetailPage() {
   const params = useParams<{ id: string }>();
@@ -71,6 +73,16 @@ export default function ClientDetailPage() {
       <section>
         <h2>Entrenamiento</h2>
         <AdminExercisePanel clientId={clientId} />
+      </section>
+
+      <section>
+        <h2>Alimentación</h2>
+        <AdminNutritionPanel clientId={clientId} />
+      </section>
+
+      <section>
+        <h2>Suplementación</h2>
+        <AdminSupplementsPanel clientId={clientId} />
       </section>
 
       <section>
