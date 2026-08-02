@@ -5,6 +5,7 @@ import { asyncHandler } from '../middleware/async-handler.js';
 import { authMiddleware, ownerOrAdmin } from '../middleware/auth.middleware.js';
 import { requirePermission } from '../middleware/require-permission.middleware.js';
 import * as logsController from '../controllers/cortisol-logs.controller.js';
+import * as tipsController from '../controllers/cortisol-tips.controller.js';
 
 export const cortisolLogsRouter = Router();
 
@@ -48,4 +49,12 @@ cortisolLogsRouter.post(
   requirePermission('cortisol'),
   validateBody(CortisolCheckinInputSchema),
   asyncHandler(logsController.upsertCheckin)
+);
+
+cortisolLogsRouter.get(
+  '/:id/cortisol-tip-of-the-day',
+  authMiddleware,
+  ownerOrAdmin,
+  requirePermission('cortisol'),
+  asyncHandler(tipsController.getTipOfTheDay)
 );

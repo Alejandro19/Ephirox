@@ -13,6 +13,7 @@ import { supplementsRouter } from './routes/supplements.routes.js';
 import { adminPhrasesRouter } from './routes/admin-phrases.routes.js';
 import { adminQuotesRouter } from './routes/admin-quotes.routes.js';
 import { restToolsRouter } from './routes/rest-tools.routes.js';
+import { adminCortisolTipsRouter } from './routes/admin-cortisol-tips.routes.js';
 import { cortisolTechniquesRouter } from './routes/cortisol-techniques.routes.js';
 import { cortisolLogsRouter } from './routes/cortisol-logs.routes.js';
 
@@ -37,6 +38,7 @@ export function createApp() {
   app.use('/api', adminPhrasesRouter);
   app.use('/api', adminQuotesRouter);
   app.use('/api', restToolsRouter);
+  app.use('/api', adminCortisolTipsRouter);
   app.use('/api/auth', authRouter);
   app.use('/api/clients', clientsRouter);
   app.use('/api/clients', personalInfoRouter);
