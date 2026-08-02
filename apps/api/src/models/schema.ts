@@ -316,3 +316,24 @@ export type CortisolTechnique = typeof cortisolTechniques.$inferSelect;
 export type CortisolCompletion = typeof cortisolCompletions.$inferSelect;
 export type CortisolCheckin = typeof cortisolCheckins.$inferSelect;
 export type CortisolTip = typeof cortisolTips.$inferSelect;
+
+export const sleepProtocols = pgTable('sleep_protocols', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  clientId: uuid('client_id').notNull().unique().references(() => clients.id, { onDelete: 'cascade' }),
+  protocolText: text('protocol_text'),
+  sleepWindow: text('sleep_window'),
+  supplement: text('supplement'),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+});
+
+export const sleepLogs = pgTable('sleep_logs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  clientId: uuid('client_id').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+  date: date('date').notNull().defaultNow(),
+  hours: numeric('hours', { precision: 3, scale: 1 }).notNull().$type<number>(),
+  quality: integer('quality').notNull(),
+  loggedAt: timestamp('logged_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type SleepProtocol = typeof sleepProtocols.$inferSelect;
+export type SleepLog = typeof sleepLogs.$inferSelect;
