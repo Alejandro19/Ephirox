@@ -16,6 +16,7 @@ import { getAchievements, type Achievement } from '../../../../lib/training-clie
 import { AdminExercisePanel } from '../../../../components/training/AdminExercisePanel';
 import { AdminNutritionPanel } from '../../../../components/nutrition/AdminNutritionPanel';
 import { AdminSupplementsPanel } from '../../../../components/supplements/AdminSupplementsPanel';
+import { AdminCortisolPanel } from '../../../../components/cortisol/AdminCortisolPanel';
 
 export default function ClientDetailPage() {
   const params = useParams<{ id: string }>();
@@ -83,6 +84,11 @@ export default function ClientDetailPage() {
       <section>
         <h2>Suplementación</h2>
         <AdminSupplementsPanel clientId={clientId} />
+      </section>
+
+      <section>
+        <h2>Gestión de Cortisol</h2>
+        <AdminCortisolPanel clientId={clientId} />
       </section>
 
       <section>
