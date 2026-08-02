@@ -28,9 +28,15 @@ describe('supplement schemas', () => {
     expect(SUPPLEMENT_CATEGORIES).toEqual(['Nootrópico', 'Adaptógeno', 'Sueño', 'Rendimiento', 'Base']);
   });
 
-  it('defaults active to true when omitted', () => {
+  it('leaves active undefined when omitted, so callers can distinguish "not provided" from "false"', () => {
     const result = SupplementInputSchema.safeParse({ name: 'Magnesio', category: 'Base' });
     expect(result.success).toBe(true);
-    if (result.success) expect(result.data.active).toBe(true);
+    if (result.success) expect(result.data.active).toBeUndefined();
+  });
+
+  it('accepts an explicit active value without coercing strings', () => {
+    const result = SupplementInputSchema.safeParse({ name: 'Magnesio', active: false });
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.active).toBe(false);
   });
 });
