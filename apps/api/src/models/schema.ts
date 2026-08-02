@@ -270,3 +270,49 @@ export const supplements = pgTable('supplements', {
 export type NutritionPlan = typeof nutritionPlans.$inferSelect;
 export type Meal = typeof meals.$inferSelect;
 export type Supplement = typeof supplements.$inferSelect;
+
+export const cortisolTechniques = pgTable('cortisol_techniques', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  clientId: uuid('client_id').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+  title: text('title').notNull(),
+  type: text('type'),
+  duration: text('duration'),
+  durationMinutes: integer('duration_minutes'),
+  durationSeconds: integer('duration_seconds'),
+  description: text('description'),
+  videoUrl: text('video_url'),
+  videoName: text('video_name'),
+  youtubeUrl: text('youtube_url'),
+  audioUrl: text('audio_url'),
+  audioName: text('audio_name'),
+  sortOrder: integer('sort_order').default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+export const cortisolCompletions = pgTable('cortisol_completions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  clientId: uuid('client_id').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+  techniqueId: uuid('technique_id').references(() => cortisolTechniques.id, { onDelete: 'set null' }),
+  completedDate: date('completed_date').notNull().defaultNow(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+export const cortisolCheckins = pgTable('cortisol_checkins', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  clientId: uuid('client_id').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+  emotion: text('emotion').notNull(),
+  checkinDate: date('checkin_date').notNull().defaultNow(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+export const cortisolTips = pgTable('cortisol_tips', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  content: text('content').notNull(),
+  active: boolean('active').notNull().default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+export type CortisolTechnique = typeof cortisolTechniques.$inferSelect;
+export type CortisolCompletion = typeof cortisolCompletions.$inferSelect;
+export type CortisolCheckin = typeof cortisolCheckins.$inferSelect;
+export type CortisolTip = typeof cortisolTips.$inferSelect;
