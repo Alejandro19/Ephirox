@@ -1,7 +1,7 @@
-import { eq, asc } from 'drizzle-orm';
+import { eq, and, asc } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import { nutritionPlans, meals, clients, clientNotifications, type NutritionPlan, type Meal } from '../models/schema.js';
-import type { NutritionPlanUpdate, MealInput } from '@latribu/shared-types';
+import type { NutritionPlanUpdate, MealInput, MealUpdateInput } from '@latribu/shared-types';
 
 async function unlockModule(clientId: string, moduleKey: string): Promise<void> {
   const rows = await db.select().from(clients).where(eq(clients.id, clientId)).limit(1);
@@ -70,17 +70,37 @@ function toMealFields(input: MealInput) {
   };
 }
 
+// Only include keys the caller actually sent — a PUT to /meals/:id is a
+// partial edit, not a full replace, so fields the admin didn't touch must
+// not be overwritten (e.g. macros must not be zeroed by an update that only
+// changes the meal name).
+function toMealUpdateFields(input: MealUpdateInput) {
+  const fields: Record<string, unknown> = {};
+  if (input.meal_time !== undefined) fields.mealTime = input.meal_time;
+  if (input.name !== undefined) fields.name = input.name;
+  if (input.calories !== undefined) fields.calories = input.calories;
+  if (input.protein_g !== undefined) fields.proteinG = input.protein_g;
+  if (input.carbs_g !== undefined) fields.carbsG = input.carbs_g;
+  if (input.fat_g !== undefined) fields.fatG = input.fat_g;
+  if (input.tags !== undefined) fields.tags = input.tags;
+  return fields;
+}
+
 export async function createMeal(clientId: string, input: MealInput): Promise<Meal> {
   const [meal] = await db.insert(meals).values({ clientId, ...toMealFields(input) }).returning();
   await unlockModule(clientId, 'nutrition');
   return meal;
 }
 
-export async function updateMeal(mealId: string, input: MealInput): Promise<Meal | null> {
-  const [meal] = await db.update(meals).set(toMealFields(input)).where(eq(meals.id, mealId)).returning();
+export async function updateMeal(clientId: string, mealId: string, input: MealUpdateInput): Promise<Meal | null> {
+  const [meal] = await db
+    .update(meals)
+    .set(toMealUpdateFields(input))
+    .where(and(eq(meals.id, mealId), eq(meals.clientId, clientId)))
+    .returning();
   return meal ?? null;
 }
 
-export async function deleteMeal(mealId: string): Promise<void> {
-  await db.delete(meals).where(eq(meals.id, mealId));
+export async function deleteMeal(clientId: string, mealId: string): Promise<void> {
+  await db.delete(meals).where(and(eq(meals.id, mealId), eq(meals.clientId, clientId)));
 }

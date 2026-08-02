@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import type { NutritionPlanUpdate, MealInput } from '@latribu/shared-types';
+import type { NutritionPlanUpdate, MealInput, MealUpdateInput } from '@latribu/shared-types';
 import * as nutritionService from '../services/nutrition.service.js';
 import { uploadFile } from '../storage/index.js';
 
@@ -34,12 +34,12 @@ export async function createMeal(req: Request, res: Response) {
 }
 
 export async function updateMeal(req: Request, res: Response) {
-  const meal = await nutritionService.updateMeal(req.params.mealId, req.body as MealInput);
+  const meal = await nutritionService.updateMeal(req.params.id, req.params.mealId, req.body as MealUpdateInput);
   if (!meal) return err(res, 'Comida no encontrada.', 404);
   return ok(res, { meal });
 }
 
 export async function deleteMeal(req: Request, res: Response) {
-  await nutritionService.deleteMeal(req.params.mealId);
+  await nutritionService.deleteMeal(req.params.id, req.params.mealId);
   return ok(res, { message: 'Comida eliminada.' });
 }

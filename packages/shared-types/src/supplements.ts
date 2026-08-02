@@ -11,6 +11,6 @@ export const SupplementInputSchema = z.object({
   timing: z.string().nullable().optional(),
   benefit: z.string().nullable().optional(),
   category: SupplementCategorySchema.optional(),
-  active: z.coerce.boolean().default(true),
+  active: z.boolean().optional(),
 });
 export type SupplementInput = z.infer<typeof SupplementInputSchema>;

@@ -21,12 +21,12 @@ export async function createSupplement(req: Request, res: Response) {
 }
 
 export async function updateSupplement(req: Request, res: Response) {
-  const supplement = await supplementsService.updateSupplement(req.params.suppId, req.body as SupplementInput);
+  const supplement = await supplementsService.updateSupplement(req.params.id, req.params.suppId, req.body as SupplementInput);
   if (!supplement) return err(res, 'Suplemento no encontrado.');
   return ok(res, { supplement });
 }
 
 export async function deleteSupplement(req: Request, res: Response) {
-  await supplementsService.deleteSupplement(req.params.suppId);
+  await supplementsService.deleteSupplement(req.params.id, req.params.suppId);
   return ok(res, { message: 'Suplemento eliminado.' });
 }

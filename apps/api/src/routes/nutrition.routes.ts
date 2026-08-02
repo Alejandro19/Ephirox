@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import multer from 'multer';
-import { NutritionPlanUpdateSchema, MealInputSchema } from '@latribu/shared-types';
+import { NutritionPlanUpdateSchema, MealInputSchema, MealUpdateInputSchema } from '@latribu/shared-types';
 import { validateBody } from '../middleware/validate.js';
 import { asyncHandler } from '../middleware/async-handler.js';
 import { authMiddleware, adminOnly, ownerOrAdmin } from '../middleware/auth.middleware.js';
@@ -47,7 +47,7 @@ nutritionRouter.put(
   '/:id/meals/:mealId',
   authMiddleware,
   adminOnly,
-  validateBody(MealInputSchema),
+  validateBody(MealUpdateInputSchema),
   asyncHandler(nutritionController.updateMeal)
 );
 

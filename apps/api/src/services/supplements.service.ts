@@ -24,16 +24,30 @@ export async function createSupplement(clientId: string, input: SupplementInput)
     .where(and(eq(supplements.clientId, clientId), eq(supplements.name, input.name)));
   if (existing.length > 0) return null;
 
-  const [supplement] = await db.insert(supplements).values({ clientId, ...input }).returning();
+  // `active` is optional now (no schema default) — only include it in the
+  // insert when the caller actually sent it, otherwise let the `supplements`
+  // table's own column default (true) apply.
+  const { active, ...rest } = input;
+  const values: Record<string, unknown> = { clientId, ...rest };
+  if (active !== undefined) values.active = active;
+
+  const [supplement] = await db.insert(supplements).values(values as typeof supplements.$inferInsert).returning();
   await unlockModule(clientId);
   return supplement;
 }
 
-export async function updateSupplement(suppId: string, input: SupplementInput): Promise<Supplement | null> {
-  const [supplement] = await db.update(supplements).set({ ...input, updatedAt: new Date() }).where(eq(supplements.id, suppId)).returning();
+export async function updateSupplement(clientId: string, suppId: string, input: SupplementInput): Promise<Supplement | null> {
+  const fields: Record<string, unknown> = { ...input, updatedAt: new Date() };
+  if (input.active === undefined) delete fields.active;
+
+  const [supplement] = await db
+    .update(supplements)
+    .set(fields)
+    .where(and(eq(supplements.id, suppId), eq(supplements.clientId, clientId)))
+    .returning();
   return supplement ?? null;
 }
 
-export async function deleteSupplement(suppId: string): Promise<void> {
-  await db.delete(supplements).where(eq(supplements.id, suppId));
+export async function deleteSupplement(clientId: string, suppId: string): Promise<void> {
+  await db.delete(supplements).where(and(eq(supplements.id, suppId), eq(supplements.clientId, clientId)));
 }

@@ -44,7 +44,7 @@ export async function getNutrition(clientId: string): Promise<{ plan: NutritionP
   return { plan: body.plan, meals: body.meals };
 }
 
-export async function saveNutritionPlan(clientId: string, patch: Partial<NutritionPlan> & { daily_cals?: number; protein_g?: number; carbs_g?: number; fat_g?: number; notes?: string }): Promise<NutritionPlan> {
+export async function saveNutritionPlan(clientId: string, patch: Partial<NutritionPlan> & { daily_cals?: number; protein_g?: number; carbs_g?: number; fat_g?: number }): Promise<NutritionPlan> {
   const body = await authorizedRequest<{ success: boolean; plan: NutritionPlan; error?: string }>(`/api/clients/${clientId}/nutrition`, 'PUT', patch);
   if (!body.success) throw new Error(body.error || 'Error al guardar el plan.');
   return body.plan;

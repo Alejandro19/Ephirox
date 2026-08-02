@@ -114,6 +114,36 @@ describe('nutrition routes', () => {
     expect((updatedClient.permissions as Record<string, boolean>).nutrition).toBe(true);
   });
 
+  it('does not let an admin mutate another client\'s meal via a mismatched clientId in the URL', async () => {
+    const [otherClient] = await db
+      .insert(clients)
+      .values({ name: 'Other Nutrition Client', email: `nutrition-other-${Date.now()}@example.com`, status: 'active', clientType: 'coaching_1_1' })
+      .returning();
+
+    const createRes = await request(app)
+      .post(`/api/clients/${clientId}/meals`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ meal_time: 'Comida', name: 'Pollo con arroz', calories: 500 });
+    const mealId = createRes.body.meal.id;
+
+    const updateRes = await request(app)
+      .put(`/api/clients/${otherClient.id}/meals/${mealId}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ name: 'Hijacked' });
+    expect(updateRes.status).toBe(404);
+
+    const deleteRes = await request(app)
+      .delete(`/api/clients/${otherClient.id}/meals/${mealId}`)
+      .set('Authorization', `Bearer ${adminToken}`);
+    expect(deleteRes.status).toBe(200);
+
+    const [unchanged] = await db.select().from(meals).where(eq(meals.id, mealId));
+    expect(unchanged).toBeDefined();
+    expect(unchanged.name).toBe('Pollo con arroz');
+
+    await db.delete(clients).where(eq(clients.id, otherClient.id));
+  });
+
   it('uploads a PDF and attaches it to the plan', async () => {
     const res = await request(app)
       .post(`/api/clients/${clientId}/nutrition/upload-pdf`)

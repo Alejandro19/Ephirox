@@ -99,4 +99,34 @@ describe('supplements routes', () => {
     const listRes = await request(app).get(`/api/clients/${clientId}/supplements`).set('Authorization', `Bearer ${clientToken}`);
     expect(listRes.body.supplements).toEqual([]);
   });
+
+  it('does not let an admin mutate another client\'s supplement via a mismatched clientId in the URL', async () => {
+    const [otherClient] = await db
+      .insert(clients)
+      .values({ name: 'Other Supplement Client', email: `supplements-other-${Date.now()}@example.com`, status: 'active', clientType: 'coaching_1_1' })
+      .returning();
+
+    const createRes = await request(app)
+      .post(`/api/clients/${clientId}/supplements`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ name: 'Creatina', dose: '5g' });
+    const suppId = createRes.body.supplement.id;
+
+    const updateRes = await request(app)
+      .put(`/api/clients/${otherClient.id}/supplements/${suppId}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ name: 'Hijacked' });
+    expect(updateRes.status).toBe(404);
+
+    const deleteRes = await request(app)
+      .delete(`/api/clients/${otherClient.id}/supplements/${suppId}`)
+      .set('Authorization', `Bearer ${adminToken}`);
+    expect(deleteRes.status).toBe(200);
+
+    const [unchanged] = await db.select().from(supplements).where(eq(supplements.id, suppId));
+    expect(unchanged).toBeDefined();
+    expect(unchanged.name).toBe('Creatina');
+
+    await db.delete(clients).where(eq(clients.id, otherClient.id));
+  });
 });
