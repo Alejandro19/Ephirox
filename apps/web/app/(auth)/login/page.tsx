@@ -35,6 +35,10 @@ export default function LoginPage() {
       router.push('/onboarding');
       return;
     }
+    if (result.role === 'cliente') {
+      router.push('/training');
+      return;
+    }
     router.push('/admin/clients');
   }
 

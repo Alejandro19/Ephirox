@@ -46,7 +46,7 @@ describe('LoginPage', () => {
     await waitFor(() => expect(pushMock).toHaveBeenCalledWith('/onboarding'));
   });
 
-  it('redirects a client who already completed onboarding to /admin/clients', async () => {
+  it('redirects a client who already completed onboarding to /training', async () => {
     (fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       json: async () => ({
         success: true,
@@ -62,10 +62,10 @@ describe('LoginPage', () => {
     fireEvent.change(screen.getByLabelText('Contraseña'), { target: { value: 'secret' } });
     fireEvent.click(screen.getByRole('button', { name: /entrar/i }));
 
-    await waitFor(() => expect(pushMock).toHaveBeenCalledWith('/admin/clients'));
+    await waitFor(() => expect(pushMock).toHaveBeenCalledWith('/training'));
   });
 
-  it('redirects a lead_wellness client with incomplete onboarding to /admin/clients (never to /onboarding)', async () => {
+  it('redirects a lead_wellness client with incomplete onboarding to /training (never to /onboarding)', async () => {
     (fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       json: async () => ({
         success: true,
@@ -82,7 +82,7 @@ describe('LoginPage', () => {
     fireEvent.change(screen.getByLabelText('Contraseña'), { target: { value: 'secret' } });
     fireEvent.click(screen.getByRole('button', { name: /entrar/i }));
 
-    await waitFor(() => expect(pushMock).toHaveBeenCalledWith('/admin/clients'));
+    await waitFor(() => expect(pushMock).toHaveBeenCalledWith('/training'));
     expect(pushMock).not.toHaveBeenCalledWith('/onboarding');
   });
 
