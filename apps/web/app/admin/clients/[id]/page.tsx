@@ -17,6 +17,7 @@ import { AdminExercisePanel } from '../../../../components/training/AdminExercis
 import { AdminNutritionPanel } from '../../../../components/nutrition/AdminNutritionPanel';
 import { AdminSupplementsPanel } from '../../../../components/supplements/AdminSupplementsPanel';
 import { AdminCortisolPanel } from '../../../../components/cortisol/AdminCortisolPanel';
+import { AdminSleepProtocolPanel } from '../../../../components/sleep/AdminSleepProtocolPanel';
 
 export default function ClientDetailPage() {
   const params = useParams<{ id: string }>();
@@ -89,6 +90,11 @@ export default function ClientDetailPage() {
       <section>
         <h2>Gestión de Cortisol</h2>
         <AdminCortisolPanel clientId={clientId} />
+      </section>
+
+      <section>
+        <h2>Protocolo de Sueño</h2>
+        <AdminSleepProtocolPanel clientId={clientId} />
       </section>
 
       <section>
