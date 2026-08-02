@@ -14,6 +14,7 @@ import { adminPhrasesRouter } from './routes/admin-phrases.routes.js';
 import { adminQuotesRouter } from './routes/admin-quotes.routes.js';
 import { restToolsRouter } from './routes/rest-tools.routes.js';
 import { cortisolTechniquesRouter } from './routes/cortisol-techniques.routes.js';
+import { cortisolLogsRouter } from './routes/cortisol-logs.routes.js';
 
 const ALLOWED_ORIGINS = ['https://latribu-oficial.vercel.app', 'http://localhost:3000'];
 
@@ -44,6 +45,7 @@ export function createApp() {
   app.use('/api/clients', nutritionRouter);
   app.use('/api/clients', supplementsRouter);
   app.use('/api/clients', cortisolTechniquesRouter);
+  app.use('/api/clients', cortisolLogsRouter);
 
   app.use((error: unknown, req: Request, res: Response, _next: NextFunction) => {
     console.error(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`, error);
