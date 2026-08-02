@@ -6,3 +6,4 @@ export * from './training.js';
 export * from './nutrition.js';
 export * from './supplements.js';
 export * from './cortisol.js';
+export * from './sleep.js';
