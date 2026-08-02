@@ -8,7 +8,7 @@ export const CommunityEventInputSchema = z.object({
   capacity: z.coerce.number().int().min(0).nullable().optional(),
   image_url: z.string().nullable().optional(),
   active: z.boolean().optional(),
-  sort_order: z.coerce.number().int().optional(),
+  sort_order: z.coerce.number().int().nullable().optional(),
 });
 export type CommunityEventInput = z.infer<typeof CommunityEventInputSchema>;
 
@@ -19,6 +19,6 @@ export const CommunityTherapyInputSchema = z.object({
   provider: z.string().nullable().optional(),
   image_url: z.string().nullable().optional(),
   active: z.boolean().optional(),
-  sort_order: z.coerce.number().int().optional(),
+  sort_order: z.coerce.number().int().nullable().optional(),
 });
 export type CommunityTherapyInput = z.infer<typeof CommunityTherapyInputSchema>;
