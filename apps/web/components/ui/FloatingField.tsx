@@ -33,7 +33,14 @@ export default function FloatingField({
       />
       <label
         htmlFor={id}
-        className={`pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[15px] text-[#8A8377] transition-all duration-150 peer-focus:top-3 peer-focus:translate-y-0 peer-focus:text-[11px] peer-focus:text-[var(--gold)] ${placeholder ? "" : "peer-[:not(:placeholder-shown)]:top-3 peer-[:not(:placeholder-shown)]:translate-y-0 peer-[:not(:placeholder-shown)]:text-[11px]"}`}
+        className={`pointer-events-none absolute left-3.5 right-3.5 truncate text-[15px] text-[#8A8377] transition-all duration-150 peer-focus:text-[var(--gold)] ${
+          // Si hay un placeholder de ayuda (ej. "Primero selecciona tu país"),
+          // el label queda flotando arriba siempre, para no pisar ese texto
+          // que ocupa el centro del campo.
+          placeholder
+            ? "top-3 translate-y-0 text-[11px]"
+            : "top-1/2 -translate-y-1/2 peer-focus:top-3 peer-focus:translate-y-0 peer-focus:text-[11px] peer-[:not(:placeholder-shown)]:top-3 peer-[:not(:placeholder-shown)]:translate-y-0 peer-[:not(:placeholder-shown)]:text-[11px]"
+        }`}
       >
         {label}
       </label>
@@ -64,7 +71,7 @@ export function FloatingTextarea({ id, label, value, onChange, invalid, rows = 3
       />
       <label
         htmlFor={id}
-        className="pointer-events-none absolute left-3.5 top-3 text-[11px] text-[#8A8377] transition-all duration-150 peer-placeholder-shown:top-4 peer-placeholder-shown:text-[15px] peer-focus:top-3 peer-focus:text-[11px] peer-focus:text-[var(--gold)]"
+        className="pointer-events-none absolute left-3.5 right-3.5 top-3 truncate text-[11px] text-[#8A8377] transition-all duration-150 peer-placeholder-shown:top-4 peer-placeholder-shown:text-[15px] peer-focus:top-3 peer-focus:text-[11px] peer-focus:text-[var(--gold)]"
       >
         {label}
       </label>

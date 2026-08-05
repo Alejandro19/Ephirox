@@ -33,6 +33,7 @@ describe('TrainingDayView', () => {
         onOpenCategory={vi.fn()}
         onCompleteDay={vi.fn()}
         completingDay={false}
+        onBack={vi.fn()}
       />
     );
     expect(screen.getByRole('button', { name: /Calentamiento/ })).toBeEnabled();
@@ -50,6 +51,7 @@ describe('TrainingDayView', () => {
         onOpenCategory={vi.fn()}
         onCompleteDay={vi.fn()}
         completingDay={false}
+        onBack={vi.fn()}
       />
     );
     expect(screen.getByRole('button', { name: /Completar Entrenamiento/ })).toBeDisabled();
@@ -63,6 +65,7 @@ describe('TrainingDayView', () => {
         onOpenCategory={vi.fn()}
         onCompleteDay={vi.fn()}
         completingDay={false}
+        onBack={vi.fn()}
       />
     );
     expect(screen.getByRole('button', { name: /Completar Entrenamiento/ })).toBeEnabled();
@@ -80,6 +83,7 @@ describe('TrainingDayView', () => {
         onOpenCategory={vi.fn()}
         onCompleteDay={onCompleteDay}
         completingDay={false}
+        onBack={vi.fn()}
       />
     );
     fireEvent.click(screen.getByRole('button', { name: /Completar Entrenamiento/ }));
@@ -97,6 +101,7 @@ describe('TrainingDayView', () => {
         onOpenCategory={vi.fn()}
         onCompleteDay={vi.fn()}
         completingDay={false}
+        onBack={vi.fn()}
       />
     );
     expect(screen.getByText('Día completado esta semana.')).toBeInTheDocument();
@@ -115,6 +120,7 @@ describe('TrainingDayView', () => {
         onOpenCategory={vi.fn()}
         onCompleteDay={vi.fn()}
         completingDay={false}
+        onBack={vi.fn()}
       />
     );
     expect(screen.getByRole('button', { name: /Cardio/ })).toBeDisabled();

@@ -98,6 +98,9 @@ describe('TrainingHome', () => {
       />
     );
 
+    // El calendario vive dentro de un acordeón colapsado por defecto.
+    fireEvent.click(screen.getByText('Nivel de disciplina'));
+
     // One cell per day of the month (day "1" appears as a marked <strong>).
     expect(screen.getAllByText(String(daysInMonth)).length).toBeGreaterThan(0);
     const markedDay1 = screen.getByText('1', { selector: 'strong' });

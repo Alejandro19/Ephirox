@@ -59,7 +59,7 @@ describe('TrainingShell', () => {
     fireEvent.click(await screen.findByRole('button', { name: /Fuerza/ }));
     fireEvent.click(await screen.findByRole('button', { name: 'Marcar completado' }));
     // rest timer starts; go back to day view without waiting it out
-    await waitFor(() => expect(screen.getByText(/Descanso/)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/Descanso: \d+s/)).toBeInTheDocument());
   });
 
   it('calls confirmSession when completing the day and returns to home after closing the confirmed screen', async () => {

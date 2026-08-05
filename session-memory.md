@@ -72,6 +72,21 @@ Pedido explícito: extraer quirúrgicamente (sin leer completos) solo lo referid
 
 Al correr la suite completa para verificar el módulo de arriba se detectó que la BD de test (`/pruebas` en Supabase, separada de la de dev) estaba desincronizada — le faltaban varias migraciones históricas de sesiones anteriores (apple_id, evolution, community, cortisol, sleep). Se aplicaron todas cronológicamente, bajando los archivos de test rotos de 27 a 8. Los 8 restantes son preexistentes y no relacionados a este módulo (credenciales de Supabase Storage inválidas para test, y una migración vieja de julio con una columna `method` que no aplica limpio) — se dejaron sin tocar por estar fuera de alcance.
 
+### 13. Fix de centrado de floating labels (`FloatingField.tsx`)
+
+El usuario reportó dos bugs visuales en "Información Personal" a partir de capturas: (a) el campo "Ciudad" mostraba el label superpuesto con el placeholder de ayuda "Primero selecciona tu país" porque el código desactivaba por completo el comportamiento flotante cuando había un `placeholder` custom, dejando el label siempre centrado encima del hint; (b) preguntas largas (ej. "¿Cuáles son tus 3 frutas preferidas?") no tenían límite de ancho en el label, así que en pantallas angostas envolvían a 2 líneas y se salían de la caja de 48px. Fix: si hay `placeholder`, el label ahora flota arriba (chico) siempre en vez de desactivar el flotado; se agregó `right-3.5 truncate` a los labels de `FloatingField` y `FloatingTextarea` para que corten con "…" en vez de envolver.
+
+### 14. Rediseño completo del módulo Entrenamiento (vista cliente)
+
+El módulo de Entrenamiento que construyó la otra IA (`TrainingHome`, `TrainingDayView`, `TrainingPlayer`, `SessionConfirmedScreen`) tenía toda la lógica funcional (streak, protector de racha, calendario de disciplina, timers de descanso/duración, share card) pero **cero estilos** — solo `<div>`/`<button>` sin className, texto crudo sin layout. El usuario pidió unir esa lógica con el diseño visual del front viejo. Se extrajo quirúrgicamente el markup/CSS de `index.html` (funciones `renderTrainingHome`, `renderTrainingDay`, `renderTrainingPlayer`, `renderStreakBadge`, `renderWeekProgressCard`, `renderNfcConfirmationScreen`, sin leer el archivo completo) y se portó a Tailwind usando las mismas CSS custom properties que ya existían en `globals.css` (`--ink`, `--terracota`, `--sage`, `--gold`, etc. — el design system nuevo ya coincidía 1:1 con las variables del legacy).
+
+- Nuevo archivo compartido `components/training/TrainingVisuals.tsx` (`ProgressBar`, `MiniRing`, `CategoryIcon`, `CATEGORY_LABELS`) para no duplicar SVGs entre los 3 componentes.
+- **Gap de lógica encontrado y corregido:** `TrainingDayView` no tenía forma de volver a Home (sin botón atrás, sin prop `onBack`) — se agregó el prop y se conectó en `TrainingShell.tsx`.
+- `SessionConfirmedScreen` pasó a ser un overlay oscuro `fixed inset-0` de pantalla completa (celebración), como en el legacy.
+- Se ajustaron 3 tests (`training-home.test.tsx`, `training-player.test.tsx`, `training-shell.test.tsx`) para reflejar cambios de comportamiento intencionales: el acordeón "Nivel de disciplina" ahora arranca colapsado (antes no existía como acordeón), y se desambiguó `/Descanso/` → `/Descanso: \d+s/` porque la nueva tarjeta KPI también muestra la palabra "Descanso" como label estático. 84 tests del módulo pasan; `tsc --noEmit` limpio.
+- **Fuera de alcance, no tocado:** el panel de admin de Entrenamiento (`AdminExercisePanel`, fallback `<div><h1>Entrenamiento</h1>` para rol admin) sigue sin estilo — no apareció en las capturas que mandó el usuario.
+- **Preexistente, no tocado:** `test/training-home-logic.test.ts` tiene una fecha hardcodeada (`2026-07-29`) que ya quedó en una semana pasada respecto a la fecha real del sistema — falla por paso del calendario, no por este trabajo.
+
 ---
 
 ## Próximas actividades — Siguiente sesión
@@ -81,16 +96,22 @@ Al correr la suite completa para verificar el módulo de arriba se detectó que 
 - Loguearse como `mentoring-demo@latribu.test` / `MentoringDemo123!`, ir a `/onboarding`, confirmar que aparecen 10 pasos (no 9), y que el paso 10 respeta la línea visual del resto del wizard.
 - Confirmar que un cliente que NO es tipo `mentoring` sigue viendo solo 9 pasos.
 
-### Actividad 2 — Activar wearables reales cuando haya credenciales
+### Actividad 2 — Probar en navegador el rediseño de Entrenamiento
+
+- Ir a `/training` como cliente y confirmar visualmente el hero card, badge de racha, protector, grid de días y el acordeón de disciplina.
+- Completar un ejercicio para ver el timer de descanso y la pantalla de celebración (`SessionConfirmedScreen`).
+- Si se quiere, estilar el panel de admin de Entrenamiento (`AdminExercisePanel`) — quedó pendiente, fuera de lo pedido esta sesión.
+
+### Actividad 3 — Activar wearables reales cuando haya credenciales
 
 - Setear `WHOOP_CLIENT_ID`/`SECRET`, `OURA_CLIENT_ID`/`SECRET`, `POLAR_CLIENT_ID`/`SECRET` en `apps/api/.env` (no requiere más cambios de código, igual que Apple Sign-In).
 - Garmin no tiene servicio portado (no existía en el código fuente de BIO360) — si se necesita, habría que escribirlo desde cero.
 
-### Actividad 3 — Activar Apple Sign-In cuando haya cuenta de desarrollador
+### Actividad 4 — Activar Apple Sign-In cuando haya cuenta de desarrollador
 
 - Crear Services ID en Apple Developer, configurar dominio/redirect URI (`{origin}/login`), setear `APPLE_CLIENT_ID` en `apps/api/.env`. No requiere más cambios de código — el botón se activa solo.
 
-### Actividad 4 — Seguir coordinando con la otra IA
+### Actividad 5 — Seguir coordinando con la otra IA
 
 - La otra IA sigue construyendo partes del App Shell y páginas de admin/cliente bajo `apps/web/app/(app)/`. Antes de tocar esos archivos, confirmar que no estén en curso de edición activa (para evitar conflictos como el ya visto con `AdminClientDetail.tsx`/`AdminClientList.tsx`, que tuvieron errores de sintaxis que rompían el dev server entero).
 

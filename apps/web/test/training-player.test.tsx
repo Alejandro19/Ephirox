@@ -35,7 +35,7 @@ describe('TrainingPlayer', () => {
     render(<TrainingPlayer exercises={[exercise('e1'), exercise('e2')]} completedIds={new Set()} onMarkComplete={onMarkComplete} onExit={vi.fn()} />);
     fireEvent.click(screen.getByRole('button', { name: 'Marcar completado' }));
     expect(onMarkComplete).toHaveBeenCalledWith('e1');
-    expect(screen.getByText(/Descanso/)).toBeInTheDocument();
+    expect(screen.getByText(/Descanso: \d+s/)).toBeInTheDocument();
   });
 
   it('auto-advances to the next exercise when the rest timer reaches 0', () => {
@@ -112,6 +112,6 @@ describe('TrainingPlayer', () => {
       vi.advanceTimersByTime(2000);
     });
     expect(onMarkComplete).toHaveBeenCalledWith('e1');
-    expect(screen.getByText(/Descanso/)).toBeInTheDocument();
+    expect(screen.getByText(/Descanso: \d+s/)).toBeInTheDocument();
   });
 });

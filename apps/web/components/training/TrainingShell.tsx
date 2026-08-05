@@ -158,6 +158,7 @@ export function TrainingShell({ clientId }: TrainingShellProps) {
         onOpenCategory={setCategory}
         onCompleteDay={handleCompleteDay}
         completingDay={completingDay}
+        onBack={backToHome}
       />
     );
   }
