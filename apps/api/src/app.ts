@@ -20,6 +20,8 @@ import { sleepRouter } from './routes/sleep.routes.js';
 import { eventsRouter } from './routes/events.routes.js';
 import { therapiesRouter } from './routes/therapies.routes.js';
 import { evolutionRouter } from './routes/evolution.routes.js';
+import { labPanelsRouter } from './routes/lab-panels.routes.js';
+import { wearableRouter, wearableOAuthRouter } from './routes/wearable.routes.js';
 
 export function createApp() {
   const app = express();
@@ -54,6 +56,9 @@ export function createApp() {
   app.use('/api/clients', cortisolTechniquesRouter);
   app.use('/api/clients', cortisolLogsRouter);
   app.use('/api/clients', sleepRouter);
+  app.use('/api/clients', labPanelsRouter);
+  app.use('/api/clients', wearableRouter);
+  app.use('/api/wearable', wearableOAuthRouter);
 
   // Error handler
   app.use((error: unknown, req: Request, res: Response, _next: NextFunction) => {

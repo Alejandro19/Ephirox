@@ -32,7 +32,7 @@ export const StatusPatchSchema = z.object({
 });
 export type StatusPatch = z.infer<typeof StatusPatchSchema>;
 
-export const CLIENT_TYPES = ['coaching_1_1', 'coaching_online', 'lead_wellness'] as const;
+export const CLIENT_TYPES = ['coaching_1_1', 'coaching_online', 'lead_wellness', 'mentoring'] as const;
 export const ClientTypePatchSchema = z.object({
   client_type: z.enum(CLIENT_TYPES),
 });

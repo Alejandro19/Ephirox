@@ -106,6 +106,13 @@ export const WIZARD_MODULES: WizardModuleConfig[] = [
   ]},
 ];
 
+// Módulo 10 — Dispositivos y Laboratorios. Puerto de BIO360Index.html
+// (renderInfoModule10) — solo visible para clientes tipo "mentoring"
+// (ver WizardShell, que lo agrega a WIZARD_MODULES condicionalmente).
+export const WIZARD_MODULE_10: WizardModuleConfig = {
+  n: 10, title: 'Dispositivos y Laboratorios', custom: 'devices', fields: [],
+};
+
 // Puerto fiel de las reglas de `initFieldDependencies` (index.html:1472-1485).
 export const CONDITIONAL_RULES: ConditionalRule[] = [
   { id: 'condition', value: 'Otra', target: 'condition_other' },

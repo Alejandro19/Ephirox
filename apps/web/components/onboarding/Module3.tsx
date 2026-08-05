@@ -3,6 +3,21 @@
 import { useState } from 'react';
 import { callOcr, uploadInbodyFile, updateClientObjetivos } from '../../lib/onboarding-client';
 import { parseOcrText } from '../../lib/parse-ocr-text';
+import SelectField from '../ui/SelectField';
+import FloatingField from '../ui/FloatingField';
+import FileField from '../ui/FileField';
+
+// Secciones siempre visibles (no acordeón real: Module3 necesita que varios
+// grupos de campos estén montados a la vez — el propio wizard ya organiza el
+// avance módulo a módulo).
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-2xl border border-[var(--line)] p-5">
+      <h3 className="m-0 mb-4 text-[15px] font-bold text-[var(--ink)]">{title}</h3>
+      {children}
+    </div>
+  );
+}
 
 export type Module3Draft = {
   weight: string;
@@ -184,105 +199,123 @@ export function Module3({ clientId, draft, onChange, invalidFields }: Module3Pro
     }
   }
 
+  const objetivoOptions = [
+    { value: 'bajar', label: 'Bajar' },
+    { value: 'mantener', label: 'Mantener' },
+    { value: 'subir', label: 'Subir' },
+  ];
+
   return (
-    <div>
-      <section>
-        <h3>Composición corporal</h3>
-        <label htmlFor="field-weight">Peso (kg)</label>
-        <input id="field-weight" type="number" value={draft.weight} onChange={(e) => onChange({ ...draft, weight: e.target.value })} />
-        {invalidFields.has('weight') && <p role="alert">Este campo es obligatorio.</p>}
+    <div className="space-y-5">
+      <Section title="Composición corporal">
+        <div className="space-y-5">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <FloatingField
+                  id="field-weight" label="Peso (kg)" type="number"
+                  value={draft.weight} onChange={(v) => onChange({ ...draft, weight: v })}
+                  invalid={invalidFields.has('weight')}
+                />
+                <FloatingField
+                  id="field-height" label="Estatura (cm)" type="number"
+                  value={draft.height} onChange={(v) => onChange({ ...draft, height: v })}
+                  invalid={invalidFields.has('height')}
+                />
+                <FloatingField
+                  id="field-body-fat" label="% Grasa corporal (si lo conoces)" type="number"
+                  value={draft.bodyFat} onChange={(v) => onChange({ ...draft, bodyFat: v })}
+                  invalid={invalidFields.has('bodyFat')}
+                />
+              </div>
 
-        <label htmlFor="field-height">Estatura (cm)</label>
-        <input id="field-height" type="number" value={draft.height} onChange={(e) => onChange({ ...draft, height: e.target.value })} />
-        {invalidFields.has('height') && <p role="alert">Este campo es obligatorio.</p>}
+              <p className="m-0 font-serif text-[14.5px] font-semibold text-[var(--ink)]">
+                Tus objetivos de composición corporal
+              </p>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                {(['peso', 'grasa_corporal', 'masa_muscular'] as const).map((metrica) => (
+                  <div key={metrica}>
+                    <SelectField
+                      id={`objetivo-${metrica}`}
+                      label={`¿Cuál es tu objetivo de ${metrica.replace('_', ' ')}?`}
+                      placeholder="Selecciona…"
+                      value={draft.objetivos[metrica]}
+                      onChange={(v) => setObjetivo(metrica, v)}
+                      options={objetivoOptions}
+                    />
+                    {invalidFields.has(`objetivo_${metrica}`) && (
+                      <p role="alert" className="mt-1.5 text-xs text-[var(--danger)]">Este campo es obligatorio.</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+        </div>
+      </Section>
 
-        <label htmlFor="field-body-fat">% Grasa corporal (si lo conoces)</label>
-        <input id="field-body-fat" type="number" value={draft.bodyFat} onChange={(e) => onChange({ ...draft, bodyFat: e.target.value })} />
-        {invalidFields.has('bodyFat') && <p role="alert">Este campo es obligatorio.</p>}
+      <Section title="Cargar análisis InBody">
+        <div className="space-y-5">
+              <FileField
+                id="field-inbody-file"
+                label="Sube el PDF o una foto de tu reporte InBody"
+                accept=".pdf,.jpg,.jpeg,.png"
+                disabled={ocrBusy}
+                fileName={draft.inbody.fileName}
+                helper="Detectamos los campos automáticamente al subir el archivo."
+                onFileChange={(file) => { if (file) void handleInbodyFile(file); }}
+              />
+              {ocrStatus && (
+                <p role={ocrStatus.isError ? 'alert' : 'status'} className={`text-sm ${ocrStatus.isError ? 'text-[var(--danger)]' : 'text-[var(--ink-soft)]'}`}>
+                  {ocrStatus.message}
+                </p>
+              )}
+              {draft.inbody.version && (
+                <p className="text-xs text-[var(--ink-soft)]">Versión detectada: {draft.inbody.version}</p>
+              )}
 
-        <h4>Tus objetivos de composición corporal</h4>
-        {(['peso', 'grasa_corporal', 'masa_muscular'] as const).map((metrica) => (
-          <div key={metrica}>
-            <label htmlFor={`objetivo-${metrica}`}>¿Cuál es tu objetivo de {metrica.replace('_', ' ')}?</label>
-            <select id={`objetivo-${metrica}`} value={draft.objetivos[metrica]} onChange={(e) => setObjetivo(metrica, e.target.value)}>
-              <option value="">Selecciona…</option>
-              <option value="bajar">Bajar</option>
-              <option value="mantener">Mantener</option>
-              <option value="subir">Subir</option>
-            </select>
-            {invalidFields.has(`objetivo_${metrica}`) && <p role="alert">Este campo es obligatorio.</p>}
-          </div>
-        ))}
-      </section>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {INBODY_NUMBER_FIELDS.map(([key, label]) => (
+                  <FloatingField
+                    key={key}
+                    id={`inbody-${key}`} label={label} type="number"
+                    value={draft.inbody[key]}
+                    onChange={(v) => {
+                      const nextInbody = { ...draft.inbody, [key]: v };
+                      if (key === 'pesoTotal' || key === 'altura') nextInbody.imc = computeImc(nextInbody.pesoTotal, nextInbody.altura);
+                      onChange({ ...draft, inbody: nextInbody });
+                    }}
+                    invalid={invalidFields.has(`inbody_${key}`)}
+                  />
+                ))}
+                <FloatingField id="inbody-imc" label="IMC calculado" value={draft.inbody.imc} onChange={() => {}} disabled />
+              </div>
+        </div>
+      </Section>
 
-      <section>
-        <h3>Cargar análisis InBody</h3>
-        <label htmlFor="field-inbody-file">Sube el PDF o una foto de tu reporte InBody</label>
-        <input
-          id="field-inbody-file"
-          type="file"
-          accept=".pdf,.jpg,.jpeg,.png"
-          disabled={ocrBusy}
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) void handleInbodyFile(file);
-          }}
-        />
-        {ocrStatus && <p role={ocrStatus.isError ? 'alert' : 'status'}>{ocrStatus.message}</p>}
-        {draft.inbody.version && <p>Versión detectada: {draft.inbody.version}</p>}
+      <Section title="Medidas antropométricas (opcional)">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              {ANTROPOMETRIA_FIELDS.map(([key, label]) => (
+                <FloatingField
+                  key={key}
+                  id={`antropometria-${key}`} label={label} type="number"
+                  value={draft.antropometria[key]}
+                  onChange={(v) => onChange({ ...draft, antropometria: { ...draft.antropometria, [key]: v } })}
+                />
+              ))}
+            </div>
+      </Section>
 
-        {INBODY_NUMBER_FIELDS.map(([key, label]) => (
-          <div key={key}>
-            <label htmlFor={`inbody-${key}`}>{label}</label>
-            <input
-              id={`inbody-${key}`}
-              type="number"
-              value={draft.inbody[key]}
-              onChange={(e) => {
-                const nextInbody = { ...draft.inbody, [key]: e.target.value };
-                if (key === 'pesoTotal' || key === 'altura') nextInbody.imc = computeImc(nextInbody.pesoTotal, nextInbody.altura);
-                onChange({ ...draft, inbody: nextInbody });
-              }}
-            />
-            {invalidFields.has(`inbody_${key}`) && <p role="alert">Este campo es obligatorio.</p>}
-          </div>
-        ))}
-        <label htmlFor="inbody-imc">IMC calculado</label>
-        <input id="inbody-imc" type="text" value={draft.inbody.imc} disabled />
-      </section>
-
-      <section>
-        <h3>Medidas antropométricas (opcional)</h3>
-        {ANTROPOMETRIA_FIELDS.map(([key, label]) => (
-          <div key={key}>
-            <label htmlFor={`antropometria-${key}`}>{label}</label>
-            <input
-              id={`antropometria-${key}`}
-              type="number"
-              value={draft.antropometria[key]}
-              onChange={(e) => onChange({ ...draft, antropometria: { ...draft.antropometria, [key]: e.target.value } })}
-            />
-          </div>
-        ))}
-      </section>
-
-      <section>
-        <h3>Fotos de progreso (opcional)</h3>
-        {PHOTO_ANGLES.map((angle) => (
-          <div key={angle.key}>
-            <label htmlFor={`photo-${angle.key}`}>{angle.label}</label>
-            <input
-              id={`photo-${angle.key}`}
-              type="file"
-              accept="image/*"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                onChange({ ...draft, photos: { ...draft.photos, [angle.key]: file } });
-              }}
-            />
-          </div>
-        ))}
-      </section>
+      <Section title="Fotos de progreso (opcional)">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {PHOTO_ANGLES.map((angle) => (
+                <FileField
+                  key={angle.key}
+                  id={`photo-${angle.key}`}
+                  label={angle.label}
+                  accept="image/*"
+                  fileName={draft.photos[angle.key]?.name ?? null}
+                  onFileChange={(file) => onChange({ ...draft, photos: { ...draft.photos, [angle.key]: file ?? undefined } })}
+                />
+              ))}
+            </div>
+      </Section>
     </div>
   );
 }

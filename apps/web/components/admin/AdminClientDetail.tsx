@@ -155,6 +155,7 @@ const isLead = (client.client_type || client.clientType) === "lead_wellness";
               <option value="coaching_1_1">Coaching 1:1</option>
               <option value="coaching_online">Coaching Online</option>
               <option value="lead_wellness">Leads Wellness</option>
+              <option value="mentoring">Mentoring</option>
             </select>
             <button onClick={handleSaveType} disabled={acting}
               style={{ marginTop: 10, padding: "6px 16px", borderRadius: "9999px",

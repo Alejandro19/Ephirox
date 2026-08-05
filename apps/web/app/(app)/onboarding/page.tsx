@@ -19,10 +19,22 @@ function decodeClientIdFromToken(token: string): string | null {
   }
 }
 
+// El módulo 10 (Dispositivos y Laboratorios) solo aplica a clientType
+// "mentoring" — igual que el id, se lee del JWT para evitar un round-trip.
+function decodeClientTypeFromToken(token: string): string | null {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return typeof payload.clientType === 'string' ? payload.clientType : null;
+  } catch {
+    return null;
+  }
+}
+
 export default function OnboardingPage() {
   const router = useRouter();
   const [ready, setReady] = useState(false);
   const [clientId, setClientId] = useState<string | null>(null);
+  const [clientType, setClientType] = useState<string | null>(null);
 
   useEffect(() => {
     const token = getSessionToken();
@@ -35,10 +47,11 @@ export default function OnboardingPage() {
     // llamada al backend sigue siendo autorizada por el token real, no por
     // este valor local.
     setClientId(decodeClientIdFromToken(token));
+    setClientType(decodeClientTypeFromToken(token));
     setReady(true);
   }, [router]);
 
   if (!ready) return null;
 
-  return <WizardShell clientId={clientId ?? ''} />;
+  return <WizardShell clientId={clientId ?? ''} clientType={clientType} />;
 }

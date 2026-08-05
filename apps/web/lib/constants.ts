@@ -14,8 +14,9 @@ export type AppState = {
 };
 
 export const CLIENT_NAV: NavItem[] = [
-  { key: "training", label: "Entrenamiento", visible: (s) => s.clientType !== "lead_wellness" && s.onboardingComplete === true },
-  { key: "nutrition", label: "Nutrición", visible: (s) => s.clientType !== "lead_wellness" && s.onboardingComplete === true },
+  { key: "personal-info", label: "Información Personal", visible: (s) => s.clientType !== "lead_wellness" },
+  { key: "training", label: "Entrenamiento", visible: (s) => s.clientType === "lead_wellness" ? true : s.onboardingComplete === true },
+  { key: "nutrition", label: "Nutrición", visible: (s) => s.clientType === "lead_wellness" ? true : s.onboardingComplete === true },
   { key: "cortisol", label: "Gestión de Cortisol", visible: (s) => s.clientType === "lead_wellness" ? true : s.onboardingComplete === true },
   { key: "rest", label: "Descanso", visible: (s) => s.clientType === "lead_wellness" ? true : s.onboardingComplete === true },
   { key: "community", label: "Comunidad", visible: (s) => s.clientType === "lead_wellness" ? true : s.onboardingComplete === true },
@@ -43,6 +44,7 @@ export const CLIENT_TYPE_LABELS: Record<string, string> = {
   coaching_1_1: "Coaching 1:1",
   coaching_online: "Coaching Online",
   lead_wellness: "Leads Wellness",
+  mentoring: "Mentoring",
 };
 
 // --- Module Theme ---

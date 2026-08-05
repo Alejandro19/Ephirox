@@ -2,10 +2,13 @@
 
 import { useState } from 'react';
 import { computeHiddenFieldIds, validateWizardModule } from '@latribu/shared-types';
-import { WIZARD_MODULES, CONDITIONAL_RULES } from '../../lib/wizard-modules';
+import { WIZARD_MODULES, WIZARD_MODULE_10, CONDITIONAL_RULES } from '../../lib/wizard-modules';
 import { WizardField } from './WizardField';
 import { CountryCityPicker, type CountryCityValue } from './CountryCityPicker';
 import { Module3, EMPTY_MODULE3_DRAFT, validateModule3, type Module3Draft } from './Module3';
+import { Module10, EMPTY_MODULE10_DRAFT, type Module10Draft } from './Module10';
+import IdentityHeader from '../ui/IdentityHeader';
+import { upsertLabPanel } from '../../lib/lab-panels-client';
 import {
   putPersonalInfo,
   uploadPersonalInfoFile,
@@ -20,20 +23,26 @@ const PHOTO_ANGLE_KEYS = ['frente', 'lado_derecho', 'lado_izquierdo', 'espalda']
 
 export type WizardShellProps = {
   clientId: string;
+  clientType?: string | null;
 };
 
-export function WizardShell({ clientId }: WizardShellProps) {
+export function WizardShell({ clientId, clientType }: WizardShellProps) {
   const [step, setStep] = useState(1);
   const [wizardData, setWizardData] = useState<WizardData>({});
   const [otroValues, setOtroValues] = useState<Record<string, string>>({});
   const [pendingCheckupFile, setPendingCheckupFile] = useState<File | null>(null);
   const [module3Draft, setModule3Draft] = useState<Module3Draft>(EMPTY_MODULE3_DRAFT);
+  const [module10Draft, setModule10Draft] = useState<Module10Draft>(EMPTY_MODULE10_DRAFT);
   const [invalidFieldIds, setInvalidFieldIds] = useState<Set<string>>(new Set());
   const [finalizing, setFinalizing] = useState(false);
   const [finalizeError, setFinalizeError] = useState<string | null>(null);
   const [complete, setComplete] = useState(false);
 
-  const mod = WIZARD_MODULES.find((m) => m.n === step)!;
+  // Módulo 10 (Dispositivos y Laboratorios) solo existe para clientes tipo
+  // Mentoring — el resto sigue viendo exactamente los 9 módulos de siempre.
+  const modules = clientType === 'mentoring' ? [...WIZARD_MODULES, WIZARD_MODULE_10] : WIZARD_MODULES;
+  const totalModules = modules.length;
+  const mod = modules.find((m) => m.n === step)!;
   const hiddenFieldIds = computeHiddenFieldIds(CONDITIONAL_RULES, wizardData);
 
   function handleFieldChange(id: string, value: string | string[]) {
@@ -134,6 +143,22 @@ export function WizardShell({ clientId }: WizardShellProps) {
         });
       }
 
+      if (clientType === 'mentoring') {
+        onboardingReport.m10_wearable = module10Draft.wearable;
+        onboardingReport.m10_aw_hrv = module10Draft.appleHealth.hrv;
+        onboardingReport.m10_aw_fc_reposo = module10Draft.appleHealth.fcReposo;
+        onboardingReport.m10_aw_spo2 = module10Draft.appleHealth.spo2;
+        onboardingReport.m10_aw_vo2max = module10Draft.appleHealth.vo2max;
+
+        const labDatos = Object.entries(module10Draft.labDatos).reduce<Record<string, number>>((acc, [k, v]) => {
+          if (v) acc[k] = Number(v);
+          return acc;
+        }, {});
+        if (Object.keys(labDatos).length > 0) {
+          await upsertLabPanel(clientId, { semana: module10Draft.labSemana, fecha: module10Draft.labFecha, datos: labDatos });
+        }
+      }
+
       setComplete(true);
     } catch (e) {
       setFinalizeError(e instanceof Error ? e.message : 'Error al guardar.');
@@ -164,7 +189,7 @@ export function WizardShell({ clientId }: WizardShellProps) {
     const invalid = validateWizardModule(mod.fields, wizardData, hiddenFieldIds);
     setInvalidFieldIds(new Set(invalid));
     if (invalid.length > 0) return;
-    if (step < 9) {
+    if (step < totalModules) {
       setStep(step + 1);
       return;
     }
@@ -173,57 +198,161 @@ export function WizardShell({ clientId }: WizardShellProps) {
 
   if (complete) {
     return (
-      <div>
-        <h1>¡Listo!</h1>
-        <p>Datos guardados. Tu coach te contactará lo antes posible.</p>
+      <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
+        <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-[var(--sage-soft)] text-3xl text-[var(--sage)]">
+          ✓
+        </div>
+        <h1 className="mb-2 font-serif text-2xl font-bold text-[var(--ink)]">¡Listo!</h1>
+        <p className="max-w-sm text-sm text-[var(--ink-soft)]">
+          Datos guardados. Tu coach te contactará lo antes posible.
+        </p>
       </div>
     );
   }
 
+  const formPct = Math.round((step / totalModules) * 100);
+  const ringR = 30;
+  const ringCirc = 2 * Math.PI * ringR;
+  const ringFilled = (formPct / 100) * ringCirc;
+
   return (
     <div>
-      <p>
-        Módulo {step} de 9 · {mod.title}
-      </p>
+      <IdentityHeader
+        title="Información Personal"
+        subtitle="Conocerte nos permite diseñar tu experiencia dentro de La Tribu."
+      />
 
-      {mod.custom === 'country' && (
-        <CountryCityPicker
-          value={{
-            country: (wizardData.country as string) || '',
-            city: (wizardData.city as string) || '',
-            phoneCode: (wizardData.phone_code as string) || '+57',
-            phoneNumber: (wizardData.phone_number as string) || '',
-          }}
-          onChange={handleCountryCityChange}
+      {/* Hero: progreso del formulario */}
+      <div
+        className="relative mb-6 overflow-hidden rounded-[20px] p-7 text-white"
+        style={{ background: "linear-gradient(135deg, #2B2621, #3A322A)" }}
+      >
+        <div
+          className="pointer-events-none absolute -right-10 -top-10 h-44 w-44 rounded-full"
+          style={{ background: "radial-gradient(circle, rgba(255,255,255,.16) 0%, transparent 70%)" }}
         />
-      )}
+        <div className="relative z-10 flex items-center justify-between gap-5">
+          <div className="relative h-[70px] w-[70px] flex-shrink-0">
+            <svg viewBox="0 0 70 70" width="70" height="70" style={{ transform: "rotate(-90deg)" }}>
+              <circle cx="35" cy="35" r={ringR} fill="none" stroke="rgba(255,255,255,.2)" strokeWidth="6" />
+              <circle
+                cx="35" cy="35" r={ringR} fill="none" stroke="var(--gold)" strokeWidth="6"
+                strokeLinecap="round" strokeDasharray={`${ringFilled.toFixed(1)} ${ringCirc.toFixed(1)}`}
+              />
+            </svg>
+            <div className="absolute inset-0 flex items-center justify-center text-sm font-bold">
+              {formPct}%
+            </div>
+          </div>
+          <div className="flex-1">
+            <p className="m-0 mb-2.5 text-[11px] font-bold uppercase tracking-wider text-[var(--gold)]">
+              Módulo {step} de {totalModules}
+            </p>
+            <p className="m-0 mb-1 font-serif text-[21px] font-semibold">{mod.title}</p>
+            <p className="m-0 text-[13px] opacity-75">{formPct}% de tu formulario completado</p>
+          </div>
+        </div>
+      </div>
 
-      {mod.custom === 'body' && (
-        <Module3 clientId={clientId} draft={module3Draft} onChange={setModule3Draft} invalidFields={invalidFieldIds} />
-      )}
+      {/* Punticos de módulo */}
+      <div className="mb-6 flex flex-wrap gap-1.5">
+        {modules.map((m) => {
+          const done = m.n < step;
+          const current = m.n === step;
+          return (
+            <button
+              key={m.n}
+              type="button"
+              onClick={() => setStep(m.n)}
+              aria-current={current ? 'step' : undefined}
+              aria-label={`Ir al módulo ${m.n}: ${m.title}`}
+              className="flex h-8 w-8 items-center justify-center rounded-full border text-[13px] font-bold transition-colors"
+              style={{
+                background: current ? "var(--gold)" : done ? "var(--sage)" : "var(--cream)",
+                borderColor: current ? "var(--gold)" : done ? "var(--sage)" : "var(--line)",
+                color: current || done ? "#fff" : "var(--ink-soft)",
+              }}
+            >
+              {m.n}
+            </button>
+          );
+        })}
+      </div>
 
-      {mod.fields.map((field) => (
-          <WizardField
-            key={field.id}
-            field={field}
-            value={wizardData[field.id]}
-            otroValue={otroValues[field.id]}
-            hidden={hiddenFieldIds.has(field.id)}
-            invalid={invalidFieldIds.has(field.id)}
-            onChange={handleFieldChange}
-            onOtroChange={handleOtroChange}
-            onFileChange={handleFileChange}
-          />
-        ))}
+      {/* Card del módulo actual */}
+      <div className="mb-5 rounded-[var(--radius)] border border-[var(--line)] bg-[var(--paper)] p-6">
+        <h2 className="m-0 mb-4 text-lg font-bold text-[var(--ink)]">
+          Módulo {mod.n} · {mod.title}
+        </h2>
 
-      {finalizeError && <p role="alert">{finalizeError}</p>}
+        {mod.custom === 'country' && (
+          <div className="mb-4">
+            <CountryCityPicker
+              value={{
+                country: (wizardData.country as string) || '',
+                city: (wizardData.city as string) || '',
+                phoneCode: (wizardData.phone_code as string) || '+57',
+                phoneNumber: (wizardData.phone_number as string) || '',
+              }}
+              onChange={handleCountryCityChange}
+              invalidFieldIds={invalidFieldIds}
+            />
+          </div>
+        )}
 
-      <button type="button" disabled={step === 1} onClick={() => setStep(step - 1)}>
-        Anterior
-      </button>
-      <button type="button" disabled={finalizing} onClick={handleContinue}>
-        {step === 9 ? 'Finalizar' : 'Continuar'}
-      </button>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {mod.fields.map((field) => (
+            <WizardField
+              key={field.id}
+              field={field}
+              value={wizardData[field.id]}
+              otroValue={otroValues[field.id]}
+              hidden={hiddenFieldIds.has(field.id)}
+              invalid={invalidFieldIds.has(field.id)}
+              onChange={handleFieldChange}
+              onOtroChange={handleOtroChange}
+              onFileChange={handleFileChange}
+            />
+          ))}
+        </div>
+
+        {mod.custom === 'body' && (
+          <div className="mt-4">
+            <Module3 clientId={clientId} draft={module3Draft} onChange={setModule3Draft} invalidFields={invalidFieldIds} />
+          </div>
+        )}
+
+        {mod.custom === 'devices' && (
+          <div className="mt-4">
+            <Module10 clientId={clientId} draft={module10Draft} onChange={setModule10Draft} />
+          </div>
+        )}
+
+        {finalizeError && (
+          <p role="alert" className="mt-4 rounded-xl border border-[var(--danger)] bg-[var(--terracota-soft)] px-4 py-3 text-sm text-[var(--danger)]">
+            {finalizeError}
+          </p>
+        )}
+
+        <div className="mt-6 flex justify-between">
+          <button
+            type="button"
+            disabled={step === 1}
+            onClick={() => setStep(step - 1)}
+            className="rounded-full border border-[var(--line)] bg-transparent px-6 py-3 text-sm font-semibold text-[var(--ink-soft)] transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Anterior
+          </button>
+          <button
+            type="button"
+            disabled={finalizing}
+            onClick={handleContinue}
+            className="rounded-full bg-[var(--gold)] px-6 py-3 text-sm font-semibold text-white transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {finalizing ? 'Guardando…' : step === totalModules ? 'Finalizar' : 'Continuar'}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

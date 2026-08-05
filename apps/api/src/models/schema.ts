@@ -421,3 +421,65 @@ export const personalRecords = pgTable('personal_records', {
 
 export type EvolutionCheckin = typeof evolutionCheckins.$inferSelect;
 export type PersonalRecord = typeof personalRecords.$inferSelect;
+
+// ==== DISPOSITIVOS Y LABORATORIOS (módulo Mentoring) ====
+
+export const wearableTokens = pgTable('wearable_tokens', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  clientId: uuid('client_id').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+  dispositivo: text('dispositivo').notNull(), // 'garmin' | 'whoop' | 'oura' | 'polar'
+  accessToken: text('access_token').notNull(),
+  refreshToken: text('refresh_token'),
+  tokenExpiresAt: timestamp('token_expires_at', { withTimezone: true }),
+  garminUserId: text('garmin_user_id'),
+  whoopUserId: text('whoop_user_id'),
+  ouraUserId: text('oura_user_id'),
+  polarUserId: text('polar_user_id'),
+  connectedAt: timestamp('connected_at', { withTimezone: true }).defaultNow(),
+  lastSyncAt: timestamp('last_sync_at', { withTimezone: true }),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+});
+
+export const wearableMetricas = pgTable('wearable_metricas', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  clientId: uuid('client_id').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+  dispositivo: text('dispositivo').notNull(),
+  fecha: date('fecha').notNull(),
+  fcReposo: integer('fc_reposo'),
+  hrvNocturno: integer('hrv_nocturno'),
+  suenoTotalMinutos: integer('sueno_total_minutos'),
+  suenoProfundoMinutos: integer('sueno_profundo_minutos'),
+  suenoRemMinutos: integer('sueno_rem_minutos'),
+  suenoLigeroMinutos: integer('sueno_ligero_minutos'),
+  suenoScore: integer('sueno_score'),
+  suenoPerformance: integer('sueno_performance'),
+  recoveryScore: integer('recovery_score'),
+  readinessScore: integer('readiness_score'),
+  bodyBatteryMax: integer('body_battery_max'),
+  estresPromedio: integer('estres_promedio'),
+  spo2: numeric('spo2', { precision: 4, scale: 1 }).$type<number>(),
+  vo2max: numeric('vo2max', { precision: 4, scale: 1 }).$type<number>(),
+  tasaRespiratoria: numeric('tasa_respiratoria', { precision: 4, scale: 1 }).$type<number>(),
+  pasos: integer('pasos'),
+  caloriasActivas: integer('calorias_activas'),
+  strainScore: numeric('strain_score', { precision: 4, scale: 1 }).$type<number>(),
+  temperaturaPiel: numeric('temperatura_piel', { precision: 4, scale: 2 }).$type<number>(),
+  horaDormir: timestamp('hora_dormir', { withTimezone: true }),
+  horaDespertar: timestamp('hora_despertar', { withTimezone: true }),
+  rawData: jsonb('raw_data').default({}),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+export const labPanels = pgTable('lab_panels', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  clientId: uuid('client_id').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+  semanaNumero: integer('semana_numero').notNull(), // 0, 6, 12
+  fecha: date('fecha'),
+  datos: jsonb('datos').notNull().default({}),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+});
+
+export type WearableToken = typeof wearableTokens.$inferSelect;
+export type WearableMetrica = typeof wearableMetricas.$inferSelect;
+export type LabPanel = typeof labPanels.$inferSelect;

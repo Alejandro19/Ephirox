@@ -20,7 +20,7 @@ export type WizardFieldConfig = {
 export type WizardModuleConfig = {
   n: number;
   title: string;
-  custom?: 'country' | 'body';
+  custom?: 'country' | 'body' | 'devices';
   fields: WizardFieldConfig[];
 };
 

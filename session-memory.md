@@ -55,27 +55,52 @@ A petición explícita del usuario ("front + backend completos"), se implementó
 
 Todo lo anterior (excepto lo ya commiteado previamente) se commiteó en un solo commit sobre `backup-migracion-2026-08-05` (90 archivos) y se pusheó a `origin/backup-migracion-2026-08-05`.
 
+### 10. Wizard de onboarding restyleado con el design system nuevo
+
+Se aplicaron las guías de `docs/design-system-oura-brief.md` (floating labels, botones pill) al wizard de `/onboarding`, replicando visualmente el layout de "Información Personal" del front viejo. De paso se corrigieron asociaciones rotas `getByLabelText`/`getByRole` en 6 componentes reutilizables de `ui/` (los íconos deben ser hermanos del `<label>`, no hijos, porque el matching de RTL es por `textContent`, no por accessible-name de ARIA).
+
+### 11. Módulo "Dispositivos y Laboratorios" (cliente tipo Mentoring) — nuevo paso 10 del wizard
+
+Pedido explícito: extraer quirúrgicamente (sin leer completos) solo lo referido a wearables/labs de `BIO360Index.html` (732 KB) y `BIO360server.js` (107 KB) —localizados en la raíz del repo junto con los servicios reales de origen, `BIO360routes/` y `BIO360services/`— y portarlo a la arquitectura nueva, visible solo para un tipo de cliente nuevo, "Mentoring".
+
+- **Backend:** 3 tablas nuevas (`wearable_tokens`, `wearable_metricas`, `lab_panels`, RLS `deny_all`, migración `tasks/migration-2026-08-05-dispositivos-laboratorios.sql`); `wearable.service.ts` + `whoop.service.ts` + `oura.service.ts` con OAuth y sync reales; `polar.service.ts` con OAuth real (la sync de métricas ya era un stub vacío en el origen BIO360, se mantuvo igual); Garmin no tenía servicio implementado en ningún lado del código fuente, así que su endpoint responde 503 controlado. `lab-panels.service.ts` con CRUD para los 3 checkpoints (semana 0/6/12) y OCR de 28 biomarcadores (reutiliza el mismo endpoint Google Vision que ya existía para InBody). `clientType` se agregó al payload del JWT para que el front sepa si debe mostrar el módulo sin round-trip extra. Constraint de `clients.client_type` en Postgres actualizado para aceptar `'mentoring'`.
+- **Frontend:** `Module10.tsx` (selector de wearable, campos manuales de Apple Health, conectar/sincronizar/desconectar, panel de labs con OCR), agregado como **paso 10 del wizard** solo si `clientType === 'mentoring'` (el resto de tipos de cliente sigue viendo 9 pasos). Tipo "Mentoring" agregado al selector de tipo de cliente en el admin.
+- **Activación pendiente:** para que WHOOP/Oura/Polar funcionen de verdad hace falta setear sus credenciales reales (`WHOOP_CLIENT_ID`/`SECRET`, `OURA_CLIENT_ID`/`SECRET`, `POLAR_CLIENT_ID`/`SECRET`) en `apps/api/.env` — hoy están en blanco a propósito y el connect responde 503 hasta que se configuren.
+- Cliente de prueba creado en la BD de dev: `mentoring-demo@latribu.test` / `MentoringDemo123!` (tipo `mentoring`) para poder ver el paso 10 en `/onboarding`.
+
+### 12. Fix de la base de datos de test (efecto colateral)
+
+Al correr la suite completa para verificar el módulo de arriba se detectó que la BD de test (`/pruebas` en Supabase, separada de la de dev) estaba desincronizada — le faltaban varias migraciones históricas de sesiones anteriores (apple_id, evolution, community, cortisol, sleep). Se aplicaron todas cronológicamente, bajando los archivos de test rotos de 27 a 8. Los 8 restantes son preexistentes y no relacionados a este módulo (credenciales de Supabase Storage inválidas para test, y una migración vieja de julio con una columna `method` que no aplica limpio) — se dejaron sin tocar por estar fuera de alcance.
+
 ---
 
 ## Próximas actividades — Siguiente sesión
 
-### Actividad 1 — Probar en navegador lo construido hoy
+### Actividad 1 — Probar en navegador el módulo de Dispositivos y Laboratorios
 
-- Verificar visualmente: botón de Google aparece sin delay perceptible, botón de Apple se ve deshabilitado ("Próximamente") debajo del divisor, pantalla de anillo se ve idéntica en login (Google/email) y en el AppShell al entrar.
+- Loguearse como `mentoring-demo@latribu.test` / `MentoringDemo123!`, ir a `/onboarding`, confirmar que aparecen 10 pasos (no 9), y que el paso 10 respeta la línea visual del resto del wizard.
+- Confirmar que un cliente que NO es tipo `mentoring` sigue viendo solo 9 pasos.
 
-### Actividad 2 — Activar Apple Sign-In cuando haya cuenta de desarrollador
+### Actividad 2 — Activar wearables reales cuando haya credenciales
+
+- Setear `WHOOP_CLIENT_ID`/`SECRET`, `OURA_CLIENT_ID`/`SECRET`, `POLAR_CLIENT_ID`/`SECRET` en `apps/api/.env` (no requiere más cambios de código, igual que Apple Sign-In).
+- Garmin no tiene servicio portado (no existía en el código fuente de BIO360) — si se necesita, habría que escribirlo desde cero.
+
+### Actividad 3 — Activar Apple Sign-In cuando haya cuenta de desarrollador
 
 - Crear Services ID en Apple Developer, configurar dominio/redirect URI (`{origin}/login`), setear `APPLE_CLIENT_ID` en `apps/api/.env`. No requiere más cambios de código — el botón se activa solo.
 
-### Actividad 3 — Seguir coordinando con la otra IA
+### Actividad 4 — Seguir coordinando con la otra IA
 
-- La otra IA sigue construyendo el App Shell y páginas de admin/cliente bajo `apps/web/app/(app)/`. Antes de tocar esos archivos, confirmar que no estén en curso de edición activa (para evitar conflictos como el ya visto con `AdminClientDetail.tsx`/`AdminClientList.tsx`, que tuvieron errores de sintaxis que rompían el dev server entero).
+- La otra IA sigue construyendo partes del App Shell y páginas de admin/cliente bajo `apps/web/app/(app)/`. Antes de tocar esos archivos, confirmar que no estén en curso de edición activa (para evitar conflictos como el ya visto con `AdminClientDetail.tsx`/`AdminClientList.tsx`, que tuvieron errores de sintaxis que rompían el dev server entero).
 
 ---
 
 ## Notas adicionales
 
 - **No modificar `server.js` ni `index.html` (raíz):** son el monolito legacy que Vercel sigue deployando en producción desde `origin/main`. Todo desarrollo nuevo va en `apps/api` / `apps/web`, commiteado en `backup-migracion-2026-08-05`.
+- **`BIO360Index.html`, `BIO360server.js`, `BIO360routes/`, `BIO360services/` (raíz):** copia de referencia del monolito legacy usada solo para extraer quirúrgicamente el módulo de Dispositivos y Laboratorios (sección 11). Quedan sin trackear en git a propósito (son archivos grandes de solo consulta, no forman parte de la arquitectura nueva) — no leerlos completos, solo con grep/sed dirigido.
 - **Puertos:** backend nuevo `:3003`, front nuevo `:3000`, backend legacy `:3001` (ver sección 8). Usar `npm run dev:api` / `npm run dev:web` desde la raíz para evitar confusión.
+- **Dos bases de datos Supabase separadas:** dev (`DATABASE_URL` en `apps/api/.env`) y test (`TEST_DATABASE_URL` en `apps/api/.env.test`) — las migraciones de `tasks/*.sql` hay que aplicarlas a mano en ambas, no se sincronizan solas.
 - **Nunca commitear/pushear a `origin/main` directamente** — riesgo real de romper el deploy de producción en Vercel.
 - **Nunca cambiar de rama, commitear o pushear sin pedido explícito del usuario en ese turno**, incluso si ya se autorizó antes en la misma sesión.

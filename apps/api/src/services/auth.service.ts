@@ -21,6 +21,7 @@ export type TokenPayload = {
   name: string;
   email: string;
   plan?: string;
+  clientType?: string;
 };
 
 export async function hashPassword(password: string): Promise<string> {

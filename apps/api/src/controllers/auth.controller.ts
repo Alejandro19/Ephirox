@@ -32,7 +32,7 @@ export async function login(req: Request, res: Response) {
   const valid = await authService.verifyPassword(password, client.passwordHash ?? '');
   if (!valid) return err(res, 'Credenciales incorrectas.', 401);
 
-  const token = authService.signToken({ id: client.id, role: 'cliente', name: client.name, email: client.email, plan: client.plan });
+  const token = authService.signToken({ id: client.id, role: 'cliente', name: client.name, email: client.email, plan: client.plan, clientType: client.clientType });
   const clientInfo = await getPersonalInfoByClientId(client.id);
   return ok(res, {
     token,
@@ -122,7 +122,7 @@ export async function googleLogin(req: Request, res: Response) {
   if (client) {
     if (client.status === 'inactive') return err(res, 'Tu cuenta está inactiva. Contacta al administrador.', 403);
     if (!client.googleId) await clientsService.updateClientGoogleId(client.id, googleId);
-    const token = authService.signToken({ id: client.id, role: 'cliente', name: client.name, email: client.email, plan: client.plan });
+    const token = authService.signToken({ id: client.id, role: 'cliente', name: client.name, email: client.email, plan: client.plan, clientType: client.clientType });
     return ok(res, {
       token,
       role: 'cliente',
@@ -163,7 +163,7 @@ export async function appleLogin(req: Request, res: Response) {
   if (client) {
     if (client.status === 'inactive') return err(res, 'Tu cuenta está inactiva. Contacta al administrador.', 403);
     if (!client.appleId) await clientsService.updateClientAppleId(client.id, appleId);
-    const token = authService.signToken({ id: client.id, role: 'cliente', name: client.name, email: client.email, plan: client.plan });
+    const token = authService.signToken({ id: client.id, role: 'cliente', name: client.name, email: client.email, plan: client.plan, clientType: client.clientType });
     return ok(res, {
       token,
       role: 'cliente',

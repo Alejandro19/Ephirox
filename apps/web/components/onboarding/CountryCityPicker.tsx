@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { getCountries, getCities, type CountryOption } from '../../lib/geo-client';
+import SelectField from '../ui/SelectField';
+import FloatingField from '../ui/FloatingField';
 
 export type CountryCityValue = {
   country: string;
@@ -13,9 +15,10 @@ export type CountryCityValue = {
 export type CountryCityPickerProps = {
   value: CountryCityValue;
   onChange: (patch: Partial<CountryCityValue>) => void;
+  invalidFieldIds?: Set<string>;
 };
 
-export function CountryCityPicker({ value, onChange }: CountryCityPickerProps) {
+export function CountryCityPicker({ value, onChange, invalidFieldIds }: CountryCityPickerProps) {
   const [priority, setPriority] = useState<CountryOption[]>([]);
   const [rest, setRest] = useState<CountryOption[]>([]);
   const [cities, setCities] = useState<string[]>([]);
@@ -36,69 +39,73 @@ export function CountryCityPicker({ value, onChange }: CountryCityPickerProps) {
   const handleCountryChange = (isoCode: string) => {
     onChange({ country: isoCode, city: '' });
     if (isoCode) {
-      getCities(isoCode)
-        .then(setCities)
-        .catch((e: Error) => setLoadError(e.message));
+      getCities(isoCode).then(setCities).catch((e: Error) => setLoadError(e.message));
     } else {
       setCities([]);
     }
   };
 
   return (
-    <div>
-      {loadError && <p role="alert">{loadError}</p>}
-      <label htmlFor="field-country">País de residencia</label>
-      <select id="field-country" value={value.country} onChange={(e) => handleCountryChange(e.target.value)}>
-        <option value="">Selecciona tu país…</option>
-        <optgroup label="Países frecuentes">
-          {priority.map((c) => (
-            <option key={c.isoCode} value={c.isoCode}>
-              {c.flag} {c.name}
-            </option>
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      {loadError && <p role="alert" className="text-sm text-[var(--danger)] sm:col-span-2">{loadError}</p>}
+
+      <div>
+        <SelectField
+          label="País de residencia"
+          placeholder="Selecciona tu país…"
+          value={value.country}
+          onChange={handleCountryChange}
+          options={[...priority, ...rest].map((c) => ({ value: c.isoCode, label: `${c.flag} ${c.name}` }))}
+        />
+        {invalidFieldIds?.has('country') && (
+          <p role="alert" className="mt-1.5 text-xs text-[var(--danger)]">Este campo es obligatorio.</p>
+        )}
+      </div>
+
+      <div>
+        <FloatingField
+          id="field-city"
+          label="Ciudad"
+          list="field-city-options"
+          disabled={!value.country}
+          placeholder={value.country ? undefined : 'Primero selecciona tu país'}
+          value={value.city}
+          onChange={(v) => onChange({ city: v })}
+        />
+        <datalist id="field-city-options">
+          {cities.map((city) => (
+            <option key={city} value={city} />
           ))}
-        </optgroup>
-        <optgroup label="Todos los países">
-          {rest.map((c) => (
-            <option key={c.isoCode} value={c.isoCode}>
-              {c.flag} {c.name}
-            </option>
-          ))}
-        </optgroup>
-      </select>
+        </datalist>
+        {invalidFieldIds?.has('city') && (
+          <p role="alert" className="mt-1.5 text-xs text-[var(--danger)]">Este campo es obligatorio.</p>
+        )}
+      </div>
 
-      <label htmlFor="field-city">Ciudad</label>
-      <input
-        id="field-city"
-        type="text"
-        list="field-city-options"
-        disabled={!value.country}
-        placeholder={value.country ? 'Busca tu ciudad…' : 'Primero selecciona tu país'}
-        value={value.city}
-        onChange={(e) => onChange({ city: e.target.value })}
-      />
-      <datalist id="field-city-options">
-        {cities.map((city) => (
-          <option key={city} value={city} />
-        ))}
-      </datalist>
-
-      <label htmlFor="field-phone-code">Indicativo</label>
-      <select id="field-phone-code" value={value.phoneCode} onChange={(e) => onChange({ phoneCode: e.target.value })}>
-        {phoneCodes.map((c) => (
-          <option key={c.phonecode} value={`+${c.phonecode}`}>
-            {c.flag} +{c.phonecode}
-          </option>
-        ))}
-      </select>
-
-      <label htmlFor="field-phone-number">Celular (WhatsApp)</label>
-      <input
-        id="field-phone-number"
-        type="tel"
-        placeholder="300 123 4567"
-        value={value.phoneNumber}
-        onChange={(e) => onChange({ phoneNumber: e.target.value })}
-      />
+      <div className="sm:col-span-2">
+        <div className="flex gap-2">
+          <div className="w-[128px] flex-shrink-0">
+            <SelectField
+              label="Indicativo"
+              value={value.phoneCode}
+              onChange={(v) => onChange({ phoneCode: v })}
+              options={phoneCodes.map((c) => ({ value: `+${c.phonecode}`, label: `${c.flag} +${c.phonecode}` }))}
+            />
+          </div>
+          <div className="flex-1">
+            <FloatingField
+              id="field-phone-number"
+              label="Celular (WhatsApp)"
+              type="tel"
+              value={value.phoneNumber}
+              onChange={(v) => onChange({ phoneNumber: v })}
+            />
+          </div>
+        </div>
+        {invalidFieldIds?.has('phone_number') && (
+          <p role="alert" className="mt-1.5 text-xs text-[var(--danger)]">Este campo es obligatorio.</p>
+        )}
+      </div>
     </div>
   );
 }
