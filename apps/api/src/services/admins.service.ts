@@ -19,3 +19,7 @@ export async function updateAdminPassword(id: string, passwordHash: string): Pro
 export async function updateAdminGoogleId(id: string, googleId: string): Promise<void> {
   await db.update(admins).set({ googleId }).where(eq(admins.id, id));
 }
+
+export async function updateAdminAppleId(id: string, appleId: string): Promise<void> {
+  await db.update(admins).set({ appleId }).where(eq(admins.id, id));
+}

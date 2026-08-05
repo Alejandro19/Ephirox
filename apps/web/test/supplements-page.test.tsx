@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import SupplementsPage from '../app/supplements/page';
+import SupplementsPage from '../app/(app)/supplements/page';
 
 vi.mock('../lib/api-client', () => ({
   getSessionToken: () => 'header.eyJpZCI6ImNsaWVudC0xIn0.signature',

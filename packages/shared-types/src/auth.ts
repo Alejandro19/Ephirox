@@ -23,3 +23,12 @@ export const GoogleAuthInputSchema = z.object({
   credential: z.string().min(1),
 });
 export type GoogleAuthInput = z.infer<typeof GoogleAuthInputSchema>;
+
+export const AppleAuthInputSchema = z.object({
+  identityToken: z.string().min(1),
+  // Apple solo manda el nombre la primera vez que el usuario autoriza la
+  // app — en logins posteriores viene undefined y hay que usar el que ya
+  // se guardó en el registro.
+  name: z.string().min(1).optional(),
+});
+export type AppleAuthInput = z.infer<typeof AppleAuthInputSchema>;

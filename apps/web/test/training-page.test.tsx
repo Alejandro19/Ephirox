@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
-import TrainingPage from '../app/training/page';
+import TrainingPage from '../app/(app)/training/page';
 import * as apiClient from '../lib/api-client';
 import * as trainingClient from '../lib/training-client';
 import { confirmSession } from '../lib/training-client';

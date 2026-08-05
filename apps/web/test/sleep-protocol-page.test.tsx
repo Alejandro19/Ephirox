@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import SleepProtocolPage from '../app/sleep-protocol/page';
+import SleepProtocolPage from '../app/(app)/sleep-protocol/page';
 
 vi.mock('../lib/api-client', () => ({
   getSessionToken: () => 'header.eyJpZCI6ImNsaWVudC0xIn0.signature',

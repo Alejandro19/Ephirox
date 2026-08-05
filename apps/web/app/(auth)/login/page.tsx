@@ -1,7 +1,47 @@
 'use client';
 
-import React, { useState, useEffect, type FormEvent } from 'react';
-import { loginRequest, saveSession, type LoginResult } from '@/lib/api-client';
+import React, { useState, useEffect, useRef, type FormEvent } from 'react';
+import {
+  loginRequest, saveSession, type LoginResult,
+  fetchGoogleClientId, googleLoginRequest,
+  fetchAppleClientId, appleLoginRequest,
+} from '@/lib/api-client';
+
+// Tipado mínimo de los namespaces globales que inyectan los scripts de
+// Google Identity Services y Sign in with Apple JS (cargados en layout.tsx)
+// — ninguno de los dos publica un paquete npm oficial con tipos.
+type GoogleCredentialResponse = { credential: string };
+interface GoogleIdentityNamespace {
+  accounts: {
+    id: {
+      initialize: (config: {
+        client_id: string;
+        callback: (response: GoogleCredentialResponse) => void;
+        use_fedcm_for_prompt?: boolean;
+      }) => void;
+      renderButton: (
+        parent: HTMLElement,
+        options: { theme?: string; size?: string; shape?: string; width?: number; text?: string }
+      ) => void;
+    };
+  };
+}
+type AppleAuthorizationResponse = {
+  authorization: { id_token: string; code: string; state?: string };
+  user?: { name?: { firstName?: string; lastName?: string }; email?: string };
+};
+interface AppleIDNamespace {
+  auth: {
+    init: (config: { clientId: string; scope: string; redirectURI: string; usePopup: boolean }) => void;
+    signIn: () => Promise<AppleAuthorizationResponse>;
+  };
+}
+declare global {
+  interface Window {
+    google?: GoogleIdentityNamespace;
+    AppleID?: AppleIDNamespace;
+  }
+}
 
 // ============================================================
 // FASE 0 — PÁGINA DE LOGIN AUTOCONTENIDA (CERO DEPENDENCIAS EXTERNAS)
@@ -51,6 +91,23 @@ export default function LoginPage(): React.ReactElement {
   const [regError, setRegError] = useState<string | null>(null);
   const [regLoading, setRegLoading] = useState(false);
 
+  // --- Pantalla transitoria de entrada (login normal y Google comparten esto) ---
+  const [enteringLabel, setEnteringLabel] = useState<string | null>(null);
+
+  // --- Mensaje de "cuenta pendiente de confirmar" (Google o Apple) ---
+  const [authMessage, setAuthMessage] = useState<string | null>(null);
+
+  // --- Google Sign-In ---
+  const googleButtonRef = useRef<HTMLDivElement>(null);
+  const [googleReady, setGoogleReady] = useState(false);
+
+  // --- Apple Sign-In ---
+  // appleReady solo pasa a true si el backend tiene APPLE_CLIENT_ID
+  // configurado (vía /api/config) — mientras tanto se muestra el botón
+  // deshabilitado de más abajo. El SDK y el flujo ya quedan completos acá,
+  // listos para activarse solos apenas exista la cuenta de desarrollador.
+  const [appleReady, setAppleReady] = useState(false);
+
   useEffect(() => {
     // Cubre navegación interna (SPA) hacia /login, donde el <script>
     // inline no vuelve a ejecutarse. Redundante pero inofensivo en la
@@ -60,10 +117,150 @@ export default function LoginPage(): React.ReactElement {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    let retriesLeft = 60;
+    // Se pide en paralelo con la espera del script, no después — así no se
+    // suman los dos tiempos de espera (script listo + ida y vuelta a /api/config).
+    const clientIdPromise = fetchGoogleClientId();
+
+    async function handleGoogleCredentialResponse(response: GoogleCredentialResponse): Promise<void> {
+      setLoginError(null);
+      setAuthMessage(null);
+      setEnteringLabel('Cargando sesión…');
+      let navigating = false;
+      try {
+        const result = await googleLoginRequest(response.credential);
+        if (result.pending) {
+          setAuthMessage(result.message || 'Tu cuenta fue creada y quedará activa cuando el administrador la confirme.');
+          return;
+        }
+        if (!result.success || !result.token) {
+          setLoginError(result.error || 'No se pudo iniciar sesión con Google.');
+          return;
+        }
+        saveSession(result.token);
+        navigating = true;
+        window.location.href = '/';
+      } finally {
+        // Si hubo éxito, el overlay se deja visible a propósito: cubre hasta
+        // que "/" termine de cargar, en vez de mostrar un instante de login
+        // sin cambios antes de que arranque la navegación completa.
+        if (!navigating) setEnteringLabel(null);
+      }
+    }
+
+    // El script de Google (accounts.google.com/gsi/client, cargado con
+    // strategy="beforeInteractive" en layout.tsx) normalmente ya está listo
+    // para cuando este efecto corre, pero se reintenta con backoff corto en
+    // vez de asumirlo, por si la red va lenta.
+    async function initGoogleSignIn(): Promise<void> {
+      if (cancelled) return;
+      if (typeof window === 'undefined' || !window.google?.accounts) {
+        if (retriesLeft > 0) {
+          retriesLeft -= 1;
+          setTimeout(initGoogleSignIn, 100);
+        }
+        return;
+      }
+      const clientId = await clientIdPromise;
+      if (cancelled || !clientId || !googleButtonRef.current) return;
+      window.google.accounts.id.initialize({
+        client_id: clientId,
+        callback: handleGoogleCredentialResponse,
+        // FedCM: diálogo nativo del navegador en vez del popup con la
+        // pantalla completa de accounts.google.com — bastante más rápido y
+        // es el flujo que Google recomienda de aquí en adelante.
+        use_fedcm_for_prompt: true,
+      });
+      window.google.accounts.id.renderButton(googleButtonRef.current, {
+        theme: 'filled_black',
+        size: 'large',
+        shape: 'pill',
+        width: 280,
+        text: 'continue_with',
+      });
+      setGoogleReady(true);
+    }
+
+    initGoogleSignIn();
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    let retriesLeft = 60;
+    const clientIdPromise = fetchAppleClientId();
+
+    // Mismo patrón: reintenta con backoff corto hasta que el SDK de Apple
+    // (cargado con strategy="beforeInteractive" en layout.tsx) esté listo.
+    async function initAppleSignIn(): Promise<void> {
+      if (cancelled) return;
+      if (typeof window === 'undefined' || !window.AppleID?.auth) {
+        if (retriesLeft > 0) {
+          retriesLeft -= 1;
+          setTimeout(initAppleSignIn, 100);
+        }
+        return;
+      }
+      const clientId = await clientIdPromise;
+      // Sin APPLE_CLIENT_ID en el backend, el botón se queda en su versión
+      // deshabilitada (ver JSX) — el resto de la lógica ya queda lista para
+      // cuando exista la cuenta de desarrollador de Apple.
+      if (cancelled || !clientId) return;
+      window.AppleID.auth.init({
+        clientId,
+        scope: 'name email',
+        redirectURI: `${window.location.origin}/login`,
+        usePopup: true,
+      });
+      setAppleReady(true);
+    }
+
+    initAppleSignIn();
+    return () => { cancelled = true; };
+  }, []);
+
+  async function handleAppleClick(): Promise<void> {
+    if (!window.AppleID?.auth) return;
+    setLoginError(null);
+    setAuthMessage(null);
+    try {
+      const response = await window.AppleID.auth.signIn();
+      // Apple solo manda el nombre la primera vez que el usuario autoriza
+      // la app — en logins posteriores response.user viene undefined.
+      const fullName = response.user?.name
+        ? [response.user.name.firstName, response.user.name.lastName].filter(Boolean).join(' ')
+        : undefined;
+      setEnteringLabel('Cargando sesión…');
+      let navigating = false;
+      try {
+        const result = await appleLoginRequest(response.authorization.id_token, fullName);
+        if (result.pending) {
+          setAuthMessage(result.message || 'Tu cuenta fue creada y quedará activa cuando el administrador la confirme.');
+          return;
+        }
+        if (!result.success || !result.token) {
+          setLoginError(result.error || 'No se pudo iniciar sesión con Apple.');
+          return;
+        }
+        saveSession(result.token);
+        navigating = true;
+        window.location.href = '/';
+      } finally {
+        if (!navigating) setEnteringLabel(null);
+      }
+    } catch {
+      // Cerrar el popup de Apple sin completar el login también cae acá —
+      // no es un error real del usuario, así que no se muestra nada.
+    }
+  }
+
   async function handleLogin(e: FormEvent): Promise<void> {
     e.preventDefault();
     setLoginError(null);
     setLoginLoading(true);
+    let navigating = false;
     try {
       const result: LoginResult = await loginRequest(loginEmail, loginPassword);
       if (!result.success || !result.token) {
@@ -72,12 +269,16 @@ export default function LoginPage(): React.ReactElement {
       }
       if (typeof window !== 'undefined') {
         saveSession(result.token);
+        // Igual que el login con Google: el anillo cubre el tramo hasta que
+        // "/" termine de cargar, en vez de un instante de login sin cambios.
+        setEnteringLabel('Cargando sesión…');
+        navigating = true;
         window.location.href = '/';
       }
     } catch {
       setLoginError('Error de conexión. Intenta de nuevo.');
     } finally {
-      setLoginLoading(false);
+      if (!navigating) setLoginLoading(false);
     }
   }
 
@@ -122,6 +323,25 @@ export default function LoginPage(): React.ReactElement {
     <>
       {/* eslint-disable-next-line @next/next/no-sync-scripts */}
       <script dangerouslySetInnerHTML={{ __html: LOGIN_THEME_SCRIPT }} />
+
+      {/* Pantalla transitoria mientras se procesa el login (con Google o con
+          email/contraseña) y se entra a la plataforma — cubre el tramo hasta
+          la navegación a "/", que si no se cubre se ve como si "regresara"
+          al login sin cambios por un instante. */}
+      {enteringLabel && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-5 bg-[var(--cream)]">
+          <svg className="animate-spin" viewBox="0 0 100 100" width="64" height="64" aria-hidden="true" style={{ animationDuration: '1.4s' }}>
+            <circle cx="50" cy="50" r="40" fill="none" strokeWidth="8" strokeLinecap="round" strokeDasharray="76 176" strokeDashoffset="0" opacity=".7" stroke="var(--ring-morning)" />
+            <circle cx="50" cy="50" r="40" fill="none" strokeWidth="8" strokeLinecap="round" strokeDasharray="76 176" strokeDashoffset="-83.8" opacity=".7" stroke="var(--ring-afternoon)" />
+            <circle cx="50" cy="50" r="40" fill="none" strokeWidth="8" strokeLinecap="round" strokeDasharray="76 176" strokeDashoffset="-167.6" opacity=".7" stroke="var(--ring-evening)" />
+          </svg>
+          <div className="flex flex-col items-center gap-1">
+            <p className="font-serif text-xl font-bold text-[var(--ink)]">La Tribu</p>
+            <p className="text-sm text-[var(--ink-soft)]">{enteringLabel}</p>
+          </div>
+        </div>
+      )}
+
       <div className="min-h-screen w-full bg-[var(--cream)] flex items-center justify-center p-4">
         <div className="max-w-4xl w-full grid grid-cols-1 md:grid-cols-2 rounded-3xl overflow-hidden shadow-[0_30px_80px_-15px_rgba(43,36,32,0.18)]">
 
@@ -153,6 +373,11 @@ export default function LoginPage(): React.ReactElement {
                     {loginError}
                   </div>
                 )}
+                {authMessage && (
+                  <div role="status" className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-400">
+                    {authMessage}
+                  </div>
+                )}
                 <div className="space-y-1.5">
                   <label htmlFor="login-email" className={labelClasses}>Email</label>
                   <input id="login-email" type="email" autoComplete="email" required value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} placeholder="tucorreo@ejemplo.com" className={inputClasses} />
@@ -165,26 +390,41 @@ export default function LoginPage(): React.ReactElement {
                   {loginLoading ? (<span className="flex items-center gap-2"><svg className="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>Ingresando…</span>) : 'Entrar'}
                 </button>
 
-                <div className="flex items-center gap-2.5 my-4">
-                  <span className="flex-1 h-px bg-[var(--lf-input-border)] transition-colors duration-[600ms]" />
-                  <span className="text-[11px] uppercase tracking-wide text-[var(--lf-foot)] transition-colors duration-[600ms]">o</span>
-                  <span className="flex-1 h-px bg-[var(--lf-input-border)] transition-colors duration-[600ms]" />
-                </div>
-                <button
-                  type="button"
-                  disabled
-                  title="Próximamente"
-                  aria-disabled="true"
-                  className="w-full h-11 rounded-xl border border-[var(--lf-input-border)] bg-[var(--lf-input-bg)] text-[var(--lf-input-text)] text-sm font-medium flex items-center justify-center gap-2 opacity-60 cursor-not-allowed transition-colors duration-[600ms]"
-                >
-                  <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
-                    <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84c-.21 1.13-.85 2.09-1.8 2.73v2.27h2.92c1.71-1.57 2.68-3.88 2.68-6.64z" />
-                    <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.17l-2.92-2.27c-.8.54-1.83.86-3.04.86-2.34 0-4.32-1.58-5.03-3.71H.96v2.34C2.44 15.98 5.48 18 9 18z" />
-                    <path fill="#FBBC05" d="M3.97 10.71A5.4 5.4 0 013.68 9c0-.59.1-1.17.29-1.71V4.96H.96A9 9 0 000 9c0 1.45.35 2.83.96 4.04l3.01-2.33z" />
-                    <path fill="#EA4335" d="M9 3.58c1.32 0 2.51.45 3.44 1.35l2.59-2.59C13.47.89 11.43 0 9 0 5.48 0 2.44 2.02.96 4.96l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58z" />
-                  </svg>
-                  Continuar con Google
-                </button>
+                {(googleReady || appleReady) && (
+                  <div className="flex items-center gap-2.5 my-4">
+                    <span className="flex-1 h-px bg-[var(--lf-input-border)] transition-colors duration-[600ms]" />
+                    <span className="text-[11px] uppercase tracking-wide text-[var(--lf-foot)] transition-colors duration-[600ms]">o</span>
+                    <span className="flex-1 h-px bg-[var(--lf-input-border)] transition-colors duration-[600ms]" />
+                  </div>
+                )}
+                {/* Google Identity Services renderiza su propio botón (iframe) acá dentro */}
+                <div ref={googleButtonRef} className="flex justify-center" />
+
+                {appleReady ? (
+                  <button
+                    type="button"
+                    onClick={handleAppleClick}
+                    className="w-full h-11 mt-2.5 rounded-xl bg-black text-white text-sm font-medium flex items-center justify-center gap-2 transition-opacity hover:opacity-90"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff" aria-hidden="true">
+                      <path d="M16.365 1.43c0 1.14-.493 2.27-1.177 3.08-.744.9-1.99 1.57-2.987 1.57-.12 0-.23-.02-.3-.03-.01-.06-.04-.22-.04-.39 0-1.15.572-2.27 1.206-2.98.804-.94 2.142-1.64 3.248-1.68.03.13.05.28.05.43zm4.565 15.71c-.03.07-.463 1.58-1.518 3.12-.945 1.34-1.94 2.71-3.43 2.71-1.517 0-1.9-.88-3.63-.88-1.698 0-2.302.91-3.67.91-1.377 0-2.332-1.26-3.428-2.8-1.287-1.82-2.323-4.63-2.323-7.28 0-4.28 2.797-6.55 5.552-6.55 1.448 0 2.675.95 3.6.95.865 0 2.222-1.01 3.902-1.01.613 0 2.886.06 4.374 2.19-.13.08-2.383 1.39-2.383 4.26 0 3.4 2.982 4.55 3.043 4.57z" />
+                    </svg>
+                    Continuar con Apple
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    disabled
+                    title="Próximamente"
+                    aria-disabled="true"
+                    className="w-full h-11 mt-2.5 rounded-xl border border-[var(--lf-input-border)] bg-[var(--lf-input-bg)] text-[var(--lf-input-text)] text-sm font-medium flex items-center justify-center gap-2 opacity-60 cursor-not-allowed transition-colors duration-[600ms]"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                      <path d="M16.365 1.43c0 1.14-.493 2.27-1.177 3.08-.744.9-1.99 1.57-2.987 1.57-.12 0-.23-.02-.3-.03-.01-.06-.04-.22-.04-.39 0-1.15.572-2.27 1.206-2.98.804-.94 2.142-1.64 3.248-1.68.03.13.05.28.05.43zm4.565 15.71c-.03.07-.463 1.58-1.518 3.12-.945 1.34-1.94 2.71-3.43 2.71-1.517 0-1.9-.88-3.63-.88-1.698 0-2.302.91-3.67.91-1.377 0-2.332-1.26-3.428-2.8-1.287-1.82-2.323-4.63-2.323-7.28 0-4.28 2.797-6.55 5.552-6.55 1.448 0 2.675.95 3.6.95.865 0 2.222-1.01 3.902-1.01.613 0 2.886.06 4.374 2.19-.13.08-2.383 1.39-2.383 4.26 0 3.4 2.982 4.55 3.043 4.57z" />
+                    </svg>
+                    Continuar con Apple
+                  </button>
+                )}
               </form>
             ) : (
               <form onSubmit={handleRegister} className="w-full space-y-4" noValidate>

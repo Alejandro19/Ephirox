@@ -6,6 +6,7 @@ export const admins = pgTable('admins', {
   email: text('email').notNull().unique(),
   passwordHash: text('password_hash').notNull(),
   googleId: text('google_id'),
+  appleId: text('apple_id'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 });
 
@@ -15,6 +16,7 @@ export const clients = pgTable('clients', {
   email: text('email').notNull().unique(),
   passwordHash: text('password_hash'),
   googleId: text('google_id'),
+  appleId: text('apple_id'),
   status: text('status').notNull().default('active'),
   plan: text('plan').notNull().default('Miembro'),
   clientType: text('client_type').notNull().default('lead_wellness'),

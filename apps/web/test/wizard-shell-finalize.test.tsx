@@ -12,7 +12,7 @@
 // migration (hidden module-1 fields, incomplete country-branch validation).
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
-import OnboardingPage from '../app/onboarding/page';
+import OnboardingPage from '../app/(app)/onboarding/page';
 import * as apiClient from '../lib/api-client';
 import * as onboardingClient from '../lib/onboarding-client';
 import * as geoClient from '../lib/geo-client';

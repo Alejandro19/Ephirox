@@ -1,9 +1,10 @@
 import type { Request, Response } from 'express';
-import type { LoginInput, RegisterInput, ChangePasswordInput, GoogleAuthInput } from '@latribu/shared-types';
+import type { LoginInput, RegisterInput, ChangePasswordInput, GoogleAuthInput, AppleAuthInput } from '@latribu/shared-types';
 import * as authService from '../services/auth.service.js';
 import * as clientsService from '../services/clients.service.js';
 import * as adminsService from '../services/admins.service.js';
 import * as googleAuthService from '../services/google-auth.service.js';
+import * as appleAuthService from '../services/apple-auth.service.js';
 import { getPersonalInfoByClientId } from '../services/personal-info.service.js';
 
 function ok(res: Response, data: Record<string, unknown>, status = 200) {
@@ -134,5 +135,46 @@ export async function googleLogin(req: Request, res: Response) {
   }
 
   await clientsService.createInactiveClient({ name: displayName, email: emailLower, googleId });
+  return ok(res, { pending: true, message: 'Tu cuenta fue creada y quedará activa cuando el administrador la confirme.' }, 201);
+}
+
+export async function appleLogin(req: Request, res: Response) {
+  if (!process.env.APPLE_CLIENT_ID) return err(res, 'Login con Apple no está configurado en el servidor.', 503);
+  const { identityToken, name } = req.body as AppleAuthInput;
+
+  const payload = await appleAuthService.verifyAppleCredential(identityToken);
+  const emailVerified = payload?.email_verified === true || payload?.email_verified === 'true';
+  if (!payload || !emailVerified || !payload.email) {
+    return err(res, 'Token de Apple inválido.', 401);
+  }
+
+  const emailLower = payload.email.toLowerCase().trim();
+  const appleId = payload.sub;
+  const displayName = name || emailLower;
+
+  const admin = await adminsService.findAdminByEmail(emailLower);
+  if (admin) {
+    if (!admin.appleId) await adminsService.updateAdminAppleId(admin.id, appleId);
+    const token = authService.signToken({ id: admin.id, role: 'admin', name: admin.name, email: admin.email });
+    return ok(res, { token, role: 'admin', user: { id: admin.id, name: admin.name, email: admin.email } });
+  }
+
+  const client = await clientsService.findClientByEmail(emailLower);
+  if (client) {
+    if (client.status === 'inactive') return err(res, 'Tu cuenta está inactiva. Contacta al administrador.', 403);
+    if (!client.appleId) await clientsService.updateClientAppleId(client.id, appleId);
+    const token = authService.signToken({ id: client.id, role: 'cliente', name: client.name, email: client.email, plan: client.plan });
+    return ok(res, {
+      token,
+      role: 'cliente',
+      user: { id: client.id, name: client.name, email: client.email, plan: client.plan },
+      permissions: client.permissions,
+      clientType: client.clientType,
+      planExpired: authService.isPlanExpired(client),
+      planEndDate: client.planEndDate,
+    });
+  }
+
+  await clientsService.createInactiveClient({ name: displayName, email: emailLower, appleId });
   return ok(res, { pending: true, message: 'Tu cuenta fue creada y quedará activa cuando el administrador la confirme.' }, 201);
 }

@@ -37,17 +37,17 @@ export async function findClientAuthRowById(id: string): Promise<ClientAuthRow |
   return (rows[0] as ClientAuthRow | undefined) ?? null;
 }
 
-export async function createInactiveClient(input: { name: string; email: string; password?: string; googleId?: string }): Promise<Client> {
+export async function createInactiveClient(input: { name: string; email: string; password?: string; googleId?: string; appleId?: string }): Promise<Client> {
   const passwordHash = input.password ? await hashPassword(input.password) : null;
   const [client] = await db
     .insert(clients)
-    .values({ name: input.name, email: input.email, passwordHash, googleId: input.googleId, status: 'inactive' })
+    .values({ name: input.name, email: input.email, passwordHash, googleId: input.googleId, appleId: input.appleId, status: 'inactive' })
     .returning();
-  const viaGoogle = Boolean(input.googleId);
+  const via = input.googleId ? 'con Google ' : input.appleId ? 'con Apple ' : '';
   await db.insert(adminNotifications).values({
     clientId: client.id,
     type: 'new_registration',
-    message: `${input.name} se registró ${viaGoogle ? 'con Google ' : ''}en la plataforma.`,
+    message: `${input.name} se registró ${via}en la plataforma.`,
   });
   return client;
 }
@@ -58,6 +58,10 @@ export async function updateClientPassword(id: string, passwordHash: string): Pr
 
 export async function updateClientGoogleId(id: string, googleId: string): Promise<void> {
   await db.update(clients).set({ googleId }).where(eq(clients.id, id));
+}
+
+export async function updateClientAppleId(id: string, appleId: string): Promise<void> {
+  await db.update(clients).set({ appleId }).where(eq(clients.id, id));
 }
 
 export class ClientEmailTakenError extends Error {

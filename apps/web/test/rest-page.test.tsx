@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import RestPage from '../app/rest/page';
+import RestPage from '../app/(app)/rest/page';
 import * as restToolsClient from '../lib/rest-tools-client';
 
 describe('RestPage', () => {

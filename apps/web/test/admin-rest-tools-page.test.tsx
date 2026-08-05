@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import AdminRestToolsPage from '../app/admin/rest-tools/page';
+import AdminRestToolsPage from '../app/(app)/admin/rest-tools/page';
 import * as restToolsClient from '../lib/rest-tools-client';
 
 describe('AdminRestToolsPage', () => {

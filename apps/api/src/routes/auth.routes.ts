@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
-import { LoginInputSchema, RegisterInputSchema, ChangePasswordInputSchema, GoogleAuthInputSchema } from '@latribu/shared-types';
+import { LoginInputSchema, RegisterInputSchema, ChangePasswordInputSchema, GoogleAuthInputSchema, AppleAuthInputSchema } from '@latribu/shared-types';
 import { validateBody } from '../middleware/validate.js';
 import { asyncHandler } from '../middleware/async-handler.js';
 import { authMiddleware } from '../middleware/auth.middleware.js';
@@ -22,3 +22,4 @@ authRouter.get('/me', authMiddleware, asyncHandler(authController.me));
 authRouter.post('/register', validateBody(RegisterInputSchema), asyncHandler(authController.register));
 authRouter.post('/change-password', authMiddleware, validateBody(ChangePasswordInputSchema), asyncHandler(authController.changePassword));
 authRouter.post('/google', validateBody(GoogleAuthInputSchema), asyncHandler(authController.googleLogin));
+authRouter.post('/apple', validateBody(AppleAuthInputSchema), asyncHandler(authController.appleLogin));

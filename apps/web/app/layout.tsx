@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Fraunces, Inter } from "next/font/google";
+import Script from "next/script";
 import Providers from "./providers";
 import "./globals.css";
 
@@ -31,9 +32,18 @@ export default function RootLayout({
   return (
     <html lang="es" className={`${fraunces.variable} ${inter.variable}`} suppressHydrationWarning>
       <head>
-        <script src="https://accounts.google.com/gsi/client" async defer />
+        {/* Acelera la conexión TLS antes de que los scripts la necesiten */}
+        <link rel="preconnect" href="https://accounts.google.com" />
+        <link rel="preconnect" href="https://appleid.cdn-apple.com" />
       </head>
       <body className={inter.className}>
+        {/* beforeInteractive: Next.js inyecta y ejecuta estos scripts antes de
+            que la página se vuelva interactiva, en vez de esperar a que un
+            <script async defer> del <head> cargue por su cuenta — así los
+            botones de Google/Apple están listos casi de inmediato en
+            /login, sin el delay de varios segundos que había antes. */}
+        <Script src="https://accounts.google.com/gsi/client" strategy="beforeInteractive" />
+        <Script src="https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js" strategy="beforeInteractive" />
         <Providers>{children}</Providers>
       </body>
     </html>

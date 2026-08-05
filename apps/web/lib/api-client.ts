@@ -16,6 +16,9 @@ export type LoginResult = {
   planExpired?: boolean;
   planEndDate?: string;
   error?: string;
+  // Cuenta nueva creada por Google, queda inactiva hasta que un admin la confirme.
+  pending?: boolean;
+  message?: string;
 };
 
 export type RegisterResult = {
@@ -56,6 +59,52 @@ export async function registerRequest(name: string, email: string, password: str
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, email, password }),
+    });
+    return res.json();
+  } catch {
+    return { success: false, error: 'Error de conexión. Intenta de nuevo.' };
+  }
+}
+
+export async function fetchGoogleClientId(): Promise<string | null> {
+  try {
+    const res = await fetch(`${API_BASE}/config`);
+    const data: { success: boolean; googleClientId: string | null } = await res.json();
+    return data.googleClientId ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export async function fetchAppleClientId(): Promise<string | null> {
+  try {
+    const res = await fetch(`${API_BASE}/config`);
+    const data: { success: boolean; appleClientId: string | null } = await res.json();
+    return data.appleClientId ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export async function appleLoginRequest(identityToken: string, name?: string): Promise<LoginResult> {
+  try {
+    const res = await fetch(`${API_BASE}/auth/apple`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ identityToken, name }),
+    });
+    return res.json();
+  } catch {
+    return { success: false, error: 'Error de conexión. Intenta de nuevo.' };
+  }
+}
+
+export async function googleLoginRequest(credential: string): Promise<LoginResult> {
+  try {
+    const res = await fetch(`${API_BASE}/auth/google`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ credential }),
     });
     return res.json();
   } catch {

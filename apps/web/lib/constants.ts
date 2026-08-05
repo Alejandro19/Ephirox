@@ -128,7 +128,7 @@ export const VIEW_TO_PATH: Record<string, string> = {
   "admin-clients": "/admin/clients",
   "admin-quotes": "/admin/phrases",
   "admin-community": "/admin/community-events",
-  "admin-notifications": "/admin/clients",
+  "admin-notifications": "/admin/notifications",
 };
 
 export const PATH_TO_VIEW: Record<string, string> = {
@@ -141,9 +141,11 @@ export const PATH_TO_VIEW: Record<string, string> = {
   "/community/therapies": "community",
   "/evolution": "evolution",
   "/onboarding": "personal-info",
+  "/admin": "admin-hub",
   "/admin/clients": "admin-clients",
   "/admin/phrases": "admin-quotes",
   "/admin/community-events": "admin-community",
   "/admin/community-therapies": "admin-community",
   "/admin/community-reservations": "admin-community",
+  "/admin/notifications": "admin-notifications",
 };
