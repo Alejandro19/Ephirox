@@ -1,96 +1,81 @@
 # session-memory.md
 
-> **Fecha:** 2026-03-08
+> **Fecha:** 2026-08-05
 > **Propósito:** Resumen ejecutivo de la sesión de hoy y plan de continuidad inmediato para la siguiente sesión.
 
 ---
 
-## Resumen Ejecutivo — Sesión 2026-03-08
+## Resumen Ejecutivo — Sesión 2026-08-05
 
-### 1. Backend Express operativo (puerto 3003)
+### 1. Cadena de bugs de login resuelta (front nuevo ↔ back nuevo)
 
-El archivo `apps/api/src/app.ts` quedó completo y compilando sin errores. Se montaron todos los routers existentes en el orden correcto:
+El login de `apps/web` no conectaba con el backend real. Se diagnosticaron y corrigieron 6 problemas encadenados:
+- Ruta mock en `apps/api/src/app.ts` que bypaseaba la autenticación real — eliminada.
+- `credentials: 'include'` + CORS `origin: '*'` es una combinación inválida en el navegador (curl no lo detecta porque ignora CORS) — se quitó `credentials: 'include'` de todos los fetch de login/registro (la app usa Bearer tokens, no cookies, para la API).
+- Faltaban exports (`decodeTokenPayload`, `fetchAuthMe`) en `apps/web/lib/api-client.ts` que rompían el bundle entero de JS.
+- `middleware.ts` de Next.js lee la sesión desde una cookie (`latribu_token`), pero `saveSession()` solo escribía en `sessionStorage` — se corrigió para que también setee/borre la cookie.
+- `apps/web/app/page.tsx` era un stub que redirigía siempre a `/login` — reemplazado (luego superado por el App Shell real de la otra IA en `app/(app)/`).
 
-- **Routers públicos** montados en `/api`: `geoRouter`, `adminPhrasesRouter`, `adminQuotesRouter`, `restToolsRouter`, `adminCortisolTipsRouter`.
-- **Comunidad**: `eventsRouter` y `therapiesRouter` montados en `/api` (líneas 46-47). Estos routers ya existían (~95% del código estaba implementado — controladores, servicios, middlewares, tipos Zod, tests) pero **no estaban importados ni montados en `app.ts`**, por lo que todas las rutas de comunidad devolvían 404. Corregido.
-- **Mi Evolución**: `evolutionRouter` montado en `/api` (línea 22, 48). Migración completa desde cero: types Zod compartidos, tablas Drizzle (`evolution_checkins` + `personal_records`), servicio, controlador, rutas REST, y montaje en `app.ts`.
-- **Routers con alcance `/api/clients`**: `authRouter`, `clientsRouter`, `personalInfoRouter`, `exercisesRouter`, `trainingRouter`, `nutritionRouter`, `supplementsRouter`, `cortisolTechniquesRouter`, `cortisolLogsRouter`, `sleepRouter`.
-- **Health check**: `GET /api/health` → `{ success: true, status: "ok" }`.
+### 2. Theming día/noche del login portado del front viejo
 
-### 2. Solución al error ENOENT en Next.js (Webpack plugin)
+Se portó el mecanismo exacto de cambio de color día/noche desde `old_index.html` (solo la sección de login, sin leer el archivo completo) a `apps/web/app/(auth)/login/page.tsx`, vía variables CSS en `globals.css` (`theme-login-light` / `theme-login-dark`) y un script inline bloqueante para evitar flash de tema incorrecto al refrescar. Se corrigió también un warning de hidratación de React agregando `suppressHydrationWarning` al `<html>`.
 
-**Problema:** Next.js 15 genera archivos del Pages Router (`_document.js`, `_app.js`, `_error.js`) incluso en proyectos App Router puros. Durante `next dev`, la limpieza de caché podía borrar `.next/server/pages/_document.js` antes de que el compilador del Pages Router lo regenerara, provocando un `ENOENT` fatal en el compilador del App Router.
+### 3. Verificación del backend nuevo para operaciones de admin
 
-**Solución aplicada en `apps/web/next.config.ts`:** Plugin de Webpack personalizado (`EnsurePagesDocument`) que se ejecuta en el hook `beforeCompile` del lado servidor (`isServer`). Garantiza que:
-1. El directorio `.next/server/pages/` exista.
-2. Un fallback mínimo de `_document.js` (`module.exports = require("next/document").default;`) esté presente antes de cada compilación.
+Se confirmó por curl (login + `/me` + creación/listado de clientes) que el backend nuevo funciona end-to-end para el flujo de admin, aunque el front nuevo todavía no tiene UI de admin propia en ese momento.
 
-Esto elimina la condición de carrera sin modificar la arquitectura del Pages Router ni requerir un directorio `pages/` físico en el proyecto.
+### 4. Respaldo en GitHub sin tocar producción
 
-### 3. Migraciones SQL exitosas
+Se creó la rama `backup-migracion-2026-08-05` desde `main` (que estaba 148 commits adelante de `origin/main`, nunca pusheada) y se pusheó a `origin/backup-migracion-2026-08-05`. **Se dejó `origin/main` intacto a propósito**: Vercel deploya producción desde ahí y su `vercel.json` todavía apunta al monolito legacy (`index.html` / `server.js`), así que mezclar ramas ahí rompería el deploy en vivo. Todo el trabajo de la migración (mío + el de la otra IA) se sigue commiteando solo en esa rama de respaldo.
 
-#### Comunidad (`tasks/migration-2026-08-02-comunidad.sql`)
-4 tablas creadas (idempotentes):
-- `community_events` — eventos comunitarios.
-- `event_reservations` — reservas de eventos (event_id + client_id, único por par).
-- `community_therapies` — terapias/aliados.
-- `therapy_reservations` — reservas de terapias (therapy_id + client_id, único por par).
+Se aprovechó para corregir gaps del `.gitignore` (`.env.local`, `.env.dev-local`, `.env.*.local`, `vendor/`, `.claude/worktrees/`) — se verificó con `git log --all` / `git log origin/main` que ningún secreto llegó nunca a `origin/main` ni a GitHub en general (solo existía en una rama local nunca pusheada).
 
-#### Mi Evolución (`tasks/migration-2026-03-08-evolucion.sql`)
-2 tablas + 1 columna nueva (idempotentes):
-- `evolution_checkins` — 14 columnas: scores de fuerza/ánimo/confianza/seguridad/energía, notas, horas de sueño, adherencia, dolor, estrés.
-- `personal_records` — récords personales por ejercicio (nombre, valor inicial, valor actual, orden).
-- Columna `next_checkin_date DATE` agregada a `clients`.
-- RLS con política `deny_all` en ambas tablas (todo el acceso ocurre vía backend con service role).
+### 5. Brief de diseño para la otra IA (`docs/design-system-oura-brief.md`)
+
+Documento 100% textual (la otra IA no recibe imágenes) describiendo el patrón de floating-label inputs, botones pill, layout de checkout y mega-menú de referencia (Oura.com), pero manteniendo el acento dorado/terracota propio de La Tribu en vez del azul de Oura. Se marcó como convención **permanente de todo el proyecto**, no solo de una fase, e incluye una sección de disciplina de alcance (tocar solo lo pedido, no dejar mocks, listar archivos tocados al final).
+
+### 6. Google OAuth funcional + pantalla de transición
+
+El backend ya tenía Google OAuth completo; solo faltaba conectar el front. Se agregó:
+- Botón de Google real en `/login`, con pantalla de transición ("anillo" giratorio de 3 colores + "La Tribu" + "Cargando sesión…") que se muestra durante el login por Google, por email/password, y se unificó visualmente con el loading state del AppShell (mismo anillo, mismo texto) — cero discontinuidad visual entre login y entrada a la app.
+- Optimización de velocidad: el script de Google pasó a `next/script strategy="beforeInteractive"`, se agregó `<link rel="preconnect">`, y se paralelizó el fetch de `/api/config` con el polling del SDK (antes eran secuenciales y además se pedía la config dos veces por un bug propio, ya corregido).
+
+### 7. Sign in with Apple — implementación completa pero inactiva
+
+A petición explícita del usuario ("front + backend completos"), se implementó el flujo real de Apple completo, dejado **intencionalmente inactivo** hasta que el usuario consiga cuenta de Apple Developer:
+- Backend: columna `apple_id` en `admins`/`clients` (migración `tasks/migration-2026-08-05-apple-auth.sql`), `apps/api/src/services/apple-auth.service.ts` (verificación JWKS con `jose`), endpoint `POST /api/auth/apple` (espeja exactamente el patrón de Google, responde 503 si `APPLE_CLIENT_ID` no está seteado), `/api/config` ahora expone también `appleClientId`.
+- Frontend: SDK de Apple cargado igual que el de Google, botón "Continuar con Apple" que se renderiza deshabilitado mientras `appleClientId` sea `null` y se activa solo (sin más cambios de código) en cuanto se setee `APPLE_CLIENT_ID` en `apps/api/.env`.
+- `packages/shared-types` requirió rebuild (`npm run build`) porque `apps/api` importa el `dist/` compilado, no `src/` directamente.
+
+### 8. Confusión de puertos (front vs. legacy) — resuelta
+
+`npm run dev` en la raíz del repo levanta el **backend legacy** (`nodemon server.js`, puerto 3001 por `PORT` en el `.env` raíz), no el front nuevo. Se agregaron scripts explícitos al `package.json` raíz: `dev:web` (`apps/web`, siempre puerto 3000 — ya estaba hardcodeado) y `dev:api` (`apps/api`, puerto 3003). El script `dev` original se dejó intacto por compatibilidad, con alias `dev:legacy`.
+
+### 9. Commit y push
+
+Todo lo anterior (excepto lo ya commiteado previamente) se commiteó en un solo commit sobre `backup-migracion-2026-08-05` (90 archivos) y se pusheó a `origin/backup-migracion-2026-08-05`.
 
 ---
 
-## Próximas 3 actividades exactas — Siguiente sesión
+## Próximas actividades — Siguiente sesión
 
-> **Contexto:** El backend Express está completo y compilando. Todos los endpoints REST están montados. La página de login del frontend (Next.js App Router en `apps/web`) responde correctamente en el navegador. El siguiente paso es **conectar el frontend con el backend real** y comenzar a migrar los módulos de cliente desde el monolito legacy (`index.html` + `server.js`) hacia la nueva arquitectura.
+### Actividad 1 — Probar en navegador lo construido hoy
 
-### Actividad 1 — Conectar el login del frontend con el backend real
+- Verificar visualmente: botón de Google aparece sin delay perceptible, botón de Apple se ve deshabilitado ("Próximamente") debajo del divisor, pantalla de anillo se ve idéntica en login (Google/email) y en el AppShell al entrar.
 
-- **Archivos a tocar:** `apps/web/app/login/page.tsx`, nuevo archivo de cliente HTTP (`apps/web/lib/api.ts`), contexto de autenticación.
-- **Qué hacer:**
-  1. Crear un cliente HTTP base (`fetch` o wrapper ligero) que apunte a `http://localhost:3003/api` en desarrollo y a la URL de producción en deploy.
-  2. Implementar el flujo de login: `POST /api/auth/login` con email + password → recibir token JWT → almacenarlo.
-  3. Implementar el flujo de registro: `POST /api/auth/register` con los campos requeridos.
-  4. Crear un contexto de autenticación (`AuthContext`) que provea `user`, `client`, `token`, `login()`, `logout()`, `isAuthenticated` al resto de la app.
-  5. Proteger rutas: redirigir a `/login` si no hay sesión activa.
-- **Verificación:** Iniciar sesión con credenciales reales de un cliente → recibir token → verificar rutas protegidas accesibles. Cerrar sesión → verificar redirección a `/login`.
+### Actividad 2 — Activar Apple Sign-In cuando haya cuenta de desarrollador
 
-### Actividad 2 — Pantalla de Comunidad (eventos y terapias)
+- Crear Services ID en Apple Developer, configurar dominio/redirect URI (`{origin}/login`), setear `APPLE_CLIENT_ID` en `apps/api/.env`. No requiere más cambios de código — el botón se activa solo.
 
-- **Archivos a tocar:**
-  - `apps/web/app/community/page.tsx` (página principal)
-  - `apps/web/app/community/events/page.tsx` (listado de eventos)
-  - `apps/web/app/community/therapies/page.tsx` (listado de terapias)
-- **Qué hacer:**
-  1. Conectar `GET /api/community/events` → renderizar lista de eventos activos (título, fecha, ubicación, capacidad, botón "Reservar").
-  2. Conectar `POST /api/community/events/:id/reserve` y `DELETE /api/community/events/:id/reserve` para reservar/cancelar.
-  3. Conectar `GET /api/community/therapies` → renderizar lista de terapias activas (título, descripción, descuento, proveedor).
-  4. Conectar `POST /api/community/therapies/:id/reserve` y `DELETE /api/community/therapies/:id/reserve`.
-  5. Mostrar estado visual de reserva (botón "Reservado" deshabilitado, badge).
-- **Verificación:** Navegar a `/community/events` → ver eventos → reservar → ver botón cambiar → cancelar. Repetir con terapias.
+### Actividad 3 — Seguir coordinando con la otra IA
 
-### Actividad 3 — Pantalla de Mi Evolución (check-ins y récords personales)
-
-- **Archivos a tocar:**
-  - `apps/web/app/evolution/page.tsx`
-- **Qué hacer:**
-  1. Conectar `GET /api/clients/:id/evolution` → renderizar historial de check-ins (fecha, scores 1-10, sueño, adherencia, dolor, estrés).
-  2. Formulario de nuevo check-in: `POST /api/clients/:id/evolution` con todos los campos del schema.
-  3. Conectar `GET /api/clients/:id/personal-records` → renderizar tabla de récords (ejercicio, valor inicial, valor actual).
-  4. Formulario crear/editar récords: `POST /api/clients/:id/personal-records` y `PUT /api/clients/:id/personal-records/:recordId`.
-  5. Mostrar gráfica simple (línea o barras) de evolución de scores en el tiempo.
-- **Verificación:** Crear check-in → ver en tabla → crear récord → ver → confirmar persistencia al recargar.
+- La otra IA sigue construyendo el App Shell y páginas de admin/cliente bajo `apps/web/app/(app)/`. Antes de tocar esos archivos, confirmar que no estén en curso de edición activa (para evitar conflictos como el ya visto con `AdminClientDetail.tsx`/`AdminClientList.tsx`, que tuvieron errores de sintaxis que rompían el dev server entero).
 
 ---
 
 ## Notas adicionales
 
-- **No modificar `server.js` ni `index.html`:** Son el monolito legacy. Todo desarrollo nuevo en `apps/api` (backend) y `apps/web` (frontend).
-- **Base URL backend en desarrollo:** `http://localhost:3003`. Frontend en `http://localhost:3000`. CORS ya configurado en `app.ts` (origen `localhost:3000` permitido).
-- **Orden estricto back → front → seguridad** definido en `sessions.md`. Backend completo. Ahora en pasada de frontend.
-- **Módulos pendientes tras estas 3 actividades:** Entrenamiento, Nutrición, Suplementación, Cortisol, Descanso, Información Personal. Orden a definir en próxima sesión según prioridad del usuario.
+- **No modificar `server.js` ni `index.html` (raíz):** son el monolito legacy que Vercel sigue deployando en producción desde `origin/main`. Todo desarrollo nuevo va en `apps/api` / `apps/web`, commiteado en `backup-migracion-2026-08-05`.
+- **Puertos:** backend nuevo `:3003`, front nuevo `:3000`, backend legacy `:3001` (ver sección 8). Usar `npm run dev:api` / `npm run dev:web` desde la raíz para evitar confusión.
+- **Nunca commitear/pushear a `origin/main` directamente** — riesgo real de romper el deploy de producción en Vercel.
+- **Nunca cambiar de rama, commitear o pushear sin pedido explícito del usuario en ese turno**, incluso si ya se autorizó antes en la misma sesión.
