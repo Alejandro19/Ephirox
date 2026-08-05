@@ -1,6 +1,6 @@
 import { getSessionToken } from './api-client';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3003';
 
 async function authorizedRequest<T>(path: string, method: string, body?: unknown): Promise<T> {
   const token = getSessionToken();

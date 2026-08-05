@@ -1,9 +1,14 @@
 import 'dotenv/config';
 import { createApp } from './app.js';
 
-const PORT = process.env.PORT || 3001;
+const PORT = 3003;
 const app = createApp();
 
-app.listen(PORT, () => {
+/*app.listen(PORT, () => {
   console.log(`API escuchando en el puerto ${PORT}`);
+});*/
+
+// Fuerza a Express a escuchar en la IP universal '0.0.0.0'
+app.listen(3003, '0.0.0.0', () => {
+  console.log("API escuchando en el puerto 3003 (IP Universal)");
 });

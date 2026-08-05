@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3003';
 
 export type CountryOption = { isoCode: string; name: string; flag: string; phonecode: string };
 export type CountriesResponse = { priority: CountryOption[]; rest: CountryOption[] };

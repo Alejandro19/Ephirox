@@ -8,3 +8,4 @@ export * from './supplements.js';
 export * from './cortisol.js';
 export * from './sleep.js';
 export * from './community.js';
+export * from './evolution.js';

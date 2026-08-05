@@ -36,6 +36,7 @@ export const clients = pgTable('clients', {
   inbodyNextExpectedDate: date('inbody_next_expected_date'),
   inbodyReminderEnabled: boolean('inbody_reminder_enabled').notNull().default(true),
   inbodyReminderSentThisCycle: boolean('inbody_reminder_sent_this_cycle').notNull().default(false),
+  nextCheckinDate: date('next_checkin_date'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 });
@@ -337,3 +338,84 @@ export const sleepLogs = pgTable('sleep_logs', {
 
 export type SleepProtocol = typeof sleepProtocols.$inferSelect;
 export type SleepLog = typeof sleepLogs.$inferSelect;
+
+// ==== COMMUNITY MODULE TABLES ====
+
+export const communityEvents = pgTable('community_events', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  title: text('title').notNull(),
+  description: text('description'),
+  eventDate: timestamp('event_date', { withTimezone: true }),
+  location: text('location'),
+  capacity: integer('capacity'),
+  imageUrl: text('image_url'),
+  active: boolean('active').default(true),
+  sortOrder: integer('sort_order').default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+export const eventReservations = pgTable('event_reservations', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  eventId: uuid('event_id').notNull().references(() => communityEvents.id, { onDelete: 'cascade' }),
+  clientId: uuid('client_id').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+  status: text('status').notNull().default('confirmada'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+export const communityTherapies = pgTable('community_therapies', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  title: text('title').notNull(),
+  description: text('description'),
+  discountPct: integer('discount_pct').default(0),
+  provider: text('provider'),
+  imageUrl: text('image_url'),
+  active: boolean('active').default(true),
+  sortOrder: integer('sort_order').default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+export const therapyReservations = pgTable('therapy_reservations', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  therapyId: uuid('therapy_id').notNull().references(() => communityTherapies.id, { onDelete: 'cascade' }),
+  clientId: uuid('client_id').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+  status: text('status').notNull().default('confirmada'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+export type CommunityEvent = typeof communityEvents.$inferSelect;
+export type EventReservation = typeof eventReservations.$inferSelect;
+export type CommunityTherapy = typeof communityTherapies.$inferSelect;
+export type TherapyReservation = typeof therapyReservations.$inferSelect;
+
+// ==== EVOLUTION MODULE TABLES ====
+
+export const evolutionCheckins = pgTable('evolution_checkins', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  clientId: uuid('client_id').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+  fecha: date('fecha').notNull().defaultNow(),
+  strengthScore: integer('strength_score'),
+  moodScore: integer('mood_score'),
+  confidenceScore: integer('confidence_score'),
+  securityScore: integer('security_score'),
+  energyScore: integer('energy_score'),
+  notes: text('notes'),
+  sleepHours: numeric('sleep_hours', { precision: 3, scale: 1 }).$type<number>(),
+  adherencePct: integer('adherence_pct'),
+  painFlag: boolean('pain_flag'),
+  painNotes: text('pain_notes'),
+  stressScore: integer('stress_score'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+export const personalRecords = pgTable('personal_records', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  clientId: uuid('client_id').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+  exerciseName: text('exercise_name').notNull(),
+  initialValue: text('initial_value'),
+  currentValue: text('current_value'),
+  sortOrder: integer('sort_order').default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+export type EvolutionCheckin = typeof evolutionCheckins.$inferSelect;
+export type PersonalRecord = typeof personalRecords.$inferSelect;
