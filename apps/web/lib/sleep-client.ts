@@ -23,6 +23,7 @@ export type SleepLog = {
   date: string;
   hours: string | number;
   quality: number;
+  loggedAt: string;
 };
 
 export async function getProtocol(clientId: string): Promise<SleepProtocol> {

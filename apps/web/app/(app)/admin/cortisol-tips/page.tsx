@@ -1,12 +1,20 @@
 'use client';
 
-import { CortisolTipsPanel } from '../../../components/cortisol/CortisolTipsPanel';
+import { CortisolTipsPanel } from '../../../../components/cortisol/CortisolTipsPanel';
+import IdentityHeader from '../../../../components/ui/IdentityHeader';
 
 export default function AdminCortisolTipsPage() {
   return (
     <div>
-      <h1>Tips de cortisol</h1>
-      <CortisolTipsPanel />
+      <IdentityHeader title="Tips de cortisol" subtitle="Banco global de tips educativos mostrados al azar en el módulo de Cortisol." />
+      <div
+        style={{
+          background: 'var(--paper)', border: '1px solid var(--line)',
+          borderRadius: 'var(--radius)', padding: '22px 24px',
+        }}
+      >
+        <CortisolTipsPanel />
+      </div>
     </div>
   );
 }

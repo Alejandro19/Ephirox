@@ -68,7 +68,6 @@ export function CountryCityPicker({ value, onChange, invalidFieldIds }: CountryC
           label="Ciudad"
           list="field-city-options"
           disabled={!value.country}
-          placeholder={value.country ? undefined : 'Primero selecciona tu país'}
           value={value.city}
           onChange={(v) => onChange({ city: v })}
         />

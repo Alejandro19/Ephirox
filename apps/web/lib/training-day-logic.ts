@@ -1,6 +1,9 @@
 import type { Exercise, ExerciseCategory } from './training-client';
 
-export const CATEGORY_ORDER: ExerciseCategory[] = ['warmup', 'strength', 'cardio'];
+// Orden de una sesión típica: calentar, la fuerza principal, accesorio de
+// core, el finisher de cardio, y estiramiento como cierre — cada categoría
+// se desbloquea al completar la anterior (ver getCategoryLockState).
+export const CATEGORY_ORDER: ExerciseCategory[] = ['warmup', 'strength', 'core', 'cardio', 'stretching'];
 
 export type CategoryLockState = 'no_asignada' | 'locked' | 'active' | 'done';
 

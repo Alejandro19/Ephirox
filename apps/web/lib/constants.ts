@@ -31,7 +31,7 @@ export const ADMIN_NAV: NavItem[] = [
   { key: "cortisol", label: "Gestión de Cortisol" },
   { key: "rest", label: "Descanso" },
   { key: "evolution", label: "Mi Evolución" },
-  { key: "admin-community", label: "Comunidad" },
+  { key: "community", label: "Comunidad" },
   { key: "admin-notifications", label: "Notificaciones" },
 ];
 
@@ -129,7 +129,6 @@ export const VIEW_TO_PATH: Record<string, string> = {
   "personal-info": "/onboarding",
   "admin-clients": "/admin/clients",
   "admin-quotes": "/admin/phrases",
-  "admin-community": "/admin/community-events",
   "admin-notifications": "/admin/notifications",
 };
 
@@ -139,15 +138,10 @@ export const PATH_TO_VIEW: Record<string, string> = {
   "/cortisol": "cortisol",
   "/rest": "rest",
   "/community": "community",
-  "/community/events": "community",
-  "/community/therapies": "community",
   "/evolution": "evolution",
   "/onboarding": "personal-info",
   "/admin": "admin-hub",
   "/admin/clients": "admin-clients",
   "/admin/phrases": "admin-quotes",
-  "/admin/community-events": "admin-community",
-  "/admin/community-therapies": "admin-community",
-  "/admin/community-reservations": "admin-community",
   "/admin/notifications": "admin-notifications",
 };

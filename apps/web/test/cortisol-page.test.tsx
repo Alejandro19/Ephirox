@@ -7,13 +7,14 @@ vi.mock('../lib/api-client', () => ({
 }));
 vi.mock('../lib/cortisol-client', () => ({
   listTechniques: vi.fn().mockResolvedValue([]),
+  listCompletions: vi.fn().mockResolvedValue([]),
   getTipOfTheDay: vi.fn().mockResolvedValue(null),
   getTodayCheckin: vi.fn().mockResolvedValue(null),
 }));
 
 describe('CortisolPage', () => {
-  it('renders the cortisol heading', () => {
+  it('renders the cortisol heading', async () => {
     render(<CortisolPage />);
-    expect(screen.getByRole('heading', { name: 'Gestión de Cortisol' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Gestión de Cortisol' })).toBeInTheDocument();
   });
 });

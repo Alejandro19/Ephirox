@@ -17,10 +17,6 @@ vi.mock('../lib/training-client', () => ({
   getAchievements: vi.fn(async () => [{ id: 'ach1', clientId: 'client-1', type: 'medalla', weekNumber: 202531, earnedAt: '2026-08-01T00:00:00Z' }]),
 }));
 
-vi.mock('../components/training/AdminExercisePanel', () => ({
-  AdminExercisePanel: () => null,
-}));
-
 describe('ClientDetailPage', () => {
   it('renders personal info, anthropometric history, and InBody records', async () => {
     render(<ClientDetailPage />);

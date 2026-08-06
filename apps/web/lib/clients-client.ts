@@ -17,6 +17,10 @@ export type ClientSummary = {
 
 export type ClientDetail = ClientSummary & {
   training_days?: number;
+  trainingDays?: number;
+  objetivos?: Record<string, string>;
+  nextCheckinDate?: string | null;
+  inbodyCadenceType?: string;
 };
 
 export async function fetchClients(): Promise<ClientSummary[]> {

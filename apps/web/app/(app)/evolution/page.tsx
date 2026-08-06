@@ -1,14 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { getSessionToken } from '@/lib/api-client';
 import { ClientEvolutionPanel } from '@/components/evolution/ClientEvolutionPanel';
+import { AdminEvolutionPanel } from '@/components/evolution/AdminEvolutionPanel';
+import ClientSwitcher from '@/components/admin/ClientSwitcher';
+import IdentityHeader from '@/components/ui/IdentityHeader';
 
-// Mismo patrón que apps/web/app/community/page.tsx: el JWT ya trae el id del
-// cliente en su payload — decodificarlo evita un round-trip solo para saber
-// "quién soy". La autorización real de cada llamada la sigue haciendo el
-// backend (ownerOrAdmin + requirePermission) sin importar este valor local.
 function decodeClientIdFromToken(token: string): string | null {
   try {
     const payload = JSON.parse(atob(token.split('.')[1]));
@@ -18,35 +16,48 @@ function decodeClientIdFromToken(token: string): string | null {
   }
 }
 
+function decodeRoleFromToken(token: string): string | null {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return typeof payload.role === 'string' ? payload.role : null;
+  } catch {
+    return null;
+  }
+}
+
 export default function EvolutionPage() {
-  const router = useRouter();
   const [clientId, setClientId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [role, setRole] = useState<string | null>(null);
+  const [adminClientId, setAdminClientId] = useState<string | null>(null);
 
   useEffect(() => {
     const token = getSessionToken();
-
-    if (!token) {
-      router.push('/login');
-      return;
+    if (token) {
+      setClientId(decodeClientIdFromToken(token));
+      setRole(decodeRoleFromToken(token));
     }
+  }, []);
 
-    const id = decodeClientIdFromToken(token);
-    setClientId(id);
-    setLoading(false);
-  }, [router]);
+  if (role === 'admin') {
+    return (
+      <div>
+        <IdentityHeader title="Mi Evolución" subtitle="Revisa el progreso e índice de bienestar de cada cliente." />
+        <div
+          style={{
+            background: 'var(--paper)', border: '1px solid var(--line)',
+            borderRadius: 'var(--radius)', padding: '22px 24px', marginBottom: 18,
+          }}
+        >
+          <ClientSwitcher moduleKey="evolution" selectedClientId={adminClientId} onSelect={setAdminClientId} />
+        </div>
+        {adminClientId ? (
+          <AdminEvolutionPanel clientId={adminClientId} />
+        ) : (
+          <p style={{ color: 'var(--ink-soft)', fontSize: 13 }}>Selecciona un cliente para ver su evolución.</p>
+        )}
+      </div>
+    );
+  }
 
-  if (loading) return null;
-  if (!clientId) return <p>Cargando...</p>;
-
-  return (
-    <div>
-      <h1>Mi Evolución</h1>
-      <p style={{ color: '#888', marginBottom: '2rem' }}>
-        Registra tus check-ins semanales, monitorea tu progreso y visualiza tus
-        mediciones antropométricas y de InBody.
-      </p>
-      <ClientEvolutionPanel clientId={clientId} />
-    </div>
-  );
+  return <div>{clientId && <ClientEvolutionPanel clientId={clientId} />}</div>;
 }

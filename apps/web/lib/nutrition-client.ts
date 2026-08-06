@@ -16,6 +16,16 @@ async function authorizedRequest<T>(path: string, method: string, body?: unknown
   return res.json();
 }
 
+export type MenuMealOption = {
+  label: string;
+  items: string[];
+};
+
+export type MenuMeal = {
+  name: string;
+  options: MenuMealOption[];
+};
+
 export type NutritionPlan = {
   id?: string;
   dailyCals?: number | null;
@@ -24,6 +34,9 @@ export type NutritionPlan = {
   fatG?: number | null;
   notes?: string | null;
   summary?: string | null;
+  menuPlan?: MenuMeal[] | null;
+  recommendations?: string[] | null;
+  closingMessage?: string | null;
   pdfUrl?: string | null;
   pdfName?: string | null;
 };
@@ -44,7 +57,18 @@ export async function getNutrition(clientId: string): Promise<{ plan: NutritionP
   return { plan: body.plan, meals: body.meals };
 }
 
-export async function saveNutritionPlan(clientId: string, patch: Partial<NutritionPlan> & { daily_cals?: number; protein_g?: number; carbs_g?: number; fat_g?: number }): Promise<NutritionPlan> {
+export async function saveNutritionPlan(
+  clientId: string,
+  patch: Partial<NutritionPlan> & {
+    daily_cals?: number;
+    protein_g?: number;
+    carbs_g?: number;
+    fat_g?: number;
+    menu_plan?: MenuMeal[];
+    recommendations?: string[];
+    closing_message?: string | null;
+  }
+): Promise<NutritionPlan> {
   const body = await authorizedRequest<{ success: boolean; plan: NutritionPlan; error?: string }>(`/api/clients/${clientId}/nutrition`, 'PUT', patch);
   if (!body.success) throw new Error(body.error || 'Error al guardar el plan.');
   return body.plan;

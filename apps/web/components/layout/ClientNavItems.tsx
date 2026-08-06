@@ -51,8 +51,10 @@ export default function ClientNavItems({
             ? `var(${ARC_COLOR_VAR[cfg.arc]})`
             : "var(--ink-soft)";
           const locked =
-            clientType === "lead_wellness" &&
-            (item.key === "training" || item.key === "nutrition");
+            item.key === "rest"
+              ? clientType !== "mentoring"
+              : clientType === "lead_wellness" &&
+                (item.key === "training" || item.key === "nutrition");
           const active = viewKey === item.key;
 
           return (

@@ -12,11 +12,31 @@ async function authorizedRequest<T>(path: string, method: string, body?: unknown
   return res.json();
 }
 
-export async function getConfirmedReservations() {
+export type EventReservation = {
+  id: string;
+  eventId: string;
+  eventTitle: string;
+  eventDate: string | null;
+  eventLocation: string | null;
+  clientName: string;
+  clientPhone: string | null;
+};
+
+export type TherapyReservation = {
+  id: string;
+  therapyId: string;
+  therapyTitle: string;
+  therapyProvider: string | null;
+  therapyDiscountPct: number | null;
+  clientName: string;
+  clientPhone: string | null;
+};
+
+export async function getConfirmedReservations(): Promise<{ eventReservations: EventReservation[]; therapyReservations: TherapyReservation[] }> {
   const body = await authorizedRequest<{
     success: boolean;
-    eventReservations: Array<any>;
-    therapyReservations: Array<any>;
+    eventReservations: EventReservation[];
+    therapyReservations: TherapyReservation[];
     error?: string;
   }>('/api/community/reservations', 'GET');
   if (!body.success) throw new Error(body.error || 'Error al obtener reservaciones.');

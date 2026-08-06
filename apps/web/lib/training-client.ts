@@ -12,7 +12,7 @@ async function authorizedRequest<T>(path: string, method: string, body?: unknown
   return res.json();
 }
 
-export type ExerciseCategory = 'warmup' | 'strength' | 'cardio';
+export type ExerciseCategory = 'warmup' | 'strength' | 'core' | 'cardio' | 'stretching';
 
 export type Exercise = {
   id: string;

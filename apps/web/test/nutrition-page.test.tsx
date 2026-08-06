@@ -8,10 +8,13 @@ vi.mock('../lib/api-client', () => ({
 vi.mock('../lib/nutrition-client', () => ({
   getNutrition: vi.fn().mockResolvedValue({ plan: {}, meals: [] }),
 }));
+vi.mock('../lib/supplements-client', () => ({
+  listSupplements: vi.fn().mockResolvedValue([]),
+}));
 
 describe('NutritionPage', () => {
-  it('renders the nutrition heading', () => {
+  it('renders the nutrition heading', async () => {
     render(<NutritionPage />);
-    expect(screen.getByRole('heading', { name: 'Alimentación' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Nutrición' })).toBeInTheDocument();
   });
 });

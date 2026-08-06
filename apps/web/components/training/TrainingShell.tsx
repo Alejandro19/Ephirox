@@ -45,6 +45,10 @@ export function TrainingShell({ clientId }: TrainingShellProps) {
   const [error, setError] = useState<string | null>(null);
   const [completionNotice, setCompletionNotice] = useState<string | null>(null);
   const [confirmedResult, setConfirmedResult] = useState<{ streak: TrainingStreak; phrase: string | null } | null>(null);
+  // Sin esto, TrainingHome se monta con trainingDays=0 antes de que load()
+  // resuelva y muestra por un instante el estado "sin días configurados"
+  // aunque el cliente sí tenga rutina — un flash de contenido incorrecto.
+  const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     const tz = clientTz();
@@ -65,7 +69,9 @@ export function TrainingShell({ clientId }: TrainingShellProps) {
   }, [clientId]);
 
   useEffect(() => {
-    load().catch((e: Error) => setError(e.message));
+    load()
+      .catch((e: Error) => setError(e.message))
+      .finally(() => setLoading(false));
   }, [load]);
 
   function openDay(d: number) {
@@ -124,6 +130,7 @@ export function TrainingShell({ clientId }: TrainingShellProps) {
     setCompletedIds((prev) => new Set(prev).add(exerciseId));
   }
 
+  if (loading) return <p style={{ color: 'var(--ink-soft)', fontSize: 14 }}>Cargando tu rutina…</p>;
   if (error) return <p role="alert">{error}</p>;
 
   if (confirmedResult) {

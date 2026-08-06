@@ -22,6 +22,7 @@ export type CortisolTechnique = {
   type: string | null;
   duration: string | null;
   durationMinutes: number | null;
+  durationSeconds: number | null;
   description: string | null;
   videoUrl: string | null;
   videoName: string | null;
@@ -32,6 +33,20 @@ export type CortisolTechnique = {
 
 export type CortisolTip = { id: string; content: string } | null;
 export type CortisolCheckin = { id: string; emotion: string; checkinDate: string } | null;
+export type CortisolCheckinRecord = { id: string; emotion: string; checkinDate: string };
+export type CortisolCompletion = { id: string; techniqueId: string | null; completedDate: string };
+
+export type CortisolTechniquePatch = {
+  title?: string;
+  type?: string;
+  duration?: string | null;
+  duration_minutes?: number | null;
+  duration_seconds?: number | null;
+  description?: string;
+  youtube_url?: string;
+  audio_url?: null;
+  audio_name?: null;
+};
 
 export async function listTechniques(clientId: string): Promise<CortisolTechnique[]> {
   const body = await authorizedRequest<{ success: boolean; techniques: CortisolTechnique[]; error?: string }>(`/api/clients/${clientId}/cortisol-techniques`, 'GET');
@@ -39,13 +54,25 @@ export async function listTechniques(clientId: string): Promise<CortisolTechniqu
   return body.techniques;
 }
 
-export async function createTechnique(clientId: string, input: { title: string; type?: string; duration_minutes?: number; description?: string; youtube_url?: string }): Promise<CortisolTechnique> {
+export async function listCheckins(clientId: string): Promise<CortisolCheckinRecord[]> {
+  const body = await authorizedRequest<{ success: boolean; checkins: CortisolCheckinRecord[]; error?: string }>(`/api/clients/${clientId}/cortisol-checkins`, 'GET');
+  if (!body.success) throw new Error(body.error || 'Error al obtener el historial de emociones.');
+  return body.checkins;
+}
+
+export async function listCompletions(clientId: string): Promise<CortisolCompletion[]> {
+  const body = await authorizedRequest<{ success: boolean; completions: CortisolCompletion[]; error?: string }>(`/api/clients/${clientId}/cortisol-completions`, 'GET');
+  if (!body.success) throw new Error(body.error || 'Error al obtener el historial.');
+  return body.completions;
+}
+
+export async function createTechnique(clientId: string, input: CortisolTechniquePatch): Promise<CortisolTechnique> {
   const body = await authorizedRequest<{ success: boolean; technique: CortisolTechnique; error?: string }>(`/api/clients/${clientId}/cortisol-techniques`, 'POST', input);
   if (!body.success) throw new Error(body.error || 'Error al asignar la técnica.');
   return body.technique;
 }
 
-export async function updateTechnique(clientId: string, techId: string, patch: { title?: string; type?: string; duration_minutes?: number; description?: string; youtube_url?: string }): Promise<CortisolTechnique> {
+export async function updateTechnique(clientId: string, techId: string, patch: CortisolTechniquePatch): Promise<CortisolTechnique> {
   const body = await authorizedRequest<{ success: boolean; technique: CortisolTechnique; error?: string }>(`/api/clients/${clientId}/cortisol-techniques/${techId}`, 'PUT', patch);
   if (!body.success) throw new Error(body.error || 'Error al actualizar la técnica.');
   return body.technique;

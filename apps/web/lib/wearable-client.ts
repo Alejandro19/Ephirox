@@ -28,6 +28,41 @@ export async function getWearableEstado(clientId: string): Promise<WearableEstad
   return body.wearables;
 }
 
+// Una fila por día capturada por wearableMetricas (apps/api) — solo lectura,
+// nunca se escribe desde el frontend. Los campos numéricos vienen de columnas
+// `numeric` de Postgres, que node-postgres puede serializar como string; se
+// tratan como `number | string | null` y se normalizan con Number(...) al consumirlos.
+export type WearableMetrica = {
+  id: string;
+  dispositivo: string;
+  fecha: string;
+  fcReposo: number | null;
+  hrvNocturno: number | null;
+  suenoTotalMinutos: number | null;
+  suenoProfundoMinutos: number | null;
+  suenoRemMinutos: number | null;
+  suenoLigeroMinutos: number | null;
+  suenoScore: number | null;
+  tasaRespiratoria: number | string | null;
+  temperaturaPiel: number | string | null;
+  horaDormir: string | null;
+  horaDespertar: string | null;
+};
+
+export async function getMetricas(
+  clientId: string,
+  dias = 7,
+  dispositivo?: Dispositivo
+): Promise<{ total: number; promedios: Record<string, number | null>; data: WearableMetrica[] }> {
+  const qs = new URLSearchParams({ dias: String(dias), ...(dispositivo ? { dispositivo } : {}) });
+  const body = await authorizedRequest<{ success: boolean; total: number; promedios: Record<string, number | null>; data: WearableMetrica[]; error?: string }>(
+    `/api/clients/${clientId}/wearable/metricas?${qs.toString()}`,
+    'GET'
+  );
+  if (!body.success) throw new Error(body.error || 'Error al obtener las métricas del wearable.');
+  return { total: body.total, promedios: body.promedios, data: body.data };
+}
+
 export function getWearableConnectUrl(dispositivo: Dispositivo, clientId: string): string {
   return `${API_BASE_URL}/api/wearable/${dispositivo}/connect?clienteId=${clientId}`;
 }

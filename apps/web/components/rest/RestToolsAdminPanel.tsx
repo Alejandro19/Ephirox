@@ -10,6 +10,38 @@ import {
   uploadRestToolAudio,
   removeRestToolAudio,
 } from '../../lib/rest-tools-client';
+import EmptyState from '../ui/EmptyState';
+
+const cardStyle: React.CSSProperties = {
+  background: 'var(--paper)', border: '1px solid var(--line)',
+  borderRadius: 'var(--radius)', padding: '22px 24px', marginBottom: 18,
+};
+const cardTitleStyle: React.CSSProperties = {
+  fontSize: 15, fontWeight: 700, color: 'var(--ink)', margin: '0 0 16px',
+};
+const labelStyle: React.CSSProperties = {
+  display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--ink-soft)', marginBottom: 4,
+};
+const fieldStyle: React.CSSProperties = {
+  width: '100%', height: 40, borderRadius: 10, border: '1px solid var(--line)',
+  padding: '0 10px', fontSize: 13, background: 'var(--paper)', color: 'var(--ink)',
+  outline: 'none', boxSizing: 'border-box',
+};
+const ghostButtonStyle: React.CSSProperties = {
+  height: 32, padding: '0 14px', borderRadius: 9999, border: '1px solid var(--line)',
+  background: 'transparent', color: 'var(--ink-soft)', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+};
+const dangerButtonStyle: React.CSSProperties = {
+  height: 32, padding: '0 14px', borderRadius: 9999, border: '1px solid var(--danger)',
+  background: 'transparent', color: 'var(--danger)', fontSize: 12, fontWeight: 600, cursor: 'pointer', flexShrink: 0,
+};
+const primaryButtonStyle: React.CSSProperties = {
+  height: 40, padding: '0 22px', borderRadius: 9999, border: 'none',
+  background: '#8A5FA0', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+};
+const draftCardStyle: React.CSSProperties = {
+  background: 'var(--cream)', border: '1px solid var(--line)', borderRadius: 14, padding: 16, marginBottom: 10,
+};
 
 export function RestToolsAdminPanel() {
   const [tools, setTools] = useState<RestTool[]>([]);
@@ -118,100 +150,125 @@ export function RestToolsAdminPanel() {
   }
 
   return (
-    <section>
-      <h2>Herramientas para dormir</h2>
-      {error && <p role="alert">{error}</p>}
+    <div style={cardStyle}>
+      <h3 style={cardTitleStyle}>Herramientas para dormir (banco global)</h3>
+      {error && <p role="alert" style={{ color: 'var(--danger)' }}>{error}</p>}
 
-      <label htmlFor="rt-new-name">Nombre</label>
-      <input id="rt-new-name" value={newName} onChange={(e) => setNewName(e.target.value)} />
-      <label htmlFor="rt-new-action">Tipo</label>
-      <select id="rt-new-action" value={newAction} onChange={(e) => setNewAction(e.target.value)}>
-        <option value="play">Reproducir (con temporizador)</option>
-        <option value="write">Escribir (diario)</option>
-      </select>
-      {newAction === 'play' && (
-        <>
-          <label htmlFor="rt-new-minutes">Minutos</label>
-          <input id="rt-new-minutes" type="number" value={newMinutes} onChange={(e) => setNewMinutes(e.target.value)} />
-          <label htmlFor="rt-new-seconds">Segundos</label>
-          <input id="rt-new-seconds" type="number" value={newSeconds} onChange={(e) => setNewSeconds(e.target.value)} />
-        </>
-      )}
-      <label htmlFor="rt-new-meta">Descripción</label>
-      <input id="rt-new-meta" value={newMeta} onChange={(e) => setNewMeta(e.target.value)} />
-      <label htmlFor="rt-new-audio">Audio propio</label>
-      <input
-        id="rt-new-audio"
-        type="file"
-        accept="audio/*"
-        onChange={(e) => setNewAudioFile(e.target.files?.[0] ?? null)}
-      />
-      <button type="button" onClick={handleCreate}>
-        + Agregar herramienta
-      </button>
-
-      {tools.length === 0 && <p>Aún no hay herramientas.</p>}
-      {tools.map((tool) =>
-        editingId === tool.id ? (
-          <div key={tool.id}>
-            <label htmlFor="rt-edit-name">Nombre</label>
-            <input id="rt-edit-name" value={editName} onChange={(e) => setEditName(e.target.value)} />
-            <label htmlFor="rt-edit-action">Tipo</label>
-            <select id="rt-edit-action" value={editAction} onChange={(e) => setEditAction(e.target.value)}>
+      <div style={draftCardStyle}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12 }}>
+          <div>
+            <label style={labelStyle} htmlFor="rt-new-name">Nombre</label>
+            <input id="rt-new-name" style={fieldStyle} value={newName} onChange={(e) => setNewName(e.target.value)} />
+          </div>
+          <div>
+            <label style={labelStyle} htmlFor="rt-new-action">Tipo</label>
+            <select id="rt-new-action" style={fieldStyle} value={newAction} onChange={(e) => setNewAction(e.target.value)}>
               <option value="play">Reproducir (con temporizador)</option>
               <option value="write">Escribir (diario)</option>
             </select>
-            {editAction === 'play' && (
-              <>
-                <label htmlFor="rt-edit-minutes">Minutos</label>
-                <input id="rt-edit-minutes" type="number" value={editMinutes} onChange={(e) => setEditMinutes(e.target.value)} />
-                <label htmlFor="rt-edit-seconds">Segundos</label>
-                <input id="rt-edit-seconds" type="number" value={editSeconds} onChange={(e) => setEditSeconds(e.target.value)} />
-              </>
-            )}
-            <label htmlFor="rt-edit-meta">Descripción</label>
-            <input id="rt-edit-meta" value={editMeta} onChange={(e) => setEditMeta(e.target.value)} />
+          </div>
+          {newAction === 'play' && (
+            <div>
+              <label style={labelStyle}>Duración (min : seg)</label>
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                <input aria-label="Minutos" id="rt-new-minutes" type="number" style={fieldStyle} value={newMinutes} onChange={(e) => setNewMinutes(e.target.value)} />
+                <span style={{ color: 'var(--ink-soft)' }}>:</span>
+                <input aria-label="Segundos" id="rt-new-seconds" type="number" style={fieldStyle} value={newSeconds} onChange={(e) => setNewSeconds(e.target.value)} />
+              </div>
+            </div>
+          )}
+        </div>
+        <label style={{ ...labelStyle, marginTop: 10 }} htmlFor="rt-new-meta">Descripción</label>
+        <input id="rt-new-meta" style={fieldStyle} value={newMeta} onChange={(e) => setNewMeta(e.target.value)} />
+        <label style={{ ...labelStyle, marginTop: 10 }} htmlFor="rt-new-audio">Audio propio</label>
+        <input
+          id="rt-new-audio"
+          type="file"
+          accept="audio/*"
+          onChange={(e) => setNewAudioFile(e.target.files?.[0] ?? null)}
+        />
+        <button type="button" style={{ ...primaryButtonStyle, marginTop: 14 }} onClick={handleCreate}>
+          + Agregar herramienta
+        </button>
+      </div>
 
-            <label htmlFor="rt-edit-audio">Audio propio</label>
-            {tool.audioUrl && (
-              <div>
-                <audio controls src={tool.audioUrl} />
-                <span>{tool.audioName}</span>
-                <button type="button" onClick={() => handleRemoveAudio(tool.id)}>
-                  Quitar audio
+      {tools.length === 0 ? (
+        <EmptyState message="Aún no hay herramientas." />
+      ) : (
+        tools.map((tool) =>
+          editingId === tool.id ? (
+            <div key={tool.id} style={draftCardStyle}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12 }}>
+                <div>
+                  <label style={labelStyle} htmlFor="rt-edit-name">Nombre</label>
+                  <input id="rt-edit-name" style={fieldStyle} value={editName} onChange={(e) => setEditName(e.target.value)} />
+                </div>
+                <div>
+                  <label style={labelStyle} htmlFor="rt-edit-action">Tipo</label>
+                  <select id="rt-edit-action" style={fieldStyle} value={editAction} onChange={(e) => setEditAction(e.target.value)}>
+                    <option value="play">Reproducir (con temporizador)</option>
+                    <option value="write">Escribir (diario)</option>
+                  </select>
+                </div>
+                {editAction === 'play' && (
+                  <div>
+                    <label style={labelStyle}>Duración (min : seg)</label>
+                    <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                      <input aria-label="Minutos (edición)" type="number" style={fieldStyle} value={editMinutes} onChange={(e) => setEditMinutes(e.target.value)} />
+                      <span style={{ color: 'var(--ink-soft)' }}>:</span>
+                      <input aria-label="Segundos (edición)" type="number" style={fieldStyle} value={editSeconds} onChange={(e) => setEditSeconds(e.target.value)} />
+                    </div>
+                  </div>
+                )}
+              </div>
+              <label style={{ ...labelStyle, marginTop: 10 }} htmlFor="rt-edit-meta">Descripción</label>
+              <input id="rt-edit-meta" style={fieldStyle} value={editMeta} onChange={(e) => setEditMeta(e.target.value)} />
+
+              <label style={{ ...labelStyle, marginTop: 10 }} htmlFor="rt-edit-audio">Audio propio</label>
+              {tool.audioUrl && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, flexWrap: 'wrap' }}>
+                  <audio controls src={tool.audioUrl} style={{ height: 32, maxWidth: 260 }} />
+                  <span style={{ fontSize: 12, color: 'var(--ink-soft)' }}>{tool.audioName}</span>
+                  <button type="button" style={ghostButtonStyle} onClick={() => handleRemoveAudio(tool.id)}>
+                    Quitar audio
+                  </button>
+                </div>
+              )}
+              <input
+                id="rt-edit-audio"
+                type="file"
+                accept="audio/*"
+                onChange={(e) => setEditAudioFile(e.target.files?.[0] ?? null)}
+              />
+              <button type="button" style={{ ...ghostButtonStyle, marginTop: 8 }} onClick={() => handleUploadAudio(tool.id)}>
+                {tool.audioUrl ? 'Reemplazar audio' : 'Subir audio'}
+              </button>
+
+              <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                <button type="button" style={primaryButtonStyle} onClick={() => handleSaveEdit(tool.id)}>
+                  Guardar
+                </button>
+                <button type="button" style={ghostButtonStyle} onClick={() => setEditingId(null)}>
+                  Cancelar
                 </button>
               </div>
-            )}
-            <input
-              id="rt-edit-audio"
-              type="file"
-              accept="audio/*"
-              onChange={(e) => setEditAudioFile(e.target.files?.[0] ?? null)}
-            />
-            <button type="button" onClick={() => handleUploadAudio(tool.id)}>
-              {tool.audioUrl ? 'Reemplazar audio' : 'Subir audio'}
-            </button>
-
-            <button type="button" onClick={() => handleSaveEdit(tool.id)}>
-              Guardar
-            </button>
-            <button type="button" onClick={() => setEditingId(null)}>
-              Cancelar
-            </button>
-          </div>
-        ) : (
-          <div key={tool.id}>
-            <strong>{tool.name}</strong>
-            <span>{tool.meta}</span>
-            <button type="button" onClick={() => startEdit(tool)}>
-              Editar
-            </button>
-            <button type="button" onClick={() => handleDelete(tool.id)}>
-              Eliminar
-            </button>
-          </div>
+            </div>
+          ) : (
+            <div key={tool.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 0', borderBottom: '1px solid var(--line)' }}>
+              <div style={{ flex: 1 }}>
+                <strong>{tool.name}</strong>
+                {tool.meta && <span style={{ marginLeft: 8, fontSize: 12, color: 'var(--ink-soft)' }}>{tool.meta}</span>}
+              </div>
+              <button type="button" style={ghostButtonStyle} onClick={() => startEdit(tool)}>
+                Editar
+              </button>
+              <button type="button" style={dangerButtonStyle} onClick={() => handleDelete(tool.id)}>
+                Eliminar
+              </button>
+            </div>
+          )
         )
       )}
-    </section>
+    </div>
   );
 }

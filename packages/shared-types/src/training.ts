@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const EXERCISE_CATEGORIES = ['warmup', 'strength', 'cardio'] as const;
+export const EXERCISE_CATEGORIES = ['warmup', 'strength', 'core', 'cardio', 'stretching'] as const;
 export const ExerciseCategorySchema = z.enum(EXERCISE_CATEGORIES);
 export type ExerciseCategory = z.infer<typeof ExerciseCategorySchema>;
 

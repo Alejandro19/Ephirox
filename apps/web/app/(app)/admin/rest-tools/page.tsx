@@ -1,11 +1,12 @@
 'use client';
 
-import { RestToolsAdminPanel } from '../../../components/rest/RestToolsAdminPanel';
+import { RestToolsAdminPanel } from '../../../../components/rest/RestToolsAdminPanel';
+import IdentityHeader from '../../../../components/ui/IdentityHeader';
 
 export default function AdminRestToolsPage() {
   return (
     <div>
-      <h1>Herramientas para dormir</h1>
+      <IdentityHeader title="Herramientas para dormir" subtitle="Banco global de herramientas disponible para todos los clientes." />
       <RestToolsAdminPanel />
     </div>
   );

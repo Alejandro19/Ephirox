@@ -4,6 +4,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Sidebar from "./Sidebar";
 import MobileTopbar from "./MobileTopbar";
+import NotificationBell from "./NotificationBell";
 import PlanExpiredScreen from "./PlanExpiredScreen";
 import { useAuth } from "../../lib/auth-context";
 import {
@@ -65,7 +66,7 @@ function ErrorFallback({ error, onReset }: { error: Error; onReset: () => void }
 export default function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { role, isLoading, planExpired } = useAuth();
+  const { role, isLoading, planExpired, token } = useAuth();
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [boundaryError, setBoundaryError] = useState<Error | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -88,6 +89,17 @@ export default function AppShell({ children }: { children: ReactNode }) {
       }
     }
   }, [isLoading, router]);
+
+  // ── Auth guard ──
+  // logout() (UserChip) solo limpia el token en memoria/storage, no navega —
+  // sin esto, cerrar sesión desde una ruta ya montada (ej. /training) deja al
+  // usuario viendo la misma página con estado vacío en vez de mandarlo a
+  // /login. Cubre logout y expiración/invalidez de token (refreshAuth falla).
+  useEffect(() => {
+    if (!isLoading && !token) router.push("/login");
+  }, [isLoading, token, router]);
+
+  if (!isLoading && !token) return null;
 
   // ── Plan expired takeover ──
   if (planExpired && role === "cliente") return <PlanExpiredScreen />;
@@ -149,8 +161,11 @@ export default function AppShell({ children }: { children: ReactNode }) {
       />
 
       {/* Main area */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, position: "relative" }}>
         <MobileTopbar onToggleSidebar={() => setMobileOpen((v) => !v)} />
+        <div style={{ position: "absolute", top: 24, right: 32, zIndex: 40 }}>
+          <NotificationBell />
+        </div>
         <main
           id="main-content"
           style={{

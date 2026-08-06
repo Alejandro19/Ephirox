@@ -7,8 +7,9 @@ import { confirmSession, type TrainingStreak } from '@/lib/training-client';
 import { captureIncomingDeepLink, getPendingAction, clearPendingAction, isTrainingConfirmAction } from '@/lib/deep-link';
 import { TrainingShell } from '@/components/training/TrainingShell';
 import { SessionConfirmedScreen } from '@/components/training/SessionConfirmedScreen';
-import { AdminExercisePanel } from '@/components/training/AdminExercisePanel';
+import { AdminTrainingPanel } from '@/components/training/AdminTrainingPanel';
 import ClientSwitcher from '@/components/admin/ClientSwitcher';
+import IdentityHeader from '@/components/ui/IdentityHeader';
 
 // Mismo patrón que apps/web/app/onboarding/page.tsx: el JWT ya trae el id del
 // cliente en su payload — decodificarlo evita un round-trip solo para saber
@@ -106,12 +107,19 @@ export default function TrainingPage() {
   if (role === 'admin') {
     return (
       <div>
-        <h1>Entrenamiento</h1>
-        <ClientSwitcher moduleKey="training" selectedClientId={adminClientId} onSelect={setAdminClientId} />
+        <IdentityHeader title="Entrenamiento" subtitle="Configura la rutina y el ritmo semanal de cada cliente." />
+        <div
+          style={{
+            background: 'var(--paper)', border: '1px solid var(--line)',
+            borderRadius: 'var(--radius)', padding: '22px 24px', marginBottom: 18,
+          }}
+        >
+          <ClientSwitcher moduleKey="training" selectedClientId={adminClientId} onSelect={setAdminClientId} />
+        </div>
         {adminClientId ? (
-          <AdminExercisePanel clientId={adminClientId} />
+          <AdminTrainingPanel clientId={adminClientId} />
         ) : (
-          <p>Selecciona un cliente para gestionar su entrenamiento.</p>
+          <p style={{ color: 'var(--ink-soft)', fontSize: 13 }}>Selecciona un cliente para gestionar su entrenamiento.</p>
         )}
       </div>
     );

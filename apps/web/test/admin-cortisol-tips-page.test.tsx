@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
-import AdminCortisolTipsPage from '../app/admin/cortisol-tips/page';
+import AdminCortisolTipsPage from '../app/(app)/admin/cortisol-tips/page';
 import * as cortisolTipsClient from '../lib/cortisol-tips-client';
 
 vi.mock('../lib/cortisol-tips-client');

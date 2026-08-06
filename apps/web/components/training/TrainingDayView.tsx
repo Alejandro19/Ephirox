@@ -44,7 +44,7 @@ export function TrainingDayView({
         <p className="m-0 text-[var(--ink-soft)]">Elige qué vas a entrenar hoy.</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
         {CATEGORY_ORDER.map((category) => {
           const state = alreadyCompletedThisWeek
             ? exercises.some((ex) => ex.category === category)

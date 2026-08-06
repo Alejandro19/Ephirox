@@ -21,8 +21,8 @@ function exercise(id: string, category: Exercise['category']): Exercise {
 }
 
 describe('CATEGORY_ORDER', () => {
-  it('is warmup, strength, cardio in that order', () => {
-    expect(CATEGORY_ORDER).toEqual(['warmup', 'strength', 'cardio']);
+  it('is warmup, strength, core, cardio, stretching in that order', () => {
+    expect(CATEGORY_ORDER).toEqual(['warmup', 'strength', 'core', 'cardio', 'stretching']);
   });
 });
 

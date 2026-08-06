@@ -14,7 +14,7 @@ export default function InicioPage() {
     ? [
         { key: "admin-clients", label: "Clientes", desc: "Gestionar clientes y permisos" },
         { key: "admin-quotes", label: "Frases", desc: "Administrar frases motivacionales" },
-        { key: "admin-community", label: "Eventos", desc: "Gestionar eventos comunitarios" },
+        { key: "community", label: "Comunidad", desc: "Gestionar eventos y terapias" },
       ]
     : [
         { key: "training", label: "Entrenamiento", desc: "Tu plan de entrenamiento diario" },
