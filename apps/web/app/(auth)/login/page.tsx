@@ -5,7 +5,15 @@ import {
   loginRequest, saveSession, type LoginResult,
   fetchGoogleClientId, googleLoginRequest,
   fetchAppleClientId, appleLoginRequest,
+  forgotPasswordRequest,
 } from '@/lib/api-client';
+
+// "Recuérdame" solo guarda el email localmente (nunca la contraseña — un
+// checkbox de la app no debe controlar si se persiste texto plano de una
+// contraseña en el navegador). El gestor de contraseñas nativo del
+// navegador, activado por autoComplete="current-password", ya cubre el
+// caso de recordar la contraseña de forma segura.
+const REMEMBER_EMAIL_KEY = 'latribu_remember_email';
 
 // Tipado mínimo de los namespaces globales que inyectan los scripts de
 // Google Identity Services y Sign in with Apple JS (cargados en layout.tsx)
@@ -75,13 +83,28 @@ function applyLoginTheme(): void {
 }
 
 export default function LoginPage(): React.ReactElement {
-  const [view, setView] = useState<'login' | 'register'>('login');
+  const [view, setView] = useState<'login' | 'register' | 'forgot'>('login');
 
   // --- Login state ---
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState<string | null>(null);
   const [loginLoading, setLoginLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+
+  // --- Recuperar contraseña ---
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotSent, setForgotSent] = useState(false);
+  const [forgotError, setForgotError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const remembered = typeof window !== 'undefined' ? window.localStorage.getItem(REMEMBER_EMAIL_KEY) : null;
+    if (remembered) {
+      setLoginEmail(remembered);
+      setRememberMe(true);
+    }
+  }, []);
 
   // --- Register state ---
   const [regName, setRegName] = useState('');
@@ -268,6 +291,11 @@ export default function LoginPage(): React.ReactElement {
         return;
       }
       if (typeof window !== 'undefined') {
+        if (rememberMe) {
+          window.localStorage.setItem(REMEMBER_EMAIL_KEY, loginEmail);
+        } else {
+          window.localStorage.removeItem(REMEMBER_EMAIL_KEY);
+        }
         saveSession(result.token);
         // Igual que el login con Google: el anillo cubre el tramo hasta que
         // "/" termine de cargar, en vez de un instante de login sin cambios.
@@ -279,6 +307,24 @@ export default function LoginPage(): React.ReactElement {
       setLoginError('Error de conexión. Intenta de nuevo.');
     } finally {
       if (!navigating) setLoginLoading(false);
+    }
+  }
+
+  async function handleForgotPassword(e: FormEvent): Promise<void> {
+    e.preventDefault();
+    setForgotError(null);
+    setForgotLoading(true);
+    try {
+      const result = await forgotPasswordRequest(forgotEmail);
+      if (!result.success) {
+        setForgotError(result.error || 'No se pudo procesar la solicitud.');
+        return;
+      }
+      setForgotSent(true);
+    } catch {
+      setForgotError('Error de conexión. Intenta de nuevo.');
+    } finally {
+      setForgotLoading(false);
     }
   }
 
@@ -343,7 +389,10 @@ export default function LoginPage(): React.ReactElement {
       )}
 
       <div className="min-h-screen w-full bg-[var(--cream)] flex items-center justify-center p-4">
-        <div className="max-w-4xl w-full grid grid-cols-1 md:grid-cols-2 rounded-3xl overflow-hidden shadow-[0_30px_80px_-15px_rgba(43,36,32,0.18)]">
+        {/* md:min-h fija un tamaño de tarjeta estándar — no debe crecer o
+            encogerse según cuántos botones tenga cada formulario (login,
+            registro, recuperar contraseña). */}
+        <div className="max-w-4xl w-full md:min-h-[600px] grid grid-cols-1 md:grid-cols-2 rounded-3xl overflow-hidden shadow-[0_30px_80px_-15px_rgba(43,36,32,0.18)]">
 
           {/* ========== LADO IZQUIERDO — IDENTIDAD LA TRIBU ========== */}
           <div className="relative overflow-hidden p-12 flex flex-col items-center justify-center text-center bg-[var(--lh-bg)] transition-colors duration-[600ms]">
@@ -363,10 +412,55 @@ export default function LoginPage(): React.ReactElement {
           {/* ========== LADO DERECHO — FORMULARIO ========== */}
           <div className="bg-[var(--lf-bg)] p-12 flex flex-col justify-center transition-colors duration-[600ms]">
             <h2 className="text-2xl font-semibold tracking-tight mb-6 text-[var(--lf-title)] transition-colors duration-[600ms]">
-              {view === 'login' ? 'Qué bueno verte de nuevo' : 'Crea tu cuenta premium'}
+              {view === 'login' ? 'Acceso Miembros' : view === 'register' ? 'Crea tu cuenta premium' : 'Recuperar contraseña'}
             </h2>
 
-            {view === 'login' ? (
+            {view === 'forgot' ? (
+              <form onSubmit={handleForgotPassword} className="w-full space-y-4" noValidate>
+                {forgotError && (
+                  <div role="alert" className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+                    {forgotError}
+                  </div>
+                )}
+                {forgotSent ? (
+                  <div role="status" className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-400">
+                    Si el correo existe, enviaremos instrucciones para restablecer tu contraseña.
+                  </div>
+                ) : (
+                  <>
+                    <div className="space-y-1.5">
+                      <label htmlFor="forgot-email" className={labelClasses}>Email</label>
+                      <input
+                        id="forgot-email"
+                        type="email"
+                        autoComplete="email"
+                        required
+                        value={forgotEmail}
+                        onChange={(e) => setForgotEmail(e.target.value)}
+                        placeholder="tucorreo@ejemplo.com"
+                        className={inputClasses}
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={forgotLoading}
+                      className="relative inline-flex w-full items-center justify-center h-11 rounded-xl bg-[var(--lf-btn-bg)] text-[var(--lf-btn-text)] font-semibold tracking-wide transition-all duration-200 ease-out active:scale-[0.98] active:brightness-95 disabled:cursor-not-allowed disabled:opacity-60 gap-2"
+                    >
+                      {forgotLoading ? 'Enviando…' : 'Enviar instrucciones'}
+                    </button>
+                  </>
+                )}
+                <div className="text-center mt-6">
+                  <button
+                    type="button"
+                    onClick={() => { setView('login'); setForgotError(null); setForgotSent(false); }}
+                    className="text-[var(--lf-link)] hover:opacity-80 underline underline-offset-4 transition-colors duration-[600ms] font-medium text-sm"
+                  >
+                    Volver a iniciar sesión
+                  </button>
+                </div>
+              </form>
+            ) : view === 'login' ? (
               <form onSubmit={handleLogin} className="w-full space-y-4" noValidate>
                 {loginError && (
                   <div role="alert" className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
@@ -386,19 +480,49 @@ export default function LoginPage(): React.ReactElement {
                   <label htmlFor="login-password" className={labelClasses}>Contraseña</label>
                   <input id="login-password" type="password" autoComplete="current-password" required value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} placeholder="••••••••" className={inputClasses} />
                 </div>
+                <label className="flex items-center gap-2 text-sm text-[var(--lf-label)] transition-colors duration-[600ms] cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="h-4 w-4 rounded border-[var(--lf-input-border)] accent-[var(--lf-link)]"
+                  />
+                  Recuérdame
+                </label>
                 <button type="submit" disabled={loginLoading} className="relative inline-flex w-full items-center justify-center h-11 rounded-xl bg-[var(--lf-btn-bg)] text-[var(--lf-btn-text)] font-semibold tracking-wide transition-all duration-200 ease-out active:scale-[0.98] active:brightness-95 disabled:cursor-not-allowed disabled:opacity-60 gap-2">
                   {loginLoading ? (<span className="flex items-center gap-2"><svg className="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>Ingresando…</span>) : 'Entrar'}
                 </button>
 
-                {(googleReady || appleReady) && (
-                  <div className="flex items-center gap-2.5 my-4">
-                    <span className="flex-1 h-px bg-[var(--lf-input-border)] transition-colors duration-[600ms]" />
-                    <span className="text-[11px] uppercase tracking-wide text-[var(--lf-foot)] transition-colors duration-[600ms]">o</span>
-                    <span className="flex-1 h-px bg-[var(--lf-input-border)] transition-colors duration-[600ms]" />
-                  </div>
-                )}
-                {/* Google Identity Services renderiza su propio botón (iframe) acá dentro */}
-                <div ref={googleButtonRef} className="flex justify-center" />
+                {/* Divisor y placeholders siempre visibles desde el primer render — antes
+                    solo aparecían cuando el SDK de Google terminaba de cargar (script
+                    externo + ida y vuelta a /api/config), lo que se sentía como que el
+                    botón "aparecía solo" un par de segundos después del resto del
+                    formulario. Reservar el espacio de entrada evita ese salto. */}
+                <div className="flex items-center gap-2.5 my-4">
+                  <span className="flex-1 h-px bg-[var(--lf-input-border)] transition-colors duration-[600ms]" />
+                  <span className="text-[11px] uppercase tracking-wide text-[var(--lf-foot)] transition-colors duration-[600ms]">o</span>
+                  <span className="flex-1 h-px bg-[var(--lf-input-border)] transition-colors duration-[600ms]" />
+                </div>
+                {/* Google Identity Services renderiza su propio botón (iframe) dentro del
+                    div con ref — mientras no esté listo, un placeholder del mismo alto
+                    ocupa su lugar para que no haya salto de layout cuando aparezca. */}
+                <div className="relative flex justify-center" style={{ minHeight: 44 }}>
+                  {!googleReady && (
+                    <div
+                      aria-hidden="true"
+                      className="absolute inset-0 flex items-center justify-center gap-2 rounded-full border border-[var(--lf-input-border)] bg-[var(--lf-input-bg)] text-[var(--lf-input-text)] text-sm font-medium opacity-60"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 48 48" aria-hidden="true">
+                        <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 3l6-6C34.5 5.1 29.6 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21 21-9.4 21-21c0-1.4-.1-2.7-.4-3.5z"/>
+                        <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.9 18.9 13 24 13c3.1 0 5.8 1.1 8 3l6-6C34.5 5.1 29.6 3 24 3 16.3 3 9.7 7.3 6.3 14.7z"/>
+                        <path fill="#4CAF50" d="M24 45c5.5 0 10.4-2.1 14.1-5.6l-6.5-5.5C29.6 35.6 26.9 37 24 37c-5.3 0-9.7-3.3-11.3-8l-6.6 5.1C9.6 40.6 16.3 45 24 45z"/>
+                        <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.2 4.2-4.1 5.6l6.5 5.5C40.9 36.6 45 30.9 45 24c0-1.4-.1-2.7-.4-3.5z"/>
+                      </svg>
+                      Continuar con Google
+                    </div>
+                  )}
+                  <div ref={googleButtonRef} className="flex justify-center" />
+                </div>
 
                 {appleReady ? (
                   <button
@@ -425,6 +549,16 @@ export default function LoginPage(): React.ReactElement {
                     Continuar con Apple
                   </button>
                 )}
+
+                <div className="text-center mt-2">
+                  <button
+                    type="button"
+                    onClick={() => { setView('forgot'); setLoginError(null); }}
+                    className="text-[var(--lf-link)] hover:opacity-80 underline underline-offset-4 transition-colors duration-[600ms] font-medium text-sm"
+                  >
+                    ¿Has olvidado tu contraseña?
+                  </button>
+                </div>
               </form>
             ) : (
               <form onSubmit={handleRegister} className="w-full space-y-4" noValidate>
@@ -455,15 +589,17 @@ export default function LoginPage(): React.ReactElement {
               </form>
             )}
 
-            <div className="text-center mt-6">
-              <button
-                type="button"
-                onClick={() => { setView(view === 'login' ? 'register' : 'login'); setLoginError(null); setRegError(null); }}
-                className="text-[var(--lf-link)] hover:opacity-80 underline underline-offset-4 transition-colors duration-[600ms] font-medium text-sm"
-              >
-                {view === 'login' ? '¿Aún no tienes cuenta? Regístrate' : '¿Ya tienes cuenta? Inicia sesión'}
-              </button>
-            </div>
+            {view !== 'forgot' && (
+              <div className="text-center mt-6">
+                <button
+                  type="button"
+                  onClick={() => { setView(view === 'login' ? 'register' : 'login'); setLoginError(null); setRegError(null); }}
+                  className="text-[var(--lf-link)] hover:opacity-80 underline underline-offset-4 transition-colors duration-[600ms] font-medium text-sm"
+                >
+                  {view === 'login' ? '¿Aún no tienes cuenta? Regístrate' : '¿Ya tienes cuenta? Inicia sesión'}
+                </button>
+              </div>
+            )}
           </div>
 
         </div>

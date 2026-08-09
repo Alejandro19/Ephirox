@@ -55,6 +55,11 @@ export function adminOnly(req: Request, res: Response, next: NextFunction) {
   next();
 }
 
+export function therapistOnly(req: Request, res: Response, next: NextFunction) {
+  if (req.user?.role !== 'terapeuta') return unauthorized(res, 'Acceso restringido a terapeutas.', 403);
+  next();
+}
+
 export function ownerOrAdmin(req: Request, res: Response, next: NextFunction) {
   if (req.user?.role === 'admin') return next();
   if (req.user?.id === req.params.id) {

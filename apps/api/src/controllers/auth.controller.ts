@@ -1,10 +1,12 @@
 import type { Request, Response } from 'express';
-import type { LoginInput, RegisterInput, ChangePasswordInput, GoogleAuthInput, AppleAuthInput } from '@latribu/shared-types';
+import type { LoginInput, RegisterInput, ChangePasswordInput, GoogleAuthInput, AppleAuthInput, ForgotPasswordInput, ResetPasswordInput } from '@latribu/shared-types';
 import * as authService from '../services/auth.service.js';
 import * as clientsService from '../services/clients.service.js';
 import * as adminsService from '../services/admins.service.js';
+import * as therapistsService from '../services/therapists.service.js';
 import * as googleAuthService from '../services/google-auth.service.js';
 import * as appleAuthService from '../services/apple-auth.service.js';
+import * as passwordResetService from '../services/password-reset.service.js';
 import { getPersonalInfoByClientId } from '../services/personal-info.service.js';
 
 function ok(res: Response, data: Record<string, unknown>, status = 200) {
@@ -46,6 +48,31 @@ export async function login(req: Request, res: Response) {
   });
 }
 
+export async function therapistLogin(req: Request, res: Response) {
+  const { email, password } = req.body as LoginInput;
+  const emailLower = email.toLowerCase().trim();
+
+  const therapist = await therapistsService.findTherapistByEmail(emailLower);
+  if (!therapist) return err(res, 'Credenciales incorrectas.', 401);
+  if (!therapist.active) return err(res, 'Tu cuenta está inactiva. Contacta al administrador.', 403);
+  const valid = await authService.verifyPassword(password, therapist.passwordHash);
+  if (!valid) return err(res, 'Credenciales incorrectas.', 401);
+
+  const token = authService.signToken({
+    id: therapist.id,
+    role: 'terapeuta',
+    name: therapist.name,
+    email: therapist.email,
+    mustChangePassword: therapist.mustChangePassword,
+  });
+  return ok(res, {
+    token,
+    role: 'terapeuta',
+    mustChangePassword: therapist.mustChangePassword,
+    user: { id: therapist.id, name: therapist.name, email: therapist.email, specialty: therapist.specialty },
+  });
+}
+
 export async function register(req: Request, res: Response) {
   const { name, email, password } = req.body as RegisterInput;
   const emailLower = email.toLowerCase().trim();
@@ -65,6 +92,14 @@ export async function me(req: Request, res: Response) {
     if (!admin) return err(res, 'No encontrado.', 404);
     return ok(res, { role: 'admin', user: { id: admin.id, name: admin.name, email: admin.email } });
   }
+  if (req.user?.role === 'terapeuta') {
+    const therapist = await therapistsService.findTherapistById(req.user.id);
+    if (!therapist) return err(res, 'No encontrado.', 404);
+    return ok(res, {
+      role: 'terapeuta',
+      user: { id: therapist.id, name: therapist.name, email: therapist.email, specialty: therapist.specialty },
+    });
+  }
   const client = await clientsService.findClientById(req.user!.id);
   if (!client) return err(res, 'No encontrado.', 404);
   const clientInfo = await getPersonalInfoByClientId(client.id);
@@ -81,6 +116,20 @@ export async function me(req: Request, res: Response) {
 
 export async function changePassword(req: Request, res: Response) {
   const { currentPassword, newPassword } = req.body as ChangePasswordInput;
+
+  if (req.user?.role === 'terapeuta') {
+    const therapist = await therapistsService.findTherapistById(req.user.id);
+    if (!therapist) return err(res, 'No encontrado.', 404);
+    const valid = await authService.verifyPassword(currentPassword, therapist.passwordHash);
+    if (!valid) return err(res, 'Contraseña actual incorrecta.', 401);
+    const passwordHash = await authService.hashPassword(newPassword);
+    await therapistsService.updateTherapistPassword(therapist.id, passwordHash);
+    // Se reemite el token sin mustChangePassword — el que tenía el terapeuta
+    // en sesión sigue cargando el claim viejo hasta que se le da uno nuevo.
+    const token = authService.signToken({ id: therapist.id, role: 'terapeuta', name: therapist.name, email: therapist.email, mustChangePassword: false });
+    return ok(res, { message: 'Contraseña actualizada.', token });
+  }
+
   const isAdmin = req.user?.role === 'admin';
   const account = isAdmin
     ? await adminsService.findAdminById(req.user!.id)
@@ -96,6 +145,55 @@ export async function changePassword(req: Request, res: Response) {
     await clientsService.updateClientPassword(account.id, passwordHash);
   }
   return ok(res, { message: 'Contraseña actualizada.' });
+}
+
+export async function forgotPassword(req: Request, res: Response) {
+  const { email } = req.body as ForgotPasswordInput;
+  const emailLower = email.toLowerCase().trim();
+  const genericResponse = { message: 'Si el correo existe en nuestro sistema, enviaremos instrucciones para restablecer la contraseña.' };
+
+  const webBaseUrl = process.env.WEB_APP_URL || 'http://localhost:3000';
+
+  const admin = await adminsService.findAdminByEmail(emailLower);
+  if (admin) {
+    const rawToken = await passwordResetService.createResetToken('admin', admin.id);
+    await passwordResetService.sendPasswordResetEmail(admin.email, `${webBaseUrl}/reset-password?token=${rawToken}`);
+    return ok(res, genericResponse);
+  }
+
+  const client = await clientsService.findClientByEmail(emailLower);
+  if (client && client.status !== 'inactive') {
+    const rawToken = await passwordResetService.createResetToken('cliente', client.id);
+    await passwordResetService.sendPasswordResetEmail(client.email, `${webBaseUrl}/reset-password?token=${rawToken}`);
+    return ok(res, genericResponse);
+  }
+
+  const therapist = await therapistsService.findTherapistByEmail(emailLower);
+  if (therapist && therapist.active) {
+    const rawToken = await passwordResetService.createResetToken('terapeuta', therapist.id);
+    await passwordResetService.sendPasswordResetEmail(therapist.email, `${webBaseUrl}/reset-password?token=${rawToken}`);
+    return ok(res, genericResponse);
+  }
+
+  // Ningún email coincidió (o la cuenta está inactiva): misma respuesta,
+  // nunca se revela si el correo existe o no.
+  return ok(res, genericResponse);
+}
+
+export async function resetPassword(req: Request, res: Response) {
+  const { token, newPassword } = req.body as ResetPasswordInput;
+  const consumed = await passwordResetService.consumeResetToken(token);
+  if (!consumed) return err(res, 'El enlace es inválido o ya expiró. Solicita uno nuevo.', 400);
+
+  const passwordHash = await authService.hashPassword(newPassword);
+  if (consumed.userType === 'admin') {
+    await adminsService.updateAdminPassword(consumed.userId, passwordHash);
+  } else if (consumed.userType === 'cliente') {
+    await clientsService.updateClientPassword(consumed.userId, passwordHash);
+  } else {
+    await therapistsService.updateTherapistPassword(consumed.userId, passwordHash);
+  }
+  return ok(res, { message: 'Contraseña actualizada. Ya puedes iniciar sesión.' });
 }
 
 export async function googleLogin(req: Request, res: Response) {

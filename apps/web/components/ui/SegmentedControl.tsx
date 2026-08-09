@@ -11,7 +11,7 @@ export default function SegmentedControl({ options, value, onChange, label }: Se
   return (
     <div>
       {label && (
-        <div style={{ display: "flex", alignItems: "center", fontSize: 13, fontWeight: 600,
+        <div style={{ display: "flex", alignItems: "center", fontSize: 12, fontWeight: 600,
           color: "var(--ink-soft)", marginBottom: 8 }}>
           {label}
         </div>

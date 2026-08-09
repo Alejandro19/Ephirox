@@ -212,10 +212,15 @@ export function Module10({ clientId, draft, onChange }: Module10Props) {
         </div>
 
         <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <FloatingField id="m10-lab-fecha" label="Fecha del análisis" type="date" value={draft.labFecha}
-            onChange={(v) => onChange({ ...draft, labFecha: v })} />
+          {/* FileField trae su propia etiqueta arriba de la caja (ícono +
+              texto); FloatingField no — sin este espaciador equivalente, las
+              dos cajas no arrancan a la misma altura y se ven desalineadas. */}
+          <div className="sm:pt-6">
+            <FloatingField id="m10-lab-fecha" label="Fecha del análisis" type="date" value={draft.labFecha}
+              onChange={(v) => onChange({ ...draft, labFecha: v })} />
+          </div>
           <FileField id="m10-lab-file" label="Subir PDF o imagen de laboratorio" accept=".pdf,.jpg,.jpeg,.png"
-            disabled={ocrBusy} fileName={draft.labFileName}
+            disabled={ocrBusy} uploading={ocrBusy} fileName={draft.labFileName}
             helper={`Extraemos ${LAB_BIOMARKER_COUNT} biomarcadores automáticamente · PDF, JPG, PNG`}
             onFileChange={(file) => { if (file) void handleLabFile(file); }} />
         </div>

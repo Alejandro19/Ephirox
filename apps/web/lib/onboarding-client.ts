@@ -17,9 +17,14 @@ async function authorizedRequest<T>(path: string, method: string, body?: unknown
 }
 
 export type PersonalInfoUpdatePayload = {
+  name?: string;
+  age?: number | null;
   birthdate?: string;
   gender?: string;
   occupation?: string;
+  cedula?: string;
+  id_type?: string;
+  email?: string;
   marital_status?: string;
   country?: string;
   city?: string;

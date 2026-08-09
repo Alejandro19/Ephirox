@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const PUBLIC_PATHS = ["/login", "/_next", "/api"];
+const PUBLIC_PATHS = ["/login", "/therapist-login", "/reset-password", "/_next", "/api"];
 const STATIC_EXTS = /\.(svg|png|jpg|jpeg|gif|ico|css|js|woff2?)$/;
 
 export function middleware(request: NextRequest) {

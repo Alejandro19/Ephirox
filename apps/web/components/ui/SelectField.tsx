@@ -34,7 +34,7 @@ export default function SelectField({ value, onChange, options, label, placehold
         id={selectId}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="peer h-12 w-full appearance-none rounded-xl border border-[#E7DFC9] bg-white px-3.5 pr-9 pt-4 text-[15px] text-transparent outline-none transition-colors focus:border-[var(--gold)]"
+        className="peer h-16 w-full appearance-none rounded-xl border border-[#E7DFC9] bg-white px-3.5 pr-9 pt-7 text-[15px] text-transparent outline-none transition-colors focus:border-[var(--gold)]"
       >
         <option value="" aria-label={placeholder}></option>
         {options.map((o) => (
@@ -45,14 +45,14 @@ export default function SelectField({ value, onChange, options, label, placehold
       </select>
       <span
         aria-hidden
-        className="pointer-events-none absolute inset-0 flex items-center truncate px-3.5 pr-9 pt-4 text-[15px] leading-none text-[#2B2621]"
+        className="pointer-events-none absolute inset-0 flex items-center truncate px-3.5 pr-9 pt-7 text-[15px] leading-none text-[#2B2621]"
       >
         {selectedLabel}
       </span>
       {label && (
         <label
           htmlFor={selectId}
-          className="pointer-events-none absolute left-3.5 right-9 top-3 truncate text-[12px] leading-none text-[#8A8377] transition-colors peer-focus:text-[var(--gold)]"
+          className="pointer-events-none absolute left-3.5 right-9 top-3 truncate text-[12px] font-semibold leading-none text-[#8A8377] transition-colors peer-focus:text-[var(--gold)]"
         >
           {label}
         </label>

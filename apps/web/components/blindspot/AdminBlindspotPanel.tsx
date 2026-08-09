@@ -1,0 +1,512 @@
+'use client';
+
+import { useCallback, useEffect, useState } from 'react';
+import { getSessionToken } from '@/lib/api-client';
+import {
+  adminListCases,
+  adminGetCase,
+  adminCreateCase,
+  adminUpdateCase,
+  adminAcknowledgeCrisis,
+  adminListTherapists,
+  adminCreateTherapist,
+  adminSetTherapistActive,
+  type BlindspotCase,
+  type BlindspotCaseStatus,
+  type BlindspotTask,
+  type BlindspotSessionLog,
+  type Therapist,
+} from '@/lib/blindspot-client';
+import { showToast } from '@/components/layout/AppShell';
+
+const API_BASE = 'http://localhost:3003/api';
+
+type ClientOption = { id: string; name: string; clientType: string };
+
+const cardStyle: React.CSSProperties = {
+  background: 'var(--paper)', border: '1px solid var(--line)',
+  borderRadius: 'var(--radius)', padding: '22px 24px', marginBottom: 18,
+};
+const cardTitleStyle: React.CSSProperties = { fontSize: 15, fontWeight: 700, color: 'var(--ink)', margin: '0 0 16px' };
+const labelStyle: React.CSSProperties = { display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--ink-soft)', marginBottom: 4 };
+const fieldStyle: React.CSSProperties = {
+  width: '100%', height: 40, borderRadius: 10, border: '1px solid var(--line)',
+  padding: '0 10px', fontSize: 13, background: 'var(--paper)', color: 'var(--ink)',
+  outline: 'none', boxSizing: 'border-box',
+};
+const textareaStyle: React.CSSProperties = { ...fieldStyle, height: 'auto', minHeight: 72, padding: 10, resize: 'vertical', fontFamily: 'inherit' };
+const primaryButtonStyle: React.CSSProperties = {
+  height: 40, padding: '0 22px', borderRadius: 9999, border: 'none',
+  background: 'var(--sage)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+};
+const ghostButtonStyle: React.CSSProperties = {
+  height: 32, padding: '0 14px', borderRadius: 9999, border: '1px solid var(--line)',
+  background: 'transparent', color: 'var(--ink-soft)', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+};
+const dangerButtonStyle: React.CSSProperties = {
+  height: 32, padding: '0 14px', borderRadius: 9999, border: '1px solid var(--danger)',
+  background: 'transparent', color: 'var(--danger)', fontSize: 12, fontWeight: 600, cursor: 'pointer', flexShrink: 0,
+};
+function tabButtonStyle(active: boolean): React.CSSProperties {
+  return {
+    height: 38, padding: '0 20px', borderRadius: 9999, fontSize: 13, fontWeight: 700, cursor: 'pointer',
+    border: active ? 'none' : '1px solid var(--line)',
+    background: active ? 'var(--gold)' : 'transparent',
+    color: active ? '#fff' : 'var(--ink-soft)',
+  };
+}
+
+const STATUS_OPTIONS: BlindspotCaseStatus[] = ['evaluando', 'referido', 'en_proceso', 'cerrado'];
+const STATUS_LABEL: Record<BlindspotCaseStatus, string> = {
+  evaluando: 'Evaluando', referido: 'Referido', en_proceso: 'En proceso', cerrado: 'Cerrado',
+};
+
+export function AdminBlindspotPanel() {
+  const [tab, setTab] = useState<'casos' | 'terapeutas'>('casos');
+  const [cases, setCases] = useState<BlindspotCase[]>([]);
+  const [clients, setClients] = useState<ClientOption[]>([]);
+  const [therapists, setTherapists] = useState<Therapist[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null);
+
+  const refetch = useCallback(async () => {
+    try {
+      const [caseList, therapistList] = await Promise.all([adminListCases(), adminListTherapists()]);
+      setCases(caseList);
+      setTherapists(therapistList);
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : 'Error al cargar Punto Ciego.', 'error');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    refetch();
+    const token = getSessionToken();
+    if (!token) return;
+    fetch(`${API_BASE}/clients`, { headers: { Authorization: `Bearer ${token}` } })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.clients) setClients(data.clients.filter((c: ClientOption) => c.clientType === 'mentoring'));
+      })
+      .catch(() => {});
+  }, [refetch]);
+
+  function therapistName(id: string | null): string {
+    if (!id) return '— sin asignar —';
+    return therapists.find((t) => t.id === id)?.name ?? 'Terapeuta desconocido';
+  }
+  function clientName(id: string): string {
+    return clients.find((c) => c.id === id)?.name ?? id;
+  }
+
+  if (loading) return <p style={{ color: 'var(--ink-soft)', fontSize: 13 }}>Cargando...</p>;
+
+  return (
+    <div>
+      <div style={{ display: 'flex', gap: 10, marginBottom: 18 }}>
+        <button style={tabButtonStyle(tab === 'casos')} onClick={() => setTab('casos')}>Casos</button>
+        <button style={tabButtonStyle(tab === 'terapeutas')} onClick={() => setTab('terapeutas')}>Terapeutas</button>
+      </div>
+
+      {tab === 'casos' ? (
+        <CasesTab
+          cases={cases}
+          clients={clients}
+          therapists={therapists}
+          selectedCaseId={selectedCaseId}
+          onSelect={setSelectedCaseId}
+          onRefetch={refetch}
+          therapistName={therapistName}
+          clientName={clientName}
+        />
+      ) : (
+        <TherapistsTab therapists={therapists} onRefetch={refetch} />
+      )}
+    </div>
+  );
+}
+
+function CasesTab({
+  cases, clients, therapists, selectedCaseId, onSelect, onRefetch, therapistName, clientName,
+}: {
+  cases: BlindspotCase[];
+  clients: ClientOption[];
+  therapists: Therapist[];
+  selectedCaseId: string | null;
+  onSelect: (id: string | null) => void;
+  onRefetch: () => Promise<void>;
+  therapistName: (id: string | null) => string;
+  clientName: (id: string) => string;
+}) {
+  const [showNewCase, setShowNewCase] = useState(false);
+  const [newClientId, setNewClientId] = useState('');
+  const [motivoConsulta, setMotivoConsulta] = useState('');
+  const [areaPercibida, setAreaPercibida] = useState('');
+  const [prioridad, setPrioridad] = useState<'alta' | 'media' | 'baja'>('media');
+  const [creating, setCreating] = useState(false);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | BlindspotCaseStatus>('all');
+
+  const clientsWithoutCase = clients.filter((c) => !cases.some((k) => k.clientId === c.id));
+
+  const filteredCases = cases.filter((c) => {
+    if (statusFilter !== 'all' && c.status !== statusFilter) return false;
+    const q = search.trim().toLowerCase().replace(/^#/, '');
+    if (!q) return true;
+    const haystack = [`#${c.caseNumber}`, String(c.caseNumber), clientName(c.clientId), STATUS_LABEL[c.status], therapistName(c.therapistId)]
+      .join(' ')
+      .toLowerCase();
+    return haystack.includes(q);
+  });
+
+  async function handleCreateCase() {
+    if (!newClientId || !motivoConsulta || !areaPercibida) {
+      showToast('Completa cliente, motivo y área percibida.', 'error');
+      return;
+    }
+    setCreating(true);
+    try {
+      await adminCreateCase({ clientId: newClientId, initialAssessment: { motivoConsulta, areaPercibida, prioridad } });
+      showToast('Caso creado.', 'success');
+      setShowNewCase(false);
+      setNewClientId('');
+      setMotivoConsulta('');
+      setAreaPercibida('');
+      setPrioridad('media');
+      await onRefetch();
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : 'Error al crear el caso.', 'error');
+    } finally {
+      setCreating(false);
+    }
+  }
+
+  const selectedCase = cases.find((c) => c.id === selectedCaseId) ?? null;
+
+  return (
+    <div>
+      <div style={cardStyle}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: showNewCase ? 16 : 0 }}>
+          <h3 style={{ ...cardTitleStyle, margin: 0 }}>Casos de Punto Ciego</h3>
+          <button style={primaryButtonStyle} onClick={() => setShowNewCase((v) => !v)}>
+            {showNewCase ? 'Cancelar' : '+ Nuevo caso'}
+          </button>
+        </div>
+
+        {showNewCase && (
+          <div style={{ marginTop: 16, display: 'grid', gap: 12 }}>
+            <div>
+              <label style={labelStyle}>Cliente de Mentoría</label>
+              <select style={fieldStyle} value={newClientId} onChange={(e) => setNewClientId(e.target.value)}>
+                <option value="">— selecciona —</option>
+                {clientsWithoutCase.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label style={labelStyle}>Motivo de consulta</label>
+              <textarea style={textareaStyle} value={motivoConsulta} onChange={(e) => setMotivoConsulta(e.target.value)} />
+            </div>
+            <div>
+              <label style={labelStyle}>Área percibida</label>
+              <textarea style={textareaStyle} value={areaPercibida} onChange={(e) => setAreaPercibida(e.target.value)} />
+            </div>
+            <div>
+              <label style={labelStyle}>Prioridad</label>
+              <select style={fieldStyle} value={prioridad} onChange={(e) => setPrioridad(e.target.value as 'alta' | 'media' | 'baja')}>
+                <option value="alta">Alta</option>
+                <option value="media">Media</option>
+                <option value="baja">Baja</option>
+              </select>
+            </div>
+            <button style={primaryButtonStyle} onClick={handleCreateCase} disabled={creating}>
+              {creating ? 'Creando...' : 'Crear caso'}
+            </button>
+          </div>
+        )}
+      </div>
+
+      {cases.length === 0 ? (
+        <p style={{ color: 'var(--ink-soft)', fontSize: 13 }}>Aún no hay casos.</p>
+      ) : (
+        <>
+          <div style={{ ...cardStyle, display: 'flex', gap: 10, marginBottom: 12 }}>
+            <input
+              style={{ ...fieldStyle, flex: 1 }}
+              placeholder="Buscar por #caso, cliente, terapeuta o estado…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+            <select
+              style={{ ...fieldStyle, width: 170, flexShrink: 0 }}
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as 'all' | BlindspotCaseStatus)}
+            >
+              <option value="all">Todos los estados</option>
+              {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
+            </select>
+          </div>
+          <div style={cardStyle}>
+          {filteredCases.length === 0 ? (
+            <p style={{ color: 'var(--ink-soft)', fontSize: 13, margin: 0 }}>Ningún caso coincide con la búsqueda.</p>
+          ) : filteredCases.map((c) => (
+            <div
+              key={c.id}
+              onClick={() => onSelect(c.id === selectedCaseId ? null : c.id)}
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '12px 4px', borderBottom: '1px solid var(--line)', cursor: 'pointer',
+              }}
+            >
+              <div>
+                <p style={{ margin: 0, fontSize: 13.5, fontWeight: 700, color: 'var(--ink)' }}>#{c.caseNumber} · {clientName(c.clientId)}</p>
+                <p style={{ margin: '2px 0 0', fontSize: 11.5, color: 'var(--ink-soft)' }}>
+                  {STATUS_LABEL[c.status]} · {therapistName(c.therapistId)}
+                </p>
+              </div>
+              {c.crisisFlag && (
+                <span style={{ background: 'var(--danger)', color: '#fff', fontSize: 10.5, fontWeight: 700, padding: '4px 10px', borderRadius: 9999 }}>
+                  CRISIS
+                </span>
+              )}
+            </div>
+          ))}
+          </div>
+        </>
+      )}
+
+      {selectedCase && (
+        <CaseDetail blindspotCase={selectedCase} therapists={therapists} onRefetch={onRefetch} />
+      )}
+    </div>
+  );
+}
+
+function CaseDetail({ blindspotCase, therapists, onRefetch }: { blindspotCase: BlindspotCase; therapists: Therapist[]; onRefetch: () => Promise<void> }) {
+  const [tasks, setTasks] = useState<BlindspotTask[]>([]);
+  const [sessionLogs, setSessionLogs] = useState<BlindspotSessionLog[]>([]);
+  const [notes, setNotes] = useState(blindspotCase.adminPrivateNotes ?? '');
+  const [saving, setSaving] = useState(false);
+
+  const load = useCallback(async () => {
+    try {
+      const res = await adminGetCase(blindspotCase.id);
+      setTasks(res.tasks);
+      setSessionLogs(res.sessionLogs);
+      setNotes(res.case.adminPrivateNotes ?? '');
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : 'Error al cargar el detalle.', 'error');
+    }
+  }, [blindspotCase.id]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  async function handleStatusChange(status: BlindspotCaseStatus) {
+    try {
+      await adminUpdateCase(blindspotCase.id, { status });
+      await onRefetch();
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : 'Error al actualizar.', 'error');
+    }
+  }
+
+  async function handleAssignTherapist(therapistId: string) {
+    try {
+      await adminUpdateCase(blindspotCase.id, { therapistId: therapistId || null, status: therapistId ? 'referido' : blindspotCase.status });
+      await onRefetch();
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : 'Error al asignar terapeuta.', 'error');
+    }
+  }
+
+  async function handleSaveNotes() {
+    setSaving(true);
+    try {
+      await adminUpdateCase(blindspotCase.id, { adminPrivateNotes: notes });
+      showToast('Notas guardadas.', 'success');
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : 'Error al guardar notas.', 'error');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleAcknowledgeCrisis() {
+    try {
+      await adminAcknowledgeCrisis(blindspotCase.id);
+      showToast('Alerta atendida.', 'success');
+      await onRefetch();
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : 'Error al atender la alerta.', 'error');
+    }
+  }
+
+  return (
+    <div style={cardStyle}>
+      {blindspotCase.crisisFlag && (
+        <div style={{ background: 'var(--danger)', color: '#fff', borderRadius: 10, padding: '10px 14px', marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontSize: 13, fontWeight: 700 }}>Alerta de crisis activa — levantada por {blindspotCase.crisisFlaggedBy}</span>
+          <button
+            onClick={handleAcknowledgeCrisis}
+            style={{ background: '#fff', color: 'var(--danger)', border: 'none', borderRadius: 9999, padding: '6px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+          >
+            Atender
+          </button>
+        </div>
+      )}
+
+      <h3 style={cardTitleStyle}>Detalle del caso #{blindspotCase.caseNumber}</h3>
+
+      <div style={{ marginBottom: 16 }}>
+        <p style={{ margin: '0 0 4px', fontSize: 12, fontWeight: 600, color: 'var(--ink-soft)' }}>Motivo de consulta</p>
+        <p style={{ margin: 0, fontSize: 13.5, color: 'var(--ink)' }}>{blindspotCase.initialAssessment.motivoConsulta}</p>
+        <p style={{ margin: '10px 0 4px', fontSize: 12, fontWeight: 600, color: 'var(--ink-soft)' }}>Área percibida</p>
+        <p style={{ margin: 0, fontSize: 13.5, color: 'var(--ink)' }}>{blindspotCase.initialAssessment.areaPercibida}</p>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+        <div>
+          <label style={labelStyle}>Estado</label>
+          <select style={fieldStyle} value={blindspotCase.status} onChange={(e) => handleStatusChange(e.target.value as BlindspotCaseStatus)}>
+            {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
+          </select>
+        </div>
+        <div>
+          <label style={labelStyle}>Terapeuta asignado</label>
+          <select style={fieldStyle} value={blindspotCase.therapistId ?? ''} onChange={(e) => handleAssignTherapist(e.target.value)}>
+            <option value="">— sin asignar —</option>
+            {therapists.filter((t) => t.active).map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+          </select>
+        </div>
+      </div>
+
+      <div style={{ marginBottom: 16 }}>
+        <label style={labelStyle}>Notas privadas (solo tú las ves)</label>
+        <textarea style={textareaStyle} value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={2000} />
+        <button style={{ ...ghostButtonStyle, marginTop: 8 }} onClick={handleSaveNotes} disabled={saving}>
+          {saving ? 'Guardando...' : 'Guardar notas'}
+        </button>
+      </div>
+
+      <div style={{ marginBottom: 16 }}>
+        <p style={{ ...cardTitleStyle, fontSize: 13, marginBottom: 8 }}>Tareas ({tasks.length})</p>
+        {tasks.length === 0 ? (
+          <p style={{ fontSize: 12.5, color: 'var(--ink-soft)' }}>Sin tareas asignadas todavía.</p>
+        ) : (
+          tasks.map((t) => (
+            <p key={t.id} style={{ fontSize: 12.5, color: 'var(--ink)', margin: '4px 0' }}>
+              • {t.title} — <span style={{ color: 'var(--ink-soft)' }}>{t.status}</span>
+            </p>
+          ))
+        )}
+      </div>
+
+      <div>
+        <p style={{ ...cardTitleStyle, fontSize: 13, marginBottom: 8 }}>Sesiones registradas ({sessionLogs.length})</p>
+        {sessionLogs.length === 0 ? (
+          <p style={{ fontSize: 12.5, color: 'var(--ink-soft)' }}>Sin sesiones registradas todavía.</p>
+        ) : (
+          sessionLogs.map((log) => (
+            <div key={log.id} style={{ borderLeft: '2px solid var(--line)', paddingLeft: 12, marginBottom: 8 }}>
+              <p style={{ margin: 0, fontSize: 11.5, fontWeight: 700, color: 'var(--ink-soft)', textTransform: 'uppercase' }}>
+                {log.sessionDate} · {log.progressMarker}
+              </p>
+              {log.internalSummary && <p style={{ margin: '2px 0 0', fontSize: 12.5, color: 'var(--ink)' }}>{log.internalSummary}</p>}
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+function TherapistsTab({ therapists, onRefetch }: { therapists: Therapist[]; onRefetch: () => Promise<void> }) {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [specialty, setSpecialty] = useState('');
+  const [creating, setCreating] = useState(false);
+
+  async function handleCreate() {
+    if (!name || !email || password.length < 8) {
+      showToast('Nombre, email y contraseña de al menos 8 caracteres.', 'error');
+      return;
+    }
+    setCreating(true);
+    try {
+      await adminCreateTherapist({ name, email, password, specialty: specialty || undefined });
+      showToast('Terapeuta creado. Esa contraseña es temporal — deberá cambiarla en su primer ingreso.', 'success');
+      setName('');
+      setEmail('');
+      setPassword('');
+      setSpecialty('');
+      await onRefetch();
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : 'Error al crear el terapeuta.', 'error');
+    } finally {
+      setCreating(false);
+    }
+  }
+
+  async function handleToggleActive(t: Therapist) {
+    try {
+      await adminSetTherapistActive(t.id, !t.active);
+      await onRefetch();
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : 'Error al actualizar.', 'error');
+    }
+  }
+
+  return (
+    <div>
+      <div style={cardStyle}>
+        <h3 style={cardTitleStyle}>Nuevo terapeuta</h3>
+        <div style={{ display: 'grid', gap: 12 }}>
+          <div>
+            <label style={labelStyle}>Nombre</label>
+            <input style={fieldStyle} value={name} onChange={(e) => setName(e.target.value)} />
+          </div>
+          <div>
+            <label style={labelStyle}>Email</label>
+            <input style={fieldStyle} type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+          </div>
+          <div>
+            <label style={labelStyle}>Contraseña temporal</label>
+            <input style={fieldStyle} type="text" value={password} onChange={(e) => setPassword(e.target.value)} />
+          </div>
+          <div>
+            <label style={labelStyle}>Especialidad</label>
+            <input style={fieldStyle} value={specialty} onChange={(e) => setSpecialty(e.target.value)} placeholder="Biodescodificación" />
+          </div>
+          <button style={primaryButtonStyle} onClick={handleCreate} disabled={creating}>
+            {creating ? 'Creando...' : 'Crear terapeuta'}
+          </button>
+        </div>
+      </div>
+
+      <div style={cardStyle}>
+        <h3 style={cardTitleStyle}>Terapeutas</h3>
+        {therapists.length === 0 ? (
+          <p style={{ color: 'var(--ink-soft)', fontSize: 13 }}>Aún no hay terapeutas.</p>
+        ) : (
+          therapists.map((t) => (
+            <div key={t.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--line)' }}>
+              <div>
+                <p style={{ margin: 0, fontSize: 13.5, fontWeight: 700, color: 'var(--ink)' }}>{t.name}</p>
+                <p style={{ margin: '2px 0 0', fontSize: 11.5, color: 'var(--ink-soft)' }}>{t.email} · {t.specialty ?? 'sin especialidad'}</p>
+              </div>
+              <button style={t.active ? dangerButtonStyle : ghostButtonStyle} onClick={() => handleToggleActive(t)}>
+                {t.active ? 'Desactivar' : 'Activar'}
+              </button>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}

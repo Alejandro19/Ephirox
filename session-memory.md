@@ -1,7 +1,7 @@
 # session-memory.md
 
-> **Fecha:** 2026-08-05
-> **Propósito:** Resumen ejecutivo de la sesión de hoy y plan de continuidad inmediato para la siguiente sesión.
+> **Última actualización:** 2026-08-09
+> **Propósito:** Resumen ejecutivo por sesión (orden cronológico) y plan de continuidad inmediato para la siguiente sesión.
 
 ---
 
@@ -114,6 +114,74 @@ El módulo de Entrenamiento que construyó la otra IA (`TrainingHome`, `Training
 ### Actividad 5 — Seguir coordinando con la otra IA
 
 - La otra IA sigue construyendo partes del App Shell y páginas de admin/cliente bajo `apps/web/app/(app)/`. Antes de tocar esos archivos, confirmar que no estén en curso de edición activa (para evitar conflictos como el ya visto con `AdminClientDetail.tsx`/`AdminClientList.tsx`, que tuvieron errores de sintaxis que rompían el dev server entero).
+
+---
+
+## Resumen Ejecutivo — Sesión 2026-08-09
+
+### 1. Módulo "Punto Ciego" (Mentoría) construido de punta a punta
+
+Nuevo módulo premium exclusivo del tier Mentoring: Alejandro hace una evaluación inicial y refiere al cliente a un terapeuta externo curado, que da seguimiento (tareas, sesiones) dentro de la plataforma. Se escribió primero un spec completo (`docs/spec-punto-ciego.md`, con la skill `spec-driven-development`) y luego se implementó entero:
+
+- **Backend:** 4 tablas nuevas (`therapists`, `blindspot_cases`, `blindspot_tasks`, `blindspot_session_logs`), rol nuevo de JWT `'terapeuta'` (login propio en `/api/auth/therapist/login`, middleware `therapistOnly`), `blindspot.service.ts` + `blindspot.controller.ts` + `blindspot.routes.ts` (montado en `/api/blindspot`), con separación estricta de privacidad: `adminPrivateNotes` nunca llega al terapeuta, `internalSummary` nunca llega al cliente (verificado con tests, no solo por convención). Alerta de crisis: notificación in-app + email (reusa el patrón nodemailer de `personal-info.service.ts`), con degradación silenciosa a log si no hay SMTP configurado.
+- **Frontend:** vistas separadas por rol en una sola ruta `/blindspot` (`AdminBlindspotPanel`, `ClientBlindspotPanel` con `LockedOverlay` si el cliente no es `mentoring`, igual que "Descanso") + un panel de terapeuta completo bajo su propio grupo de rutas `(therapist)`.
+- **Regresión propia detectada y corregida:** `drizzle-kit push` reveló que `sleep_logs`/`wearable_tokens`/`wearable_metricas`/`lab_panels` tenían constraints `UNIQUE` compuestos que existían en la BD real pero nunca se habían declarado en `schema.ts` — al hacer push los iba a borrar. Se declararon en el schema antes de aplicar nada.
+- **`drizzle-kit push` no es confiable en este repo:** dos veces distintas en esta sesión se quedó colgado esperando una confirmación interactiva de TTY (truncar tabla) que nunca llega en un proceso en background — no es un cuelgue real, es un prompt invisible. Desde entonces, todo cambio de schema se aplica con un script `tsx` desechable que corre SQL directo (`ALTER TABLE ... ADD COLUMN IF NOT EXISTS`, `CREATE TABLE IF NOT EXISTS`), contando filas antes de cualquier operación potencialmente destructiva, y se borra después de usarlo. Aplicado así, sin pérdida de datos, a las dos bases (test y real) en cada cambio de esta sesión.
+
+### 2. Login de terapeutas + sistema de recuperación de contraseña
+
+- Login de terapeutas (`/therapist-login`) rediseñado para compartir la misma esencia visual que `/login` (logo, slogan, tema día/noche, splitscreen) pero sin Google/Apple ni registro.
+- **Bug encontrado y corregido:** el `AuthProvider` global (envuelve toda la app, incluida `/therapist`) valida el token contra `/api/auth/me` en cada carga de página; ese endpoint no reconocía el rol `terapeuta` y caía al branch de cliente → 404 → cierre de sesión forzado. Se agregó el branch faltante en `me()`.
+- Sistema de "¿Has olvidado tu contraseña?" genérico por email (busca en admins/clientes/terapeutas, misma respuesta siempre exista o no la cuenta), tabla `password_reset_tokens` (token de un solo uso, expira en 1h), página compartida `/reset-password`.
+- Contraseña temporal para terapeutas: el admin les asigna una al crearlos (`mustChangePassword: true`); en su primer login se les fuerza a `/therapist/set-password` antes de dejarlos entrar, reemitiendo un token limpio al terminar.
+- "Recuérdame" en ambos logins: solo persiste el email en `localStorage`, nunca la contraseña en texto plano (el gestor de contraseñas del navegador ya cubre eso de forma segura vía `autoComplete`).
+- Tarjetas de login estandarizadas a un alto fijo (`md:min-h-[600px]`) para que no cambien de tamaño según cuántos botones tengan.
+
+### 3. Numeración de casos, navegación y buscador
+
+- `blindspot_cases.case_number`: columna `serial` de Postgres, se asigna sola en orden de creación. Se muestra como `#N` en los tres paneles (admin, terapeuta, cliente).
+- Módulo "Punto Ciego" agregado a la navegación real (`ADMIN_NAV`/`CLIENT_NAV`/`VIEW_TO_PATH` en `lib/constants.ts`) — antes solo era alcanzable por URL directa. En el panel de cliente usa el mismo candado 🔒 que "Descanso" si el `clientType` no es `mentoring`.
+- Buscador/filtro de casos en el panel admin y en el panel de terapeuta.
+
+### 4. Rediseño completo del panel de terapeuta ("Punto Ciego")
+
+Sidebar nuevo (`TherapistSidebar.tsx`) con los 7 módulos pedidos (Mi perfil, Mis casos, Mis clientes, Mi agenda, Recursos clínicos, Comunidad de terapeutas, Dashboards), resaltado del módulo activo reusando el patrón real que ya usa el admin (`--terracota`/`--terracota-soft` — no existe un token "coral" en `globals.css`, se reusó el existente para mantener consistencia real con el resto de la app), bloque de cuenta fijo abajo (avatar + nombre + "Terapeuta") con "Cerrar sesión". Todo vive como un mini-SPA dentro de `/therapist` (`TherapistShell.tsx`), sin rutas nuevas por módulo — los 6 módulos no construidos muestran un placeholder "Próximamente".
+
+Único módulo construido a fondo: **Mis casos** (`TherapistCasesModule.tsx`, reemplaza a `TherapistBlindspotPanel.tsx`) — tabs Activos/En crisis/Cerrados con contador, lista con avatar+inicial, nombre+#caso, motivo corto y "última sesión hace...", badge de estado; detalle con grid de datos personales de solo lectura (Nombre, Cédula, País, Ciudad, Email, Celular), motivo/área lado a lado con labels en mayúsculas trackeadas, botón sólido de crisis con confirmación, checklist de tareas con círculo-checkbox, y "Registrar sesión" con selects de igual alto y botón negro de guardar.
+
+- **Dato nuevo que no existía:** "Cédula" no estaba en ningún lado del modelo (`personal_info`). Se agregó la columna (migración aditiva, segura) y se expone de solo lectura al terapeuta vía `therapistGetCase`, pero **no se construyó un formulario de admin para cargarla** — hoy el admin tampoco tiene edición de ningún otro dato personal, solo lectura. Pendiente de decisión del usuario si se quiere ese formulario.
+- **Decisión de seguridad tomada sin preguntar:** el spec pedido decía que el "resumen interno" de sesión lo ven "tú y el cliente", pero eso contradice la barrera de privacidad ya probada por tests (el cliente nunca debe ver `internalSummary`). Se dejó el texto original ("solo tú y Alejandro lo ven") en vez de implementar literalmente lo pedido. **Pendiente de confirmación del usuario.**
+- `therapistListCases`/`therapistGetCase` se enriquecieron en el backend con nombre del cliente, fecha de última sesión y los datos personales de solo lectura (antes el terapeuta no tenía acceso a ninguno de estos datos).
+
+### 5. Verificación
+
+`tsc --noEmit` limpio en ambas apps en cada paso. Suite de backend sin regresiones (auth: 17→31 tests con los nuevos de forgot/reset/mustChangePassword; blindspot: 14 tests). `next build` compila todo lo nuevo — solo falla en el mismo bug preexistente y no tocado de `AdminClientDetail.tsx` (mismatch de tipos en `PersonalInfo`, fuera de alcance, ya reportado en sesiones anteriores). Fallas preexistentes no relacionadas confirmadas de nuevo: credenciales de Supabase Storage inválidas en test, un test de login obsoleto (`login-page.test.tsx`) que prueba una lógica de `router.push` que ya no existe desde el rediseño "Fase 0", y flakiness conocida por fecha relativa/timeout en `training-home-logic.test.ts`/`wizard-shell-*.test.tsx`.
+
+### 6. Estado del working tree al cerrar la sesión
+
+`old_index.html` (tracked, borrado) e `index.html` (nuevo, sin trackear) en la raíz quedaron **fuera del commit de esta sesión a propósito** — tocan el archivo que Vercel deploya en producción desde `origin/main` (ver Notas adicionales) y ese cambio no fue parte de ningún pedido de esta sesión ni se investigó su origen. `BIO360Index.html`/`BIO360server.js` y los binarios `apps/api/*.traineddata` se movieron a `.gitignore` (ya eran "sin trackear a propósito" mencionado en la sesión 2026-08-05, pero no estaban en `.gitignore` todavía, así que un `git add -A` los habría capturado por error).
+
+---
+
+## Próximas actividades — Siguiente sesión
+
+### Actividad 1 — Decidir sobre "Cédula" y el texto del resumen interno
+
+- Confirmar si se quiere un formulario de admin para cargar la cédula (y de paso el resto de datos personales, que hoy tampoco son editables desde el panel admin).
+- Confirmar el texto correcto de la etiqueta "Resumen interno" en Registrar sesión — hoy dice "solo tú y Alejandro lo ven", el pedido original decía "tú y el cliente", lo cual no puede ser cierto sin romper la privacidad ya garantizada por tests.
+
+### Actividad 2 — Probar en navegador el panel de terapeuta rediseñado
+
+- Loguearse con una cuenta de terapeuta, confirmar navegación entre los 7 módulos del sidebar, y probar el flujo completo de "Mis casos": tabs, buscador, marcar crisis, agregar/completar/omitir tareas, registrar sesión.
+- Probar el flujo de "olvidé mi contraseña" end-to-end en ambos logins (clientes y terapeutas) con SMTP real o revisando el link en los logs del backend si no hay SMTP configurado.
+
+### Actividad 3 — Revisar `old_index.html` / `index.html` en la raíz
+
+- Antes de cualquier commit futuro, entender por qué `old_index.html` (tracked) aparece borrado y hay un `index.html` nuevo sin trackear — no se tocó ni se investigó en esta sesión porque no fue parte de ningún pedido y el archivo es el que usa producción en Vercel.
+
+### Actividad 4 — Construir los 6 módulos placeholder del panel de terapeuta
+
+- Mi perfil (reusar la estética de rachas/medallas ya usada con clientes), Mis clientes, Mi agenda, Recursos clínicos, Comunidad de terapeutas, Dashboards — hoy son solo navegación + "Próximamente".
 
 ---
 

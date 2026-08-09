@@ -55,9 +55,14 @@ export async function upsertPersonalInfo(clientId: string, input: PersonalInfoUp
   // propiedades camelCase declaradas en schema.ts. El mapeo debe ser
   // explícito — spreadear `input` directamente insertaría columnas nulas.
   const patch: Record<string, unknown> = { updatedAt: new Date() };
+  if (input.name !== undefined) patch.name = input.name;
+  if (input.age !== undefined) patch.age = input.age;
   if (input.birthdate !== undefined) patch.birthdate = input.birthdate;
   if (input.gender !== undefined) patch.gender = input.gender;
   if (input.occupation !== undefined) patch.occupation = input.occupation;
+  if (input.cedula !== undefined) patch.cedula = input.cedula;
+  if (input.id_type !== undefined) patch.idType = input.id_type;
+  if (input.email !== undefined) patch.email = input.email;
   if (input.country !== undefined) patch.country = input.country;
   if (input.city !== undefined) patch.city = input.city;
   if (input.phone_code !== undefined) patch.phoneCode = input.phone_code;

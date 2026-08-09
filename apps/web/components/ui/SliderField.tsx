@@ -28,8 +28,7 @@ export default function SliderField({
       <div style={{ display: "flex", justifyContent: "space-between",
         alignItems: "center", marginBottom: 8 }}>
         {label && (
-          <div style={{ display: "inline-flex", alignItems: "center", fontSize: 12, fontWeight: 600, color: "#2B2621" }}>
-            <span aria-hidden style={{ marginRight: 6, color: "#5B7A4E", fontSize: 14 }}>🎚️</span>
+          <div style={{ display: "inline-flex", alignItems: "center", fontSize: 12, fontWeight: 600, color: "var(--ink-soft)" }}>
             <label htmlFor={sliderId} style={{ cursor: "pointer" }}>{label}</label>
           </div>
         )}

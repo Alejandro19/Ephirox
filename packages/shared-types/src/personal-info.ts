@@ -1,9 +1,14 @@
 import { z } from 'zod';
 
 export const PersonalInfoUpdateSchema = z.object({
+  name: z.string().optional(),
+  age: z.coerce.number().optional(),
   birthdate: z.string().date().optional(),
   gender: z.string().optional(),
   occupation: z.string().optional(),
+  cedula: z.string().optional(),
+  id_type: z.string().optional(),
+  email: z.string().optional(),
   country: z.string().optional(),
   city: z.string().optional(),
   phone_code: z.string().optional(),

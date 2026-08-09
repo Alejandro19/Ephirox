@@ -28,7 +28,7 @@ type AuthUser = {
 
 type AuthState = {
   token: string | null;
-  role: "admin" | "cliente" | null;
+  role: "admin" | "cliente" | "terapeuta" | null;
   user: AuthUser | null;
   permissions: Record<string, boolean>;
   clientType: string | null;

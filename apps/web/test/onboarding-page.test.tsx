@@ -14,10 +14,15 @@ vi.mock('next/navigation', () => ({
 }));
 
 function fillModule1() {
+  fireEvent.change(screen.getByLabelText('Nombre completo'), { target: { value: 'Cliente de Prueba' } });
+  fireEvent.change(screen.getByLabelText('Edad'), { target: { value: '35' } });
   fireEvent.change(screen.getByLabelText('Fecha de nacimiento'), { target: { value: '1990-01-01' } });
   fireEvent.change(screen.getByLabelText('Género'), { target: { value: 'Masculino' } });
   fireEvent.change(screen.getByLabelText('Ocupación'), { target: { value: 'Ingeniero' } });
   fireEvent.change(screen.getByLabelText('Estado civil'), { target: { value: 'Soltero/a' } });
+  fireEvent.change(screen.getByLabelText('Identificación'), { target: { value: 'Cédula de ciudadanía' } });
+  fireEvent.change(screen.getByLabelText('Número de identificación'), { target: { value: '1234567890' } });
+  fireEvent.change(screen.getByLabelText('Correo electrónico'), { target: { value: 'cliente@example.com' } });
   fireEvent.change(screen.getByLabelText('País de residencia'), { target: { value: 'CO' } });
   fireEvent.change(screen.getByLabelText('Ciudad'), { target: { value: 'Bogotá' } });
   fireEvent.change(screen.getByLabelText('Celular (WhatsApp)'), { target: { value: '3001234567' } });

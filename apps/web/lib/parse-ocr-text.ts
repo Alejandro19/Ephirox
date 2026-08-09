@@ -4,10 +4,14 @@ export type ParsedInbodyFields = {
   grasa_pct?: number;
   peso_objetivo?: number;
   grasa_visceral?: number;
+  grasa_visceral_range?: [number, number];
   bmr?: number;
+  bmr_range?: [number, number];
   ecw_tbw?: number;
+  ecw_tbw_range?: [number, number];
   smm?: number;
   masa_osea?: number;
+  masa_osea_range?: [number, number];
   height?: number;
   angulo_fase?: number;
 };
@@ -24,6 +28,72 @@ function firstDecimal(str: string, min?: number, max?: number): number | undefin
   while ((m = re.exec(str)) !== null) {
     const v = parseNum(m[1]);
     if (v != null && (min == null || v >= min) && (max == null || v <= max)) return v;
+  }
+  return undefined;
+}
+
+// Los reportes InBody imprimen el rango de referencia entre paréntesis justo
+// después del valor, ej. "Nivel de Grasa Visceral 8 ( 1~9 )" — se usa tanto
+// "~" como "-" como separador según el modelo/idioma del equipo. minBound/
+// maxBound son un chequeo de cordura: en layouts a dos columnas (ej. plantilla
+// Integral: InBody 370S/380/570/580) el texto de una celda vecina puede
+// quedar más cerca que el rango real y "colarse" — un reporte real (InBody570)
+// mostró esto: a "Nivel de Grasa Visceral" se le pegó el rango del BMR
+// (1229-1420) en vez del propio (1-9). Un rango fuera de los límites
+// plausibles del campo se descarta antes que mostrar un dato falso.
+function parseRange(win: string, minBound?: number, maxBound?: number): [number, number] | undefined {
+  const m = win.match(/\(\s*([0-9]+(?:[,.][0-9]+)?)\s*[~-]\s*([0-9]+(?:[,.][0-9]+)?)\s*\)/);
+  if (!m) return undefined;
+  const lo = parseNum(m[1]);
+  const hi = parseNum(m[2]);
+  if (lo == null || hi == null || lo >= hi) return undefined;
+  if (minBound != null && lo < minBound) return undefined;
+  if (maxBound != null && hi > maxBound) return undefined;
+  return [lo, hi];
+}
+
+// Como parseRange, pero cuando hay más de un "(...)" candidato en la ventana
+// prueba cada uno en orden hasta encontrar el primero que además "encierre"
+// el valor ya conocido (dentro de un margen razonable) — así se salta el
+// rango de OTRA celda de la tabla que simplemente quedó más cerca en el texto
+// OCR. Caso real (InBody570): entre "Minerales 2,79" y su propio rango
+// "(2,76~3,38)" se coló el rango del Peso, "(49,8-67,4)", por el layout a dos
+// columnas — parseRange solo(que se queda con el primer match) lo agarraba
+// y el chequeo de límites lo descartaba entero, dejando el campo vacío en vez
+// de seguir buscando el rango correcto un poco más adelante.
+function firstPlausibleRange(win: string, value: number, minBound: number, maxBound: number): [number, number] | undefined {
+  const re = /\(\s*([0-9]+(?:[,.][0-9]+)?)\s*[~-]\s*([0-9]+(?:[,.][0-9]+)?)\s*\)/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(win)) !== null) {
+    const lo = parseNum(m[1]);
+    const hi = parseNum(m[2]);
+    if (lo == null || hi == null || lo >= hi) continue;
+    if (lo < minBound || hi > maxBound) continue;
+    if (lo > value + 1 || hi < value - 1) continue;
+    return [lo, hi];
+  }
+  return undefined;
+}
+
+// Respaldo para cuando el OCR pierde el paréntesis/espacio entre el valor y
+// su rango: quedan pegados sin separador, ej. "49,436,2-44,2" en vez de
+// "49,4 (36,2-44,2)" (caso real: foto de un InBody120 de baja calidad).
+// Separar esos dígitos a ciegas es ambiguo (¿"49,43" + "6,2"? ¿"49,4" +
+// "36,2"?) — pero el valor YA se conoce (se extrajo antes), así que se busca
+// su propia representación de texto dentro de la ventana y se toma todo lo
+// que sigue como el bloque del rango, sin adivinar dónde termina.
+function rangeAfterKnownValue(win: string, value: number, minBound: number, maxBound: number): [number, number] | undefined {
+  for (const needle of [String(value).replace('.', ','), String(value).replace('.', '.')]) {
+    const idx = win.indexOf(needle);
+    if (idx < 0) continue;
+    const after = win.slice(idx + needle.length, idx + needle.length + 40);
+    const m = after.match(/^[\s)]*\(?\s*([0-9]{1,3}[,.][0-9])\s*[~\-\s]\s*([0-9]{1,3}[,.][0-9])/);
+    if (!m) continue;
+    const lo = parseNum(m[1]);
+    const hi = parseNum(m[2]);
+    if (lo == null || hi == null || lo >= hi) continue;
+    if (lo < minBound || hi > maxBound) continue;
+    return [lo, hi];
   }
   return undefined;
 }
@@ -96,7 +166,13 @@ export function parseOcrText(text: string): ParsedInbodyFields {
         }
       }
       if (result.peso_total == null) {
-        const pw = winOf(text, /\bpeso\b(?!\s*(?:ideal|control|libre|magra))/i, 0, 200);
+        // Ventana angosta a propósito: con texto muy degradado (OCR local
+        // sin Vision) una ventana amplia puede alcanzar el límite superior
+        // de un rango de referencia de OTRA celda de la tabla (ej. "Masa
+        // Magra (38,3-46,9)") y devolverlo como si fuera el peso — un dato
+        // incorrecto es peor que uno vacío. 40 caracteres alcanza para
+        // "Peso ... 57,4 kg" pero no para cruzar a una celda distinta.
+        const pw = winOf(text, /\bpeso\b(?!\s*(?:ideal|control|libre|magra))/i, 0, 40);
         if (pw) {
           v = firstDecimal(pw, 40, 250);
           if (v != null) result.peso_total = v;
@@ -115,6 +191,15 @@ export function parseOcrText(text: string): ParsedInbodyFields {
         const ht = parseInt(htM[1], 10);
         bmi = result.peso_total / Math.pow(ht / 100, 2);
       }
+    }
+    // Camino directo: "PGC (%) 22,5" en una sola línea/frase — más simple y
+    // menos propenso a ruido de OCR que el heurístico multi-línea de abajo,
+    // que sigue existiendo como respaldo para reportes donde el valor no
+    // queda pegado a la etiqueta.
+    const pgcDirectM = text.match(/pgc[^\n(]{0,10}\(%\)[^0-9]{0,15}([0-9]+[,.][0-9]+)/i);
+    if (pgcDirectM) {
+      const pgcDirectV = parseNum(pgcDirectM[1]);
+      if (pgcDirectV != null && pgcDirectV >= 10 && pgcDirectV <= 65) result.grasa_pct = pgcDirectV;
     }
     const pgcPos: number[] = [];
     const pgcRe = /\bpgc\b/gi;
@@ -143,13 +228,28 @@ export function parseOcrText(text: string): ParsedInbodyFields {
     }
   }
 
-  // Peso ideal
+  // Peso ideal — se prueba primero un valor sufijado "kg" (ej. "Peso Ideal
+  // 79,4 kg"), que es como el reporte lo imprime siempre. Buscar el primer
+  // decimal después de la etiqueta sin exigir el sufijo es frágil: en OCR
+  // degradado, una celda vecina de otra mini-tabla (ej. el peso actual con su
+  // propio rango de referencia, "87,1(54,7-74,0)") puede quedar más cerca de
+  // la etiqueta que el valor real y capturarse por error — caso real
+  // (InBody120): devolvía 87,154 en vez del "79,4 kg" real, unas líneas más
+  // abajo. El patrón sin "kg" se mantiene como respaldo para reportes donde
+  // ese sufijo no quedó pegado al número.
   const ctrlSec = winOf(text, /control\s+de\s+peso/i, 0, 400);
   if (ctrlSec) {
-    const idealSecM = ctrlSec.match(/peso\s+ideal[\s\S]{0,40}?([0-9]+[,.][0-9]+)/i);
-    if (idealSecM) {
-      v = parseNum(idealSecM[1]);
+    const idealKgM = ctrlSec.match(/peso\s+ideal[\s\S]{0,80}?([0-9]{1,3}[,.][0-9])\s*kg\b/i);
+    if (idealKgM) {
+      v = parseNum(idealKgM[1]);
       if (v != null && v >= 30 && v <= 150) result.peso_objetivo = v;
+    }
+    if (result.peso_objetivo == null) {
+      const idealSecM = ctrlSec.match(/peso\s+ideal[\s\S]{0,40}?([0-9]+[,.][0-9]+)/i);
+      if (idealSecM) {
+        v = parseNum(idealSecM[1]);
+        if (v != null && v >= 30 && v <= 150) result.peso_objetivo = v;
+      }
     }
   }
   if (result.peso_objetivo == null) {
@@ -170,15 +270,24 @@ export function parseOcrText(text: string): ParsedInbodyFields {
     }
   }
 
-  // Grasa visceral
-  const viscIdx = text.search(/visceral/i);
-  if (viscIdx >= 0) {
-    const viscSnip = text.slice(viscIdx + 8, viscIdx + 150);
-    const viscClean = viscSnip.replace(/[0-9]+[,.][0-9]+/g, '');
-    const viscIntM = viscClean.match(/\b([0-9]{1,2})\b/);
-    if (viscIntM) {
-      const vv = parseInt(viscIntM[1], 10);
-      if (vv >= 1 && vv <= 20) result.grasa_visceral = vv;
+  // Grasa visceral — algunos modelos (ej. InBody120) la etiquetan "Nivel de
+  // Grasa Visceral" con el valor pegado a la etiqueta; se prueba ese patrón
+  // directo antes del genérico basado solo en "visceral".
+  const viscNivelM = text.match(/nivel\s+de\s+grasa\s+visceral[^0-9]{0,20}([0-9]{1,2})\b/i);
+  if (viscNivelM) {
+    const vv0 = parseInt(viscNivelM[1], 10);
+    if (vv0 >= 1 && vv0 <= 20) result.grasa_visceral = vv0;
+  }
+  if (result.grasa_visceral == null) {
+    const viscIdx = text.search(/visceral/i);
+    if (viscIdx >= 0) {
+      const viscSnip = text.slice(viscIdx + 8, viscIdx + 150);
+      const viscClean = viscSnip.replace(/[0-9]+[,.][0-9]+/g, '');
+      const viscIntM = viscClean.match(/\b([0-9]{1,2})\b/);
+      if (viscIntM) {
+        const vv = parseInt(viscIntM[1], 10);
+        if (vv >= 1 && vv <= 20) result.grasa_visceral = vv;
+      }
     }
   }
   if (result.grasa_visceral == null) {
@@ -188,6 +297,14 @@ export function parseOcrText(text: string): ParsedInbodyFields {
       if (gvv >= 1 && gvv <= 20) result.grasa_visceral = gvv;
     }
   }
+  // El rango saludable de grasa visceral (1-9) es un estándar fijo del
+  // software InBody en las 3 familias de plantillas (Estándar, Integral y
+  // Médica/Académica) — no varía por paciente ni por modelo, así que se fija
+  // directo en vez de buscarlo en el texto. Buscarlo dinámicamente resultó
+  // frágil: en un reporte real InBody570 (plantilla Integral, layout a dos
+  // columnas) el rango del BMR quedó más cerca en el texto OCR que el propio
+  // "( 1~9 )" y terminaba mostrándose por error bajo Grasa visceral.
+  if (result.grasa_visceral != null) result.grasa_visceral_range = [1, 9];
 
   // Metabolismo basal (BMR)
   m = text.match(/tasa\s+metab[^\n]{0,30}?([0-9]{3,4})\s*kcal/i);
@@ -195,16 +312,29 @@ export function parseOcrText(text: string): ParsedInbodyFields {
   if (!m) m = text.match(/([0-9]{4})\s*kcal/i);
   if (m) {
     v = parseInt(m[1], 10);
-    if (v >= 600 && v <= 5000) result.bmr = v;
+    if (v >= 600 && v <= 5000) {
+      result.bmr = v;
+      result.bmr_range = parseRange(text.slice(m.index ?? 0, (m.index ?? 0) + m[0].length + 40), 400, 6000);
+    }
   }
 
-  // Agua corporal total
+  // Agua corporal total — la ventana de caracteres antes del número se
+  // amplió (15/20 → 40/60) para tolerar el ruido extra que deja el OCR local
+  // (Tesseract, fallback cuando Vision no está disponible) entre la etiqueta
+  // y el valor, comparado con lo limpio que sale de Vision.
   m = text.match(/agua\s+corporal\s+(?:total\s+)?\([Ll]\)[^0-9]{0,10}([0-9]+[,.][0-9]+)/i);
-  if (!m) m = text.match(/agua\s+corporal\s+total[^0-9]{0,15}([0-9]+[,.][0-9]+)/i);
-  if (!m) m = text.match(/agua\s+corporal[^0-9]{0,20}([0-9]+[,.][0-9]+)/i);
+  if (!m) m = text.match(/agua\s+corporal\s+total[^0-9]{0,40}([0-9]+[,.][0-9]+)/i);
+  if (!m) m = text.match(/agua\s+corporal[^0-9]{0,60}([0-9]+[,.][0-9]+)/i);
   if (m) {
     v = parseNum(m[1]);
-    if (v != null && v >= 15 && v <= 80) result.ecw_tbw = Math.round(v * 10) / 10;
+    if (v != null && v >= 15 && v <= 80) {
+      result.ecw_tbw = Math.round(v * 10) / 10;
+      const winStart = m.index ?? 0;
+      result.ecw_tbw_range = parseRange(text.slice(winStart, winStart + m[0].length + 40), 5, 100);
+      if (result.ecw_tbw_range == null) {
+        result.ecw_tbw_range = rangeAfterKnownValue(text.slice(winStart, winStart + m[0].length + 60), result.ecw_tbw, 5, 100);
+      }
+    }
   }
 
   // Masa muscular esquelética (SMM/MME)
@@ -212,7 +342,11 @@ export function parseOcrText(text: string): ParsedInbodyFields {
     const smmLines = text.split('\n');
     for (let si = 0; si < smmLines.length && result.smm == null; si++) {
       const sLine = smmLines[si];
-      if (/m[uú]sculo\s+esqu/i.test(sLine) || /\bmme\s*\([Kk]g\)/i.test(sLine)) {
+      // "MME (kg)" es el formato de reportes InBody770-style; algunos
+      // modelos (ej. InBody120) muestran "MME" solo, sin "(kg)" pegado —
+      // se acepta la etiqueta sola siempre que exista un decimal plausible
+      // cerca (lo valida firstDecimal más abajo, rango 10-60).
+      if (/m[uú]sculo\s+esqu/i.test(sLine) || /\bmme\b/i.test(sLine)) {
         const sWin = sLine + '\n' + (smmLines[si + 1] || '') + '\n' + (smmLines[si + 2] || '') + '\n' + (smmLines[si + 3] || '');
         v = firstDecimal(sWin, 10, 60);
         if (v != null) result.smm = v;
@@ -263,6 +397,23 @@ export function parseOcrText(text: string): ParsedInbodyFields {
             }
           }
         }
+      }
+    }
+    // El rango se ancla en la propia representación de texto del valor ya
+    // encontrado (igual que en agua corporal) en vez de en la etiqueta
+    // "Minerales": esa palabra también aparece en la sección "Evaluación de
+    // Nutrición" (checklist Normal/Deficiente sin números), que en un layout
+    // a dos columnas puede quedar antes en el texto OCR que la fila real de
+    // la tabla — el mismo tipo de interferencia que afectó a grasa visceral.
+    // Se usa firstPlausibleRange (no parseRange) porque, en el layout a dos
+    // columnas de la plantilla Integral, entre "2,79" y su rango real
+    // "(2,76~3,38)" se cuela el rango de OTRA celda (Peso: "(49,8-67,4)") —
+    // hay que seguir buscando en vez de quedarse con el primer paréntesis.
+    if (result.masa_osea != null) {
+      const valueStr = String(result.masa_osea).replace('.', ',');
+      const idx = text.indexOf(valueStr);
+      if (idx >= 0) {
+        result.masa_osea_range = firstPlausibleRange(text.slice(idx, idx + 80), result.masa_osea, 1, 8);
       }
     }
   }

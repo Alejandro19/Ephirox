@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { computeHiddenFieldIds, validateWizardModule } from '@latribu/shared-types';
+import { useRouter } from 'next/navigation';
+import { computeHiddenFieldIds, validateWizardModule, type WizardFieldConfig } from '@latribu/shared-types';
 import { WIZARD_MODULES, WIZARD_MODULE_10, CONDITIONAL_RULES } from '../../lib/wizard-modules';
 import { WizardField } from './WizardField';
 import { CountryCityPicker, type CountryCityValue } from './CountryCityPicker';
@@ -21,12 +22,68 @@ type WizardData = Record<string, string | string[]>;
 
 const PHOTO_ANGLE_KEYS = ['frente', 'lado_derecho', 'lado_izquierdo', 'espalda'] as const;
 
+// Un campo "ancho" (chips, textarea, o un select con pregunta muy larga)
+// necesita la fila completa para no verse apretado — ver WizardField.tsx,
+// que ya les da sm:col-span-2.
+function isWideField(field: WizardFieldConfig): boolean {
+  return (
+    field.type === 'chips' ||
+    field.type === 'textarea' ||
+    field.type === 'country-picker' ||
+    (field.type === 'select' && field.label.length > 55)
+  );
+}
+
+// 'segmented'/'chevron'/'time'/'file' dibujan su label ARRIBA de la caja (una
+// fila aparte, ~24px de alto); el resto de los campos (select, text, date,
+// slider) no tienen esa fila — su caja empieza pegada al borde superior de su
+// celda. Emparejados en una misma fila de la grilla, eso deja las dos cajas a
+// distinta altura (ver capturas: "Hora del último café" vs "Consumo de
+// alcohol", "Último chequeo médico" vs "Subir chequeo médico"). Cuando el par
+// mezcla ambos estilos, el campo sin fila de label recibe un `pt-6` para
+// bajar su caja y emparejarla con la del otro.
+const EXTERNAL_LABEL_TYPES = new Set(['segmented', 'chevron', 'time', 'file']);
+
+// El emparejamiento de filas se calcula UNA sola vez a partir de la lista
+// estática de campos del módulo — nunca a partir de cuáles están ocultos en
+// este momento. Antes se filtraban los campos ocultos ANTES de armar los
+// pares, así que cuando un campo condicional (ej. "¿Cuáles probióticos?")
+// pasaba de oculto a visible, el emparejamiento de TODAS las filas
+// siguientes cambiaba de a uno — React desmontaba y volvía a montar en
+// cascada cada fila restante del módulo con keys nuevas. Ese remount masivo,
+// en un único clic, es lo que dejaba la página con scroll "varado" en un
+// hueco en blanco (la altura vieja ya no correspondía al contenido nuevo,
+// más corto). Ahora las filas son fijas: activar/desactivar un campo
+// condicional solo agrega o quita SU PROPIA fila — el resto nunca se
+// remonta.
+function groupFieldsIntoRows(fields: WizardFieldConfig[]): WizardFieldConfig[][] {
+  const rows: WizardFieldConfig[][] = [];
+  let pendingNarrow: WizardFieldConfig | null = null;
+  for (const field of fields) {
+    if (isWideField(field)) {
+      if (pendingNarrow) {
+        rows.push([pendingNarrow]);
+        pendingNarrow = null;
+      }
+      rows.push([field]);
+    } else if (pendingNarrow) {
+      rows.push([pendingNarrow, field]);
+      pendingNarrow = null;
+    } else {
+      pendingNarrow = field;
+    }
+  }
+  if (pendingNarrow) rows.push([pendingNarrow]);
+  return rows;
+}
+
 export type WizardShellProps = {
   clientId: string;
   clientType?: string | null;
 };
 
 export function WizardShell({ clientId, clientType }: WizardShellProps) {
+  const router = useRouter();
   const [step, setStep] = useState(1);
   const [wizardData, setWizardData] = useState<WizardData>({});
   const [otroValues, setOtroValues] = useState<Record<string, string>>({});
@@ -45,8 +102,30 @@ export function WizardShell({ clientId, clientType }: WizardShellProps) {
   const mod = modules.find((m) => m.n === step)!;
   const hiddenFieldIds = computeHiddenFieldIds(CONDITIONAL_RULES, wizardData);
 
+  // Revalida en vivo SOLO cuando ya hay errores visibles (el usuario intentó
+  // avanzar con el paso incompleto) — así un campo deja de verse en rojo en
+  // cuanto se completa, en vez de quedar marcado inválido hasta el próximo
+  // clic en "Continuar". Sin errores visibles no se toca nada, para no
+  // validar de más mientras el usuario recién está llenando el formulario.
+  function revalidateWizardData(next: WizardData) {
+    if (invalidFieldIds.size === 0) return;
+    const nextHidden = computeHiddenFieldIds(CONDITIONAL_RULES, next);
+    if (mod.custom === 'country') {
+      const invalid: string[] = [];
+      if (!next.country) invalid.push('country');
+      if (!next.city) invalid.push('city');
+      if (!next.phone_number) invalid.push('phone_number');
+      invalid.push(...validateWizardModule(mod.fields, next, nextHidden));
+      setInvalidFieldIds(new Set(invalid));
+      return;
+    }
+    setInvalidFieldIds(new Set(validateWizardModule(mod.fields, next, nextHidden)));
+  }
+
   function handleFieldChange(id: string, value: string | string[]) {
-    setWizardData((prev) => ({ ...prev, [id]: value }));
+    const next = { ...wizardData, [id]: value };
+    setWizardData(next);
+    revalidateWizardData(next);
   }
 
   function handleOtroChange(id: string, value: string) {
@@ -55,17 +134,28 @@ export function WizardShell({ clientId, clientType }: WizardShellProps) {
 
   function handleFileChange(id: string, file: File | null) {
     if (id === 'checkup_file') setPendingCheckupFile(file);
-    setWizardData((prev) => ({ ...prev, [id]: file?.name || '' }));
+    const next = { ...wizardData, [id]: file?.name || '' };
+    setWizardData(next);
+    revalidateWizardData(next);
   }
 
   function handleCountryCityChange(patch: Partial<CountryCityValue>) {
-    setWizardData((prev) => ({
-      ...prev,
+    const next = {
+      ...wizardData,
       ...(patch.country !== undefined ? { country: patch.country } : {}),
       ...(patch.city !== undefined ? { city: patch.city } : {}),
       ...(patch.phoneCode !== undefined ? { phone_code: patch.phoneCode } : {}),
       ...(patch.phoneNumber !== undefined ? { phone_number: patch.phoneNumber } : {}),
-    }));
+    };
+    setWizardData(next);
+    revalidateWizardData(next);
+  }
+
+  function handleModule3Change(next: Module3Draft) {
+    setModule3Draft(next);
+    if (invalidFieldIds.size > 0) {
+      setInvalidFieldIds(new Set(validateModule3(next)));
+    }
   }
 
   async function finalize() {
@@ -87,17 +177,22 @@ export function WizardShell({ clientId, clientType }: WizardShellProps) {
       }
 
       await putPersonalInfo(clientId, {
+        name: wizardData.name as string,
+        age: wizardData.age ? Number(wizardData.age) : null,
         birthdate: wizardData.birthdate as string,
         gender: wizardData.gender as string,
         occupation: wizardData.occupation as string,
+        cedula: wizardData.cedula as string,
+        id_type: wizardData.id_type as string,
+        email: wizardData.email as string,
         marital_status: wizardData.marital_status as string,
         country: wizardData.country as string,
         city: wizardData.city as string,
         phone_code: wizardData.phone_code as string,
         phone_number: wizardData.phone_number as string,
-        weight: module3Draft.weight ? Number(module3Draft.weight) : null,
-        height: module3Draft.height ? Number(module3Draft.height) : null,
-        body_fat: module3Draft.bodyFat ? Number(module3Draft.bodyFat) : null,
+        weight: module3Draft.inbody.pesoTotal ? Number(module3Draft.inbody.pesoTotal) : null,
+        height: module3Draft.inbody.altura ? Number(module3Draft.inbody.altura) : null,
+        body_fat: module3Draft.inbody.grasaPct ? Number(module3Draft.inbody.grasaPct) : null,
         onboarding_report: onboardingReport,
         complete: true,
       });
@@ -107,7 +202,7 @@ export function WizardShell({ clientId, clientType }: WizardShellProps) {
       if (cintura || brazos || hombros || piernas || gluteo) {
         await createAnthropometric(clientId, {
           fecha: new Date().toISOString().slice(0, 10),
-          peso: module3Draft.weight ? Number(module3Draft.weight) : null,
+          peso: module3Draft.inbody.pesoTotal ? Number(module3Draft.inbody.pesoTotal) : null,
           cintura: cintura ? Number(cintura) : null,
           brazos: brazos ? Number(brazos) : null,
           hombros: hombros ? Number(hombros) : null,
@@ -198,14 +293,33 @@ export function WizardShell({ clientId, clientType }: WizardShellProps) {
 
   if (complete) {
     return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
-        <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-[var(--sage-soft)] text-3xl text-[var(--sage)]">
-          ✓
+      <div className="flex min-h-[60vh] flex-col items-center justify-center px-4">
+        {/* Tarjeta estilo notificación push (icono + nombre de app + "ahora"),
+            en vez del check genérico centrado — pedido explícito del usuario. */}
+        <div className="w-full max-w-sm rounded-2xl border border-[var(--line)] bg-[var(--paper)] p-4 shadow-[0_10px_35px_rgba(43,38,33,0.12)]">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-[var(--sage-soft)] text-lg text-[var(--sage)]">
+              ✓
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center justify-between gap-2">
+                <p className="m-0 text-[11px] font-bold uppercase tracking-wider text-[var(--ink-soft)]">La Tribu</p>
+                <p className="m-0 text-[11px] text-[var(--ink-soft)]">ahora</p>
+              </div>
+              <p className="m-0 mt-0.5 font-serif text-base font-bold text-[var(--ink)]">¡Listo!</p>
+              <p className="m-0 mt-1 text-sm leading-snug text-[var(--ink-soft)]">
+                Datos guardados. Tu coach te contactará lo antes posible.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => router.push('/training')}
+            className="mt-4 w-full rounded-full bg-[var(--gold)] px-6 py-3 text-sm font-semibold text-white transition hover:brightness-95"
+          >
+            Aceptar
+          </button>
         </div>
-        <h1 className="mb-2 font-serif text-2xl font-bold text-[var(--ink)]">¡Listo!</h1>
-        <p className="max-w-sm text-sm text-[var(--ink-soft)]">
-          Datos guardados. Tu coach te contactará lo antes posible.
-        </p>
       </div>
     );
   }
@@ -285,40 +399,57 @@ export function WizardShell({ clientId, clientType }: WizardShellProps) {
           Módulo {mod.n} · {mod.title}
         </h2>
 
-        {mod.custom === 'country' && (
-          <div className="mb-4">
-            <CountryCityPicker
-              value={{
-                country: (wizardData.country as string) || '',
-                city: (wizardData.city as string) || '',
-                phoneCode: (wizardData.phone_code as string) || '+57',
-                phoneNumber: (wizardData.phone_number as string) || '',
-              }}
-              onChange={handleCountryCityChange}
-              invalidFieldIds={invalidFieldIds}
-            />
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {mod.fields.map((field) => (
-            <WizardField
-              key={field.id}
-              field={field}
-              value={wizardData[field.id]}
-              otroValue={otroValues[field.id]}
-              hidden={hiddenFieldIds.has(field.id)}
-              invalid={invalidFieldIds.has(field.id)}
-              onChange={handleFieldChange}
-              onOtroChange={handleOtroChange}
-              onFileChange={handleFileChange}
-            />
-          ))}
+        <div className="space-y-4">
+          {groupFieldsIntoRows(mod.fields).map((row) => {
+            const visibleRow = row.filter((field) => !hiddenFieldIds.has(field.id));
+            if (visibleRow.length === 0) return null;
+            // Si el campo que acompañaba a este en su fila está oculto por una
+            // condición (ej. "alcohol_type" cuando "alcohol" = "Nunca"), el
+            // que queda no debe dejar la otra mitad de la fila en blanco —
+            // ocupa el ancho completo mientras esté solo.
+            const alone = visibleRow.length === 1;
+            const mixedLabelStyle =
+              visibleRow.length === 2 && EXTERNAL_LABEL_TYPES.has(visibleRow[0].type) !== EXTERNAL_LABEL_TYPES.has(visibleRow[1].type);
+            return (
+              <div key={row.map((f) => f.id).join('+')} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {visibleRow.map((field) => {
+                  const needsSpacer = mixedLabelStyle && !EXTERNAL_LABEL_TYPES.has(field.type);
+                  const wrapperClass = [alone && 'sm:col-span-2', needsSpacer && 'sm:pt-6'].filter(Boolean).join(' ') || undefined;
+                  return (
+                  <div key={field.id} className={wrapperClass}>
+                    {field.type === 'country-picker' ? (
+                      <CountryCityPicker
+                        value={{
+                          country: (wizardData.country as string) || '',
+                          city: (wizardData.city as string) || '',
+                          phoneCode: (wizardData.phone_code as string) || '+57',
+                          phoneNumber: (wizardData.phone_number as string) || '',
+                        }}
+                        onChange={handleCountryCityChange}
+                        invalidFieldIds={invalidFieldIds}
+                      />
+                    ) : (
+                    <WizardField
+                      field={field}
+                      value={wizardData[field.id]}
+                      otroValue={otroValues[field.id]}
+                      invalid={invalidFieldIds.has(field.id)}
+                      onChange={handleFieldChange}
+                      onOtroChange={handleOtroChange}
+                      onFileChange={handleFileChange}
+                    />
+                    )}
+                  </div>
+                  );
+                })}
+              </div>
+            );
+          })}
         </div>
 
         {mod.custom === 'body' && (
           <div className="mt-4">
-            <Module3 clientId={clientId} draft={module3Draft} onChange={setModule3Draft} invalidFields={invalidFieldIds} />
+            <Module3 clientId={clientId} draft={module3Draft} onChange={handleModule3Change} invalidFields={invalidFieldIds} />
           </div>
         )}
 

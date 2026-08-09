@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export type WizardFieldType =
   | 'text' | 'textarea' | 'select' | 'date' | 'chevron'
-  | 'slider' | 'segmented' | 'chips' | 'time' | 'file';
+  | 'slider' | 'segmented' | 'chips' | 'time' | 'file' | 'country-picker';
 
 export type WizardFieldConfig = {
   id: string;

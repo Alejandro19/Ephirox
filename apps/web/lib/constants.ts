@@ -19,6 +19,7 @@ export const CLIENT_NAV: NavItem[] = [
   { key: "nutrition", label: "Nutrición", visible: (s) => s.clientType === "lead_wellness" ? true : s.onboardingComplete === true },
   { key: "cortisol", label: "Gestión de Cortisol", visible: (s) => s.clientType === "lead_wellness" ? true : s.onboardingComplete === true },
   { key: "rest", label: "Descanso", visible: (s) => s.clientType === "lead_wellness" ? true : s.onboardingComplete === true },
+  { key: "blindspot", label: "Punto Ciego", visible: (s) => s.clientType === "lead_wellness" ? true : s.onboardingComplete === true },
   { key: "community", label: "Comunidad", visible: (s) => s.clientType === "lead_wellness" ? true : s.onboardingComplete === true },
   { key: "evolution", label: "Mi Evolución", visible: (s) => s.clientType === "lead_wellness" ? true : s.onboardingComplete === true },
 ];
@@ -30,6 +31,7 @@ export const ADMIN_NAV: NavItem[] = [
   { key: "nutrition", label: "Nutrición" },
   { key: "cortisol", label: "Gestión de Cortisol" },
   { key: "rest", label: "Descanso" },
+  { key: "blindspot", label: "Punto Ciego" },
   { key: "evolution", label: "Mi Evolución" },
   { key: "community", label: "Comunidad" },
   { key: "admin-notifications", label: "Notificaciones" },
@@ -66,6 +68,7 @@ export const MODULE_THEME: Record<string, ModuleThemeConfig> = {
   rest: { theme: "neutral", arc: "evening", ringLabel: "Fase: Descanso" },
   community: { theme: "neutral", arc: "evening", ringLabel: "Fase: Comunidad" },
   evolution: { theme: "neutral", arc: "balanced", ringLabel: "Tu progreso" },
+  blindspot: { theme: "neutral", arc: "balanced", ringLabel: "Punto Ciego" },
 };
 
 export const ARC_COLOR_VAR: Record<ArcType, string> = {
@@ -126,6 +129,7 @@ export const VIEW_TO_PATH: Record<string, string> = {
   rest: "/rest",
   community: "/community",
   evolution: "/evolution",
+  blindspot: "/blindspot",
   "personal-info": "/onboarding",
   "admin-clients": "/admin/clients",
   "admin-quotes": "/admin/phrases",
@@ -139,6 +143,7 @@ export const PATH_TO_VIEW: Record<string, string> = {
   "/rest": "rest",
   "/community": "community",
   "/evolution": "evolution",
+  "/blindspot": "blindspot",
   "/onboarding": "personal-info",
   "/admin": "admin-hub",
   "/admin/clients": "admin-clients",

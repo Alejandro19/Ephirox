@@ -52,10 +52,15 @@ function clickContinue() {
 }
 
 function fillModule1() {
+  fireEvent.change(screen.getByLabelText('Nombre completo'), { target: { value: 'Cliente de Prueba' } });
+  fireEvent.change(screen.getByLabelText('Edad'), { target: { value: '35' } });
   fireEvent.change(screen.getByLabelText('Fecha de nacimiento'), { target: { value: '1990-01-01' } });
   fireEvent.change(screen.getByLabelText('Género'), { target: { value: 'Masculino' } });
   fireEvent.change(screen.getByLabelText('Ocupación'), { target: { value: 'Ingeniero' } });
   fireEvent.change(screen.getByLabelText('Estado civil'), { target: { value: 'Soltero/a' } });
+  fireEvent.change(screen.getByLabelText('Identificación'), { target: { value: 'Cédula de ciudadanía' } });
+  fireEvent.change(screen.getByLabelText('Número de identificación'), { target: { value: '1234567890' } });
+  fireEvent.change(screen.getByLabelText('Correo electrónico'), { target: { value: 'cliente@example.com' } });
   fireEvent.change(screen.getByLabelText('País de residencia'), { target: { value: 'CO' } });
   fireEvent.change(screen.getByLabelText('Ciudad'), { target: { value: 'Bogotá' } });
   fireEvent.change(screen.getByLabelText('Celular (WhatsApp)'), { target: { value: '3001234567' } });
@@ -71,30 +76,40 @@ function fillModule2() {
 
 type Module3Options = { withAntropometria?: boolean };
 
+function uploadPhoto(label: string, filename: string) {
+  const file = new File(['fake-image-bytes'], filename, { type: 'image/jpeg' });
+  fireEvent.change(screen.getByLabelText(label), { target: { files: [file] } });
+}
+
 // Fills the 9 InBody fields by hand (never runs the OCR flow), which
 // deliberately leaves module3Draft.inbody.ocrDone === false — the exact
-// condition finalize() checks before calling createInbodyRecord.
+// condition finalize() checks before calling createInbodyRecord. Peso,
+// estatura y % grasa ya no se piden aparte: se toman de los campos InBody
+// (Peso total / Estatura / % Grasa corporal), que son los únicos que existen.
 function fillModule3(options: Module3Options = {}) {
-  setField('Peso (kg)', '80');
-  setField('Estatura (cm)', '180');
-  setField('% Grasa corporal (si lo conoces)', '20');
   setField('¿Cuál es tu objetivo de peso?', 'bajar');
   setField('¿Cuál es tu objetivo de grasa corporal?', 'bajar');
   setField('¿Cuál es tu objetivo de masa muscular?', 'subir');
 
-  setField('Peso total (InBody)', '80');
+  setField('Peso total', '80');
+  setField('Estatura (cm)', '180');
   setField('Masa muscular esquelética', '35');
   setField('% Grasa corporal', '20');
-  setField('Peso objetivo', '75');
+  setField('Peso Ideal', '75');
   setField('Grasa visceral', '8');
   setField('Metabolismo basal (BMR)', '1800');
   setField('Agua corporal total (L)', '45');
   setField('Masa ósea', '3.2');
-  setField('Estatura (InBody)', '180');
 
   if (options.withAntropometria) {
     setField('Cintura (cm)', '85');
   }
+
+  // Fotos de progreso: obligatorias, ya no opcionales.
+  uploadPhoto('Frente', 'frente.jpg');
+  uploadPhoto('Lado derecho', 'lado-derecho.jpg');
+  uploadPhoto('Lado izquierdo', 'lado-izquierdo.jpg');
+  uploadPhoto('Espalda', 'espalda.jpg');
 }
 
 type Module4Options = { withCheckupFile?: boolean };
@@ -139,7 +154,7 @@ function fillModule5() {
   setField('¿Consumes probióticos?', 'No');
   setField('¿Cuántas veces comes por fuera?', 'Nunca');
   setField('Consumo de snacks entre comidas', 'Nunca');
-  clickSegmented('Tazas de café/cafeína al día', 0);
+  clickSegmented('Tazas de café/cafeína al día', 1);
   setField('Hora del último café', '07:00');
   setField('Consumo de alcohol', 'Nunca');
   setField('Tipo de dieta', 'Omnívoro');
@@ -176,9 +191,9 @@ function fillModule8() {
 
 function fillModule9() {
   setField('¿Has realizado alguna vez actividad física?', 'No');
-  setField('A qué nivel', 'Básico');
-  setField('Durante cuánto tiempo', '1 año');
-  setField('Actualmente practicas algún deporte o haces actividad física', 'No');
+  setField('¿A qué nivel?', 'Básico');
+  setField('¿Durante cuánto tiempo?', '1 año');
+  setField('¿Actualmente practicas algún deporte o haces actividad física?', 'No');
   setField('¿En qué lugar vas a entrenar actualmente?', 'Gimnasio');
   setField('¿En qué horario?', 'Mañana');
   clickSegmented('¿Cuántos días a la semana?', 3);
@@ -198,7 +213,7 @@ async function driveWizardToFinalize(options: DriveOptions = {}) {
   fillModule2();
   clickContinue();
 
-  await screen.findByLabelText('Peso (kg)');
+  await screen.findByLabelText('Peso total');
   fillModule3(options.module3);
   clickContinue();
 

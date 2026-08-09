@@ -17,11 +17,12 @@ const JWT_EXPIRES_IN = (process.env.JWT_EXPIRES_IN || '8h') as jwt.SignOptions['
 
 export type TokenPayload = {
   id: string;
-  role: 'admin' | 'cliente';
+  role: 'admin' | 'cliente' | 'terapeuta';
   name: string;
   email: string;
   plan?: string;
   clientType?: string;
+  mustChangePassword?: boolean;
 };
 
 export async function hashPassword(password: string): Promise<string> {

@@ -5,9 +5,20 @@ import type { WizardModuleConfig, ConditionalRule } from '@latribu/shared-types'
 // (validateWizardModule) y las reglas condicionales (CONDITIONAL_RULES) —
 // no duplicar esta lista en ningún otro archivo.
 export const WIZARD_MODULES: WizardModuleConfig[] = [
+  // Orden de importancia pedido explícitamente: nombre, tipo y número de
+  // identificación, género, edad, nacimiento, correo, país/ciudad (el picker
+  // de `custom: 'country'` ya no se renderiza fijo arriba — el field
+  // sentinela 'country-picker' lo ubica exactamente donde le corresponde en
+  // esta lista, ver WizardShell), ocupación y estado civil al final.
   { n: 1, title: 'Perfil Personal', custom: 'country', fields: [
-    { id: 'birthdate', label: 'Fecha de nacimiento', type: 'date', required: true },
+    { id: 'name', label: 'Nombre completo', type: 'text', required: true },
+    { id: 'id_type', label: 'Identificación', type: 'select', options: ['Cédula de ciudadanía', 'Cédula de extranjería', 'Tarjeta de identidad', 'Pasaporte', 'Otro'], required: true },
+    { id: 'cedula', label: 'Número de identificación', type: 'text', required: true },
     { id: 'gender', label: 'Género', type: 'select', options: ['Masculino', 'Femenino', 'Otro'], required: true },
+    { id: 'age', label: 'Edad', type: 'text', required: true },
+    { id: 'birthdate', label: 'Fecha de nacimiento', type: 'date', required: true },
+    { id: 'email', label: 'Correo electrónico', type: 'text', required: true },
+    { id: 'country_picker', label: 'País, ciudad y celular', type: 'country-picker' },
     { id: 'occupation', label: 'Ocupación', type: 'text', required: true },
     { id: 'marital_status', label: 'Estado civil', type: 'select', options: ['Soltero/a', 'Casado/a', 'Unión libre', 'Divorciado/a'], required: true },
   ]},
@@ -95,9 +106,9 @@ export const WIZARD_MODULES: WizardModuleConfig[] = [
   ]},
   { n: 9, title: 'Entrenamiento Físico', fields: [
     { id: 'active', label: '¿Has realizado alguna vez actividad física?', type: 'select', options: ['Sí', 'No'], required: true },
-    { id: 'activity_level', label: 'A qué nivel', type: 'select', options: ['Básico', 'Intermedio', 'Avanzado'], required: true },
-    { id: 'activity_time', label: 'Durante cuánto tiempo', type: 'text', required: true },
-    { id: 'sports_active', label: 'Actualmente practicas algún deporte o haces actividad física', type: 'select', options: ['Sí', 'No'], required: true },
+    { id: 'activity_level', label: '¿A qué nivel?', type: 'select', options: ['Básico', 'Intermedio', 'Avanzado'], required: true },
+    { id: 'activity_time', label: '¿Durante cuánto tiempo?', type: 'text', required: true },
+    { id: 'sports_active', label: '¿Actualmente practicas algún deporte o haces actividad física?', type: 'select', options: ['Sí', 'No'], required: true },
     { id: 'sports_detail', label: '¿Cuál deporte o actividad practicas?', type: 'text', required: true },
     { id: 'training_place', label: '¿En qué lugar vas a entrenar actualmente?', type: 'select', options: ['Gimnasio', 'Casa', 'Aire libre', 'Otro'], required: true },
     { id: 'training_schedule', label: '¿En qué horario?', type: 'text', required: true },
@@ -121,6 +132,7 @@ export const CONDITIONAL_RULES: ConditionalRule[] = [
   { id: 'alcohol', notValue: 'Nunca', target: 'alcohol_type' },
   { id: 'substances', value: 'Otra', target: 'substances_detail' },
   { id: 'substances', values: ['Tabaco', 'Alcohol frecuente', 'Cannabis', 'Esteroides'], target: 'substances_frequency' },
+  { id: 'caffeine_cups', notValue: '0', target: 'last_coffee' },
   { id: 'supps_active', value: 'Sí', target: 'supps_list' },
   { id: 'probiotics', value: 'Sí', target: 'probiotics_types' },
   { id: 'sports_active', value: 'Sí', target: 'sports_detail' },

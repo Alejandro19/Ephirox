@@ -15,9 +15,8 @@ export default function TimeField({ value, onChange, label, id }: TimeFieldProps
   return (
     <div>
       {label && (
-        <div style={{ display: "flex", alignItems: "center", fontSize: 13, fontWeight: 600,
+        <div style={{ display: "flex", alignItems: "center", fontSize: 12, fontWeight: 600,
           color: "var(--ink-soft)", marginBottom: 8 }}>
-          <span aria-hidden style={{ marginRight: 6, color: "#5B7A4E", fontSize: 14 }}>🕐</span>
           <label htmlFor={fieldId} style={{ cursor: "pointer" }}>{label}</label>
         </div>
       )}

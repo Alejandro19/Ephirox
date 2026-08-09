@@ -1,10 +1,12 @@
 import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest';
 import request from 'supertest';
+import jwt from 'jsonwebtoken';
 import { eq } from 'drizzle-orm';
 import { createApp } from '../src/app.js';
 import { db } from '../src/db/index.js';
-import { admins, clients, adminNotifications, personalInfo } from '../src/models/schema.js';
-import { hashPassword, signToken } from '../src/services/auth.service.js';
+import { admins, clients, therapists, adminNotifications, personalInfo } from '../src/models/schema.js';
+import { hashPassword, signToken, type TokenPayload } from '../src/services/auth.service.js';
+import { createResetToken, consumeResetToken } from '../src/services/password-reset.service.js';
 
 describe('auth routes', () => {
   const app = createApp();
@@ -110,5 +112,86 @@ describe('auth routes', () => {
 
     const loginRes = await request(app).post('/api/auth/login').send({ email: clientEmail, password: 'new-client-pass' });
     expect(loginRes.status).toBe(200);
+  });
+
+  it('forgot-password always returns a generic success message, whether or not the email exists', async () => {
+    const resExisting = await request(app).post('/api/auth/forgot-password').send({ email: clientEmail });
+    const resMissing = await request(app).post('/api/auth/forgot-password').send({ email: 'no-such-user@example.com' });
+    expect(resExisting.status).toBe(200);
+    expect(resMissing.status).toBe(200);
+    expect(resExisting.body.message).toBe(resMissing.body.message);
+  });
+
+  it('reset-password updates the password and the new password works on login', async () => {
+    const rawToken = await createResetToken('cliente', clientId);
+    const res = await request(app).post('/api/auth/reset-password').send({ token: rawToken, newPassword: 'reset-via-link-pass' });
+    expect(res.status).toBe(200);
+
+    const loginRes = await request(app).post('/api/auth/login').send({ email: clientEmail, password: 'reset-via-link-pass' });
+    expect(loginRes.status).toBe(200);
+  });
+
+  it('reset-password rejects an invalid token', async () => {
+    const res = await request(app).post('/api/auth/reset-password').send({ token: 'not-a-real-token', newPassword: 'whatever123' });
+    expect(res.status).toBe(400);
+  });
+
+  it('reset-password token cannot be used twice', async () => {
+    const rawToken = await createResetToken('cliente', clientId);
+    const first = await request(app).post('/api/auth/reset-password').send({ token: rawToken, newPassword: 'first-reset-pass' });
+    expect(first.status).toBe(200);
+
+    const second = await request(app).post('/api/auth/reset-password').send({ token: rawToken, newPassword: 'second-reset-pass' });
+    expect(second.status).toBe(400);
+  });
+
+  it('consumeResetToken returns null for an already-consumed token', async () => {
+    const rawToken = await createResetToken('cliente', clientId);
+    const first = await consumeResetToken(rawToken);
+    expect(first).not.toBeNull();
+    const second = await consumeResetToken(rawToken);
+    expect(second).toBeNull();
+  });
+});
+
+describe('therapist forced password change', () => {
+  const app = createApp();
+  const therapistEmail = `auth-therapist-${Date.now()}@example.com`;
+  let therapistId: string;
+
+  beforeAll(async () => {
+    const [therapist] = await db
+      .insert(therapists)
+      .values({ name: 'Temp Therapist', email: therapistEmail, passwordHash: await hashPassword('temp-pass-123'), mustChangePassword: true })
+      .returning();
+    therapistId = therapist.id;
+  });
+
+  afterAll(async () => {
+    await db.delete(therapists).where(eq(therapists.id, therapistId));
+  });
+
+  it('a therapist created with a temporary password must change it on first login', async () => {
+    const res = await request(app).post('/api/auth/therapist/login').send({ email: therapistEmail, password: 'temp-pass-123' });
+    expect(res.status).toBe(200);
+    expect(res.body.mustChangePassword).toBe(true);
+    const decoded = jwt.decode(res.body.token) as TokenPayload;
+    expect(decoded.mustChangePassword).toBe(true);
+  });
+
+  it('change-password clears mustChangePassword and reissues a token without the flag', async () => {
+    const token = signToken({ id: therapistId, role: 'terapeuta', name: 'Temp Therapist', email: therapistEmail, mustChangePassword: true });
+    const res = await request(app)
+      .post('/api/auth/change-password')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ currentPassword: 'temp-pass-123', newPassword: 'permanent-pass-456' });
+    expect(res.status).toBe(200);
+    expect(typeof res.body.token).toBe('string');
+    const decoded = jwt.decode(res.body.token) as TokenPayload;
+    expect(decoded.mustChangePassword).toBe(false);
+
+    const loginRes = await request(app).post('/api/auth/therapist/login').send({ email: therapistEmail, password: 'permanent-pass-456' });
+    expect(loginRes.status).toBe(200);
+    expect(loginRes.body.mustChangePassword).toBe(false);
   });
 });

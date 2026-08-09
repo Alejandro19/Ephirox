@@ -99,14 +99,21 @@ export default function AdminClientDetail({ clientId }: { clientId: string }) {
   if (loading) return <p style={{ color: "var(--ink-soft)" }}>Cargando…</p>;
   if (error || !client) return <p style={{ color: "var(--danger)" }}>{error || "Cliente no encontrado."}</p>;
 
-  const summaryRows: [string, string | null][] = [
-    ["Nombre completo", client.name],
-    ["Edad", calculateAge(personalInfo?.birthdate ?? null)?.toString() ?? null],
-    ["Celular", personalInfo?.phone_number ?? null],
-    ["Ciudad", personalInfo?.city ?? null],
-    ["Profesión", personalInfo?.occupation ?? null],
-    ["Vencimiento del plan", client.plan_end_date ?? null],
-  ].filter(([, v]) => v);
+  const summaryRows = (
+    [
+      ["Nombre completo", client.name],
+      ["Nombre (onboarding)", personalInfo?.name ?? null],
+      ["Edad (calculada)", calculateAge(personalInfo?.birthdate ?? null)?.toString() ?? null],
+      ["Edad (declarada)", personalInfo?.age?.toString() ?? null],
+      ["Celular", personalInfo?.phoneNumber ?? null],
+      ["Ciudad", personalInfo?.city ?? null],
+      ["Profesión", personalInfo?.occupation ?? null],
+      ["Tipo de identificación", personalInfo?.idType ?? null],
+      ["Número de identificación", personalInfo?.cedula ?? null],
+      ["Correo (onboarding)", personalInfo?.email ?? null],
+      ["Vencimiento del plan", client.plan_end_date ?? null],
+    ] as [string, string | null][]
+  ).filter(([, v]) => v);
 const isLead = (client.client_type || client.clientType) === "lead_wellness";
 
   return (

@@ -22,6 +22,7 @@ import { therapiesRouter } from './routes/therapies.routes.js';
 import { evolutionRouter } from './routes/evolution.routes.js';
 import { labPanelsRouter } from './routes/lab-panels.routes.js';
 import { wearableRouter, wearableOAuthRouter } from './routes/wearable.routes.js';
+import { blindspotRouter } from './routes/blindspot.routes.js';
 
 export function createApp() {
   const app = express();
@@ -59,6 +60,7 @@ export function createApp() {
   app.use('/api/clients', labPanelsRouter);
   app.use('/api/clients', wearableRouter);
   app.use('/api/wearable', wearableOAuthRouter);
+  app.use('/api/blindspot', blindspotRouter);
 
   // Error handler
   app.use((error: unknown, req: Request, res: Response, _next: NextFunction) => {

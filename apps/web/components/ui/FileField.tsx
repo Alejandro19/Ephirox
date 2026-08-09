@@ -5,42 +5,76 @@ type FileFieldProps = {
   label: string;
   accept?: string;
   disabled?: boolean;
+  uploading?: boolean;
+  invalid?: boolean;
   helper?: string;
   fileName?: string | null;
   onFileChange: (file: File | null) => void;
 };
 
-export default function FileField({ id, label, accept, disabled, helper, fileName, onFileChange }: FileFieldProps) {
+function AttachIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+      strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+    </svg>
+  );
+}
+
+function UploadArrowIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+      strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="animate-bounce">
+      <path d="M12 19V5" />
+      <path d="M5 12l7-7 7 7" />
+    </svg>
+  );
+}
+
+export default function FileField({ id, label, accept, disabled, uploading, invalid, helper, fileName, onFileChange }: FileFieldProps) {
+  const inactive = disabled || uploading;
   return (
     <div style={{ position: "relative" }}>
-      <div style={{ display: "flex", alignItems: "center", fontSize: 13, fontWeight: 600,
+      <div style={{ display: "flex", alignItems: "center", fontSize: 12, fontWeight: 600,
         color: "var(--ink-soft)", marginBottom: 8 }}>
-        <span aria-hidden style={{ marginRight: 6, color: "#5B7A4E", fontSize: 14 }}>📎</span>
+        <span aria-hidden style={{ marginRight: 6, color: "#5B7A4E", display: "inline-flex" }}><AttachIcon /></span>
         {label}
       </div>
       <label
         htmlFor={id}
+        aria-busy={uploading || undefined}
         style={{
-          display: "flex", alignItems: "center", justifyContent: "center",
-          height: 48, borderRadius: 12, border: "1px dashed #E7DFC9",
-          background: disabled ? "#F5F1E9" : "#FFFFFF", fontSize: 13,
-          color: fileName ? "#2B2621" : "#8A8377", cursor: disabled ? "not-allowed" : "pointer",
+          display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+          height: 64, borderRadius: 12,
+          border: uploading ? "1.5px solid var(--gold)" : invalid ? "1.5px solid var(--danger)" : "1.5px solid var(--terracota-soft)",
+          background: uploading ? "#FBF3E3" : disabled ? "#F5F1E9" : "#FFFDF9",
+          fontSize: 13, fontWeight: uploading ? 600 : 500,
+          color: uploading ? "var(--terracota)" : fileName ? "#2B2621" : "#8A8377",
+          cursor: inactive ? "not-allowed" : "pointer",
           textAlign: "center", padding: "0 14px", overflow: "hidden",
           textOverflow: "ellipsis", whiteSpace: "nowrap",
         }}
       >
-        {fileName || "Elegir archivo…"}
+        {uploading ? (
+          <>
+            <UploadArrowIcon />
+            Subiendo…
+          </>
+        ) : (
+          fileName || "Elegir archivo…"
+        )}
       </label>
       <input
         id={id}
         type="file"
         aria-label={label}
         accept={accept}
-        disabled={disabled}
+        disabled={inactive}
         onChange={(e) => onFileChange(e.target.files?.[0] || null)}
         style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0 0 0 0)" }}
       />
-      {helper && <p style={{ fontSize: 12, color: "var(--ink-soft)", marginTop: 6 }}>{helper}</p>}
+      {invalid && <p role="alert" style={{ fontSize: 12, color: "var(--danger)", marginTop: 6 }}>Este campo es obligatorio.</p>}
+      {!invalid && helper && <p style={{ fontSize: 12, color: "var(--ink-soft)", marginTop: 6 }}>{helper}</p>}
     </div>
   );
 }

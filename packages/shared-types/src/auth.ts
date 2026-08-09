@@ -32,3 +32,14 @@ export const AppleAuthInputSchema = z.object({
   name: z.string().min(1).optional(),
 });
 export type AppleAuthInput = z.infer<typeof AppleAuthInputSchema>;
+
+export const ForgotPasswordInputSchema = z.object({
+  email: z.string().email(),
+});
+export type ForgotPasswordInput = z.infer<typeof ForgotPasswordInputSchema>;
+
+export const ResetPasswordInputSchema = z.object({
+  token: z.string().min(1),
+  newPassword: z.string().min(6),
+});
+export type ResetPasswordInput = z.infer<typeof ResetPasswordInputSchema>;

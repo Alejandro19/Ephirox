@@ -3,10 +3,22 @@ import { getSessionToken } from './api-client';
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3003';
 
 export type PersonalInfo = {
+  name: string | null;
+  age: number | null;
+  birthdate: string | null;
+  gender: string | null;
+  occupation: string | null;
+  cedula: string | null;
+  idType: string | null;
+  email: string | null;
   country: string | null;
   city: string | null;
+  phoneCode: string | null;
+  phoneNumber: string | null;
+  maritalStatus: string | null;
   weight: number | null;
   height: number | null;
+  bodyFat: number | null;
 };
 
 export type AnthropometricRecord = {

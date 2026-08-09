@@ -8,24 +8,29 @@ vi.mock('../lib/onboarding-client');
 vi.mock('../lib/parse-ocr-text');
 
 describe('validateModule3', () => {
-  it('flags weight/height/body_fat and the 3 objetivos and 9 InBody fields as required, no more', () => {
+  it('flags the 3 objetivos, 9 InBody fields and 4 photos as required, no more', () => {
     const invalid = validateModule3(EMPTY_MODULE3_DRAFT);
     expect(invalid).toEqual(
-      expect.arrayContaining(['weight', 'height', 'bodyFat', 'objetivo_peso', 'objetivo_grasa_corporal', 'objetivo_masa_muscular'])
+      expect.arrayContaining([
+        'objetivo_peso', 'objetivo_grasa_corporal', 'objetivo_masa_muscular',
+        'photo_frente', 'photo_lado_derecho', 'photo_lado_izquierdo', 'photo_espalda',
+      ])
     );
     expect(invalid).not.toContain('inbody_anguloFase');
+    expect(invalid).not.toContain('weight');
   });
 
   it('is empty once every required field is filled', () => {
+    const photo = new File(['x'], 'foto.jpg', { type: 'image/jpeg' });
     const draft: Module3Draft = {
       ...EMPTY_MODULE3_DRAFT,
-      weight: '70', height: '170', bodyFat: '18',
       objetivos: { peso: 'bajar', grasa_corporal: 'bajar', masa_muscular: 'subir' },
       inbody: {
         ...EMPTY_MODULE3_DRAFT.inbody,
         pesoTotal: '70', smm: '30', grasaPct: '18', pesoObjetivo: '65', grasaVisceral: '7',
         bmr: '1500', ecwTbw: '35', masaOsea: '3', altura: '170',
       },
+      photos: { frente: photo, lado_derecho: photo, lado_izquierdo: photo, espalda: photo },
     };
     expect(validateModule3(draft)).toEqual([]);
   });

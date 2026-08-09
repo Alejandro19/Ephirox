@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, boolean, integer, date, jsonb, timestamp, numeric } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, boolean, integer, serial, date, jsonb, timestamp, numeric, unique } from 'drizzle-orm/pg-core';
 
 export const admins = pgTable('admins', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -59,9 +59,14 @@ export type NewClient = typeof clients.$inferInsert;
 export const personalInfo = pgTable('personal_info', {
   id: uuid('id').primaryKey().defaultRandom(),
   clientId: uuid('client_id').notNull().unique().references(() => clients.id, { onDelete: 'cascade' }),
+  name: text('name'),
+  age: integer('age'),
   birthdate: date('birthdate'),
   gender: text('gender'),
   occupation: text('occupation'),
+  cedula: text('cedula'),
+  idType: text('id_type'),
+  email: text('email'),
   country: text('country'),
   city: text('city'),
   phoneCode: text('phone_code').default('+52'),
@@ -336,7 +341,11 @@ export const sleepLogs = pgTable('sleep_logs', {
   hours: numeric('hours', { precision: 3, scale: 1 }).notNull().$type<number>(),
   quality: integer('quality').notNull(),
   loggedAt: timestamp('logged_at', { withTimezone: true }).notNull().defaultNow(),
-});
+}, (table) => ({
+  // sleep.service.ts hace upsert por día con onConflictDoUpdate({ target: [clientId, date] }) —
+  // este constraint es lo que ese ON CONFLICT necesita para resolver el arbiter index.
+  clientDateUnique: unique('sleep_logs_client_id_date_unique').on(table.clientId, table.date),
+}));
 
 export type SleepProtocol = typeof sleepProtocols.$inferSelect;
 export type SleepLog = typeof sleepLogs.$inferSelect;
@@ -438,7 +447,10 @@ export const wearableTokens = pgTable('wearable_tokens', {
   connectedAt: timestamp('connected_at', { withTimezone: true }).defaultNow(),
   lastSyncAt: timestamp('last_sync_at', { withTimezone: true }),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
-});
+}, (table) => ({
+  // wearable.service.ts hace upsert por dispositivo con onConflictDoUpdate({ target: [clientId, dispositivo] }).
+  clientDispositivoUnique: unique('wearable_tokens_client_id_dispositivo_unique').on(table.clientId, table.dispositivo),
+}));
 
 export const wearableMetricas = pgTable('wearable_metricas', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -468,7 +480,10 @@ export const wearableMetricas = pgTable('wearable_metricas', {
   horaDespertar: timestamp('hora_despertar', { withTimezone: true }),
   rawData: jsonb('raw_data').default({}),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-});
+}, (table) => ({
+  // wearable.service.ts hace upsert diario con onConflictDoUpdate({ target: [clientId, dispositivo, fecha] }).
+  clientDispositivoFechaUnique: unique('wearable_metricas_client_id_dispositivo_fecha_unique').on(table.clientId, table.dispositivo, table.fecha),
+}));
 
 export const labPanels = pgTable('lab_panels', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -478,8 +493,81 @@ export const labPanels = pgTable('lab_panels', {
   datos: jsonb('datos').notNull().default({}),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
-});
+}, (table) => ({
+  // lab-panels.service.ts hace upsert por checkpoint con onConflictDoUpdate({ target: [clientId, semanaNumero] }).
+  clientSemanaUnique: unique('lab_panels_client_id_semana_numero_unique').on(table.clientId, table.semanaNumero),
+}));
 
 export type WearableToken = typeof wearableTokens.$inferSelect;
 export type WearableMetrica = typeof wearableMetricas.$inferSelect;
+
+// ==== PUNTO CIEGO MODULE (módulo Mentoring) ====
+
+export const therapists = pgTable('therapists', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: text('name').notNull(),
+  email: text('email').notNull().unique(),
+  passwordHash: text('password_hash').notNull(),
+  specialty: text('specialty'), // ej. "Biodescodificación"
+  phone: text('phone'),
+  active: boolean('active').notNull().default(true),
+  // true cuando el admin asigna una contraseña temporal — obliga a cambiarla en el primer login.
+  mustChangePassword: boolean('must_change_password').notNull().default(false),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+export const passwordResetTokens = pgTable('password_reset_tokens', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userType: text('user_type').notNull(), // 'admin' | 'cliente' | 'terapeuta'
+  userId: uuid('user_id').notNull(),
+  tokenHash: text('token_hash').notNull().unique(),
+  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  usedAt: timestamp('used_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+export const blindspotCases = pgTable('blindspot_cases', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  // Numeración secuencial visible en todos los paneles como "#N" — se asigna
+  // sola en orden de creación vía secuencia de Postgres, nunca se elige a mano.
+  caseNumber: serial('case_number').notNull(),
+  clientId: uuid('client_id').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+  therapistId: uuid('therapist_id').references(() => therapists.id),
+  status: text('status').notNull().default('evaluando'), // evaluando | referido | en_proceso | cerrado
+  initialAssessment: jsonb('initial_assessment').notNull().default({}), // { motivoConsulta, areaPercibida, prioridad }
+  adminPrivateNotes: text('admin_private_notes'), // SOLO visible para admin, nunca al terapeuta ni al cliente
+  crisisFlag: boolean('crisis_flag').notNull().default(false),
+  crisisFlaggedAt: timestamp('crisis_flagged_at', { withTimezone: true }),
+  crisisFlaggedBy: text('crisis_flagged_by'), // 'cliente' | 'terapeuta' | 'admin'
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+});
+
+export const blindspotTasks = pgTable('blindspot_tasks', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  caseId: uuid('case_id').notNull().references(() => blindspotCases.id, { onDelete: 'cascade' }),
+  title: text('title').notNull(),
+  description: text('description'),
+  dueDate: date('due_date'),
+  status: text('status').notNull().default('pendiente'), // pendiente | completada | omitida
+  createdBy: uuid('created_by').notNull().references(() => therapists.id),
+  completedAt: timestamp('completed_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+export const blindspotSessionLogs = pgTable('blindspot_session_logs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  caseId: uuid('case_id').notNull().references(() => blindspotCases.id, { onDelete: 'cascade' }),
+  sessionDate: date('session_date').notNull(),
+  progressMarker: text('progress_marker').notNull(), // avance | estable | retroceso | cerrado
+  internalSummary: text('internal_summary'), // privado: terapeuta + admin, sin detalle clínico sensible
+  clientNote: text('client_note'), // opcional, corto, visible al cliente
+  createdBy: uuid('created_by').notNull().references(() => therapists.id),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+export type Therapist = typeof therapists.$inferSelect;
+export type BlindspotCase = typeof blindspotCases.$inferSelect;
+export type BlindspotTask = typeof blindspotTasks.$inferSelect;
+export type BlindspotSessionLog = typeof blindspotSessionLogs.$inferSelect;
 export type LabPanel = typeof labPanels.$inferSelect;

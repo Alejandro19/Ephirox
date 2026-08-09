@@ -8,7 +8,7 @@ const API_BASE = 'http://localhost:3003/api';
 export type LoginResult = {
   success: boolean;
   token?: string;
-  role?: 'admin' | 'cliente';
+  role?: 'admin' | 'cliente' | 'terapeuta';
   user?: { id: string; name: string; email: string };
   onboardingComplete?: boolean;
   clientType?: string;
@@ -28,9 +28,16 @@ export type RegisterResult = {
   error?: string;
 };
 
+export type SimpleResult = {
+  success: boolean;
+  message?: string;
+  token?: string;
+  error?: string;
+};
+
 export type MeResult = {
   success: boolean;
-  role?: 'admin' | 'cliente';
+  role?: 'admin' | 'cliente' | 'terapeuta';
   user?: { id: string; name: string; email: string };
   onboardingComplete?: boolean;
   clientType?: string | null;
@@ -105,6 +112,46 @@ export async function googleLoginRequest(credential: string): Promise<LoginResul
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ credential }),
+    });
+    return res.json();
+  } catch {
+    return { success: false, error: 'Error de conexión. Intenta de nuevo.' };
+  }
+}
+
+export async function forgotPasswordRequest(email: string): Promise<SimpleResult> {
+  try {
+    const res = await fetch(`${API_BASE}/auth/forgot-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    return res.json();
+  } catch {
+    return { success: false, error: 'Error de conexión. Intenta de nuevo.' };
+  }
+}
+
+export async function resetPasswordRequest(token: string, newPassword: string): Promise<SimpleResult> {
+  try {
+    const res = await fetch(`${API_BASE}/auth/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, newPassword }),
+    });
+    return res.json();
+  } catch {
+    return { success: false, error: 'Error de conexión. Intenta de nuevo.' };
+  }
+}
+
+export async function changePasswordRequest(currentPassword: string, newPassword: string): Promise<SimpleResult> {
+  try {
+    const token = getSessionToken();
+    const res = await fetch(`${API_BASE}/auth/change-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ currentPassword, newPassword }),
     });
     return res.json();
   } catch {

@@ -20,9 +20,6 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 export type Module3Draft = {
-  weight: string;
-  height: string;
-  bodyFat: string;
   objetivos: { peso: string; grasa_corporal: string; masa_muscular: string };
   antropometria: { cintura: string; brazos: string; hombros: string; piernas: string; gluteo: string };
   inbody: {
@@ -31,10 +28,14 @@ export type Module3Draft = {
     grasaPct: string;
     pesoObjetivo: string;
     grasaVisceral: string;
+    grasaVisceralRange: string;
     bmr: string;
+    bmrRange: string;
     anguloFase: string;
     ecwTbw: string;
+    ecwTbwRange: string;
     masaOsea: string;
+    masaOseaRange: string;
     altura: string;
     imc: string;
     version: string | null;
@@ -46,30 +47,33 @@ export type Module3Draft = {
 };
 
 export const EMPTY_MODULE3_DRAFT: Module3Draft = {
-  weight: '', height: '', bodyFat: '',
   objetivos: { peso: '', grasa_corporal: '', masa_muscular: '' },
   antropometria: { cintura: '', brazos: '', hombros: '', piernas: '', gluteo: '' },
   inbody: {
-    pesoTotal: '', smm: '', grasaPct: '', pesoObjetivo: '', grasaVisceral: '', bmr: '', anguloFase: '',
-    ecwTbw: '', masaOsea: '', altura: '', imc: '', version: null, fileUrl: null, fileName: null, ocrDone: false,
+    pesoTotal: '', smm: '', grasaPct: '', pesoObjetivo: '', grasaVisceral: '', grasaVisceralRange: '',
+    bmr: '', bmrRange: '', anguloFase: '', ecwTbw: '', ecwTbwRange: '',
+    masaOsea: '', masaOseaRange: '', altura: '', imc: '', version: null, fileUrl: null, fileName: null, ocrDone: false,
   },
   photos: {},
 };
 
-// Ángulo de fase y toda la sección de medidas antropométricas quedan
-// opcionales a propósito, igual que MODULE3_REQUIRED_FIELDS en el legacy.
+// Ángulo de fase queda opcional a propósito: algunos modelos (ej. InBody120,
+// plantilla Estándar) ni siquiera lo imprimen en el reporte, así que exigirlo
+// bloquearía a esos clientes. Es la única excepción — de resto, todo el
+// módulo (incluidas las fotos de progreso) es obligatorio; solo las medidas
+// antropométricas quedan opcionales.
 const INBODY_REQUIRED_KEYS = ['pesoTotal', 'smm', 'grasaPct', 'pesoObjetivo', 'grasaVisceral', 'bmr', 'ecwTbw', 'masaOsea', 'altura'] as const;
 
 export function validateModule3(draft: Module3Draft): string[] {
   const invalid: string[] = [];
-  if (!draft.weight.trim()) invalid.push('weight');
-  if (!draft.height.trim()) invalid.push('height');
-  if (!draft.bodyFat.trim()) invalid.push('bodyFat');
   if (!draft.objetivos.peso) invalid.push('objetivo_peso');
   if (!draft.objetivos.grasa_corporal) invalid.push('objetivo_grasa_corporal');
   if (!draft.objetivos.masa_muscular) invalid.push('objetivo_masa_muscular');
   for (const key of INBODY_REQUIRED_KEYS) {
     if (!draft.inbody[key]) invalid.push(`inbody_${key}`);
+  }
+  for (const angle of PHOTO_ANGLES) {
+    if (!draft.photos[angle.key]) invalid.push(`photo_${angle.key}`);
   }
   return invalid;
 }
@@ -88,17 +92,27 @@ const PHOTO_ANGLES = [
 ] as const;
 
 const INBODY_NUMBER_FIELDS = [
-  ['pesoTotal', 'Peso total (InBody)'],
+  ['pesoTotal', 'Peso total'],
+  ['altura', 'Estatura (cm)'],
   ['smm', 'Masa muscular esquelética'],
   ['grasaPct', '% Grasa corporal'],
-  ['pesoObjetivo', 'Peso objetivo'],
+  ['pesoObjetivo', 'Peso Ideal'],
   ['grasaVisceral', 'Grasa visceral'],
   ['bmr', 'Metabolismo basal (BMR)'],
   ['anguloFase', 'Ángulo de fase'],
   ['ecwTbw', 'Agua corporal total (L)'],
   ['masaOsea', 'Masa ósea'],
-  ['altura', 'Estatura (InBody)'],
 ] as const;
+
+// Campos InBody que traen impreso un rango de referencia junto al valor
+// (ej. "Nivel de Grasa Visceral 8 ( 1~9 )") — parseOcrText lo extrae y acá
+// se muestra como hint debajo del campo correspondiente.
+const INBODY_RANGE_KEYS: Partial<Record<(typeof INBODY_NUMBER_FIELDS)[number][0], keyof Module3Draft['inbody']>> = {
+  grasaVisceral: 'grasaVisceralRange',
+  bmr: 'bmrRange',
+  ecwTbw: 'ecwTbwRange',
+  masaOsea: 'masaOseaRange',
+};
 
 const ANTROPOMETRIA_FIELDS = [
   ['cintura', 'Cintura (cm)'],
@@ -163,10 +177,14 @@ export function Module3({ clientId, draft, onChange, invalidFields }: Module3Pro
         grasaPct: parsed.grasa_pct != null ? String(parsed.grasa_pct) : '',
         pesoObjetivo: parsed.peso_objetivo != null ? String(parsed.peso_objetivo) : '',
         grasaVisceral: parsed.grasa_visceral != null ? String(parsed.grasa_visceral) : '',
+        grasaVisceralRange: parsed.grasa_visceral_range ? `${parsed.grasa_visceral_range[0]} - ${parsed.grasa_visceral_range[1]}` : '',
         bmr: parsed.bmr != null ? String(parsed.bmr) : '',
+        bmrRange: parsed.bmr_range ? `${parsed.bmr_range[0]} - ${parsed.bmr_range[1]}` : '',
         anguloFase: parsed.angulo_fase != null ? String(parsed.angulo_fase) : '',
         ecwTbw: parsed.ecw_tbw != null ? String(parsed.ecw_tbw) : '',
+        ecwTbwRange: parsed.ecw_tbw_range ? `${parsed.ecw_tbw_range[0]} - ${parsed.ecw_tbw_range[1]}` : '',
         masaOsea: parsed.masa_osea != null ? String(parsed.masa_osea) : '',
+        masaOseaRange: parsed.masa_osea_range ? `${parsed.masa_osea_range[0]} - ${parsed.masa_osea_range[1]}` : '',
         altura: parsed.height != null ? String(parsed.height) : '',
         version: parsed._version ?? null,
         ocrDone: true,
@@ -207,26 +225,53 @@ export function Module3({ clientId, draft, onChange, invalidFields }: Module3Pro
 
   return (
     <div className="space-y-5">
+      <Section title="Cargar análisis InBody">
+        <div className="space-y-5">
+              <FileField
+                id="field-inbody-file"
+                label="Sube el PDF o una foto de tu reporte InBody"
+                accept=".pdf,.jpg,.jpeg,.png"
+                disabled={ocrBusy}
+                uploading={ocrBusy}
+                fileName={draft.inbody.fileName}
+                helper="Detectamos los campos automáticamente al subir el archivo."
+                onFileChange={(file) => { if (file) void handleInbodyFile(file); }}
+              />
+              {ocrStatus && (
+                <p role={ocrStatus.isError ? 'alert' : 'status'} className={`text-sm ${ocrStatus.isError ? 'text-[var(--danger)]' : 'text-[var(--ink-soft)]'}`}>
+                  {ocrStatus.message}
+                </p>
+              )}
+              {draft.inbody.version && (
+                <p className="text-xs text-[var(--ink-soft)]">Versión detectada: {draft.inbody.version}</p>
+              )}
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {INBODY_NUMBER_FIELDS.map(([key, label]) => {
+                  const rangeKey = INBODY_RANGE_KEYS[key];
+                  const range = rangeKey ? draft.inbody[rangeKey] : '';
+                  return (
+                    <FloatingField
+                      key={key}
+                      id={`inbody-${key}`} label={label} type="number"
+                      value={draft.inbody[key]}
+                      onChange={(v) => {
+                        const nextInbody = { ...draft.inbody, [key]: v };
+                        if (key === 'pesoTotal' || key === 'altura') nextInbody.imc = computeImc(nextInbody.pesoTotal, nextInbody.altura);
+                        onChange({ ...draft, inbody: nextInbody });
+                      }}
+                      invalid={invalidFields.has(`inbody_${key}`)}
+                      hint={range ? `Rango de referencia: ${range}` : undefined}
+                    />
+                  );
+                })}
+                <FloatingField id="inbody-imc" label="IMC calculado" value={draft.inbody.imc} onChange={() => {}} disabled />
+              </div>
+        </div>
+      </Section>
+
       <Section title="Composición corporal">
         <div className="space-y-5">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <FloatingField
-                  id="field-weight" label="Peso (kg)" type="number"
-                  value={draft.weight} onChange={(v) => onChange({ ...draft, weight: v })}
-                  invalid={invalidFields.has('weight')}
-                />
-                <FloatingField
-                  id="field-height" label="Estatura (cm)" type="number"
-                  value={draft.height} onChange={(v) => onChange({ ...draft, height: v })}
-                  invalid={invalidFields.has('height')}
-                />
-                <FloatingField
-                  id="field-body-fat" label="% Grasa corporal (si lo conoces)" type="number"
-                  value={draft.bodyFat} onChange={(v) => onChange({ ...draft, bodyFat: v })}
-                  invalid={invalidFields.has('bodyFat')}
-                />
-              </div>
-
               <p className="m-0 font-serif text-[14.5px] font-semibold text-[var(--ink)]">
                 Tus objetivos de composición corporal
               </p>
@@ -250,45 +295,6 @@ export function Module3({ clientId, draft, onChange, invalidFields }: Module3Pro
         </div>
       </Section>
 
-      <Section title="Cargar análisis InBody">
-        <div className="space-y-5">
-              <FileField
-                id="field-inbody-file"
-                label="Sube el PDF o una foto de tu reporte InBody"
-                accept=".pdf,.jpg,.jpeg,.png"
-                disabled={ocrBusy}
-                fileName={draft.inbody.fileName}
-                helper="Detectamos los campos automáticamente al subir el archivo."
-                onFileChange={(file) => { if (file) void handleInbodyFile(file); }}
-              />
-              {ocrStatus && (
-                <p role={ocrStatus.isError ? 'alert' : 'status'} className={`text-sm ${ocrStatus.isError ? 'text-[var(--danger)]' : 'text-[var(--ink-soft)]'}`}>
-                  {ocrStatus.message}
-                </p>
-              )}
-              {draft.inbody.version && (
-                <p className="text-xs text-[var(--ink-soft)]">Versión detectada: {draft.inbody.version}</p>
-              )}
-
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                {INBODY_NUMBER_FIELDS.map(([key, label]) => (
-                  <FloatingField
-                    key={key}
-                    id={`inbody-${key}`} label={label} type="number"
-                    value={draft.inbody[key]}
-                    onChange={(v) => {
-                      const nextInbody = { ...draft.inbody, [key]: v };
-                      if (key === 'pesoTotal' || key === 'altura') nextInbody.imc = computeImc(nextInbody.pesoTotal, nextInbody.altura);
-                      onChange({ ...draft, inbody: nextInbody });
-                    }}
-                    invalid={invalidFields.has(`inbody_${key}`)}
-                  />
-                ))}
-                <FloatingField id="inbody-imc" label="IMC calculado" value={draft.inbody.imc} onChange={() => {}} disabled />
-              </div>
-        </div>
-      </Section>
-
       <Section title="Medidas antropométricas (opcional)">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               {ANTROPOMETRIA_FIELDS.map(([key, label]) => (
@@ -302,7 +308,7 @@ export function Module3({ clientId, draft, onChange, invalidFields }: Module3Pro
             </div>
       </Section>
 
-      <Section title="Fotos de progreso (opcional)">
+      <Section title="Fotos de progreso">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {PHOTO_ANGLES.map((angle) => (
                 <FileField
@@ -311,6 +317,7 @@ export function Module3({ clientId, draft, onChange, invalidFields }: Module3Pro
                   label={angle.label}
                   accept="image/*"
                   fileName={draft.photos[angle.key]?.name ?? null}
+                  invalid={invalidFields.has(`photo_${angle.key}`)}
                   onFileChange={(file) => onChange({ ...draft, photos: { ...draft.photos, [angle.key]: file ?? undefined } })}
                 />
               ))}
