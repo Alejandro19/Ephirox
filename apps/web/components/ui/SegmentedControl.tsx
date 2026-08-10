@@ -11,8 +11,8 @@ export default function SegmentedControl({ options, value, onChange, label }: Se
   return (
     <div>
       {label && (
-        <div style={{ display: "flex", alignItems: "center", fontSize: 12, fontWeight: 600,
-          color: "var(--ink-soft)", marginBottom: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", fontSize: 12, fontWeight: 400,
+          color: "var(--ink-secondary)", marginBottom: 8 }}>
           {label}
         </div>
       )}
@@ -27,10 +27,10 @@ export default function SegmentedControl({ options, value, onChange, label }: Se
               onClick={() => onChange(opt.value)}
               style={{
                 flex: 1, height: "100%", borderRadius: 12,
-                border: selected ? "1px solid #2B2621" : "1px solid #E7DFC9",
-                background: selected ? "#2B2621" : "#FFFFFF",
+                border: selected ? "1px solid var(--ink)" : "1px solid var(--border-input)",
+                background: selected ? "var(--ink)" : "transparent",
                 fontFamily: "Fraunces, Georgia, serif", fontWeight: 600,
-                fontSize: 14, color: selected ? "#F3EFE6" : "#8A8377",
+                fontSize: 14, color: selected ? "#F5EFE2" : "var(--ink-secondary)",
                 cursor: "pointer", transition: "all .15s ease",
               }}
             >

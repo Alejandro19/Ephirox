@@ -1,6 +1,7 @@
 "use client";
 
 import { useId } from "react";
+import { IconChevronDown } from "./icons";
 
 type SelectFieldProps = {
   value: string;
@@ -23,43 +24,47 @@ type SelectFieldProps = {
 // menú nativo. `leading-none` en el label también era necesario: sin él, la
 // caja de línea por defecto (~1.5×) lo hacía más alto de lo que se ve y
 // empujaba su texto hacia abajo, hacia el valor.
-export default function SelectField({ value, onChange, options, label, placeholder, id }: SelectFieldProps) {
+export default function SelectField({ value, onChange, options, label, placeholder = "Seleccionar", id }: SelectFieldProps) {
   const autoId = useId();
   const selectId = id || autoId;
   const selectedLabel = options.find((o) => o.value === value)?.label ?? "";
+  const showingPlaceholder = !selectedLabel;
 
   return (
-    <div className="relative">
-      <select
-        id={selectId}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="peer h-16 w-full appearance-none rounded-xl border border-[#E7DFC9] bg-white px-3.5 pr-9 pt-7 text-[15px] text-transparent outline-none transition-colors focus:border-[var(--gold)]"
-      >
-        <option value="" aria-label={placeholder}></option>
-        {options.map((o) => (
-          <option key={o.value} value={o.value}>
-            {o.label}
-          </option>
-        ))}
-      </select>
-      <span
-        aria-hidden
-        className="pointer-events-none absolute inset-0 flex items-center truncate px-3.5 pr-9 pt-7 text-[15px] leading-none text-[#2B2621]"
-      >
-        {selectedLabel}
-      </span>
+    <div>
       {label && (
-        <label
-          htmlFor={selectId}
-          className="pointer-events-none absolute left-3.5 right-9 top-3 truncate text-[12px] font-semibold leading-none text-[#8A8377] transition-colors peer-focus:text-[var(--gold)]"
-        >
+        <label htmlFor={selectId} className="mb-1 block truncate text-xs font-normal text-[var(--ink-secondary)]">
           {label}
         </label>
       )}
-      <span aria-hidden className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-[#B0A99C]">
-        ▼
-      </span>
+      <div className="relative">
+        <select
+          id={selectId}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="h-9 w-full appearance-none border-0 border-b border-[var(--border-input)] rounded-none bg-transparent px-0.5 pr-5 text-[14.5px] font-semibold text-transparent outline-none transition-colors focus:border-[var(--ink)] focus-visible:ring-0"
+        >
+          <option value="" aria-label={placeholder}></option>
+          {options.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+        <span
+          aria-hidden
+          className={`pointer-events-none absolute inset-y-0 left-0.5 right-5 flex items-center truncate text-[14.5px] leading-none ${
+            showingPlaceholder ? 'font-normal text-[var(--ink-secondary)]' : 'font-semibold text-[var(--ink)]'
+          }`}
+        >
+          {showingPlaceholder ? placeholder : selectedLabel}
+        </span>
+        <IconChevronDown
+          size={14}
+          className="pointer-events-none absolute right-0.5 top-1/2 -translate-y-1/2"
+          style={{ color: "#B8B4A8" }}
+        />
+      </div>
     </div>
   );
 }

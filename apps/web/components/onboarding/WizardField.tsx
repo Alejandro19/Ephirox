@@ -42,7 +42,7 @@ export function WizardField({ field, value, otroValue, hidden, invalid, onChange
       <div className={wide ? 'sm:col-span-2' : undefined}>
         <SelectField
           label={field.label}
-          placeholder="Selecciona…"
+          placeholder="Seleccionar"
           value={(value as string) || ''}
           onChange={(v) => onChange(field.id, v)}
           options={(field.options || []).map((option) => ({ value: option, label: option }))}

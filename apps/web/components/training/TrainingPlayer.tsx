@@ -14,9 +14,9 @@ export type TrainingPlayerProps = {
 
 function KpiTile({ value, label }: { value: string | number; label: string }) {
   return (
-    <div className="rounded-2xl border border-[var(--line)] bg-[var(--paper)] p-[18px] text-center">
+    <div className="rounded-xl bg-[var(--page-bg)] p-[18px] text-center">
       <div className="font-serif text-2xl font-semibold text-[var(--ink)]">{value}</div>
-      <div className="mt-1 text-xs text-[var(--ink-soft)]">{label}</div>
+      <div className="mt-1 text-xs text-[var(--ink-secondary)]">{label}</div>
     </div>
   );
 }
@@ -112,17 +112,17 @@ export function TrainingPlayer({ exercises, completedIds, onMarkComplete, onExit
         >
           Volver al día
         </button>
-        <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-[var(--ink-soft)]">
+        <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-[var(--ink-secondary)]">
           Día {current.dayNumber} · {CATEGORY_LABELS[current.category]}
         </p>
         <h1 className="mb-1.5 font-serif text-[28px] font-bold text-[var(--ink)]">{current.title}</h1>
-        <p className="m-0 text-[var(--ink-soft)]">
+        <p className="m-0 text-[var(--ink-secondary)]">
           Ejercicio {index + 1} de {exercises.length}
         </p>
         <ProgressBar done={doneInCategory} total={exercises.length} />
       </div>
 
-      <div className="rounded-[var(--radius)] border border-[var(--line)] bg-[var(--paper)] p-[26px]">
+      <div className="rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--paper)] p-[26px]">
         {embedUrl ? (
           <div className="relative overflow-hidden rounded-[14px] bg-black pt-[56.25%]">
             <iframe
@@ -134,7 +134,7 @@ export function TrainingPlayer({ exercises, completedIds, onMarkComplete, onExit
             />
           </div>
         ) : (
-          <div className="py-10 text-center text-[var(--ink-soft)]">Sin video asignado.</div>
+          <div className="py-10 text-center text-[var(--ink-secondary)]">Sin video asignado.</div>
         )}
 
         <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
@@ -155,12 +155,12 @@ export function TrainingPlayer({ exercises, completedIds, onMarkComplete, onExit
         {current.description && <p className="mt-4 text-[var(--ink)]">{current.description}</p>}
 
         {restRemaining !== null ? (
-          <div className="mt-4 rounded-2xl border border-[var(--line)] bg-[var(--cream)] p-4 text-center">
+          <div className="mt-4 rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--page-bg)] p-4 text-center">
             <p className="font-serif text-lg font-semibold text-[var(--ink)]">Descanso: {restRemaining}s</p>
             <button
               type="button"
               onClick={handleSkipRest}
-              className="mt-2 rounded-full border border-[var(--line)] bg-transparent px-4 py-2 text-sm text-[var(--ink-soft)]"
+              className="mt-2 rounded-full border border-[var(--border-hairline)] bg-transparent px-4 py-2 text-sm text-[var(--ink-secondary)]"
             >
               Saltar descanso
             </button>
@@ -174,7 +174,7 @@ export function TrainingPlayer({ exercises, completedIds, onMarkComplete, onExit
                 type="button"
                 disabled={isCurrentDone}
                 onClick={handleStartDuration}
-                className="rounded-full bg-[var(--terracota)] px-[22px] py-3 font-semibold text-white transition-transform active:scale-[.97] disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-full bg-[var(--hero-espresso-accent)] px-[22px] py-3 font-semibold text-white transition-transform active:scale-[.97] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Iniciar
               </button>
@@ -186,7 +186,7 @@ export function TrainingPlayer({ exercises, completedIds, onMarkComplete, onExit
               type="button"
               disabled={isCurrentDone}
               onClick={handleMarkComplete}
-              className="rounded-full bg-[var(--terracota)] px-[22px] py-3 font-semibold text-white transition-transform active:scale-[.97] disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-full bg-[var(--hero-espresso-accent)] px-[22px] py-3 font-semibold text-white transition-transform active:scale-[.97] disabled:cursor-not-allowed disabled:opacity-50"
             >
               Marcar completado
             </button>
@@ -198,7 +198,7 @@ export function TrainingPlayer({ exercises, completedIds, onMarkComplete, onExit
             type="button"
             disabled={index === 0}
             onClick={() => goTo(index - 1)}
-            className="rounded-full border border-[var(--line)] bg-transparent px-[22px] py-3 font-semibold text-[var(--ink-soft)] disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-full border border-[var(--border-hairline)] bg-transparent px-[22px] py-3 font-semibold text-[var(--ink-secondary)] disabled:cursor-not-allowed disabled:opacity-40"
           >
             Anterior
           </button>
@@ -206,7 +206,7 @@ export function TrainingPlayer({ exercises, completedIds, onMarkComplete, onExit
             <button
               type="button"
               onClick={onExit}
-              className="rounded-full bg-[var(--terracota)] px-[22px] py-3 font-semibold text-white"
+              className="rounded-full bg-[var(--hero-espresso-accent)] px-[22px] py-3 font-semibold text-white"
             >
               Finalizar
             </button>
@@ -215,7 +215,7 @@ export function TrainingPlayer({ exercises, completedIds, onMarkComplete, onExit
               type="button"
               disabled={isLast}
               onClick={() => goTo(index + 1)}
-              className="rounded-full border border-[var(--line)] bg-transparent px-[22px] py-3 font-semibold text-[var(--ink-soft)] disabled:cursor-not-allowed disabled:opacity-40"
+              className="rounded-full border border-[var(--border-hairline)] bg-transparent px-[22px] py-3 font-semibold text-[var(--ink-secondary)] disabled:cursor-not-allowed disabled:opacity-40"
             >
               Siguiente
             </button>

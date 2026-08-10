@@ -6,6 +6,7 @@ import type { MindsetQuote } from '../../lib/quotes-client';
 import { isDayUnlocked, isDayCompletedThisWeek, calculateDisciplineStats } from '../../lib/training-home-logic';
 import IdentityHeader from '../ui/IdentityHeader';
 import { ProgressBar } from './TrainingVisuals';
+import { IconFlame, IconShield, IconLock } from '../ui/icons';
 
 export type TrainingHomeProps = {
   trainingDays: number;
@@ -62,53 +63,53 @@ export function TrainingHome({
       <IdentityHeader title="Entrenamiento" subtitle={trainingDays ? 'Tu programa de ejercicios personalizado.' : undefined} />
 
       {quote && (
-        <div className="mb-[22px] border-b border-[var(--line)] pb-[18px] font-serif text-xl font-medium italic leading-snug text-[var(--ink)]">
-          <span className="mb-2 block font-sans text-xs font-semibold uppercase tracking-wide text-[var(--ink-soft)]">
+        <div className="mb-[22px] border-b border-[var(--border-hairline)] pb-[18px] font-serif text-xl font-medium italic leading-snug text-[var(--ink)]">
+          <span className="mb-2 block font-sans text-xs font-semibold uppercase tracking-wide text-[var(--ink-secondary)]">
             Hola {clientName}, repite después de mí:
           </span>
           &quot;{quote.quote}&quot;
-          {quote.author && <p className="mt-1.5 text-xs font-sans not-italic text-[var(--ink-soft)]">— {quote.author}</p>}
-        </div>
-      )}
-
-      {streak && (
-        <div className="mb-4 flex justify-end">
-          <div
-            className={`flex flex-shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-2 ${
-              streak.atRisk ? 'border-[#F0DAC0] bg-[#FBEFE4]' : 'border-[#E7DFC9] bg-white'
-            }`}
-          >
-            <span className="text-base">🔥</span>
-            <span className="font-serif text-[15px] font-bold text-[#2B2621]">{streak.streakWeeks}</span>
-            <span className={`text-[9.5px] ${streak.atRisk ? 'font-semibold text-[#B8794A]' : 'text-[#8A8377]'}`}>
-              {streak.atRisk ? 'en riesgo' : streak.streakWeeks === 1 ? 'semana seguida' : 'semanas seguidas'}
-            </span>
-          </div>
+          {quote.author && <p className="mt-1.5 text-xs font-sans not-italic text-[var(--ink-secondary)]">— {quote.author}</p>}
         </div>
       )}
 
       {heroDay !== null && (
         <div
-          className="relative mb-6 overflow-hidden rounded-[20px] p-7 text-white"
-          style={{ background: 'linear-gradient(135deg, #2B2621, #3A322A)' }}
+          className="relative mt-8 mb-6 overflow-hidden rounded-[var(--radius-hero)] p-7"
+          style={{ background: 'var(--hero-espresso)', color: 'var(--hero-espresso-text)' }}
         >
           <div
             className="pointer-events-none absolute -right-10 -top-10 h-[180px] w-[180px] rounded-full"
-            style={{ background: 'radial-gradient(circle, rgba(255,255,255,.16) 0%, transparent 70%)' }}
+            style={{ background: 'radial-gradient(circle, rgba(217,183,126,.18) 0%, transparent 70%)' }}
           />
-          <p className="relative z-10 mb-2.5 text-[11px] font-bold uppercase tracking-wider text-[#D9BE8C]">
-            HOY · DÍA {heroDay}
-          </p>
+          <div className="relative z-10 mb-2.5 flex items-start justify-between gap-3">
+            <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: 'var(--hero-espresso-accent)' }}>
+              HOY · DÍA {heroDay}
+            </p>
+            {streak && (
+              <div className="flex flex-shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5" style={{ background: 'rgba(255,255,255,.12)' }}>
+                <IconFlame size={14} />
+                <span className="text-[13px] font-bold">{streak.streakWeeks}</span>
+                <span className="text-[9.5px]" style={{ color: streak.atRisk ? '#F0C68A' : 'var(--hero-espresso-text-muted)' }}>
+                  {streak.atRisk ? 'en riesgo' : streak.streakWeeks === 1 ? 'semana seguida' : 'semanas seguidas'}
+                </span>
+              </div>
+            )}
+          </div>
           <p className="relative z-10 mb-1.5 font-serif text-xl font-semibold">
             {heroCount === 0 ? 'Aún no tienes ejercicios asignados' : `${heroCount} ejercicio${heroCount === 1 ? '' : 's'} por entrenar`}
           </p>
-          {heroCount > 0 && <p className="relative z-10 text-[13px] opacity-75">Asignados por tu mentor</p>}
+          {heroCount > 0 && (
+            <p className="relative z-10 text-[13px]" style={{ color: 'var(--hero-espresso-text-muted)' }}>
+              Asignados por tu mentor
+            </p>
+          )}
           <div className="relative z-10 mt-5 flex items-center justify-end gap-4">
             <button
               type="button"
               disabled={heroCount === 0}
               onClick={() => onOpenDay(heroDay)}
-              className="whitespace-nowrap rounded-full bg-[#D9BE8C] px-5 py-2.5 text-[13px] font-bold text-[#2B2621] disabled:cursor-not-allowed disabled:opacity-50"
+              className="whitespace-nowrap rounded-full px-5 py-2.5 text-[13px] font-bold disabled:cursor-not-allowed disabled:opacity-50"
+              style={{ background: 'var(--hero-espresso-accent)', color: 'var(--hero-espresso)' }}
             >
               Comenzar sesión
             </button>
@@ -117,7 +118,7 @@ export function TrainingHome({
       )}
 
       {streak && (
-        <section className="mb-5 rounded-[var(--radius)] border border-[var(--line)] bg-[var(--paper)] p-[26px]">
+        <section className="border-t border-[var(--border-hairline)] py-6">
           <div className="mb-1 font-serif text-[15px] font-bold text-[var(--ink)]">Tu semana</div>
           <div className="flex items-center gap-2.5">
             {Array.from({ length: streak.sessionsRequiredThisWeek }, (_, i) => i + 1).map((n) => {
@@ -126,33 +127,38 @@ export function TrainingHome({
               return (
                 <div
                   key={n}
-                  className={`flex h-[34px] w-[34px] flex-shrink-0 items-center justify-center rounded-full text-[13px] transition-colors ${
+                  className={`flex h-[34px] w-[34px] flex-shrink-0 items-center justify-center rounded-full border text-[13px] transition-colors ${
                     done
-                      ? 'border-[#B8935A] bg-[#B8935A] text-white'
+                      ? 'border-[var(--hero-espresso-accent)] bg-[var(--hero-espresso-accent)] text-white'
                       : shielded
-                        ? 'border border-[#E1D5EE] bg-[#F1EAF7] text-[#8A5FA0]'
-                        : 'border border-dashed border-[#D9A441] font-bold text-[#B8935A]'
-                  } border`}
+                        ? 'border-[#E1D5EE] bg-[#F1EAF7] text-[#8A5FA0]'
+                        : 'border-[var(--border-input)] font-semibold text-[var(--ink-secondary)]'
+                  }`}
                 >
-                  {done ? '✓' : shielded ? '🛡️' : '?'}
+                  {done ? '✓' : shielded ? <IconShield size={14} /> : n}
                 </div>
               );
             })}
           </div>
-          <p className="mt-3 text-[13px] text-[var(--ink-soft)]">
+          <p className="mt-3 text-[13px] text-[var(--ink-secondary)]">
             {streak.protectorUsedThisWeek
               ? 'Semana protegida — no necesitas completar más sesiones para conservar tu racha.'
               : `${streak.sessionsDoneThisWeek} de ${streak.sessionsRequiredThisWeek} sesiones completadas.`}
           </p>
-          <div className="mt-4 flex items-center gap-3 border-t border-[#E7DFC9] pt-4">
-            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#F1EAF7] text-[15px]">
-              🛡️
+        </section>
+      )}
+
+      {streak && (
+        <section className="border-t border-[var(--border-hairline)] py-6">
+          <div className="flex items-center gap-3">
+            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#F1EAF7] text-[#8A5FA0]">
+              <IconShield size={15} />
             </div>
             <div className="flex-1">
-              <div className="text-xs font-semibold text-[#2B2621]">
+              <div className="text-xs font-semibold text-[var(--ink)]">
                 {streak.protectorUsedThisWeek ? 'Protector ya usado esta semana' : 'Protector de racha disponible'}
               </div>
-              <div className="mt-0.5 text-[10.5px] text-[#8A8377]">
+              <div className="mt-0.5 text-[10.5px] text-[var(--ink-secondary)]">
                 {streak.protectorUsedThisWeek
                   ? 'Vuelve a estar disponible la próxima semana.'
                   : 'Úsalo si esta semana no puedes completar tus sesiones — tu racha no se rompe.'}
@@ -170,7 +176,7 @@ export function TrainingHome({
         </section>
       )}
 
-      <section className="mb-5 rounded-[var(--radius)] border border-[var(--line)] bg-[var(--paper)] p-[26px]">
+      <section className="border-t border-[var(--border-hairline)] py-6">
         <h2 className="mb-4 font-serif text-lg font-bold text-[var(--ink)]">Días de entrenamiento</h2>
         {days.length ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -184,14 +190,14 @@ export function TrainingHome({
                   type="button"
                   disabled={!unlocked}
                   onClick={() => onOpenDay(day)}
-                  className="rounded-2xl border border-[#E7DFC9] bg-white px-3.5 py-5 text-center transition-colors disabled:cursor-not-allowed disabled:opacity-50 enabled:hover:border-[#B8935A] enabled:hover:shadow-[0_6px_16px_rgba(184,147,90,.15)]"
+                  className="rounded-xl border border-[var(--border-hairline)] bg-[var(--paper)] px-3.5 py-5 text-center transition-colors disabled:cursor-not-allowed disabled:opacity-50 enabled:hover:border-[var(--hero-espresso-accent)] enabled:hover:shadow-[0_6px_16px_rgba(217,183,126,.18)]"
                 >
                   <div className="font-serif text-[22px] font-semibold text-[var(--ink)]">Día {day}</div>
-                  <div className="mt-1 text-[10px] text-[#8A8377]">
+                  <div className="mt-1 text-[10px] text-[var(--ink-secondary)]">
                     {!unlocked ? (
-                      <>
-                        <span className="text-[13px]">🔒</span> Bloqueado
-                      </>
+                      <span className="inline-flex items-center gap-1">
+                        <IconLock size={11} /> Bloqueado
+                      </span>
                     ) : completedThisWeek ? (
                       'Completado esta semana'
                     ) : (
@@ -203,28 +209,28 @@ export function TrainingHome({
             })}
           </div>
         ) : (
-          <div className="py-10 text-center text-[var(--ink-soft)]">Tu coach aún no configuró tus días de entrenamiento.</div>
+          <div className="py-10 text-center text-[var(--ink-secondary)]">Tu coach aún no configuró tus días de entrenamiento.</div>
         )}
       </section>
 
       {days.length > 0 && (
-        <section className="rounded-[var(--radius)] border border-[var(--line)] bg-[var(--paper)] p-[26px]">
-          <div className="overflow-hidden rounded-[18px] border border-[var(--line)]">
+        <section className="border-t border-[var(--border-hairline)] py-6">
+          <div className="overflow-hidden rounded-xl border border-[var(--border-hairline)]">
             <button
               type="button"
               onClick={() => setDisciplineOpen((v) => !v)}
-              className="flex w-full items-center justify-between bg-[var(--cream)] px-[18px] py-4 text-left text-[15px] font-bold"
+              className="flex w-full items-center justify-between bg-[var(--page-bg)] px-[18px] py-4 text-left text-[15px] font-bold text-[var(--ink)]"
             >
               Nivel de disciplina
               <span className="flex items-center gap-2.5">
-                <span className="inline-block h-1.5 w-[70px] overflow-hidden rounded-full bg-[var(--line)]">
+                <span className="inline-block h-1.5 w-[70px] overflow-hidden rounded-full bg-[var(--border-hairline)]">
                   <span
-                    className="block h-full rounded-full bg-[var(--terracota)]"
+                    className="block h-full rounded-full bg-[var(--hero-espresso-accent)]"
                     style={{ width: `${Math.min(stats.pct, 100)}%` }}
                   />
                 </span>
-                <span className="text-xs font-bold text-[var(--terracota)]">{stats.pct}%</span>
-                <span className="text-sm text-[var(--terracota)]">{disciplineOpen ? 'Ocultar' : 'Ver'}</span>
+                <span className="text-xs font-bold text-[var(--ink)]">{stats.pct}%</span>
+                <span className="text-sm text-[var(--ink)]">{disciplineOpen ? 'Ocultar' : 'Ver'}</span>
               </span>
             </button>
             {disciplineOpen && (
@@ -234,9 +240,10 @@ export function TrainingHome({
                   {calendarCells.map(({ day, completed }) => (
                     <div
                       key={day}
-                      className={`flex aspect-square flex-col items-center justify-center rounded-[10px] border text-[11px] ${
-                        completed ? 'border-[var(--sage)] bg-[var(--sage-soft)]' : 'border-[var(--line)] bg-[var(--cream)]'
-                      }`}
+                      className="flex aspect-square flex-col items-center justify-center rounded-[10px] border text-[11px]"
+                      style={completed
+                        ? { borderColor: 'var(--hero-espresso-accent)', background: 'rgba(217,183,126,.18)', color: 'var(--ink)' }
+                        : { borderColor: 'var(--border-hairline)', background: 'var(--page-bg)', color: 'var(--ink-secondary)' }}
                     >
                       {completed ? <strong>{day}</strong> : <span>{day}</span>}
                     </div>

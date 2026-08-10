@@ -21,8 +21,8 @@ export default function ChipGroup({ options, selected, onChange, label, max }: C
   return (
     <fieldset style={{ border: "none", margin: 0, padding: 0 }}>
       {label && (
-        <legend style={{ display: "flex", alignItems: "center", fontSize: 12, fontWeight: 600,
-          color: "var(--ink-soft)", marginBottom: 8, padding: 0 }}>
+        <legend style={{ display: "flex", alignItems: "center", fontSize: 12, fontWeight: 400,
+          color: "var(--ink-secondary)", marginBottom: 8, padding: 0 }}>
           {label}
         </legend>
       )}
@@ -35,10 +35,10 @@ export default function ChipGroup({ options, selected, onChange, label, max }: C
               style={{
                 position: "relative",
                 display: "inline-flex", alignItems: "center", gap: 4,
-                padding: "6px 14px", borderRadius: 10, fontSize: 12, fontWeight: 500,
-                border: isSel ? "1px solid var(--terracota)" : "1px solid var(--line)",
-                background: isSel ? "var(--terracota)" : "var(--cream)",
-                color: isSel ? "#fff" : "var(--ink-soft)",
+                padding: "6px 14px", borderRadius: 9999, fontSize: 12, fontWeight: 500,
+                border: isSel ? "1px solid var(--ink)" : "1px solid var(--border-input)",
+                background: isSel ? "var(--ink)" : "transparent",
+                color: isSel ? "#F5EFE2" : "var(--ink)",
                 cursor: "pointer", transition: "all .15s ease",
               }}
             >

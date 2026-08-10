@@ -37,7 +37,7 @@ export default function ProgressBar({ done, total, label = "Progreso" }: Progres
           style={{
             height: "100%",
             width: `${pct}%`,
-            background: "var(--terracota)",
+            background: "var(--ring-accent)",
             borderRadius: "999px",
             transition: "width 0.4s ease",
           }}

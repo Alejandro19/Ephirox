@@ -39,7 +39,7 @@ export default function CommunityPage() {
   if (role === 'admin') {
     return (
       <div>
-        <IdentityHeader title="Comunidad" subtitle="Publica eventos y terapias, y revisa quién ha reservado." />
+        <IdentityHeader title="Comunidad Wellness" subtitle="Publica eventos y terapias, y revisa quién ha reservado." />
         <AdminCommunityPanel />
       </div>
     );

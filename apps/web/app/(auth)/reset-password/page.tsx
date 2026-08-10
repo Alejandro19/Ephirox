@@ -76,22 +76,22 @@ export default function ResetPasswordPage(): React.ReactElement {
       {/* eslint-disable-next-line @next/next/no-sync-scripts */}
       <script dangerouslySetInnerHTML={{ __html: LOGIN_THEME_SCRIPT }} />
 
-      <div className="min-h-screen w-full bg-[var(--cream)] flex items-center justify-center p-4">
+      <div className="min-h-screen w-full bg-[var(--page-bg)] flex items-center justify-center p-4">
         <div className="max-w-4xl w-full md:min-h-[600px] grid grid-cols-1 md:grid-cols-2 rounded-3xl overflow-hidden shadow-[0_30px_80px_-15px_rgba(43,36,32,0.18)]">
 
           {/* ========== LADO IZQUIERDO — IDENTIDAD LA TRIBU ========== */}
-          <div className="relative overflow-hidden p-12 flex flex-col items-center justify-center text-center bg-[var(--lh-bg)] transition-colors duration-[600ms]">
-            <div className="absolute w-[280px] h-[280px] rounded-full blur-[50px] opacity-40 pointer-events-none -top-[70px] -left-[70px]" style={{ background: '#D9A441' }} />
-            <div className="absolute w-[280px] h-[280px] rounded-full blur-[50px] opacity-40 pointer-events-none -bottom-[90px] left-[28%]" style={{ background: '#7C8B6F' }} />
-            <div className="absolute w-[280px] h-[280px] rounded-full blur-[50px] opacity-40 pointer-events-none top-[15%] -right-[90px]" style={{ background: '#8A5FA0' }} />
+          <div className="relative overflow-hidden p-12 flex flex-col items-center justify-center text-center" style={{ background: 'var(--hero-espresso)' }}>
+            <div
+              className="pointer-events-none absolute -right-16 -top-16 h-[280px] w-[280px] rounded-full"
+              style={{ background: 'radial-gradient(circle, rgba(217,183,126,.18) 0%, transparent 70%)' }}
+            />
 
             <svg className="relative z-[1] -rotate-90" viewBox="0 0 100 100" width="56" height="56" aria-hidden="true">
-              <circle cx="50" cy="50" r="40" fill="none" strokeWidth="8" strokeLinecap="round" strokeDasharray="76 176" strokeDashoffset="0" opacity=".5" stroke="var(--ring-morning)" />
-              <circle cx="50" cy="50" r="40" fill="none" strokeWidth="8" strokeLinecap="round" strokeDasharray="76 176" strokeDashoffset="-83.8" opacity=".5" stroke="var(--ring-afternoon)" />
-              <circle cx="50" cy="50" r="40" fill="none" strokeWidth="8" strokeLinecap="round" strokeDasharray="76 176" strokeDashoffset="-167.6" opacity=".5" stroke="var(--ring-evening)" />
+              <circle cx="50" cy="50" r="40" fill="none" strokeWidth="8" stroke="rgba(255,255,255,.2)" />
+              <circle cx="50" cy="50" r="40" fill="none" strokeWidth="8" strokeLinecap="round" strokeDasharray="205 251" stroke="var(--hero-espresso-accent)" />
             </svg>
-            <h1 className="relative z-[1] font-serif text-[32px] font-bold text-[var(--lh-word)] mt-[18px] mb-1.5 transition-colors duration-[600ms]">La Tribu</h1>
-            <p className="relative z-[1] font-serif italic text-[15px] text-[var(--lh-slogan)] transition-colors duration-[600ms]">Comunidad de bienestar y alto rendimiento.</p>
+            <h1 className="relative z-[1] font-serif text-[32px] font-bold mt-[18px] mb-1.5" style={{ color: 'var(--hero-espresso-text)' }}>La Tribu</h1>
+            <p className="relative z-[1] font-serif italic text-[15px]" style={{ color: 'var(--hero-espresso-text-muted)' }}>Comunidad de bienestar y alto rendimiento.</p>
           </div>
 
           {/* ========== LADO DERECHO — FORMULARIO ========== */}

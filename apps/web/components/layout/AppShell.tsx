@@ -3,6 +3,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Sidebar from "./Sidebar";
+import ClientTopbar from "./ClientTopbar";
 import MobileTopbar from "./MobileTopbar";
 import NotificationBell from "./NotificationBell";
 import PlanExpiredScreen from "./PlanExpiredScreen";
@@ -13,6 +14,7 @@ import {
   clearPendingAction,
 } from "../../lib/deep-link";
 import { PATH_TO_VIEW } from "../../lib/constants";
+import { IconAlertTriangle, IconCheckCircle } from "../ui/icons";
 
 // ─── Toast System ─────────────────────────────────────────────
 
@@ -36,22 +38,24 @@ export function showToast(message: string, type: "success" | "error" | "info" = 
 function ErrorFallback({ error, onReset }: { error: Error; onReset: () => void }) {
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center",
-      minHeight: "100vh", background: "var(--cream)", padding: 24 }}>
+      minHeight: "100vh", background: "var(--page-bg)", padding: 24 }}>
       <div style={{ maxWidth: 400, width: "100%", background: "var(--paper)",
-        border: "1px solid var(--line)", borderRadius: "20px",
+        border: "1px solid var(--border-hairline)", borderRadius: "20px",
         padding: "32px 28px", textAlign: "center" }}>
-        <div style={{ fontSize: 28, marginBottom: 12 }}>⚠️</div>
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 12, color: "var(--danger)" }}>
+          <IconAlertTriangle size={28} />
+        </div>
         <h2 style={{ fontFamily: "Fraunces, Georgia, serif", fontSize: 18,
           fontWeight: 700, color: "var(--ink)", margin: "0 0 8px" }}>
           Algo salió mal
         </h2>
-        <p style={{ fontSize: 13, color: "var(--ink-soft)", lineHeight: 1.5,
+        <p style={{ fontSize: 13, color: "var(--ink-secondary)", lineHeight: 1.5,
           margin: "0 0 20px" }}>
           {error.message || "Ha ocurrido un error inesperado."}
         </p>
         <button onClick={onReset}
           style={{ display: "inline-flex", alignItems: "center", gap: 6,
-            borderRadius: "9999px", background: "var(--gold)", color: "#fff",
+            borderRadius: "9999px", background: "var(--ring-accent)", color: "#fff",
             border: "none", padding: "10px 24px", fontSize: 13, fontWeight: 600,
             cursor: "pointer" }}>
           Reintentar
@@ -138,45 +142,63 @@ export default function AppShell({ children }: { children: ReactNode }) {
   }
 
   const viewKey = PATH_TO_VIEW[pathname] ?? "training";
+  const isClient = role !== "admin";
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", position: "relative" }}>
-      {/* Mobile backdrop */}
-      {mobileOpen && (
-        <div
-          style={{
-            display: "none",
-            position: "fixed", inset: 0,
-            background: "rgba(0,0,0,.4)", zIndex: 90,
-          }}
-          onClick={() => setMobileOpen(false)}
-        />
+    <div style={{ display: "flex", minHeight: "100vh", position: "relative", flexDirection: isClient ? "column" : "row" }}>
+      {isClient ? (
+        <>
+          <ClientTopbar viewKey={viewKey} />
+          <main
+            id="main-content"
+            style={{
+              flex: 1, padding: "36px 44px", overflowY: "auto",
+              background: "var(--page-bg)",
+            }}
+          >
+            {children}
+          </main>
+        </>
+      ) : (
+        <>
+          {/* Mobile backdrop */}
+          {mobileOpen && (
+            <div
+              style={{
+                display: "none",
+                position: "fixed", inset: 0,
+                background: "rgba(0,0,0,.4)", zIndex: 90,
+              }}
+              onClick={() => setMobileOpen(false)}
+            />
+          )}
+
+          {/* Sidebar */}
+          <Sidebar
+            viewKey={viewKey}
+            mobileOpen={mobileOpen}
+            onCloseMobile={() => setMobileOpen(false)}
+          />
+
+          {/* Main area */}
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, position: "relative" }}>
+            <MobileTopbar onToggleSidebar={() => setMobileOpen((v) => !v)} />
+            <div style={{ position: "absolute", top: 24, right: 32, zIndex: 40 }}>
+              <NotificationBell />
+            </div>
+            <main
+              id="main-content"
+              style={{
+                flex: 1, padding: "36px 44px", overflowY: "auto",
+                maxHeight: "100vh", background: "var(--cream)",
+                transition: "background 0.4s ease",
+              }}
+            >
+              {children}
+            </main>
+          </div>
+        </>
       )}
-
-      {/* Sidebar */}
-      <Sidebar
-        viewKey={viewKey}
-        mobileOpen={mobileOpen}
-        onCloseMobile={() => setMobileOpen(false)}
-      />
-
-      {/* Main area */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, position: "relative" }}>
-        <MobileTopbar onToggleSidebar={() => setMobileOpen((v) => !v)} />
-        <div style={{ position: "absolute", top: 24, right: 32, zIndex: 40 }}>
-          <NotificationBell />
-        </div>
-        <main
-          id="main-content"
-          style={{
-            flex: 1, padding: "36px 44px", overflowY: "auto",
-            maxHeight: "100vh", background: "var(--cream)",
-            transition: "background 0.4s ease",
-          }}
-        >
-          {children}
-        </main>
-      </div>
 
       {/* ── Toasts ── */}
       {toasts.length > 0 && (
@@ -198,8 +220,8 @@ export default function AppShell({ children }: { children: ReactNode }) {
                 animation: "toast-in 0.35s ease",
               }}
             >
-              {toast.type === "error" && "⚠️ "}
-              {toast.type === "success" && "✅ "}
+              {toast.type === "error" && <IconAlertTriangle size={14} />}
+              {toast.type === "success" && <IconCheckCircle size={14} />}
               {toast.message}
             </div>
           ))}

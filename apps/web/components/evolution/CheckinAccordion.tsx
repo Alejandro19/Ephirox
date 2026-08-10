@@ -6,8 +6,8 @@ import { showToast } from '../layout/AppShell';
 import Accordion from '../ui/Accordion';
 
 const fieldStyle =
-  'h-10 w-full rounded-lg border border-[var(--line)] bg-[var(--paper)] px-2.5 text-[13px] text-[var(--ink)] outline-none';
-const labelStyle = 'mb-1 block text-xs text-[#555]';
+  'h-8 w-full border-0 border-b border-[var(--border-input)] rounded-none bg-transparent px-0.5 py-1.5 text-[14.5px] font-semibold text-[var(--ink)] outline-none focus-visible:border-[var(--ink)] focus-visible:ring-0';
+const labelStyle = 'mb-1 block text-xs font-normal text-[var(--ink-secondary)]';
 
 export function CheckinAccordion({ clientId, onSaved }: { clientId: string; onSaved?: () => void }) {
   const [sleepHours, setSleepHours] = useState('');
@@ -81,7 +81,7 @@ export function CheckinAccordion({ clientId, onSaved }: { clientId: string; onSa
                 type="button"
                 disabled={saving}
                 onClick={handleSave}
-                className="mt-4 h-10 rounded-full bg-[var(--gold)] px-6 text-[13px] font-bold text-white disabled:opacity-60"
+                className="mt-4 h-10 rounded-full bg-[var(--hero-piedra-accent)] px-6 text-[13px] font-bold text-white disabled:opacity-60"
               >
                 {saving ? 'Guardando…' : 'Guardar check-in'}
               </button>

@@ -17,20 +17,20 @@ import {
 } from '@/lib/blindspot-client';
 import IdentityHeader from '@/components/ui/IdentityHeader';
 
-const cardStyle: React.CSSProperties = {
-  background: 'var(--paper)', border: '1px solid var(--line)',
-  borderRadius: 'var(--radius)', padding: '22px 24px', marginBottom: 18,
-};
 const trackedLabelStyle: React.CSSProperties = {
-  display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--ink-soft)',
+  display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--ink-secondary)',
   textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6,
 };
 const fieldStyle: React.CSSProperties = {
-  width: '100%', height: 40, borderRadius: 10, border: '1px solid var(--line)',
-  padding: '0 10px', fontSize: 13, background: 'var(--paper)', color: 'var(--ink)',
+  width: '100%', height: 32, borderRadius: 0, border: 'none', borderBottom: '1px solid var(--border-input)',
+  padding: '0 2px 6px', fontSize: 14.5, fontWeight: 600, background: 'transparent', color: 'var(--ink)',
   outline: 'none', boxSizing: 'border-box',
 };
-const textareaStyle: React.CSSProperties = { ...fieldStyle, height: 'auto', minHeight: 72, padding: 10, resize: 'vertical', fontFamily: 'inherit' };
+const textareaStyle: React.CSSProperties = {
+  width: '100%', borderRadius: 10, border: '1px solid var(--border-hairline)',
+  padding: 10, fontSize: 14.5, fontWeight: 600, background: 'var(--paper)', color: 'var(--ink)',
+  outline: 'none', boxSizing: 'border-box', minHeight: 72, resize: 'vertical', fontFamily: 'inherit',
+};
 const primaryButtonStyle: React.CSSProperties = {
   height: 40, padding: '0 20px', borderRadius: 9999, border: 'none',
   color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer',
@@ -38,9 +38,9 @@ const primaryButtonStyle: React.CSSProperties = {
 function tabButtonStyle(active: boolean): React.CSSProperties {
   return {
     height: 38, padding: '0 18px', borderRadius: 9999, fontSize: 13, fontWeight: 700, cursor: 'pointer',
-    border: active ? 'none' : '1px solid var(--line)',
-    background: active ? 'var(--gold)' : 'transparent',
-    color: active ? '#fff' : 'var(--ink-soft)',
+    border: active ? 'none' : '1px solid var(--border-input)',
+    background: active ? 'var(--ring-accent)' : 'transparent',
+    color: active ? '#fff' : 'var(--ink-secondary)',
   };
 }
 
@@ -68,8 +68,8 @@ function relativeTime(dateStr: string | null): string {
 
 function caseBadge(c: TherapistCaseListItem): { label: string; bg: string; color: string } {
   if (c.crisisFlag) return { label: 'En crisis', bg: 'var(--danger)', color: '#fff' };
-  if (c.status === 'cerrado') return { label: 'Cerrado', bg: 'var(--line)', color: 'var(--ink-soft)' };
-  return { label: STATUS_LABEL[c.status], bg: '#F6E6C8', color: '#8A5A12' };
+  if (c.status === 'cerrado') return { label: 'Cerrado', bg: 'var(--border-hairline)', color: 'var(--ink-secondary)' };
+  return { label: STATUS_LABEL[c.status], bg: 'rgba(201,166,107,.18)', color: 'var(--ring-accent)' };
 }
 
 function AlertIcon() {
@@ -105,7 +105,7 @@ export function TherapistCasesModule() {
     refetch();
   }, [refetch]);
 
-  if (loading) return <p style={{ color: 'var(--ink-soft)', fontSize: 13 }}>Cargando...</p>;
+  if (loading) return <p style={{ color: 'var(--ink-secondary)', fontSize: 13 }}>Cargando...</p>;
 
   const crisisCases = cases.filter((c) => c.crisisFlag);
   const closedCases = cases.filter((c) => !c.crisisFlag && c.status === 'cerrado');
@@ -124,6 +124,38 @@ export function TherapistCasesModule() {
     <div>
       <IdentityHeader title="Mis casos" subtitle="Evaluación, referidos y seguimiento — exclusivo mentoría." />
 
+      <div
+        style={{
+          position: 'relative', overflow: 'hidden', borderRadius: 'var(--radius-hero)',
+          padding: '26px 28px', marginTop: 32, marginBottom: 18, display: 'flex', gap: 32,
+          background: 'var(--hero-espresso)', color: 'var(--hero-espresso-text)',
+        }}
+      >
+        <div
+          style={{
+            position: 'absolute', top: -40, right: -40, width: 180, height: 180, borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(217,183,126,.18) 0%, transparent 70%)', pointerEvents: 'none',
+          }}
+        />
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--hero-espresso-accent)' }}>
+            Casos activos
+          </p>
+          <p style={{ margin: 0, fontFamily: 'Fraunces, Georgia, serif', fontSize: 34, fontWeight: 700 }}>{activeCases.length}</p>
+        </div>
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--hero-espresso-accent)' }}>
+            En crisis
+          </p>
+          <p style={{ margin: 0, fontFamily: 'Fraunces, Georgia, serif', fontSize: 34, fontWeight: 700 }}>{crisisCases.length}</p>
+        </div>
+        <div style={{ position: 'relative', zIndex: 1, flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+          <p style={{ margin: 0, fontSize: 13, color: crisisCases.length > 0 ? 'var(--hero-espresso-accent)' : 'var(--hero-espresso-text-muted)', fontWeight: crisisCases.length > 0 ? 700 : 400 }}>
+            {crisisCases.length > 0 ? `${crisisCases.length} caso${crisisCases.length === 1 ? '' : 's'} requiere${crisisCases.length === 1 ? '' : 'n'} atención urgente` : 'Sin crisis activas ahora mismo'}
+          </p>
+        </div>
+      </div>
+
       {error && <p style={{ color: 'var(--danger)', fontSize: 13 }}>{error}</p>}
 
       <div style={{ display: 'flex', gap: 10, marginBottom: 18 }}>
@@ -139,7 +171,7 @@ export function TherapistCasesModule() {
       </div>
 
       {cases.length > 0 && (
-        <div style={{ ...cardStyle, marginBottom: 12 }}>
+        <div style={{ marginBottom: 18 }}>
           <input
             style={fieldStyle}
             placeholder="Buscar por cliente, #caso o motivo…"
@@ -149,11 +181,11 @@ export function TherapistCasesModule() {
         </div>
       )}
 
-      <div style={cardStyle}>
+      <div>
         {cases.length === 0 ? (
-          <p style={{ color: 'var(--ink-soft)', fontSize: 13, margin: 0 }}>Aún no tienes casos asignados.</p>
+          <p style={{ color: 'var(--ink-secondary)', fontSize: 13, margin: 0 }}>Aún no tienes casos asignados.</p>
         ) : filteredCases.length === 0 ? (
-          <p style={{ color: 'var(--ink-soft)', fontSize: 13, margin: 0 }}>Ningún caso coincide en esta pestaña.</p>
+          <p style={{ color: 'var(--ink-secondary)', fontSize: 13, margin: 0 }}>Ningún caso coincide en esta pestaña.</p>
         ) : (
           filteredCases.map((c) => {
             const badge = caseBadge(c);
@@ -163,13 +195,13 @@ export function TherapistCasesModule() {
                 onClick={() => setSelectedId(c.id === selectedId ? null : c.id)}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 12,
-                  padding: '14px 4px', borderBottom: '1px solid var(--line)', cursor: 'pointer',
+                  padding: '14px 4px', borderBottom: '1px solid var(--border-hairline)', cursor: 'pointer',
                 }}
               >
                 <div
                   style={{
                     width: 38, height: 38, borderRadius: '50%', flexShrink: 0,
-                    background: 'var(--sage-soft)', color: 'var(--sage)',
+                    background: 'rgba(201,166,107,.18)', color: 'var(--ring-accent)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: 15, fontWeight: 700,
                   }}
@@ -180,7 +212,7 @@ export function TherapistCasesModule() {
                   <p style={{ margin: 0, fontSize: 13.5, fontWeight: 700, color: 'var(--ink)' }}>
                     {c.clientName} · #{c.caseNumber}
                   </p>
-                  <p style={{ margin: '2px 0 0', fontSize: 11.5, color: 'var(--ink-soft)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <p style={{ margin: '2px 0 0', fontSize: 11.5, color: 'var(--ink-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {c.initialAssessment.motivoConsulta} · {relativeTime(c.lastSessionAt)}
                   </p>
                 </div>
@@ -265,12 +297,14 @@ function CaseDetail({ blindspotCase, onRefetch }: { blindspotCase: TherapistCase
     ['Celular', client?.phone ?? null],
   ];
 
+  const sectionStyle: React.CSSProperties = { borderTop: '1px solid var(--border-hairline)', paddingTop: 20, paddingBottom: 20 };
+
   return (
-    <div style={cardStyle}>
-      <p style={{ margin: '0 0 16px', fontSize: 15, fontWeight: 700, color: 'var(--ink)' }}>Caso #{blindspotCase.caseNumber}</p>
+    <div>
+      <p style={{ margin: '0 0 4px', fontSize: 15, fontWeight: 700, color: 'var(--ink)' }}>Caso #{blindspotCase.caseNumber}</p>
 
       {/* a. Datos personales */}
-      <div style={{ marginBottom: 20 }}>
+      <div style={sectionStyle}>
         <p style={{ ...trackedLabelStyle, fontSize: 12.5, marginBottom: 12 }}>Datos personales</p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
           {personalFields.map(([label, value]) => (
@@ -283,7 +317,7 @@ function CaseDetail({ blindspotCase, onRefetch }: { blindspotCase: TherapistCase
       </div>
 
       {/* b. Motivo de consulta / Área percibida */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
+      <div style={{ ...sectionStyle, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
         <div>
           <span style={trackedLabelStyle}>Motivo de consulta</span>
           <p style={{ margin: 0, fontSize: 13.5, color: 'var(--ink)' }}>{blindspotCase.initialAssessment.motivoConsulta}</p>
@@ -295,7 +329,7 @@ function CaseDetail({ blindspotCase, onRefetch }: { blindspotCase: TherapistCase
       </div>
 
       {/* c. Marcar caso en crisis */}
-      <div style={{ marginBottom: 20 }}>
+      <div style={sectionStyle}>
         <button
           onClick={handleCrisis}
           disabled={blindspotCase.crisisFlag}
@@ -313,15 +347,15 @@ function CaseDetail({ blindspotCase, onRefetch }: { blindspotCase: TherapistCase
       </div>
 
       {/* d. Tareas */}
-      <div style={{ marginBottom: 20 }}>
+      <div style={sectionStyle}>
         <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)', marginBottom: 10 }}>Tareas</p>
         {tasks.map((t) => (
           <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 0' }}>
             <span
               style={{
                 width: 18, height: 18, borderRadius: '50%', flexShrink: 0,
-                border: t.status === 'pendiente' ? '2px solid var(--line)' : 'none',
-                background: t.status === 'pendiente' ? 'transparent' : t.status === 'completada' ? 'var(--sage)' : 'var(--line)',
+                border: t.status === 'pendiente' ? '2px solid var(--border-input)' : 'none',
+                background: t.status === 'pendiente' ? 'transparent' : t.status === 'completada' ? 'var(--ring-accent)' : 'var(--border-hairline)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}
             >
@@ -336,8 +370,8 @@ function CaseDetail({ blindspotCase, onRefetch }: { blindspotCase: TherapistCase
             </span>
             {t.status === 'pendiente' && (
               <span style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-                <button onClick={() => handleTaskStatus(t.id, 'completada')} style={{ fontSize: 11, border: '1px solid var(--line)', borderRadius: 9999, padding: '3px 10px', background: 'transparent', cursor: 'pointer' }}>Completada</button>
-                <button onClick={() => handleTaskStatus(t.id, 'omitida')} style={{ fontSize: 11, border: '1px solid var(--line)', borderRadius: 9999, padding: '3px 10px', background: 'transparent', cursor: 'pointer' }}>Omitir</button>
+                <button onClick={() => handleTaskStatus(t.id, 'completada')} style={{ fontSize: 11, border: '1px solid var(--border-hairline)', borderRadius: 9999, padding: '3px 10px', background: 'transparent', cursor: 'pointer' }}>Completada</button>
+                <button onClick={() => handleTaskStatus(t.id, 'omitida')} style={{ fontSize: 11, border: '1px solid var(--border-hairline)', borderRadius: 9999, padding: '3px 10px', background: 'transparent', cursor: 'pointer' }}>Omitir</button>
               </span>
             )}
           </div>
@@ -346,7 +380,7 @@ function CaseDetail({ blindspotCase, onRefetch }: { blindspotCase: TherapistCase
           <input style={fieldStyle} placeholder="Nueva tarea" value={newTaskTitle} onChange={(e) => setNewTaskTitle(e.target.value)} />
           <button
             onClick={handleAddTask}
-            style={{ ...primaryButtonStyle, height: 40, flexShrink: 0, background: '#F6E6C8', color: '#8A5A12' }}
+            style={{ ...primaryButtonStyle, height: 40, flexShrink: 0, background: 'rgba(201,166,107,.18)', color: 'var(--ring-accent)' }}
           >
             Agregar
           </button>
@@ -354,7 +388,7 @@ function CaseDetail({ blindspotCase, onRefetch }: { blindspotCase: TherapistCase
       </div>
 
       {/* e. Registrar sesión */}
-      <div style={{ marginBottom: 20 }}>
+      <div style={sectionStyle}>
         <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)', marginBottom: 10 }}>Registrar sesión</p>
         <div style={{ display: 'grid', gap: 10 }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
@@ -391,14 +425,14 @@ function CaseDetail({ blindspotCase, onRefetch }: { blindspotCase: TherapistCase
         </div>
       </div>
 
-      <div>
+      <div style={sectionStyle}>
         <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)', marginBottom: 8 }}>Historial de sesiones</p>
         {sessionLogs.length === 0 ? (
-          <p style={{ fontSize: 12.5, color: 'var(--ink-soft)' }}>Sin sesiones registradas todavía.</p>
+          <p style={{ fontSize: 12.5, color: 'var(--ink-secondary)' }}>Sin sesiones registradas todavía.</p>
         ) : (
           sessionLogs.map((log) => (
-            <div key={log.id} style={{ borderLeft: '2px solid var(--line)', paddingLeft: 12, marginBottom: 8 }}>
-              <p style={{ margin: 0, fontSize: 11.5, fontWeight: 700, color: 'var(--ink-soft)', textTransform: 'uppercase' }}>
+            <div key={log.id} style={{ borderLeft: '2px solid var(--border-hairline)', paddingLeft: 12, marginBottom: 8 }}>
+              <p style={{ margin: 0, fontSize: 11.5, fontWeight: 700, color: 'var(--ink-secondary)', textTransform: 'uppercase' }}>
                 {log.sessionDate} · {log.progressMarker}
               </p>
               {log.internalSummary && <p style={{ margin: '2px 0 0', fontSize: 12.5, color: 'var(--ink)' }}>{log.internalSummary}</p>}

@@ -99,6 +99,7 @@ describe('WizardShell — módulo 5, chips condicionales de probióticos/supleme
       rest: [],
     });
     vi.mocked(geoClient.getCities).mockResolvedValue(['Bogotá']);
+    vi.mocked(onboardingClient.getPersonalInfoAccess).mockResolvedValue('standard');
     vi.mocked(onboardingClient.updateClientObjetivos).mockResolvedValue(undefined);
   });
 

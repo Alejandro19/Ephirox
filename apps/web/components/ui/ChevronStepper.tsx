@@ -20,16 +20,15 @@ export default function ChevronStepper({
   return (
     <div>
       {label && (
-        <div style={{ display: "flex", alignItems: "center", fontSize: 12, fontWeight: 600,
-          color: "var(--ink-soft)", marginBottom: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", fontSize: 12, fontWeight: 400,
+          color: "var(--ink-secondary)", marginBottom: 8 }}>
           <label htmlFor={outputId}>{label}</label>
         </div>
       )}
-      <div style={{ height: 48, display: "flex", alignItems: "center",
-        justifyContent: "space-between", border: "1px solid #E7DFC9",
-        borderRadius: 12, background: "#FFFFFF", padding: "0 16px", boxSizing: "border-box" }}>
-        <output id={outputId} style={{ fontFamily: "Fraunces, Georgia, serif", fontWeight: 700,
-          fontSize: 18, color: "#2B2621" }}>{value}</output>
+      <div style={{ height: 36, display: "flex", alignItems: "center",
+        justifyContent: "space-between", borderBottom: "1px solid var(--border-input)",
+        padding: "0 2px", boxSizing: "border-box" }}>
+        <output id={outputId} style={{ fontSize: 14.5, fontWeight: 600, color: "var(--ink)" }}>{value}</output>
         <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
           <button type="button" aria-label={label ? `Aumentar ${label}` : "Aumentar"} onClick={() => {
             const n = value + step;
@@ -37,7 +36,7 @@ export default function ChevronStepper({
             onChange(n);
           }}
             style={{ border: "none", background: "none", padding: 0, lineHeight: 1,
-              fontSize: 11, color: "#B0A99C", cursor: "pointer" }}>
+              fontSize: 11, color: "var(--ink-secondary)", cursor: "pointer" }}>
             ▲
           </button>
           <button type="button" aria-label={label ? `Disminuir ${label}` : "Disminuir"} onClick={() => {
@@ -46,7 +45,7 @@ export default function ChevronStepper({
             onChange(n);
           }}
             style={{ border: "none", background: "none", padding: 0, lineHeight: 1,
-              fontSize: 11, color: "#B0A99C", cursor: "pointer" }}>
+              fontSize: 11, color: "var(--ink-secondary)", cursor: "pointer" }}>
             ▼
           </button>
         </div>

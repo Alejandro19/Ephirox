@@ -35,6 +35,15 @@ describe('AdminTrainingPanel', () => {
     vi.clearAllMocks();
     vi.mocked(trainingClient.getClientTrainingDays).mockResolvedValue(4);
     vi.mocked(trainingClient.listExercises).mockResolvedValue([exercise()]);
+    vi.mocked(trainingClient.getAchievements).mockResolvedValue([]);
+    vi.mocked(trainingClient.getStreak).mockResolvedValue({
+      streakWeeks: 0,
+      sessionsDoneThisWeek: 0,
+      sessionsRequiredThisWeek: 0,
+      protectorAvailable: false,
+      protectorUsedThisWeek: false,
+      atRisk: false,
+    });
     vi.mocked(quotesClient.listQuotes).mockResolvedValue([
       { id: 'q1', quote: 'Frase corta', author: null, active: true },
     ]);

@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { getWeekStart, isDayCompletedThisWeek, isDayUnlocked, calculateDisciplineStats } from '../lib/training-home-logic';
 import type { TrainingCompletion } from '../lib/training-client';
 
@@ -19,6 +19,18 @@ describe('getWeekStart', () => {
 });
 
 describe('isDayCompletedThisWeek / isDayUnlocked', () => {
+  // isDayCompletedThisWeek/isDayUnlocked calculan "esta semana" contra
+  // new Date() real (sin parámetro inyectable) — se fija el reloj a un punto
+  // conocido dentro de la semana del 27 jul-2 ago para que este test no se
+  // vuelva flaky con el paso del tiempo real.
+  beforeAll(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-07-29T12:00:00'));
+  });
+  afterAll(() => {
+    vi.useRealTimers();
+  });
+
   const weekStart = getWeekStart(new Date('2026-07-29T12:00:00'));
   const completions = [completion(1, weekStart)];
 

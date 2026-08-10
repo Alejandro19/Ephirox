@@ -11,16 +11,16 @@ type DayTileProps = {
 export default function DayTile({ num, label, state, exerciseCount, onClick }: DayTileProps) {
   const bg =
     state === "completed"
-      ? "var(--sage-soft)"
+      ? "rgba(201,166,107,.14)"
       : state === "locked"
-        ? "#F0EBE0"
+        ? "var(--page-bg)"
         : "var(--paper)";
   const borderColor =
     state === "active"
-      ? "var(--terracota)"
+      ? "var(--ring-accent)"
       : state === "completed"
-        ? "var(--terracota)"
-        : "#E7DFC9";
+        ? "var(--ring-accent)"
+        : "var(--border-hairline)";
   const opacity = state === "locked" ? 0.5 : 1;
 
   return (
@@ -29,7 +29,7 @@ export default function DayTile({ num, label, state, exerciseCount, onClick }: D
       disabled={state === "locked"}
       style={{
         background: bg,
-        border: `2px solid ${state === "completed" ? "var(--terracota)" : borderColor}`,
+        border: `2px solid ${state === "completed" ? "var(--ring-accent)" : borderColor}`,
         borderRadius: 16,
         padding: "20px 14px",
         textAlign: "center",
@@ -40,8 +40,8 @@ export default function DayTile({ num, label, state, exerciseCount, onClick }: D
       }}
       onMouseEnter={(e) => {
         if (state !== "locked") {
-          e.currentTarget.style.borderColor = "#B8935A";
-          e.currentTarget.style.boxShadow = "0 6px 16px rgba(184,147,90,.15)";
+          e.currentTarget.style.borderColor = "var(--ring-accent)";
+          e.currentTarget.style.boxShadow = "0 6px 16px rgba(217,183,126,.18)";
         }
       }}
       onMouseLeave={(e) => {

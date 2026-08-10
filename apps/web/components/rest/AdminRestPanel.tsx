@@ -8,22 +8,23 @@ import { showToast } from '../layout/AppShell';
 import { RestToolsAdminPanel } from './RestToolsAdminPanel';
 
 const cardStyle: React.CSSProperties = {
-  background: 'var(--paper)', border: '1px solid var(--line)',
-  borderRadius: 'var(--radius)', padding: '22px 24px', marginBottom: 18,
+  borderTop: '1px solid var(--border-hairline)', paddingTop: 20, paddingBottom: 20,
 };
 const cardTitleStyle: React.CSSProperties = {
   fontSize: 15, fontWeight: 700, color: 'var(--ink)', margin: '0 0 16px',
 };
 const labelStyle: React.CSSProperties = {
-  display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--ink-soft)', marginBottom: 4,
+  display: 'block', fontSize: 12, fontWeight: 400, color: 'var(--ink-secondary)', marginBottom: 4,
 };
 const fieldStyle: React.CSSProperties = {
-  width: '100%', height: 40, borderRadius: 10, border: '1px solid var(--line)',
-  padding: '0 10px', fontSize: 13, background: 'var(--paper)', color: 'var(--ink)',
+  width: '100%', height: 32, borderRadius: 0, border: 'none', borderBottom: '1px solid var(--border-input)',
+  padding: '0 2px 6px', fontSize: 14.5, fontWeight: 600, background: 'transparent', color: 'var(--ink)',
   outline: 'none', boxSizing: 'border-box',
 };
 const textareaStyle: React.CSSProperties = {
-  ...fieldStyle, height: 'auto', minHeight: 120, padding: 10, resize: 'vertical', fontFamily: 'inherit',
+  width: '100%', borderRadius: 10, border: '1px solid var(--border-hairline)',
+  padding: 10, fontSize: 14.5, fontWeight: 600, background: 'var(--paper)', color: 'var(--ink)',
+  outline: 'none', boxSizing: 'border-box', minHeight: 120, resize: 'vertical', fontFamily: 'inherit',
 };
 const primaryButtonStyle: React.CSSProperties = {
   height: 40, padding: '0 22px', borderRadius: 9999, border: 'none',
@@ -64,7 +65,7 @@ export function AdminRestPanel({ clientId }: { clientId: string }) {
     }
   }
 
-  if (loading) return <p style={{ color: 'var(--ink-soft)', fontSize: 14 }}>Cargando protocolo de sueño…</p>;
+  if (loading) return <p style={{ color: 'var(--ink-secondary)', fontSize: 14 }}>Cargando protocolo de sueño…</p>;
 
   return (
     <div>
@@ -94,8 +95,8 @@ export function AdminRestPanel({ clientId }: { clientId: string }) {
       ) : (
         <div style={cardStyle}>
           <h3 style={cardTitleStyle}>Protocolo personalizado</h3>
-          <p style={{ fontSize: 13, color: 'var(--ink-soft)', margin: 0 }}>
-            Este cliente no tiene el plan Mentoring — el módulo de Descanso se le muestra bloqueado con un CTA para
+          <p style={{ fontSize: 13, color: 'var(--ink-secondary)', margin: 0 }}>
+            Este cliente no tiene el plan Mentoring — el módulo Hackeando el sueño se le muestra bloqueado con un CTA para
             conocer planes. Cambia su tipo de cliente a Mentoring para poder escribirle este protocolo.
           </p>
         </div>

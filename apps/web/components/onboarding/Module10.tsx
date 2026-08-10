@@ -7,6 +7,7 @@ import { getWearableEstado, getWearableConnectUrl, syncWearable, disconnectWeara
 import SegmentedControl from '../ui/SegmentedControl';
 import FloatingField from '../ui/FloatingField';
 import FileField from '../ui/FileField';
+import { IconActivity, IconClipboardCheck } from '../ui/icons';
 
 export type Module10Draft = {
   wearable: string | null;
@@ -143,14 +144,35 @@ export function Module10({ clientId, draft, onChange }: Module10Props) {
 
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl border border-[var(--line)] p-5">
-        <h3 className="m-0 mb-4 text-[15px] font-bold text-[var(--ink)]">Wearables</h3>
-        <SegmentedControl
-          label="Wearables que utilizas"
-          options={WEARABLE_OPTIONS}
-          value={draft.wearable ?? ''}
-          onChange={(v) => onChange({ ...draft, wearable: v })}
-        />
+      <div className="rounded-[14px] border border-[var(--border-hairline)] bg-[var(--paper)] p-5">
+        <div className="mb-4 flex items-center gap-2">
+          <IconActivity size={16} style={{ color: 'var(--hero-piedra-accent)' }} />
+          <span className="text-[10.5px] font-bold uppercase tracking-[0.05em]" style={{ color: 'var(--hero-piedra-accent)' }}>
+            Wearables
+          </span>
+        </div>
+        <p className="m-0 mb-2 text-xs font-normal text-[var(--ink-secondary)]">Wearables que utilizas</p>
+        <div className="flex flex-wrap gap-2" role="group" aria-label="Wearables que utilizas">
+          {WEARABLE_OPTIONS.map((opt) => {
+            const selected = draft.wearable === opt.value;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                aria-pressed={selected}
+                onClick={() => onChange({ ...draft, wearable: opt.value })}
+                className="rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors"
+                style={{
+                  border: selected ? '1px solid var(--ink)' : '1px solid var(--border-input)',
+                  background: selected ? 'var(--ink)' : 'transparent',
+                  color: selected ? '#F5EFE2' : 'var(--ink)',
+                }}
+              >
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
 
         {draft.wearable === 'Apple Watch' && (
           <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -166,41 +188,46 @@ export function Module10({ clientId, draft, onChange }: Module10Props) {
         )}
 
         {dispositivo && dispositivo !== 'garmin' && (
-          <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-[var(--line)] bg-[var(--cream)] p-4">
+          <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-[var(--border-hairline)] bg-[var(--page-bg)] p-4">
             {conectado ? (
               <>
-                <span className="text-sm text-[var(--sage)]">
+                <span className="text-sm text-[var(--hero-espresso-accent)]">
                   ✓ Conectado {estadoActual?.ultimaSync ? `· última sincronización ${new Date(estadoActual.ultimaSync).toLocaleDateString('es-CO')}` : ''}
                 </span>
                 <button type="button" onClick={handleSync} disabled={syncing}
-                  className="rounded-full border border-[var(--sage)] px-4 py-1.5 text-xs font-semibold text-[var(--sage)] disabled:opacity-60">
+                  className="rounded-full border border-[var(--hero-espresso-accent)] px-4 py-1.5 text-xs font-semibold text-[var(--hero-espresso-accent)] disabled:opacity-60">
                   {syncing ? 'Sincronizando…' : 'Sincronizar ahora'}
                 </button>
                 <button type="button" onClick={handleDisconnect}
-                  className="rounded-full border border-[var(--line)] px-4 py-1.5 text-xs font-semibold text-[var(--ink-soft)]">
+                  className="rounded-full border border-[var(--border-hairline)] px-4 py-1.5 text-xs font-semibold text-[var(--ink-secondary)]">
                   Desconectar
                 </button>
               </>
             ) : (
               <a href={getWearableConnectUrl(dispositivo, clientId)}
-                className="rounded-full bg-[var(--gold)] px-4 py-2 text-xs font-semibold text-white">
+                className="rounded-full bg-[var(--ink)] px-4 py-2 text-xs font-semibold text-white">
                 Conectar {draft.wearable}
               </a>
             )}
-            {syncMsg && <span className="w-full text-xs text-[var(--ink-soft)]">{syncMsg}</span>}
+            {syncMsg && <span className="w-full text-xs text-[var(--ink-secondary)]">{syncMsg}</span>}
           </div>
         )}
 
         {dispositivo === 'garmin' && (
-          <p className="mt-4 rounded-xl border border-dashed border-[var(--line)] p-3 text-xs text-[var(--ink-soft)]">
+          <p className="mt-4 rounded-xl border border-dashed border-[var(--border-hairline)] p-3 text-xs text-[var(--ink-secondary)]">
             La integración con Garmin todavía no está disponible — próximamente.
           </p>
         )}
       </div>
 
-      <div className="rounded-2xl border border-[var(--line)] p-5">
-        <h3 className="m-0 mb-1 text-[15px] font-bold text-[var(--ink)]">Laboratorios Clínicos</h3>
-        <p className="m-0 mb-4 text-xs text-[var(--ink-soft)]">Importación automática de biomarcadores vía PDF</p>
+      <div className="rounded-[14px] border border-[var(--border-hairline)] bg-[var(--paper)] p-5">
+        <div className="mb-1 flex items-center gap-2">
+          <IconClipboardCheck size={16} style={{ color: 'var(--hero-piedra-accent)' }} />
+          <span className="text-[10.5px] font-bold uppercase tracking-[0.05em]" style={{ color: 'var(--hero-piedra-accent)' }}>
+            Laboratorios clínicos
+          </span>
+        </div>
+        <p className="m-0 mb-4 text-xs text-[var(--ink-secondary)]">Importación automática de biomarcadores vía PDF</p>
 
         <div className="mb-4">
           <SegmentedControl
@@ -212,13 +239,8 @@ export function Module10({ clientId, draft, onChange }: Module10Props) {
         </div>
 
         <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {/* FileField trae su propia etiqueta arriba de la caja (ícono +
-              texto); FloatingField no — sin este espaciador equivalente, las
-              dos cajas no arrancan a la misma altura y se ven desalineadas. */}
-          <div className="sm:pt-6">
-            <FloatingField id="m10-lab-fecha" label="Fecha del análisis" type="date" value={draft.labFecha}
-              onChange={(v) => onChange({ ...draft, labFecha: v })} />
-          </div>
+          <FloatingField id="m10-lab-fecha" label="Fecha del análisis" type="date" value={draft.labFecha}
+            onChange={(v) => onChange({ ...draft, labFecha: v })} />
           <FileField id="m10-lab-file" label="Subir PDF o imagen de laboratorio" accept=".pdf,.jpg,.jpeg,.png"
             disabled={ocrBusy} uploading={ocrBusy} fileName={draft.labFileName}
             helper={`Extraemos ${LAB_BIOMARKER_COUNT} biomarcadores automáticamente · PDF, JPG, PNG`}
@@ -226,16 +248,16 @@ export function Module10({ clientId, draft, onChange }: Module10Props) {
         </div>
 
         {ocrStatus && (
-          <p role={ocrStatus.isError ? 'alert' : 'status'} className={`mb-4 text-sm ${ocrStatus.isError ? 'text-[var(--danger)]' : 'text-[var(--sage)]'}`}>
+          <p role={ocrStatus.isError ? 'alert' : 'status'} className={`mb-4 text-sm ${ocrStatus.isError ? 'text-[var(--danger)]' : 'text-[var(--hero-espresso-accent)]'}`}>
             {ocrStatus.message}
           </p>
         )}
 
         {groups.__all__ && groups.__all__.length > 0 && (
-          <div className="overflow-x-auto rounded-xl border border-[var(--line)]">
+          <div className="overflow-x-auto rounded-xl border border-[var(--border-hairline)]">
             <table className="w-full border-collapse text-sm">
               <thead>
-                <tr className="border-b border-[var(--line)] bg-[var(--cream)] text-left text-xs text-[var(--ink-soft)]">
+                <tr className="border-b border-[var(--border-hairline)] bg-[var(--page-bg)] text-left text-xs text-[var(--ink-secondary)]">
                   <th className="p-2.5">Biomarcador</th>
                   <th className="p-2.5 text-right">Valor</th>
                   <th className="p-2.5">Unidad</th>
@@ -244,11 +266,11 @@ export function Module10({ clientId, draft, onChange }: Module10Props) {
               </thead>
               <tbody>
                 {groups.__all__.map((f) => (
-                  <tr key={f.field} className="border-b border-[var(--line)] last:border-0">
+                  <tr key={f.field} className="border-b border-[var(--border-hairline)] last:border-0">
                     <td className="p-2.5 text-[var(--ink)]">{f.lbl}</td>
-                    <td className="p-2.5 text-right font-semibold text-[var(--sage)]">{draft.labDatos[f.field]}</td>
-                    <td className="p-2.5 text-[var(--ink-soft)]">{f.unit}</td>
-                    <td className="p-2.5 text-[var(--ink-soft)]">{f.opt[0]}–{f.opt[1]}</td>
+                    <td className="p-2.5 text-right font-semibold text-[var(--hero-espresso-accent)]">{draft.labDatos[f.field]}</td>
+                    <td className="p-2.5 text-[var(--ink-secondary)]">{f.unit}</td>
+                    <td className="p-2.5 text-[var(--ink-secondary)]">{f.opt[0]}–{f.opt[1]}</td>
                   </tr>
                 ))}
               </tbody>
@@ -256,7 +278,7 @@ export function Module10({ clientId, draft, onChange }: Module10Props) {
           </div>
         )}
         {(!groups.__all__ || groups.__all__.length === 0) && (
-          <p className="rounded-xl border border-dashed border-[var(--line)] p-6 text-center text-sm text-[var(--ink-soft)]">
+          <p className="rounded-xl border border-dashed border-[var(--border-hairline)] p-6 text-center text-sm text-[var(--ink-secondary)]">
             Los valores aparecerán aquí tras importar el PDF.
           </p>
         )}

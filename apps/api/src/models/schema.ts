@@ -571,3 +571,34 @@ export type BlindspotCase = typeof blindspotCases.$inferSelect;
 export type BlindspotTask = typeof blindspotTasks.$inferSelect;
 export type BlindspotSessionLog = typeof blindspotSessionLogs.$inferSelect;
 export type LabPanel = typeof labPanels.$inferSelect;
+
+// Catálogo de módulos de la app — de acá sale cada fila de la matriz de
+// "Roles y Perfiles". `isCustom` distingue los 9 módulos base (sembrados por
+// la migración manual) de los que un admin agregue después desde la UI.
+export const permissionModules = pgTable('permission_modules', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  key: text('key').notNull().unique(),
+  label: text('label').notNull(),
+  note: text('note'),
+  sortOrder: integer('sort_order').notNull().default(0),
+  isCustom: boolean('is_custom').notNull().default(false),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+// Matriz tipo-de-cliente × módulo — reemplaza las reglas de acceso que hoy
+// están hardcodeadas en el código (ver require-permission.middleware.ts).
+// Es la capa "general" por tipo; el permiso individual por cliente
+// (clients.permissions) sigue siendo la capa fina que se auto-activa al
+// asignar contenido — ambas se combinan, ninguna reemplaza a la otra.
+export const clientTypeModulePermissions = pgTable('client_type_module_permissions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  clientType: text('client_type').notNull(),
+  moduleKey: text('module_key').notNull().references(() => permissionModules.key, { onDelete: 'cascade' }),
+  allowed: boolean('allowed').notNull().default(false),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => ({
+  clientTypeModuleUnique: unique('client_type_module_unique').on(table.clientType, table.moduleKey),
+}));
+
+export type PermissionModule = typeof permissionModules.$inferSelect;
+export type ClientTypeModulePermission = typeof clientTypeModulePermissions.$inferSelect;

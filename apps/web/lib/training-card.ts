@@ -1,6 +1,7 @@
 // Puerto directo de computeAchievements/drawInstagramCard del legacy (index.html:3145-3251).
-// streakWeeks=11 → trophiesEarned=2 (🏆🏆), medalsInCurrentCycle=3 (🎖️🎖️🎖️ + 1 slot vacío).
-// Las copas nunca se resetean; las medallas del ciclo actual sí, cada 4.
+// streakWeeks=11 → trophiesEarned=2 (2 íconos de trofeo), medalsInCurrentCycle=3
+// (3 íconos de medalla + 1 slot vacío). Las copas nunca se resetean; las
+// medallas del ciclo actual sí, cada 4.
 export function computeAchievements(streakWeeks: number): { medalsInCurrentCycle: number; trophiesEarned: number } {
   return {
     medalsInCurrentCycle: streakWeeks % 4,
@@ -9,6 +10,64 @@ export function computeAchievements(streakWeeks: number): { medalsInCurrentCycle
 }
 
 const CARD_SCALE = 1080 / 260;
+
+// Íconos de línea dibujados a mano sobre el canvas (reemplazan los emojis
+// 🏆/🎖️ que antes se pintaban vía fillText) — mismo trazo fino monocromático
+// que el resto del set de íconos de la app (components/ui/icons.tsx), pero
+// como paths de canvas ya que fillText no puede renderizar un componente SVG.
+function drawTrophyIcon(ctx: CanvasRenderingContext2D, cx: number, cy: number, size: number, color: string): void {
+  const w = size;
+  const h = size;
+  ctx.save();
+  ctx.fillStyle = color;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = size * 0.09;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(cx - w * 0.3, cy - h * 0.4);
+  ctx.lineTo(cx + w * 0.3, cy - h * 0.4);
+  ctx.lineTo(cx + w * 0.2, cy + h * 0.02);
+  ctx.quadraticCurveTo(cx, cy + h * 0.16, cx - w * 0.2, cy + h * 0.02);
+  ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(cx - w * 0.36, cy - h * 0.22, w * 0.12, Math.PI * 0.25, Math.PI * 1.6);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(cx + w * 0.36, cy - h * 0.22, w * 0.12, Math.PI * 1.4, Math.PI * 2.75);
+  ctx.stroke();
+  ctx.fillRect(cx - w * 0.045, cy + h * 0.02, w * 0.09, h * 0.16);
+  ctx.fillRect(cx - w * 0.16, cy + h * 0.16, w * 0.32, h * 0.06);
+  ctx.restore();
+}
+
+function drawMedalIcon(ctx: CanvasRenderingContext2D, cx: number, cy: number, size: number, color: string): void {
+  const r = size * 0.34;
+  ctx.save();
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(cx - r * 0.55, cy - r * 1.7);
+  ctx.lineTo(cx + r * 0.55, cy - r * 1.7);
+  ctx.lineTo(cx + r * 0.3, cy - r * 0.7);
+  ctx.lineTo(cx - r * 0.3, cy - r * 0.7);
+  ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawEmptyMedalSlot(ctx: CanvasRenderingContext2D, cx: number, cy: number, size: number, color: string): void {
+  ctx.save();
+  ctx.globalAlpha = 0.85;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = size * 0.09;
+  ctx.beginPath();
+  ctx.arc(cx, cy, size * 0.34, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+}
 
 export function drawInstagramCard(ctx: CanvasRenderingContext2D, { streakWeeks, phrase }: { streakWeeks: number; phrase: string | null }): void {
   const W = 1080;
@@ -30,13 +89,29 @@ export function drawInstagramCard(ctx: CanvasRenderingContext2D, { streakWeeks, 
   ctx.textBaseline = 'middle';
   ctx.font = `${s(12)}px Georgia, serif`;
   ctx.fillStyle = '#E8C97D';
-  ctx.textAlign = 'left';
-  if (trophiesEarned > 0) ctx.fillText(`${'🏆'.repeat(trophiesEarned)} copas`, s(22), rowY);
-  ctx.textAlign = 'right';
+
+  const iconSize = s(13);
+  const iconGap = s(5);
+
+  if (trophiesEarned > 0) {
+    let x = s(22) + iconSize / 2;
+    for (let i = 0; i < trophiesEarned; i++) {
+      drawTrophyIcon(ctx, x, rowY, iconSize, '#E8C97D');
+      x += iconSize + iconGap;
+    }
+    ctx.textAlign = 'left';
+    ctx.fillText(' copas', x - iconGap + s(4), rowY);
+  }
+
   ctx.globalAlpha = 0.85;
-  ctx.letterSpacing = `${s(2)}px`;
-  ctx.fillText(`${'🎖️'.repeat(medalsInCurrentCycle)}${'○'.repeat(4 - medalsInCurrentCycle)}`, W - s(22), rowY);
-  ctx.letterSpacing = '0px';
+  const medalSlots = 4;
+  const medalsWidth = medalSlots * iconSize + (medalSlots - 1) * iconGap;
+  let medalX = W - s(22) - medalsWidth + iconSize / 2;
+  for (let i = 0; i < medalSlots; i++) {
+    if (i < medalsInCurrentCycle) drawMedalIcon(ctx, medalX, rowY, iconSize, '#E8C97D');
+    else drawEmptyMedalSlot(ctx, medalX, rowY, iconSize, '#E8C97D');
+    medalX += iconSize + iconGap;
+  }
   ctx.globalAlpha = 1;
 
   // Bloque 2: sello circular

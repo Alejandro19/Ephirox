@@ -17,6 +17,11 @@ export async function listTherapists(): Promise<Therapist[]> {
   return db.select().from(therapists).orderBy(desc(therapists.createdAt));
 }
 
+export async function countActiveTherapists(): Promise<number> {
+  const rows = await db.select().from(therapists).where(eq(therapists.active, true));
+  return rows.length;
+}
+
 export async function createTherapist(input: { name: string; email: string; password: string; specialty?: string | null; phone?: string | null }): Promise<Therapist> {
   const passwordHash = await hashPassword(input.password);
   const [therapist] = await db

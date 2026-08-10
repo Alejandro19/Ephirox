@@ -185,6 +185,67 @@ Sidebar nuevo (`TherapistSidebar.tsx`) con los 7 módulos pedidos (Mi perfil, Mi
 
 ---
 
+## Resumen Ejecutivo — Sesión 2026-08-09 (tarde) — Sistema de diseño premium (fase 2)
+
+Continuación del sistema de diseño premium (Apple/Oura/Vercel) ya iniciado en fases anteriores de esta misma sesión larga (topbar horizontal para cliente y terapeuta, hero espresso/piedra, tokens nuevos). Esta parte cubrió dos prompts nuevos del usuario:
+
+### 1. Corrección de jerarquía de contenedores (los 3 paneles)
+
+Se eliminó el patrón de "card completa apilada" (fondo blanco + borde + radio) para todo el contenido secundario debajo de cada hero, en los 8 módulos de cliente, terapeuta (Mis casos) y ~20 archivos de admin — reemplazado por secciones abiertas separadas con `border-top` de 1px y padding vertical, dejando el borde completo solo para controles clicables (tabs, chips, filas de listado). Se agregó `mt-8` entre el topbar y el primer hero de cada pantalla, y se corrigieron badges que flotaban sueltos junto al hero (ej. racha "🔥 en riesgo" en Entrenamiento, ahora integrada dentro del hero).
+
+### 2. Formularios: agrupación, tipografía, íconos, paleta
+
+- **Cards agrupadas estilo Oura** en los 10 módulos de "Información Personal": se agregó metadata `group` (opcional) a `WizardFieldConfig` en `packages/shared-types/src/wizard.ts` (requirió `pnpm run build` en ese paquete para que `apps/web` viera el tipo nuevo, ya que importa el `dist/` compilado) y se anotó cada campo de `lib/wizard-modules.ts` con su grupo temático. `WizardShell.tsx` parte los campos de cada módulo en cards contiguas por grupo, cada una con ícono de línea (16px) + eyebrow mayúsculas. Módulo 3 (Composición Corporal) y Módulo 10 (Dispositivos y Laboratorios) — que son `custom` y no pasan por ese pipeline — recibieron el mismo tratamiento visual a mano, a pedido explícito del usuario tras una primera pasada incompleta.
+- **Jerarquía tipográfica pregunta/respuesta**: label 12px/400/`--ink-secondary` siempre estático arriba, valor 14.5px/600/`--ink` abajo — reemplaza el floating-label animado que tenía `FloatingField.tsx` (ahora es un label fijo, ya no flota). Aplicado en todos los componentes compartidos de formulario (`FloatingField`, `SelectField`, `TimeField`, `SegmentedControl`, `ChevronStepper`, `SliderField`, `ChipGroup`) y en los `fieldStyle`/`labelStyle` locales de ~10 paneles admin/terapeuta.
+- **`SelectField.tsx` — bug real encontrado y corregido**: el placeholder ("Seleccionar") nunca se mostraba visualmente cuando el campo estaba vacío — el `<span>` que dibuja el valor por encima del `<select>` nativo transparente mostraba string vacío en vez del placeholder, así que todo select sin valor se veía completamente en blanco. Corregido para mostrar "Seleccionar" en gris cuando no hay valor.
+- **Emojis → íconos de línea**: nuevo archivo `components/ui/icons.tsx` con ~35 íconos SVG hand-rolled (mismo criterio que ya usaba la app, no se agregó ninguna librería de íconos como dependencia). Reemplazados todos los emojis reales encontrados por grep de rangos Unicode (🔥🔒🔔🏆🎖️📎📸🔀⚠️✅🧊🧘🏃🤝💆🩺🥗🧠), incluyendo los que se dibujaban con `fillText` en el canvas de la tarjeta de Instagram (`lib/training-card.ts` — se reemplazaron por funciones que dibujan trofeo/medalla como paths de canvas). El símbolo ✓ (check mark plano, no emoji de color) se dejó igual a propósito.
+- **Chips/botones fuera de paleta — bug real encontrado y corregido**: `components/ui/ChipGroup.tsx` (el componente compartido detrás de TODOS los selectores múltiples: proteínas, carbohidratos, probióticos, suplementos, etc. en el onboarding) tenía naranja sólido hardcodeado (`var(--terracota)`) para el estado seleccionado — nunca se había retokenizado en ninguna fase anterior. Corregido al patrón de paleta (`--ink` sólido/pill). También corregido el dropzone de `FileField.tsx` (antes borde naranja sólido, ahora punteado) y luego, a pedido de seguimiento, hecho más visible (fondo con tinte, borde más marcado, ícono de clip dentro del recuadro — antes pasaba desapercibido).
+- **Sliders**: `SliderField.tsx` tenía caja blanca + borde + verde viejo (`#5B7A4E`) sin retokenizar — ahora es un track delgado sin caja, con `accent-color` del dorado de marca.
+
+### 3. Bug real encontrado detrás del error "preexistente" de toda la sesión
+
+`components/nutrition/NutritionPdfGenerator.tsx` fallaba el build con "Modifiers cannot appear here" desde antes de que empezara este trabajo — se había reportado repetidamente como "preexistente, fuera de alcance". Al tocar este archivo para quitarle un emoji se encontró la causa real: a la función `mdBold` le faltaba la llave de cierre `}`, lo que corría todo lo demás dentro de su cuerpo y dejaba una llave extra sobrante al final del archivo. Corregido (dos líneas) — `next build` ahora compila 100% limpio, sin ningún error.
+
+### 4. Incidente de `git stash` — corrupción y recuperación completa
+
+Al comparar si un test roto era preexistente, se encadenó `git stash && npx vitest run ... && git stash pop` en un solo comando con timeout de 60s. El timeout mató el proceso a mitad del `git stash pop`, dejando ~15 archivos revertidos a su versión de antes de la sesión (incluyendo el borrado completo de `FloatingField.tsx`). Se diagnosticó comparando los 116 archivos del stash contra el disco uno por uno (`git show stash@{0}:<path>` vs archivo real) y se restauró cada uno exacto (`git checkout stash@{0} -- <path>`), verificado luego byte a byte. El stash se dropeó al final, ya verificado con `tsc`, `next build` y la suite de tests. **Ningún archivo del diseño de hoy se perdió.**
+
+### 5. Tests corregidos y hallazgos de arquitectura preexistente (no tocados)
+
+Corregidos por regresión real de esta sesión o por mocks incompletos: `admin-training-panel.test.tsx` (faltaban mocks de `getAchievements`/`getStreak`, usados por el `AdminAchievementsPanel` agregado en una fase anterior), `training-home-logic.test.ts` (fecha hardcodeada que ya había quedado en el pasado — se fijó el reloj con `vi.useFakeTimers`), `training-home.test.tsx` y `phrases-panel.test.tsx` (queries por texto de emoji que ya no existe, actualizadas), `client-detail-page.test.tsx` (reescrito completo).
+
+**Hallazgos de arquitectura preexistente, NO corregidos hoy (fuera de alcance, requieren decisión de producto):**
+- **`client-detail-page.test.tsx` (ya corregido, pero reveló esto):** el historial de antropometría/InBody y el resumen de logros que este test esperaba ver en la página de detalle de cliente ya no se muestran ahí — un refactor real anterior a esta sesión movió esa información a "Mi Evolución" (antropometría/InBody) y al tab de Entrenamiento (`AdminAchievementsPanel`, logros). El test se reescribió para reflejar la arquitectura actual.
+- **`login-page.test.tsx` (5 tests, fallo consistente, NO flaky):** `components/auth/LoginForm.tsx` — el componente que contiene la lógica real de redirección por rol/onboarding (admin→`/admin/clients`, onboarding incompleto→`/onboarding`, completo→`/training`, acción NFC pendiente→`/training`) — **no lo importa ningún archivo del proyecto**. `app/(auth)/login/page.tsx` (el que de verdad se usa) hace `window.location.href = '/'` sin condicionales, tanto para login por contraseña como por Google. Es un refactor a medias de antes de esta sesión. **Pendiente de decisión:** o se conecta `LoginForm.tsx` de verdad, o se borra como código muerto y se reescriben/eliminan estos tests.
+- **`wizard-shell-finalize.test.tsx` (flaky, no determinístico):** sus 5 tests recorren los 9 pasos reales del wizard de punta a punta (~8-14s cada uno) — pasan siempre en aislamiento (verificado dos veces), pero fallan intermitentemente bajo la contención de CPU de la suite completa (~311 tests). Es un tradeoff ya documentado en los comentarios del propio archivo de test, no una regresión de esta sesión.
+- Credenciales de Supabase Storage inválidas en el entorno de test — ya reportado en la sesión anterior (2026-08-09, sección "Fix de la base de datos de test"), sigue sin resolverse, no es de este trabajo.
+
+### 6. Verificación final
+
+`tsc --noEmit` limpio, `next build` 100% limpio (0 errores, incluyendo la ruta de nutrición que antes fallaba). Suite de tests: 302/311 pasan; los 9 restantes son los dos hallazgos preexistentes de la sección anterior (login-page: determinístico; wizard-shell-finalize: flaky), no regresiones de hoy.
+
+---
+
+## Próximas actividades — Siguiente sesión (actualizada 2026-08-09 tarde)
+
+### Actividad 1 — Decidir sobre `login-page.test.tsx` / `LoginForm.tsx`
+
+- Confirmar si se quiere restaurar el ruteo inteligente post-login (admin/onboarding-incompleto/training/acción-NFC-pendiente) conectando `components/auth/LoginForm.tsx` de verdad en `app/(auth)/login/page.tsx`, o si se prefiere borrar `LoginForm.tsx` como código muerto y simplificar/eliminar esos 5 tests para que reflejen el comportamiento actual (siempre redirige a `/`).
+
+### Actividad 2 — Revisar flakiness de `wizard-shell-finalize.test.tsx`
+
+- Si molesta en CI o en runs locales, evaluar correr ese archivo aislado (`vitest run test/wizard-shell-finalize.test.tsx`) o con `--pool=threads --poolOptions.threads.singleThread` en vez de subir más los timeouts — no es una regresión de código, es contención de CPU en la suite completa.
+
+### Actividad 3 — Revisar visualmente en `dev:web` los cambios de hoy
+
+- Cards agrupadas de Información Personal (los 10 módulos, incluidos 3 y 10), selects con "Seleccionar" visible, dropzones de archivo más visibles, jerarquía tipográfica label/valor, chips sin naranja, sliders sin caja, y la corrección de jerarquía de contenedores en los 3 paneles.
+
+### Actividad 4 — Construir los 6 módulos placeholder del panel de terapeuta
+
+- (Sigue pendiente de la sesión anterior, sin tocar hoy.) Mi perfil, Mis clientes, Mi agenda, Recursos clínicos, Comunidad de terapeutas, Dashboards.
+
+---
+
 ## Notas adicionales
 
 - **No modificar `server.js` ni `index.html` (raíz):** son el monolito legacy que Vercel sigue deployando en producción desde `origin/main`. Todo desarrollo nuevo va en `apps/api` / `apps/web`, commiteado en `backup-migracion-2026-08-05`.
@@ -193,3 +254,4 @@ Sidebar nuevo (`TherapistSidebar.tsx`) con los 7 módulos pedidos (Mi perfil, Mi
 - **Dos bases de datos Supabase separadas:** dev (`DATABASE_URL` en `apps/api/.env`) y test (`TEST_DATABASE_URL` en `apps/api/.env.test`) — las migraciones de `tasks/*.sql` hay que aplicarlas a mano en ambas, no se sincronizan solas.
 - **Nunca commitear/pushear a `origin/main` directamente** — riesgo real de romper el deploy de producción en Vercel.
 - **Nunca cambiar de rama, commitear o pushear sin pedido explícito del usuario en ese turno**, incluso si ya se autorizó antes en la misma sesión.
+- **Nunca encadenar `git stash` con un comando largo y `git stash pop` en una sola invocación de shell** (ej. `git stash && npx vitest run && git stash pop`) — si el comando del medio se corta por timeout, el `stash pop` puede quedar aplicado a medias y corromper archivos silenciosamente (visto en la sesión 2026-08-09 tarde). Si hace falta comparar contra un estado previo, usar `git show <ref>:<path>` para leer sin tocar el working tree, o ejecutar cada paso (`stash`, el comando, `stash pop`) como llamadas separadas.

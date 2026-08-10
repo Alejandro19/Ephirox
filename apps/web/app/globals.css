@@ -6,7 +6,7 @@
 :root {
   --cream: #FBF7F1;
   --paper: #FFFFFF;
-  --ink: #2B2420;
+  --ink: #1A1712;
   --ink-soft: #6B6058;
   --terracota: #C1662F;
   --terracota-soft: #F1DDCB;
@@ -29,6 +29,25 @@
   --bg-green: #EFF5E8;
   --line-green: #D9E4CE;
   --accent-green: #5B7A4E;
+
+  /* ─── Sistema de diseño premium (Apple/Oura/Vercel) ─── */
+  --page-bg: #FCFAF6;
+  --hero-espresso: #3D3226;
+  --hero-espresso-text: #F5EFE2;
+  --hero-espresso-text-muted: #B8ABA0;
+  --hero-espresso-accent: #D9B77E;
+  --hero-piedra-start: #E8DFCE;
+  --hero-piedra-end: #C7B9A4;
+  --hero-piedra-text: #2E2618;
+  --hero-piedra-text-muted: #5C513E;
+  --hero-piedra-accent: #6B5C42;
+  --ink-secondary: #8A867C;
+  --border-hairline: #EAE6DC;
+  --border-input: #E4E0D5;
+  --ring-accent: #C9A66B;
+  --radius-hero: 16px;
+  --radius-card: 14px;
+  --radius-control: 9px;
 }
 
 /* ─── Base ─── */

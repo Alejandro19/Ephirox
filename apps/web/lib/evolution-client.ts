@@ -1,4 +1,4 @@
-import { getSessionToken } from './api-client';
+import { getSessionToken, PermissionDeniedError } from './api-client';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3003';
 
@@ -9,6 +9,10 @@ async function authorizedRequest<T>(path: string, method: string, body?: unknown
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: body != null ? JSON.stringify(body) : undefined,
   });
+  if (res.status === 403) {
+    const errorBody = await res.json().catch(() => ({}));
+    throw new PermissionDeniedError(errorBody.error || 'No tienes acceso a este módulo.');
+  }
   return res.json();
 }
 

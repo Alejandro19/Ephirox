@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { getMetricas, getWearableEstado, type WearableMetrica, type WearableEstado } from '../../lib/wearable-client';
 import { getProtocol, type SleepProtocol } from '../../lib/sleep-client';
 import { fetchClient } from '../../lib/clients-client';
+import { PermissionDeniedError } from '../../lib/api-client';
 import { pickMantra } from '../../lib/mantra-bank';
 import { COACH_WHATSAPP_NUMBER } from '../../lib/constants';
 import {
@@ -71,7 +72,11 @@ function SyncIcon() {
 function SyncHero({ latest, ultimaSync }: { latest: WearableMetrica | null; ultimaSync: string | null }) {
   if (!latest) {
     return (
-      <div className="relative mb-5 overflow-hidden rounded-[20px] p-7 text-white" style={{ background: 'linear-gradient(135deg, #241C30, #332740)' }}>
+      <div className="relative mt-8 mb-5 overflow-hidden rounded-[var(--radius-hero)] p-7" style={{ background: 'var(--hero-espresso)', color: 'var(--hero-espresso-text)' }}>
+        <div
+          className="pointer-events-none absolute -right-10 -top-10 h-[180px] w-[180px] rounded-full"
+          style={{ background: 'radial-gradient(circle, rgba(217,183,126,.18) 0%, transparent 70%)' }}
+        />
         <EmptyState message="Aún no hay datos sincronizados desde tu Oura Ring." />
       </div>
     );
@@ -84,24 +89,30 @@ function SyncHero({ latest, ultimaSync }: { latest: WearableMetrica | null; ulti
   const despierto = Math.max(0, totalMin - (profundo + rem + ligero));
 
   return (
-    <div className="relative mb-5 overflow-hidden rounded-[20px] p-7 text-white" style={{ background: 'linear-gradient(135deg, #241C30, #332740)' }}>
-      <div className="mb-4 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wide text-[#C6B4E0]">
+    <div className="relative mt-8 mb-5 overflow-hidden rounded-[var(--radius-hero)] p-7" style={{ background: 'var(--hero-espresso)', color: 'var(--hero-espresso-text)' }}>
+      <div
+        className="pointer-events-none absolute -right-10 -top-10 h-[180px] w-[180px] rounded-full"
+        style={{ background: 'radial-gradient(circle, rgba(217,183,126,.18) 0%, transparent 70%)' }}
+      />
+      <div className="relative z-10 mb-4 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wide" style={{ color: 'var(--hero-espresso-accent)' }}>
         <span className="inline-flex items-center gap-1.5">
           <SyncIcon /> Sincronizado con Oura {ultimaSync ? `· ${formatRelativeSync(ultimaSync)}` : ''}
         </span>
-        <span className="normal-case tracking-normal opacity-70">Anoche</span>
+        <span className="normal-case tracking-normal" style={{ color: 'var(--hero-espresso-text-muted)' }}>Anoche</span>
       </div>
 
-      <div className="mb-1 flex items-start justify-between gap-3">
+      <div className="relative z-10 mb-1 flex items-start justify-between gap-3">
         <p className="font-serif text-4xl font-bold leading-none">{latest.suenoScore ?? '—'}</p>
         <p className="text-right font-serif text-lg font-semibold">{formatMinutesDuration(totalMin)}</p>
       </div>
-      <div className="mb-5 flex items-start justify-between gap-3">
-        <p className="text-sm opacity-80">puntaje de sueño · {sleepScoreLabel(latest.suenoScore)}</p>
-        {latest.horaDormir && <p className="text-right text-xs opacity-70">te dormiste {formatClockTime(latest.horaDormir)}</p>}
+      <div className="relative z-10 mb-5 flex items-start justify-between gap-3">
+        <p className="text-sm" style={{ color: 'var(--hero-espresso-text-muted)' }}>puntaje de sueño · {sleepScoreLabel(latest.suenoScore)}</p>
+        {latest.horaDormir && <p className="text-right text-xs" style={{ color: 'var(--hero-espresso-text-muted)' }}>te dormiste {formatClockTime(latest.horaDormir)}</p>}
       </div>
 
-      <Hypnogram despierto={despierto} profundo={profundo} rem={rem} ligero={ligero} />
+      <div className="relative z-10">
+        <Hypnogram despierto={despierto} profundo={profundo} rem={rem} ligero={ligero} />
+      </div>
     </div>
   );
 }
@@ -110,11 +121,11 @@ function SyncHero({ latest, ultimaSync }: { latest: WearableMetrica | null; ulti
 
 function MetricCard({ label, value, caption, captionColor }: { label: string; value: string; caption?: string; captionColor?: string }) {
   return (
-    <div className="rounded-2xl border border-[var(--line)] bg-[var(--paper)] p-4">
-      <p className="mb-1 text-[11px] font-semibold text-[var(--ink-soft)]">{label}</p>
+    <div className="rounded-xl bg-[var(--page-bg)] p-4">
+      <p className="mb-1 text-[11px] font-semibold text-[var(--ink-secondary)]">{label}</p>
       <p className="font-serif text-xl font-bold text-[var(--ink)]">{value}</p>
       {caption && (
-        <p className="mt-1 text-[11px]" style={{ color: captionColor || 'var(--ink-soft)' }}>
+        <p className="mt-1 text-[11px]" style={{ color: captionColor || 'var(--ink-secondary)' }}>
           {caption}
         </p>
       )}
@@ -135,7 +146,7 @@ function RecoveryMetricsRow({ latest, previous }: { latest: WearableMetrica; pre
         label="HRV"
         value={latest.hrvNocturno != null ? `${latest.hrvNocturno} ms` : '—'}
         caption={hrvPct != null ? `${hrvPct >= 0 ? '↑' : '↓'} ${Math.abs(hrvPct)}% vs. prom.` : undefined}
-        captionColor={hrvPct != null && hrvPct >= 0 ? 'var(--sage)' : 'var(--danger)'}
+        captionColor={hrvPct != null && hrvPct >= 0 ? 'var(--hero-espresso-accent)' : 'var(--danger)'}
       />
       <MetricCard label="FC reposo" value={latest.fcReposo != null ? `${latest.fcReposo} bpm` : '—'} caption="estable" />
       <MetricCard label="Temp. piel" value={tempDelta != null ? `${tempDelta >= 0 ? '+' : ''}${tempDelta.toFixed(1)}°` : '—'} caption="vs. tu base" />
@@ -155,7 +166,7 @@ function TrendChart({ points }: { points: WearableMetrica[] }) {
   const scores = points.map((p) => p.suenoScore).filter((s): s is number => s != null);
   if (!scores.length) {
     return (
-      <section className="mb-5 rounded-[var(--radius)] border border-[var(--line)] bg-[var(--paper)] p-[26px]">
+      <section className="border-t border-[var(--border-hairline)] py-6">
         <h2 className="mb-4 font-serif text-lg font-bold text-[var(--ink)]">Tendencia · últimos 7 días</h2>
         <EmptyState message="Aún no hay suficientes días sincronizados para ver la tendencia." />
       </section>
@@ -180,13 +191,13 @@ function TrendChart({ points }: { points: WearableMetrica[] }) {
   for (let v = yMin; v <= yMax; v += 10) gridValues.push(v);
 
   return (
-    <section className="mb-5 rounded-[var(--radius)] border border-[var(--line)] bg-[var(--paper)] p-[26px]">
+    <section className="border-t border-[var(--border-hairline)] py-6">
       <h2 className="mb-4 font-serif text-lg font-bold text-[var(--ink)]">Tendencia · últimos 7 días</h2>
       <svg viewBox={`0 0 ${w} ${h}`} className="w-full" style={{ height: 180 }} role="img" aria-label="Tendencia del puntaje de sueño de los últimos 7 días">
         {gridValues.map((v) => (
           <g key={v}>
-            <line x1={padL} x2={w - padR} y1={yFor(v)} y2={yFor(v)} stroke="var(--line)" strokeWidth={1} />
-            <text x={0} y={yFor(v) + 3} fontSize={10} fill="var(--ink-soft)">
+            <line x1={padL} x2={w - padR} y1={yFor(v)} y2={yFor(v)} stroke="var(--border-hairline)" strokeWidth={1} />
+            <text x={0} y={yFor(v) + 3} fontSize={10} fill="var(--ink-secondary)">
               {v}
             </text>
           </g>
@@ -196,7 +207,7 @@ function TrendChart({ points }: { points: WearableMetrica[] }) {
           p.suenoScore != null ? <circle key={p.id} cx={xFor(i)} cy={yFor(p.suenoScore)} r={3.5} fill="#8A5FA0" /> : null
         )}
         {points.map((p, i) => (
-          <text key={`${p.id}-label`} x={xFor(i)} y={h - 4} fontSize={10} fill="var(--ink-soft)" textAnchor="middle">
+          <text key={`${p.id}-label`} x={xFor(i)} y={h - 4} fontSize={10} fill="var(--ink-secondary)" textAnchor="middle">
             {shortWeekday(p.fecha)}
           </text>
         ))}
@@ -231,22 +242,20 @@ function ProtocolCard({ protocol }: { protocol: SleepProtocol }) {
   const lines = (protocol?.protocolText || '').split('\n').map((l) => l.trim()).filter(Boolean);
 
   return (
-    <section className="mb-5">
+    <section className="border-t border-[var(--border-hairline)] py-6">
       <p className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.08em] text-[#8A5FA0]">Actualizado con tu data</p>
       <h2 className="mb-3.5 font-serif text-lg font-bold text-[var(--ink)]">Tu protocolo de sueño personalizado</h2>
-      <div className="rounded-2xl border border-[#E1D5EE] bg-[#F1EAF7] p-[22px_24px]">
-        {lines.length ? (
-          <div className="space-y-2">{lines.map((line, i) => renderProtocolLine(line, i))}</div>
-        ) : (
-          <EmptyState message="Tu mentor está preparando tu protocolo personalizado." />
-        )}
-        {protocol?.supplement && (
-          <div className="mt-4 border-t border-[#E1D5EE] pt-4">
-            <p className="mb-0.5 text-[9px] font-bold uppercase tracking-[0.08em] text-[#8A5FA0]">Suplemento sugerido</p>
-            <p className="font-serif text-sm font-semibold text-[#3F2A63]">{protocol.supplement}</p>
-          </div>
-        )}
-      </div>
+      {lines.length ? (
+        <div className="space-y-2">{lines.map((line, i) => renderProtocolLine(line, i))}</div>
+      ) : (
+        <EmptyState message="Tu mentor está preparando tu protocolo personalizado." />
+      )}
+      {protocol?.supplement && (
+        <div className="mt-4 border-t border-[var(--border-hairline)] pt-4">
+          <p className="mb-0.5 text-[9px] font-bold uppercase tracking-[0.08em] text-[#8A5FA0]">Suplemento sugerido</p>
+          <p className="font-serif text-sm font-semibold text-[#3F2A63]">{protocol.supplement}</p>
+        </div>
+      )}
     </section>
   );
 }
@@ -259,6 +268,7 @@ export function ClientRestPanel({ clientId }: { clientId: string }) {
   const [protocol, setProtocol] = useState<SleepProtocol>(null);
   const [mentoring, setMentoring] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [permissionLocked, setPermissionLocked] = useState(false);
   const [loading, setLoading] = useState(true);
   const [mantra] = useState(() => pickMantra('rest'));
 
@@ -266,7 +276,13 @@ export function ClientRestPanel({ clientId }: { clientId: string }) {
     Promise.all([
       getMetricas(clientId, 7).catch(() => ({ total: 0, promedios: {}, data: [] as WearableMetrica[] })),
       getWearableEstado(clientId).catch(() => [] as WearableEstado[]),
-      getProtocol(clientId).catch(() => null),
+      // Un 403 acá sí debe propagar (a diferencia del resto de estos
+      // fetches, que son "best effort") — es la señal de que este tipo de
+      // cliente ya no tiene acceso al módulo, ver requirePermission('rest').
+      getProtocol(clientId).catch((e) => {
+        if (e instanceof PermissionDeniedError) throw e;
+        return null;
+      }),
       fetchClient(clientId).catch(() => null),
     ])
       .then(([metricasRes, estados, sleepProtocol, client]) => {
@@ -276,13 +292,16 @@ export function ClientRestPanel({ clientId }: { clientId: string }) {
         setProtocol(sleepProtocol);
         setMentoring(isMentoringClient(client?.clientType));
       })
-      .catch((e: Error) => setError(e.message))
+      .catch((e: Error) => {
+        if (e instanceof PermissionDeniedError) setPermissionLocked(true);
+        else setError(e.message);
+      })
       .finally(() => setLoading(false));
   }, [clientId]);
 
   const header = (
     <>
-      <IdentityHeader title="Descanso" subtitle="Tu recuperación nocturna, medida por tu wearable." />
+      <IdentityHeader title="Hackeando el sueño" subtitle="Tu recuperación nocturna, medida por tu wearable." />
       {mantra && <MantraCard mantra={mantra} />}
     </>
   );
@@ -291,7 +310,17 @@ export function ClientRestPanel({ clientId }: { clientId: string }) {
     return (
       <div>
         {header}
-        <p className="text-sm text-[var(--ink-soft)]">Cargando tu recuperación…</p>
+        <p className="text-sm text-[var(--ink-secondary)]">Cargando tu recuperación…</p>
+      </div>
+    );
+  }
+  if (permissionLocked) {
+    return (
+      <div>
+        {header}
+        <LockedOverlay title="Módulo no disponible" subtitle="Este módulo ya no está disponible para tu tipo de cuenta.">
+          <div style={{ minHeight: 200 }} />
+        </LockedOverlay>
       </div>
     );
   }

@@ -12,23 +12,28 @@ export function formatEventDateTime(dateStr: string | null): string {
   return `${d.getDate()} ${MONTHS[d.getMonth()]}, ${h}:${min}${ampm}`;
 }
 
-// Ícono heurístico por título — el esquema no tiene un campo de categoría
-// dedicado, igual que en el legacy (index.html:4954-4972).
-export function eventCategoryIcon(title: string | null): string {
+// Categoría heurística por título — el esquema no tiene un campo de
+// categoría dedicado, igual que en el legacy (index.html:4954-4972). Se
+// devuelve una clave (no un emoji) que CommunityVisuals.tsx resuelve a un
+// ícono de línea.
+export type EventCategoryKey = 'ice' | 'mindful' | 'activity' | 'heat' | 'social' | 'default';
+export type TherapyCategoryKey = 'massage' | 'physio' | 'nutrition' | 'mental' | 'default';
+
+export function eventCategoryIcon(title: string | null): EventCategoryKey {
   const t = (title || '').toLowerCase();
-  if (/hielo|ice\b|frío|frio/.test(t)) return '🧊';
-  if (/medita|mindful|respira|yoga/.test(t)) return '🧘';
-  if (/circuito|entrena|fuerza|cardio|running|correr|hiit/.test(t)) return '🏃';
-  if (/sauna|calor/.test(t)) return '🔥';
-  if (/comunidad|social|cena|desayuno|brunch/.test(t)) return '🤝';
-  return '📅';
+  if (/hielo|ice\b|frío|frio/.test(t)) return 'ice';
+  if (/medita|mindful|respira|yoga/.test(t)) return 'mindful';
+  if (/circuito|entrena|fuerza|cardio|running|correr|hiit/.test(t)) return 'activity';
+  if (/sauna|calor/.test(t)) return 'heat';
+  if (/comunidad|social|cena|desayuno|brunch/.test(t)) return 'social';
+  return 'default';
 }
 
-export function therapyCategoryIcon(title: string | null): string {
+export function therapyCategoryIcon(title: string | null): TherapyCategoryKey {
   const t = (title || '').toLowerCase();
-  if (/masaje|spa/.test(t)) return '💆';
-  if (/fisio/.test(t)) return '🩺';
-  if (/nutri/.test(t)) return '🥗';
-  if (/biodescod|psicolog|terapia|coach|mental/.test(t)) return '🧠';
-  return '📅';
+  if (/masaje|spa/.test(t)) return 'massage';
+  if (/fisio/.test(t)) return 'physio';
+  if (/nutri/.test(t)) return 'nutrition';
+  if (/biodescod|psicolog|terapia|coach|mental/.test(t)) return 'mental';
+  return 'default';
 }

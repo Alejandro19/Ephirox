@@ -58,7 +58,7 @@ describe('ClientEvolutionPanel', () => {
     render(<ClientEvolutionPanel clientId="client-1" />);
     expect(await screen.findByText('Índice de bienestar general')).toBeInTheDocument();
     expect(screen.getByText('Bienestar general')).toBeInTheDocument();
-    expect(screen.getByText('Descanso')).toBeInTheDocument();
+    expect(screen.getByText('Hackeando el sueño')).toBeInTheDocument();
     expect(screen.getByText('Gestión de Cortisol')).toBeInTheDocument();
   });
 

@@ -23,6 +23,6 @@ vi.mock('../lib/rest-tools-client', () => ({
 describe('RestPage', () => {
   it('renders the client panel', async () => {
     render(<RestPage />);
-    expect(await screen.findByRole('heading', { name: 'Descanso' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Hackeando el sueño' })).toBeInTheDocument();
   });
 });

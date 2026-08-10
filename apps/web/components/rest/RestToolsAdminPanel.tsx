@@ -13,23 +13,22 @@ import {
 import EmptyState from '../ui/EmptyState';
 
 const cardStyle: React.CSSProperties = {
-  background: 'var(--paper)', border: '1px solid var(--line)',
-  borderRadius: 'var(--radius)', padding: '22px 24px', marginBottom: 18,
+  borderTop: '1px solid var(--border-hairline)', paddingTop: 20, paddingBottom: 20,
 };
 const cardTitleStyle: React.CSSProperties = {
   fontSize: 15, fontWeight: 700, color: 'var(--ink)', margin: '0 0 16px',
 };
 const labelStyle: React.CSSProperties = {
-  display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--ink-soft)', marginBottom: 4,
+  display: 'block', fontSize: 12, fontWeight: 400, color: 'var(--ink-secondary)', marginBottom: 4,
 };
 const fieldStyle: React.CSSProperties = {
-  width: '100%', height: 40, borderRadius: 10, border: '1px solid var(--line)',
-  padding: '0 10px', fontSize: 13, background: 'var(--paper)', color: 'var(--ink)',
+  width: '100%', height: 32, borderRadius: 0, border: 'none', borderBottom: '1px solid var(--border-input)',
+  padding: '0 2px 6px', fontSize: 14.5, fontWeight: 600, background: 'transparent', color: 'var(--ink)',
   outline: 'none', boxSizing: 'border-box',
 };
 const ghostButtonStyle: React.CSSProperties = {
-  height: 32, padding: '0 14px', borderRadius: 9999, border: '1px solid var(--line)',
-  background: 'transparent', color: 'var(--ink-soft)', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+  height: 32, padding: '0 14px', borderRadius: 9999, border: '1px solid var(--border-hairline)',
+  background: 'transparent', color: 'var(--ink-secondary)', fontSize: 12, fontWeight: 600, cursor: 'pointer',
 };
 const dangerButtonStyle: React.CSSProperties = {
   height: 32, padding: '0 14px', borderRadius: 9999, border: '1px solid var(--danger)',
@@ -40,7 +39,7 @@ const primaryButtonStyle: React.CSSProperties = {
   background: '#8A5FA0', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer',
 };
 const draftCardStyle: React.CSSProperties = {
-  background: 'var(--cream)', border: '1px solid var(--line)', borderRadius: 14, padding: 16, marginBottom: 10,
+  background: 'var(--page-bg)', border: '1px solid var(--border-hairline)', borderRadius: 14, padding: 16, marginBottom: 10,
 };
 
 export function RestToolsAdminPanel() {
@@ -172,7 +171,7 @@ export function RestToolsAdminPanel() {
               <label style={labelStyle}>Duración (min : seg)</label>
               <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                 <input aria-label="Minutos" id="rt-new-minutes" type="number" style={fieldStyle} value={newMinutes} onChange={(e) => setNewMinutes(e.target.value)} />
-                <span style={{ color: 'var(--ink-soft)' }}>:</span>
+                <span style={{ color: 'var(--ink-secondary)' }}>:</span>
                 <input aria-label="Segundos" id="rt-new-seconds" type="number" style={fieldStyle} value={newSeconds} onChange={(e) => setNewSeconds(e.target.value)} />
               </div>
             </div>
@@ -215,7 +214,7 @@ export function RestToolsAdminPanel() {
                     <label style={labelStyle}>Duración (min : seg)</label>
                     <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                       <input aria-label="Minutos (edición)" type="number" style={fieldStyle} value={editMinutes} onChange={(e) => setEditMinutes(e.target.value)} />
-                      <span style={{ color: 'var(--ink-soft)' }}>:</span>
+                      <span style={{ color: 'var(--ink-secondary)' }}>:</span>
                       <input aria-label="Segundos (edición)" type="number" style={fieldStyle} value={editSeconds} onChange={(e) => setEditSeconds(e.target.value)} />
                     </div>
                   </div>
@@ -228,7 +227,7 @@ export function RestToolsAdminPanel() {
               {tool.audioUrl && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, flexWrap: 'wrap' }}>
                   <audio controls src={tool.audioUrl} style={{ height: 32, maxWidth: 260 }} />
-                  <span style={{ fontSize: 12, color: 'var(--ink-soft)' }}>{tool.audioName}</span>
+                  <span style={{ fontSize: 12, color: 'var(--ink-secondary)' }}>{tool.audioName}</span>
                   <button type="button" style={ghostButtonStyle} onClick={() => handleRemoveAudio(tool.id)}>
                     Quitar audio
                   </button>
@@ -254,10 +253,10 @@ export function RestToolsAdminPanel() {
               </div>
             </div>
           ) : (
-            <div key={tool.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 0', borderBottom: '1px solid var(--line)' }}>
+            <div key={tool.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 0', borderBottom: '1px solid var(--border-hairline)' }}>
               <div style={{ flex: 1 }}>
                 <strong>{tool.name}</strong>
-                {tool.meta && <span style={{ marginLeft: 8, fontSize: 12, color: 'var(--ink-soft)' }}>{tool.meta}</span>}
+                {tool.meta && <span style={{ marginLeft: 8, fontSize: 12, color: 'var(--ink-secondary)' }}>{tool.meta}</span>}
               </div>
               <button type="button" style={ghostButtonStyle} onClick={() => startEdit(tool)}>
                 Editar

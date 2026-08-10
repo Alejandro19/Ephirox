@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { listEvents, reserveEvent, cancelEventReservation, listMyEventReservations, type CommunityEvent } from '../../lib/events-client';
 import { listTherapies, reserveTherapy, cancelTherapyReservation, listMyTherapyReservations, type CommunityTherapy } from '../../lib/therapies-client';
 import { fetchClient } from '../../lib/clients-client';
+import { PermissionDeniedError } from '../../lib/api-client';
 import { pickMantra } from '../../lib/mantra-bank';
 import { COACH_WHATSAPP_NUMBER } from '../../lib/constants';
 import { formatEventDateTime } from '../../lib/community-logic';
@@ -11,6 +12,7 @@ import IdentityHeader from '../ui/IdentityHeader';
 import MantraCard from '../ui/MantraCard';
 import LockedOverlay from '../ui/LockedOverlay';
 import EmptyState from '../ui/EmptyState';
+import { IconFlame } from '../ui/icons';
 import { EventCard, TherapyCard } from './CommunityVisuals';
 
 type MyReservation = { eventId?: string; therapyId?: string; status: string };
@@ -20,12 +22,12 @@ function ReserveButton({ reserved, onReserve, onCancel }: { reserved: boolean; o
     <button
       type="button"
       onClick={onCancel}
-      className="mt-4 h-11 w-full rounded-full border border-[var(--line)] text-sm font-semibold text-[var(--ink)]"
+      className="mt-4 h-11 w-full rounded-full border border-[var(--border-input)] text-sm font-semibold text-[var(--ink)]"
     >
       Cancelar reserva
     </button>
   ) : (
-    <button type="button" onClick={onReserve} className="mt-4 h-11 w-full rounded-full bg-[#2B2621] text-sm font-semibold text-white">
+    <button type="button" onClick={onReserve} className="mt-4 h-11 w-full rounded-full bg-[var(--ink)] text-sm font-semibold text-white">
       Reservar mi lugar
     </button>
   );
@@ -40,6 +42,7 @@ export function ClientCommunityPanel({ clientId }: { clientId: string }) {
   const [tab, setTab] = useState<'events' | 'therapies'>('events');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [permissionLocked, setPermissionLocked] = useState(false);
   const [mantra] = useState(() => pickMantra('community'));
 
   const loadAll = useCallback(async () => {
@@ -61,7 +64,10 @@ export function ClientCommunityPanel({ clientId }: { clientId: string }) {
 
   useEffect(() => {
     loadAll()
-      .catch((e: Error) => setError(e.message))
+      .catch((e: Error) => {
+        if (e instanceof PermissionDeniedError) setPermissionLocked(true);
+        else setError(e.message);
+      })
       .finally(() => setLoading(false));
   }, [loadAll]);
 
@@ -109,7 +115,17 @@ export function ClientCommunityPanel({ clientId }: { clientId: string }) {
     return (
       <div>
         {header}
-        <p className="text-sm text-[var(--ink-soft)]">Cargando comunidad…</p>
+        <p className="text-sm text-[var(--ink-secondary)]">Cargando comunidad…</p>
+      </div>
+    );
+  }
+  if (permissionLocked) {
+    return (
+      <div>
+        {header}
+        <LockedOverlay title="Módulo no disponible" subtitle="Este módulo ya no está disponible para tu tipo de cuenta.">
+          <div style={{ minHeight: 200 }} />
+        </LockedOverlay>
       </div>
     );
   }
@@ -173,43 +189,42 @@ export function ClientCommunityPanel({ clientId }: { clientId: string }) {
     <div>
       {header}
 
-      <div className="relative mb-6 overflow-hidden rounded-[20px] p-7 text-white" style={{ background: 'linear-gradient(135deg, #3A2418, #4A311F)' }}>
-        <div
-          className="pointer-events-none absolute -right-10 -top-10 h-[180px] w-[180px] rounded-full"
-          style={{ background: 'radial-gradient(circle, rgba(255,255,255,.12) 0%, transparent 70%)' }}
-        />
-        <div className="relative z-10">
-          <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-[#E0B08C]">{nextEvent ? 'Próximo evento' : 'Comunidad'}</p>
-          <p className="mb-1 font-serif text-2xl font-bold">{nextEvent ? nextEvent.title : 'Aún no hay eventos programados'}</p>
-          <p className="text-sm opacity-80">
-            {nextEvent
-              ? `${formatEventDateTime(nextEvent.eventDate)}${nextEvent.location ? ' · ' + nextEvent.location : ''}`
-              : 'Tu coach publicará el próximo evento pronto.'}
+      <div
+        className="relative mt-8 mb-6 overflow-hidden rounded-[var(--radius-hero)] p-7"
+        style={{ background: 'linear-gradient(135deg, var(--hero-piedra-start), var(--hero-piedra-end))', color: 'var(--hero-piedra-text)' }}
+      >
+        <p className="mb-2 text-[11px] font-bold uppercase tracking-wider" style={{ color: 'var(--hero-piedra-accent)' }}>{nextEvent ? 'Próximo evento' : 'Comunidad Wellness'}</p>
+        <p className="mb-1 font-serif text-2xl font-bold">{nextEvent ? nextEvent.title : 'Aún no hay eventos programados'}</p>
+        <p className="text-sm" style={{ color: 'var(--hero-piedra-text-muted)' }}>
+          {nextEvent
+            ? `${formatEventDateTime(nextEvent.eventDate)}${nextEvent.location ? ' · ' + nextEvent.location : ''}`
+            : 'Tu coach publicará el próximo evento pronto.'}
+        </p>
+        {nextEventConfirmed > 0 && (
+          <p className="mt-1.5 flex items-center gap-1.5 text-[11px] font-semibold" style={{ color: 'var(--hero-piedra-accent)' }}>
+            <IconFlame size={12} /> {nextEventConfirmed} persona{nextEventConfirmed === 1 ? '' : 's'} ya confirmaron su lugar
           </p>
-          {nextEventConfirmed > 0 && (
-            <p className="mt-1.5 text-[11px] font-semibold text-[#E8B99A]">
-              🔥 {nextEventConfirmed} persona{nextEventConfirmed === 1 ? '' : 's'} ya confirmaron su lugar
-            </p>
-          )}
-        </div>
+        )}
       </div>
 
       <div className="mb-5 flex gap-2.5">
         <button
           type="button"
           onClick={() => setTab('events')}
-          className={`h-10 rounded-full px-5 text-sm font-semibold transition-colors ${
-            tab === 'events' ? 'bg-[var(--gold)] text-white' : 'border border-[var(--line)] text-[var(--ink-soft)]'
-          }`}
+          className="h-10 rounded-full px-5 text-sm font-semibold transition-colors"
+          style={tab === 'events'
+            ? { background: 'var(--hero-piedra-accent)', color: '#fff' }
+            : { border: '1px solid var(--border-input)', color: 'var(--ink-secondary)' }}
         >
           Eventos
         </button>
         <button
           type="button"
           onClick={() => setTab('therapies')}
-          className={`h-10 rounded-full px-5 text-sm font-semibold transition-colors ${
-            tab === 'therapies' ? 'bg-[var(--gold)] text-white' : 'border border-[var(--line)] text-[var(--ink-soft)]'
-          }`}
+          className="h-10 rounded-full px-5 text-sm font-semibold transition-colors"
+          style={tab === 'therapies'
+            ? { background: 'var(--hero-piedra-accent)', color: '#fff' }
+            : { border: '1px solid var(--border-input)', color: 'var(--ink-secondary)' }}
         >
           Terapias
         </button>

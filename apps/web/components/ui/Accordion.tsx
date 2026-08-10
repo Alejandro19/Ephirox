@@ -29,7 +29,7 @@ export default function Accordion({ items }: AccordionProps) {
               }}
             >
               {item.header}
-              <span style={{ fontSize: 14, color: "var(--terracota)" }}>
+              <span style={{ fontSize: 14, color: "var(--ring-accent)" }}>
                 {open ? "▲" : "▼"}
               </span>
             </button>

@@ -257,6 +257,7 @@ describe('WizardShell finalize()', () => {
       rest: [],
     });
     vi.mocked(geoClient.getCities).mockResolvedValue(['Bogotá']);
+    vi.mocked(onboardingClient.getPersonalInfoAccess).mockResolvedValue('standard');
 
     vi.mocked(onboardingClient.putPersonalInfo).mockResolvedValue(undefined);
     vi.mocked(onboardingClient.updateClientObjetivos).mockResolvedValue(undefined);

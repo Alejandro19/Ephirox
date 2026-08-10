@@ -1,5 +1,7 @@
 "use client";
 
+import { IconLock } from "./icons";
+
 type LockedOverlayProps = {
   children: React.ReactNode;
   title: string;
@@ -26,8 +28,8 @@ export default function LockedOverlay({
       <div
         style={{
           background: "var(--paper)",
-          border: "1px solid var(--line)",
-          borderRadius: "var(--radius)",
+          border: "1px solid var(--border-hairline)",
+          borderRadius: "var(--radius-card)",
           padding: "26px 24px",
           textAlign: "center",
           marginTop: -14,
@@ -35,7 +37,9 @@ export default function LockedOverlay({
           zIndex: 1,
         }}
       >
-        <div style={{ fontSize: 26, marginBottom: 10 }}>🔒</div>
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 10, color: "var(--ring-accent)" }}>
+          <IconLock size={26} />
+        </div>
         <h3
           style={{
             fontFamily: "Fraunces, Georgia, serif",
@@ -46,7 +50,7 @@ export default function LockedOverlay({
         >
           {title}
         </h3>
-        <p style={{ fontSize: 13, color: "var(--ink-soft)", margin: "0 0 16px" }}>
+        <p style={{ fontSize: 13, color: "var(--ink-secondary)", margin: "0 0 16px" }}>
           {subtitle}
         </p>
         {onCta && (
@@ -55,7 +59,7 @@ export default function LockedOverlay({
             style={{
               padding: "10px 22px",
               borderRadius: "9999px",
-              background: "var(--gold)",
+              background: "var(--ring-accent)",
               color: "#fff",
               border: "none",
               fontSize: 13,

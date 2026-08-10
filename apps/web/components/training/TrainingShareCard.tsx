@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { drawInstagramCard } from "../../lib/training-card";
 import { shareCanvasAsImage } from "../../lib/share-card";
 import { showToast } from "../layout/AppShell";
+import { IconCamera } from "../ui/icons";
 
 type TrainingShareCardProps = {
   streakWeeks: number;
@@ -57,7 +58,7 @@ export default function TrainingShareCard({ streakWeeks, phrase }: TrainingShare
           alignItems: "center",
           gap: 8,
           borderRadius: "9999px",
-          background: "var(--gold)",
+          background: "var(--hero-espresso-accent)",
           color: "#fff",
           border: "none",
           padding: "12px 24px",
@@ -92,7 +93,7 @@ export default function TrainingShareCard({ streakWeeks, phrase }: TrainingShare
           </>
         ) : (
           <>
-            📸 Compartir en Instagram
+            <IconCamera size={15} /> Compartir en Instagram
           </>
         )}
       </button>

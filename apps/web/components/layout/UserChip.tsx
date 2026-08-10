@@ -2,12 +2,11 @@
 
 import { useAuth } from "../../lib/auth-context";
 
+// Solo se usa dentro de Sidebar.tsx, que ahora es exclusivo del rol admin.
 export default function UserChip() {
-  const { user, role, logout } = useAuth();
+  const { user, logout } = useAuth();
 
   const initial = (user?.name ?? "U").charAt(0).toUpperCase();
-  const isAdmin = role === "admin";
-  const roleLabel = isAdmin ? "Admin" : "Miembro";
 
   return (
     <div
@@ -26,9 +25,9 @@ export default function UserChip() {
           alignItems: "center",
           gap: 10,
           padding: "8px 10px",
-          borderRadius: "var(--radius)",
-          border: "1px solid var(--line)",
-          background: "var(--cream)",
+          borderRadius: "var(--radius-card)",
+          border: "1px solid var(--border-hairline)",
+          background: "var(--page-bg)",
         }}
       >
         {/* Avatar circle */}
@@ -37,8 +36,8 @@ export default function UserChip() {
             width: 32,
             height: 32,
             borderRadius: "50%",
-            background: isAdmin ? "var(--terracota-soft)" : "var(--sage-soft)",
-            color: isAdmin ? "var(--terracota)" : "var(--sage)",
+            background: "rgba(201,166,107,.18)",
+            color: "var(--ring-accent)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -67,11 +66,11 @@ export default function UserChip() {
           <div
             style={{
               fontSize: 11,
-              color: "var(--ink-soft)",
+              color: "var(--ink-secondary)",
               marginTop: 1,
             }}
           >
-            {roleLabel}
+            Admin
           </div>
         </div>
       </div>
@@ -82,22 +81,22 @@ export default function UserChip() {
         style={{
           width: "100%",
           background: "none",
-          border: "1px solid var(--line)",
+          border: "1px solid var(--border-input)",
           borderRadius: "9999px",
           padding: "8px 16px",
           fontSize: 12,
           fontWeight: 500,
-          color: "var(--ink-soft)",
+          color: "var(--ink-secondary)",
           cursor: "pointer",
           transition: "all 0.2s ease",
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.background = "var(--cream)";
+          e.currentTarget.style.background = "var(--page-bg)";
           e.currentTarget.style.color = "var(--ink)";
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.background = "none";
-          e.currentTarget.style.color = "var(--ink-soft)";
+          e.currentTarget.style.color = "var(--ink-secondary)";
         }}
       >
         Cerrar sesión

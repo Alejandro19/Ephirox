@@ -6,16 +6,16 @@ import { showToast } from '../layout/AppShell';
 import EmptyState from '../ui/EmptyState';
 
 const labelStyle: React.CSSProperties = {
-  display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--ink-soft)', marginBottom: 4,
+  display: 'block', fontSize: 12, fontWeight: 400, color: 'var(--ink-secondary)', marginBottom: 4,
 };
 const textareaStyle: React.CSSProperties = {
-  width: '100%', borderRadius: 10, border: '1px solid var(--line)',
-  padding: 10, fontSize: 13, background: 'var(--paper)', color: 'var(--ink)',
+  width: '100%', borderRadius: 10, border: '1px solid var(--border-hairline)',
+  padding: 10, fontSize: 14.5, fontWeight: 600, background: 'var(--paper)', color: 'var(--ink)',
   outline: 'none', boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit',
 };
 const ghostButtonStyle: React.CSSProperties = {
-  height: 32, padding: '0 14px', borderRadius: 9999, border: '1px solid var(--line)',
-  background: 'transparent', color: 'var(--ink-soft)', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+  height: 32, padding: '0 14px', borderRadius: 9999, border: '1px solid var(--border-hairline)',
+  background: 'transparent', color: 'var(--ink-secondary)', fontSize: 12, fontWeight: 600, cursor: 'pointer',
 };
 const dangerButtonStyle: React.CSSProperties = {
   height: 32, padding: '0 14px', borderRadius: 9999, border: '1px solid var(--danger)',
@@ -23,10 +23,10 @@ const dangerButtonStyle: React.CSSProperties = {
 };
 const primaryButtonStyle: React.CSSProperties = {
   height: 36, padding: '0 18px', borderRadius: 9999, border: 'none',
-  background: 'var(--sage)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+  background: 'var(--ring-accent)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer',
 };
 const rowStyle: React.CSSProperties = {
-  display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 0', borderBottom: '1px solid var(--line)',
+  display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 0', borderBottom: '1px solid var(--border-hairline)',
 };
 
 export function CortisolTipsPanel() {
@@ -83,7 +83,7 @@ export function CortisolTipsPanel() {
     }
   }
 
-  if (loading) return <p style={{ color: 'var(--ink-soft)', fontSize: 14 }}>Cargando tips…</p>;
+  if (loading) return <p style={{ color: 'var(--ink-secondary)', fontSize: 14 }}>Cargando tips…</p>;
 
   return (
     <div>
@@ -106,7 +106,7 @@ export function CortisolTipsPanel() {
         ) : (
           tips.map((tip) =>
             editingId === tip.id ? (
-              <div key={tip.id} style={{ padding: '12px 0', borderBottom: '1px solid var(--line)' }}>
+              <div key={tip.id} style={{ padding: '12px 0', borderBottom: '1px solid var(--border-hairline)' }}>
                 <textarea rows={2} style={textareaStyle} value={editContent} onChange={(e) => setEditContent(e.target.value)} />
                 <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
                   <button type="button" style={primaryButtonStyle} onClick={() => handleSaveEdit(tip.id)}>Guardar</button>

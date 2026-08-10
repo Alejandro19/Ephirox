@@ -41,7 +41,7 @@ export default function RestPage() {
   if (role === 'admin') {
     return (
       <div>
-        <IdentityHeader title="Descanso" subtitle="Escribe el protocolo de sueño y gestiona el banco de herramientas." />
+        <IdentityHeader title="Hackeando el sueño" subtitle="Escribe el protocolo de sueño y gestiona el banco de herramientas." />
         <div
           style={{
             background: 'var(--paper)', border: '1px solid var(--line)',

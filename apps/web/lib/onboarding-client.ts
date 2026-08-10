@@ -134,3 +134,17 @@ export async function updateClientObjetivos(clientId: string, objetivos: Record<
   const body = await authorizedRequest<{ success: boolean; error?: string }>(`/api/clients/${clientId}`, 'PUT', { objetivos });
   if (!body.success) throw new Error(body.error || 'Error al guardar tu objetivo.');
 }
+
+export type PersonalInfoVariant = 'standard' | 'mentoring' | 'none';
+
+// Resuelto desde la matriz de "Roles y Perfiles" (ver plan del mismo
+// nombre) — reemplaza el viejo `clientType === 'mentoring'` hardcodeado que
+// decidía si se mostraba el módulo 10 (Dispositivos y Laboratorios).
+export async function getPersonalInfoAccess(clientId: string): Promise<PersonalInfoVariant> {
+  const body = await authorizedRequest<{ success: boolean; variant: PersonalInfoVariant; error?: string }>(
+    `/api/clients/${clientId}/personal-info-access`,
+    'GET'
+  );
+  if (!body.success) throw new Error(body.error || 'Error al verificar el acceso a Información Personal.');
+  return body.variant;
+}

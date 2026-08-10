@@ -32,32 +32,33 @@ function supplementsToRows(list: Supplement[]): SupplementRowDraft[] {
 }
 
 const cardStyle: React.CSSProperties = {
-  background: 'var(--paper)', border: '1px solid var(--line)',
-  borderRadius: 'var(--radius)', padding: '22px 24px', marginBottom: 18,
+  borderTop: '1px solid var(--border-hairline)', paddingTop: 20, paddingBottom: 20,
 };
 const cardTitleStyle: React.CSSProperties = {
   fontSize: 15, fontWeight: 700, color: 'var(--ink)', margin: '0 0 16px',
 };
 const sectionLabelStyle: React.CSSProperties = {
-  display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--ink-soft)', margin: '18px 0 8px',
+  display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--ink-secondary)', margin: '18px 0 8px',
 };
 const labelStyle: React.CSSProperties = {
-  display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--ink-soft)', marginBottom: 4,
+  display: 'block', fontSize: 12, fontWeight: 400, color: 'var(--ink-secondary)', marginBottom: 4,
 };
 const fieldStyle: React.CSSProperties = {
-  width: '100%', height: 40, borderRadius: 10, border: '1px solid var(--line)',
-  padding: '0 10px', fontSize: 13, background: 'var(--paper)', color: 'var(--ink)',
+  width: '100%', height: 32, borderRadius: 0, border: 'none', borderBottom: '1px solid var(--border-input)',
+  padding: '0 2px 6px', fontSize: 14.5, fontWeight: 600, background: 'transparent', color: 'var(--ink)',
   outline: 'none', boxSizing: 'border-box',
 };
 const textareaStyle: React.CSSProperties = {
-  ...fieldStyle, height: 'auto', minHeight: 72, padding: 10, resize: 'vertical', fontFamily: 'inherit',
+  width: '100%', borderRadius: 10, border: '1px solid var(--border-hairline)',
+  padding: 10, fontSize: 14.5, fontWeight: 600, background: 'var(--paper)', color: 'var(--ink)',
+  outline: 'none', boxSizing: 'border-box', minHeight: 72, resize: 'vertical', fontFamily: 'inherit',
 };
 const draftCardStyle: React.CSSProperties = {
-  background: 'var(--cream)', border: '1px solid var(--line)', borderRadius: 14, padding: 16, marginBottom: 10,
+  background: 'var(--page-bg)', border: '1px solid var(--border-hairline)', borderRadius: 14, padding: 16, marginBottom: 10,
 };
 const ghostButtonStyle: React.CSSProperties = {
-  height: 32, padding: '0 14px', borderRadius: 9999, border: '1px solid var(--line)',
-  background: 'transparent', color: 'var(--ink-soft)', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+  height: 32, padding: '0 14px', borderRadius: 9999, border: '1px solid var(--border-hairline)',
+  background: 'transparent', color: 'var(--ink-secondary)', fontSize: 12, fontWeight: 600, cursor: 'pointer',
 };
 const dangerButtonStyle: React.CSSProperties = {
   height: 32, padding: '0 14px', borderRadius: 9999, border: '1px solid var(--danger)',
@@ -191,7 +192,7 @@ export function AdminNutritionPanel({ clientId }: AdminNutritionPanelProps) {
     }
   }
 
-  if (loading) return <p style={{ color: 'var(--ink-soft)', fontSize: 14 }}>Cargando plan de nutrición…</p>;
+  if (loading) return <p style={{ color: 'var(--ink-secondary)', fontSize: 14 }}>Cargando plan de nutrición…</p>;
   if (error) return <p style={{ color: 'var(--danger)' }}>{error}</p>;
 
   return (
@@ -242,7 +243,7 @@ export function AdminNutritionPanel({ clientId }: AdminNutritionPanelProps) {
           }}
         />
         {plan.pdfUrl && (
-          <a href={plan.pdfUrl} target="_blank" rel="noreferrer" style={{ display: 'block', marginTop: 6, fontSize: 12, color: 'var(--terracota)' }}>
+          <a href={plan.pdfUrl} target="_blank" rel="noreferrer" style={{ display: 'block', marginTop: 6, fontSize: 12, color: 'var(--ring-accent)' }}>
             {plan.pdfName || 'Ver PDF'}
           </a>
         )}
@@ -349,7 +350,7 @@ export function AdminNutritionPanel({ clientId }: AdminNutritionPanelProps) {
           onClick={handleSave}
           style={{
             height: 44, padding: '0 28px', borderRadius: 9999, border: 'none',
-            background: 'var(--sage)', color: '#fff', fontSize: 14, fontWeight: 700,
+            background: 'var(--ring-accent)', color: '#fff', fontSize: 14, fontWeight: 700,
             cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.6 : 1,
           }}
         >

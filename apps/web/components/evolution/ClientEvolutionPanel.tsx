@@ -13,6 +13,7 @@ import { listLogs as listSleepLogs, type SleepLog } from '../../lib/sleep-client
 import { listTrainingCompletions, getStreak, type TrainingCompletion } from '../../lib/training-client';
 import { calculateDisciplineStats } from '../../lib/training-home-logic';
 import { fetchClient, type ClientDetail } from '../../lib/clients-client';
+import { PermissionDeniedError } from '../../lib/api-client';
 import { pickMantra } from '../../lib/mantra-bank';
 import { COACH_WHATSAPP_NUMBER } from '../../lib/constants';
 import {
@@ -25,6 +26,7 @@ import {
 } from '../../lib/evolution-logic';
 import IdentityHeader from '../ui/IdentityHeader';
 import MantraCard from '../ui/MantraCard';
+import LockedOverlay from '../ui/LockedOverlay';
 import { WellnessIndexHero, BienestarGeneral, EvolucionFisicaSection, EvolucionFisicaLocked } from './EvolutionVisuals';
 import { CheckinAccordion } from './CheckinAccordion';
 
@@ -47,6 +49,7 @@ export function ClientEvolutionPanel({ clientId }: { clientId: string }) {
   const [wellnessIndex, setWellnessIndex] = useState<number | null>(null);
   const [streakWeeks, setStreakWeeks] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [permissionLocked, setPermissionLocked] = useState(false);
   const [loading, setLoading] = useState(true);
   const [mantra] = useState(() => pickMantra('evolution'));
 
@@ -88,7 +91,8 @@ export function ClientEvolutionPanel({ clientId }: { clientId: string }) {
       setWellnessIndex(computeWellnessIndex({ trainingPct: stats?.pct ?? null, sleepAvg: sleepLast, cortisolAvg: cortisolLast }));
       setStreakWeeks(streak?.streakWeeks ?? null);
     } catch (e) {
-      setError((e as Error).message);
+      if (e instanceof PermissionDeniedError) setPermissionLocked(true);
+      else setError((e as Error).message);
     } finally {
       setLoading(false);
     }
@@ -109,7 +113,17 @@ export function ClientEvolutionPanel({ clientId }: { clientId: string }) {
     return (
       <div>
         {header}
-        <p className="text-sm text-[var(--ink-soft)]">Cargando tu evolución…</p>
+        <p className="text-sm text-[var(--ink-secondary)]">Cargando tu evolución…</p>
+      </div>
+    );
+  }
+  if (permissionLocked) {
+    return (
+      <div>
+        {header}
+        <LockedOverlay title="Módulo no disponible" subtitle="Este módulo ya no está disponible para tu tipo de cuenta.">
+          <div style={{ minHeight: 200 }} />
+        </LockedOverlay>
       </div>
     );
   }

@@ -14,12 +14,12 @@ export default function InicioPage() {
     ? [
         { key: "admin-clients", label: "Clientes", desc: "Gestionar clientes y permisos" },
         { key: "admin-quotes", label: "Frases", desc: "Administrar frases motivacionales" },
-        { key: "community", label: "Comunidad", desc: "Gestionar eventos y terapias" },
+        { key: "community", label: "Comunidad Wellness", desc: "Gestionar eventos y terapias" },
       ]
     : [
         { key: "training", label: "Entrenamiento", desc: "Tu plan de entrenamiento diario" },
         { key: "nutrition", label: "Nutrición", desc: "Plan alimenticio y comidas" },
-        { key: "community", label: "Comunidad", desc: "Eventos y terapias grupales" },
+        { key: "community", label: "Comunidad Wellness", desc: "Eventos y terapias grupales" },
       ];
 
   return (

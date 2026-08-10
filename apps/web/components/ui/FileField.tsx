@@ -35,9 +35,9 @@ export default function FileField({ id, label, accept, disabled, uploading, inva
   const inactive = disabled || uploading;
   return (
     <div style={{ position: "relative" }}>
-      <div style={{ display: "flex", alignItems: "center", fontSize: 12, fontWeight: 600,
-        color: "var(--ink-soft)", marginBottom: 8 }}>
-        <span aria-hidden style={{ marginRight: 6, color: "#5B7A4E", display: "inline-flex" }}><AttachIcon /></span>
+      <div style={{ display: "flex", alignItems: "center", fontSize: 12, fontWeight: 400,
+        color: "var(--ink-secondary)", marginBottom: 8 }}>
+        <span aria-hidden style={{ marginRight: 6, color: "var(--ring-accent)", display: "inline-flex" }}><AttachIcon /></span>
         {label}
       </div>
       <label
@@ -46,13 +46,18 @@ export default function FileField({ id, label, accept, disabled, uploading, inva
         style={{
           display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
           height: 64, borderRadius: 12,
-          border: uploading ? "1.5px solid var(--gold)" : invalid ? "1.5px solid var(--danger)" : "1.5px solid var(--terracota-soft)",
-          background: uploading ? "#FBF3E3" : disabled ? "#F5F1E9" : "#FFFDF9",
-          fontSize: 13, fontWeight: uploading ? 600 : 500,
-          color: uploading ? "var(--terracota)" : fileName ? "#2B2621" : "#8A8377",
+          border: uploading
+            ? "1.5px solid var(--ring-accent)"
+            : invalid
+              ? "1.5px dashed var(--danger)"
+              : "1.5px dashed rgba(138,134,124,.4)",
+          background: uploading ? "rgba(201,166,107,.1)" : "var(--page-bg)",
+          fontSize: 13, fontWeight: uploading ? 600 : 400,
+          color: uploading ? "var(--ring-accent)" : fileName ? "var(--ink)" : "var(--ink-secondary)",
           cursor: inactive ? "not-allowed" : "pointer",
           textAlign: "center", padding: "0 14px", overflow: "hidden",
           textOverflow: "ellipsis", whiteSpace: "nowrap",
+          opacity: disabled ? 0.6 : 1,
         }}
       >
         {uploading ? (
@@ -61,7 +66,12 @@ export default function FileField({ id, label, accept, disabled, uploading, inva
             Subiendo…
           </>
         ) : (
-          fileName || "Elegir archivo…"
+          <>
+            <span aria-hidden style={{ display: "inline-flex", flexShrink: 0, color: "var(--ring-accent)" }}>
+              <AttachIcon />
+            </span>
+            {fileName || "Elegir archivo…"}
+          </>
         )}
       </label>
       <input
@@ -74,7 +84,7 @@ export default function FileField({ id, label, accept, disabled, uploading, inva
         style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0 0 0 0)" }}
       />
       {invalid && <p role="alert" style={{ fontSize: 12, color: "var(--danger)", marginTop: 6 }}>Este campo es obligatorio.</p>}
-      {!invalid && helper && <p style={{ fontSize: 12, color: "var(--ink-soft)", marginTop: 6 }}>{helper}</p>}
+      {!invalid && helper && <p style={{ fontSize: 12, color: "var(--ink-secondary)", marginTop: 6 }}>{helper}</p>}
     </div>
   );
 }

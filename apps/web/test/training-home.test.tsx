@@ -159,7 +159,7 @@ describe('TrainingHome', () => {
     );
     // Scoped to the streak badge container: a bare getByText('3') is ambiguous here because
     // the pre-existing discipline calendar also renders an unmarked "3" span for day 3 of the month.
-    const badge = screen.getByText('🔥').closest('div');
+    const badge = screen.getByText(/semanas seguidas/).closest('div');
     expect(badge).toHaveTextContent('3');
     expect(badge).toHaveTextContent(/semanas seguidas/);
   });

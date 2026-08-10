@@ -14,21 +14,10 @@ import {
   type PersonalInfo,
 } from "../../lib/personal-info-client";
 import { showToast } from "../layout/AppShell";
-
-function calculateAge(birthdate: string | null): number | null {
-  if (!birthdate) return null;
-  const b = new Date(birthdate + "T00:00:00");
-  if (isNaN(b.getTime())) return null;
-  const today = new Date();
-  let age = today.getFullYear() - b.getFullYear();
-  const m = today.getMonth() - b.getMonth();
-  if (m < 0 || (m === 0 && today.getDate() < b.getDate())) age--;
-  return age;
-}
+import { OnboardingSummaryAccordion } from "./OnboardingSummaryAccordion";
 
 const cardStyle: React.CSSProperties = {
-  background: "var(--paper)", border: "1px solid var(--line)",
-  borderRadius: "var(--radius)", padding: "22px 24px", marginBottom: 18,
+  borderTop: "1px solid var(--border-hairline)", paddingTop: 20, paddingBottom: 20,
 };
 
 const cardTitleStyle: React.CSSProperties = {
@@ -37,14 +26,14 @@ const cardTitleStyle: React.CSSProperties = {
 };
 
 const labelStyle: React.CSSProperties = {
-  display: "block", fontSize: 12, fontWeight: 600,
-  color: "var(--ink-soft)", marginBottom: 4,
+  display: "block", fontSize: 12, fontWeight: 400,
+  color: "var(--ink-secondary)", marginBottom: 4,
 };
 
 const inputStyle: React.CSSProperties = {
-  width: "100%", height: 44, borderRadius: "var(--radius)",
-  border: "1px solid var(--line)", padding: "0 14px", fontSize: 14,
-  background: "var(--cream)", color: "var(--ink)", outline: "none",
+  width: "100%", height: 36, borderRadius: 0,
+  border: "none", borderBottom: "1px solid var(--border-input)", padding: "0 2px 6px", fontSize: 14.5,
+  fontWeight: 600, background: "transparent", color: "var(--ink)", outline: "none",
   boxSizing: "border-box",
 };
 
@@ -96,33 +85,18 @@ export default function AdminClientDetail({ clientId }: { clientId: string }) {
     finally { setActing(false); }
   };
 
-  if (loading) return <p style={{ color: "var(--ink-soft)" }}>Cargando…</p>;
+  if (loading) return <p style={{ color: "var(--ink-secondary)" }}>Cargando…</p>;
   if (error || !client) return <p style={{ color: "var(--danger)" }}>{error || "Cliente no encontrado."}</p>;
 
-  const summaryRows = (
-    [
-      ["Nombre completo", client.name],
-      ["Nombre (onboarding)", personalInfo?.name ?? null],
-      ["Edad (calculada)", calculateAge(personalInfo?.birthdate ?? null)?.toString() ?? null],
-      ["Edad (declarada)", personalInfo?.age?.toString() ?? null],
-      ["Celular", personalInfo?.phoneNumber ?? null],
-      ["Ciudad", personalInfo?.city ?? null],
-      ["Profesión", personalInfo?.occupation ?? null],
-      ["Tipo de identificación", personalInfo?.idType ?? null],
-      ["Número de identificación", personalInfo?.cedula ?? null],
-      ["Correo (onboarding)", personalInfo?.email ?? null],
-      ["Vencimiento del plan", client.plan_end_date ?? null],
-    ] as [string, string | null][]
-  ).filter(([, v]) => v);
-const isLead = (client.client_type || client.clientType) === "lead_wellness";
+  const isLead = (client.client_type || client.clientType) === "lead_wellness";
 
   return (
     <div>
       <h1 style={{ fontFamily: "Fraunces, Georgia, serif", fontSize: 26,
         fontWeight: 700, color: "var(--ink)", margin: "0 0 4px" }}>{client.name}</h1>
-      <p style={{ fontSize: 14, color: "var(--ink-soft)", margin: "0 0 24px" }}>{client.email}</p>
+      <p style={{ fontSize: 14, color: "var(--ink-secondary)", margin: "0 0 24px" }}>{client.email}</p>
       <button onClick={() => router.push("/admin/clients")}
-        style={{ background: "none", border: "none", color: "var(--ink-soft)",
+        style={{ background: "none", border: "none", color: "var(--ink-secondary)",
           fontSize: 13, fontWeight: 500, cursor: "pointer", padding: 0, marginBottom: 24,
           textDecoration: "underline", textUnderlineOffset: 4 }}>
         ← Volver a clientes</button>
@@ -135,14 +109,14 @@ const isLead = (client.client_type || client.clientType) === "lead_wellness";
             <span style={labelStyle}>Estado</span>
             <span style={{ display: "inline-block", padding: "4px 12px",
               borderRadius: "9999px", fontSize: 12, fontWeight: 600,
-              background: client.status === "inactive" ? "var(--terracota-soft)" : "var(--sage-soft)",
-              color: client.status === "inactive" ? "var(--terracota)" : "var(--sage)" }}>
+              background: client.status === "inactive" ? "var(--border-hairline)" : "rgba(201,166,107,.14)",
+              color: client.status === "inactive" ? "var(--ink-secondary)" : "var(--ring-accent)" }}>
               {client.status}</span>
             <div style={{ marginTop: 10 }}>
               {client.status === "inactive" ? (
                 <button onClick={handleActivate} disabled={acting}
-                  style={{ padding: "6px 16px", borderRadius: "9999px", border: "1px solid var(--sage)",
-                    background: "transparent", color: "var(--sage)", fontSize: 12, fontWeight: 600,
+                  style={{ padding: "6px 16px", borderRadius: "9999px", border: "1px solid var(--ring-accent)",
+                    background: "transparent", color: "var(--ring-accent)", fontSize: 12, fontWeight: 600,
                     cursor: acting ? "not-allowed" : "pointer", opacity: acting ? 0.6 : 1 }}>
                   Activar cliente</button>
               ) : (
@@ -166,8 +140,8 @@ const isLead = (client.client_type || client.clientType) === "lead_wellness";
             </select>
             <button onClick={handleSaveType} disabled={acting}
               style={{ marginTop: 10, padding: "6px 16px", borderRadius: "9999px",
-                border: "1px solid var(--line)", background: "transparent",
-                color: "var(--ink-soft)", fontSize: 12, fontWeight: 500,
+                border: "1px solid var(--border-hairline)", background: "transparent",
+                color: "var(--ink-secondary)", fontSize: 12, fontWeight: 500,
                 cursor: acting ? "not-allowed" : "pointer" }}>
               Guardar tipo</button>
           </div>
@@ -183,7 +157,7 @@ const isLead = (client.client_type || client.clientType) === "lead_wellness";
               <span style={labelStyle}>Plan contratado</span>
               <span style={{ display: "inline-block", padding: "4px 12px",
                 borderRadius: "9999px", fontSize: 12, fontWeight: 600,
-                background: "var(--cream)", color: "var(--ink)" }}>
+                background: "var(--page-bg)", color: "var(--ink)" }}>
                 {client.plan_duration_days ? `${client.plan_duration_days} días` : "Sin plan"}</span>
             </div>
             <div>
@@ -207,19 +181,19 @@ const isLead = (client.client_type || client.clientType) === "lead_wellness";
           { key: "training", label: "Entrenamiento", desc: client.training_days ? `${client.training_days} día(s)/semana` : "Sin configurar" },
           { key: "nutrition", label: "Nutrición", desc: "Plan y suplementación" },
           { key: "cortisol", label: "Gestión de Cortisol", desc: "Técnicas y constancia" },
-          { key: "rest", label: "Descanso", desc: "Protocolo de sueño" },
+          { key: "rest", label: "Hackeando el sueño", desc: "Protocolo de sueño" },
           { key: "evolution", label: "Mi Evolución", desc: "Progreso y check-ins" },
         ].map((mod) => (
           <div key={mod.key} style={{ display: "flex", alignItems: "center",
             justifyContent: "space-between", padding: "12px 0",
-            borderBottom: "1px solid var(--line)" }}>
+            borderBottom: "1px solid var(--border-hairline)" }}>
             <div>
               <strong style={{ fontSize: 13, color: "var(--ink)" }}>{mod.label}</strong>
-              <div style={{ fontSize: 12, color: "var(--ink-soft)", marginTop: 2 }}>{mod.desc}</div>
+              <div style={{ fontSize: 12, color: "var(--ink-secondary)", marginTop: 2 }}>{mod.desc}</div>
             </div>
             <span style={{ display: "inline-flex", padding: "4px 12px",
               borderRadius: "9999px", fontSize: 11, fontWeight: 600,
-              background: "var(--sage-soft)", color: "var(--sage)" }}>Ver</span>
+              background: "rgba(201,166,107,.14)", color: "var(--ring-accent)" }}>Ver</span>
           </div>
         ))}
       </div>
@@ -227,19 +201,10 @@ const isLead = (client.client_type || client.clientType) === "lead_wellness";
       {/* Resumen onboarding */}
       <div style={cardStyle}>
         <h3 style={cardTitleStyle}>Resumen de onboarding</h3>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <tbody>
-            {summaryRows.map(([label, value], i) => (
-              <tr key={i} style={{ borderBottom: i < summaryRows.length - 1 ? "1px solid var(--line)" : "none" }}>
-                <td style={{ padding: "10px 8px", fontWeight: 700, fontSize: 13, color: "var(--ink)" }}>{label}</td>
-                <td style={{ padding: "10px 8px", fontSize: 13, color: "var(--ink-soft)" }}>{value}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {summaryRows.length === 0 && (
-          <p style={{ color: "var(--ink-soft)", fontSize: 13 }}>Sin datos de onboarding.</p>
-        )}
+        <OnboardingSummaryAccordion
+          personalInfo={personalInfo}
+          clientType={client.client_type || client.clientType || null}
+        />
       </div>
     </div>
   );

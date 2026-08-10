@@ -15,6 +15,10 @@ export type WizardFieldConfig = {
   step?: number;
   minLabel?: string;
   maxLabel?: string;
+  // Agrupación temática visual (cards estilo Oura) — puramente de
+  // presentación, no afecta validación ni reglas condicionales. Campos
+  // contiguos con el mismo `group` se renderizan juntos en una sola card.
+  group?: string;
 };
 
 export type WizardModuleConfig = {

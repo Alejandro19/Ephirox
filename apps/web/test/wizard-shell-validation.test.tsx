@@ -89,6 +89,7 @@ describe('WizardShell — live validation clears once a field is fixed', () => {
       rest: [],
     });
     vi.mocked(geoClient.getCities).mockResolvedValue(['Bogotá']);
+    vi.mocked(onboardingClient.getPersonalInfoAccess).mockResolvedValue('standard');
     vi.mocked(onboardingClient.updateClientObjetivos).mockResolvedValue(undefined);
   });
 

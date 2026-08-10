@@ -13,10 +13,10 @@ function dotStyle(s: DotState): React.CSSProperties {
     fontSize: 13, flexShrink: 0, transition: "all .3s ease",
   };
   switch (s) {
-    case "done":   return { ...base, background: "#B8935A", border: "1px solid #B8935A", color: "#fff" };
-    case "pending": return { ...base, border: "1.5px dashed #D9A441", color: "#B8935A", fontWeight: 700 };
+    case "done":   return { ...base, background: "var(--hero-espresso-accent)", border: "1px solid var(--hero-espresso-accent)", color: "#fff" };
+    case "pending": return { ...base, border: "1px solid var(--border-input)", color: "var(--ink-secondary)", fontWeight: 700 };
     case "shield": return { ...base, background: "#F1EAF7", border: "1px solid #E1D5EE", color: "#8A5FA0" };
-    default:       return { ...base, background: "#FBF7EC", border: "1.5px solid #E7DFC9", color: "#B0A99C" };
+    default:       return { ...base, background: "var(--page-bg)", border: "1px solid var(--border-hairline)", color: "var(--ink-secondary)" };
   }
 }
 

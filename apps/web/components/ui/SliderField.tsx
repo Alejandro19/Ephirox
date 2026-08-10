@@ -19,32 +19,26 @@ export default function SliderField({
   const autoId = useId();
   const sliderId = id || autoId;
   return (
-    <div
-      style={{
-        background: "#FFFFFF", border: "1px solid #E7DFC9",
-        borderRadius: 12, padding: "14px 16px",
-      }}
-    >
+    <div>
       <div style={{ display: "flex", justifyContent: "space-between",
         alignItems: "center", marginBottom: 8 }}>
         {label && (
-          <div style={{ display: "inline-flex", alignItems: "center", fontSize: 12, fontWeight: 600, color: "var(--ink-soft)" }}>
+          <div style={{ display: "inline-flex", alignItems: "center", fontSize: 12, fontWeight: 400, color: "var(--ink-secondary)" }}>
             <label htmlFor={sliderId} style={{ cursor: "pointer" }}>{label}</label>
           </div>
         )}
-        <span style={{ fontFamily: "Fraunces, Georgia, serif", fontWeight: 700,
-          fontSize: 18, color: "#5B7A4E" }}>{value}</span>
+        <span style={{ fontSize: 14.5, fontWeight: 600, color: "var(--ink)" }}>{value}</span>
       </div>
       <input
         type="range"
         id={sliderId}
         min={min} max={max} value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        style={{ width: "100%", accentColor: "#5B7A4E" }}
+        style={{ width: "100%", accentColor: "var(--ring-accent)" }}
       />
       {(minLabel || maxLabel) && (
         <div style={{ display: "flex", justifyContent: "space-between",
-          fontSize: 9, color: "#B0A99C", marginTop: 4 }}>
+          fontSize: 9, color: "var(--ink-secondary)", marginTop: 4 }}>
           <span>{minLabel || min}</span>
           <span>{maxLabel || max}</span>
         </div>

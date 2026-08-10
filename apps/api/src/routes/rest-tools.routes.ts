@@ -3,6 +3,7 @@ import multer from 'multer';
 import type { Request, Response, NextFunction } from 'express';
 import { asyncHandler } from '../middleware/async-handler.js';
 import { authMiddleware, adminOnly } from '../middleware/auth.middleware.js';
+import { requirePermission } from '../middleware/require-permission.middleware.js';
 import * as restToolsController from '../controllers/rest-tools.controller.js';
 
 export const restToolsRouter = Router();
@@ -22,7 +23,7 @@ function handleAudioUpload(req: Request, res: Response, next: NextFunction) {
   });
 }
 
-restToolsRouter.get('/rest-tools', authMiddleware, asyncHandler(restToolsController.listActiveForClient));
+restToolsRouter.get('/rest-tools', authMiddleware, requirePermission('rest'), asyncHandler(restToolsController.listActiveForClient));
 restToolsRouter.get('/admin/rest-tools', authMiddleware, adminOnly, asyncHandler(restToolsController.listAllForAdmin));
 restToolsRouter.post('/admin/rest-tools', authMiddleware, adminOnly, asyncHandler(restToolsController.createTool));
 restToolsRouter.put('/admin/rest-tools/:id', authMiddleware, adminOnly, asyncHandler(restToolsController.updateTool));

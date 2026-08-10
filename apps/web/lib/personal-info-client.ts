@@ -19,6 +19,8 @@ export type PersonalInfo = {
   weight: number | null;
   height: number | null;
   bodyFat: number | null;
+  onboardingReport: Record<string, unknown> | null;
+  completedAt: string | null;
 };
 
 export type AnthropometricRecord = {

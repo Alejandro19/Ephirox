@@ -72,14 +72,14 @@ export function ProgressBar({ done, total }: { done: number; total: number }) {
   const barWidth = Math.min(pct, 100);
   return (
     <div className="mt-3.5">
-      <div className="mb-1 flex justify-between text-xs text-[var(--ink-soft)]">
+      <div className="mb-1 flex justify-between text-xs text-[var(--ink-secondary)]">
         <span>Progreso</span>
         <span>
           {done}/{total} · {pct}%
         </span>
       </div>
-      <div className="h-2 overflow-hidden rounded-full bg-[var(--line)]">
-        <div className="h-full rounded-full bg-[var(--terracota)]" style={{ width: `${barWidth}%` }} />
+      <div className="h-2 overflow-hidden rounded-full bg-[var(--border-hairline)]">
+        <div className="h-full rounded-full bg-[var(--hero-espresso-accent)]" style={{ width: `${barWidth}%` }} />
       </div>
     </div>
   );

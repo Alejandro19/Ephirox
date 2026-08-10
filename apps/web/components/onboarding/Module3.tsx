@@ -6,14 +6,24 @@ import { parseOcrText } from '../../lib/parse-ocr-text';
 import SelectField from '../ui/SelectField';
 import FloatingField from '../ui/FloatingField';
 import FileField from '../ui/FileField';
+import { IconClipboardCheck, IconScale, IconActivity, IconCamera, type IconProps } from '../ui/icons';
 
 // Secciones siempre visibles (no acordeón real: Module3 necesita que varios
 // grupos de campos estén montados a la vez — el propio wizard ya organiza el
-// avance módulo a módulo).
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+// avance módulo a módulo). Mismo tratamiento de card agrupada (ícono +
+// eyebrow) que los módulos data-driven, ver WizardShell.
+function Section({ title, icon: Icon, children }: { title: string; icon: (props: IconProps) => React.ReactElement; children: React.ReactNode }) {
   return (
-    <div className="rounded-2xl border border-[var(--line)] p-5">
-      <h3 className="m-0 mb-4 text-[15px] font-bold text-[var(--ink)]">{title}</h3>
+    <div className="rounded-[14px] border border-[var(--border-hairline)] bg-[var(--paper)] p-5">
+      <div className="mb-4 flex items-center gap-2">
+        <Icon size={16} style={{ color: 'var(--hero-piedra-accent)' }} />
+        <span
+          className="text-[10.5px] font-bold uppercase tracking-[0.05em]"
+          style={{ color: 'var(--hero-piedra-accent)' }}
+        >
+          {title}
+        </span>
+      </div>
       {children}
     </div>
   );
@@ -225,7 +235,7 @@ export function Module3({ clientId, draft, onChange, invalidFields }: Module3Pro
 
   return (
     <div className="space-y-5">
-      <Section title="Cargar análisis InBody">
+      <Section title="Cargar análisis InBody" icon={IconClipboardCheck}>
         <div className="space-y-5">
               <FileField
                 id="field-inbody-file"
@@ -238,12 +248,12 @@ export function Module3({ clientId, draft, onChange, invalidFields }: Module3Pro
                 onFileChange={(file) => { if (file) void handleInbodyFile(file); }}
               />
               {ocrStatus && (
-                <p role={ocrStatus.isError ? 'alert' : 'status'} className={`text-sm ${ocrStatus.isError ? 'text-[var(--danger)]' : 'text-[var(--ink-soft)]'}`}>
+                <p role={ocrStatus.isError ? 'alert' : 'status'} className={`text-sm ${ocrStatus.isError ? 'text-[var(--danger)]' : 'text-[var(--ink-secondary)]'}`}>
                   {ocrStatus.message}
                 </p>
               )}
               {draft.inbody.version && (
-                <p className="text-xs text-[var(--ink-soft)]">Versión detectada: {draft.inbody.version}</p>
+                <p className="text-xs text-[var(--ink-secondary)]">Versión detectada: {draft.inbody.version}</p>
               )}
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -270,7 +280,7 @@ export function Module3({ clientId, draft, onChange, invalidFields }: Module3Pro
         </div>
       </Section>
 
-      <Section title="Composición corporal">
+      <Section title="Composición corporal" icon={IconScale}>
         <div className="space-y-5">
               <p className="m-0 font-serif text-[14.5px] font-semibold text-[var(--ink)]">
                 Tus objetivos de composición corporal
@@ -281,7 +291,7 @@ export function Module3({ clientId, draft, onChange, invalidFields }: Module3Pro
                     <SelectField
                       id={`objetivo-${metrica}`}
                       label={`¿Cuál es tu objetivo de ${metrica.replace('_', ' ')}?`}
-                      placeholder="Selecciona…"
+                      placeholder="Seleccionar"
                       value={draft.objetivos[metrica]}
                       onChange={(v) => setObjetivo(metrica, v)}
                       options={objetivoOptions}
@@ -295,7 +305,7 @@ export function Module3({ clientId, draft, onChange, invalidFields }: Module3Pro
         </div>
       </Section>
 
-      <Section title="Medidas antropométricas (opcional)">
+      <Section title="Medidas antropométricas (opcional)" icon={IconActivity}>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               {ANTROPOMETRIA_FIELDS.map(([key, label]) => (
                 <FloatingField
@@ -308,7 +318,7 @@ export function Module3({ clientId, draft, onChange, invalidFields }: Module3Pro
             </div>
       </Section>
 
-      <Section title="Fotos de progreso">
+      <Section title="Fotos de progreso" icon={IconCamera}>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {PHOTO_ANGLES.map((angle) => (
                 <FileField

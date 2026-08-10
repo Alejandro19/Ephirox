@@ -3,6 +3,7 @@
 import type { Exercise, ExerciseCategory } from '../../lib/training-client';
 import { CATEGORY_ORDER, getCategoryLockState } from '../../lib/training-day-logic';
 import { CATEGORY_LABELS, CategoryIcon, MiniRing, ProgressBar } from './TrainingVisuals';
+import { IconLock } from '../ui/icons';
 
 export type TrainingDayViewProps = {
   day: number;
@@ -41,7 +42,7 @@ export function TrainingDayView({
           ← Días de entrenamiento
         </button>
         <h1 className="mb-1.5 font-serif text-[28px] font-bold text-[var(--ink)]">Día {day}</h1>
-        <p className="m-0 text-[var(--ink-soft)]">Elige qué vas a entrenar hoy.</p>
+        <p className="m-0 text-[var(--ink-secondary)]">Elige qué vas a entrenar hoy.</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
@@ -80,13 +81,14 @@ export function TrainingDayView({
               } ${!disabled ? 'enabled:hover:border-[#B8935A] enabled:hover:shadow-[0_6px_16px_rgba(184,147,90,.15)]' : ''}`}
             >
               {state === 'locked' ? (
-                <span className="text-[15px]">🔒</span>
+                <IconLock size={15} className="text-[#8A8377]" />
               ) : (
                 <CategoryIcon category={category} className={state === 'done' ? 'text-[#5B7A4E]' : 'text-[#8A8377]'} />
               )}
-              <div className="mt-2 font-serif text-[15px] font-semibold text-[var(--ink)]">
+              <div className="mt-2 flex items-center justify-center gap-1 font-serif text-[15px] font-semibold text-[var(--ink)]">
                 {CATEGORY_LABELS[category]}
-                {state === 'locked' ? ' 🔒' : state === 'done' ? ' ✓' : ''}
+                {state === 'locked' && <IconLock size={11} className="text-[#8A8377]" />}
+                {state === 'done' ? ' ✓' : ''}
               </div>
               <div className="mt-1 text-[10px] text-[#8A8377]">{countText}</div>
             </button>
@@ -94,7 +96,7 @@ export function TrainingDayView({
         })}
       </div>
 
-      <div className="mt-5 rounded-[var(--radius)] border border-[var(--line)] bg-[var(--paper)] p-[26px]">
+      <div className="mt-5 border-t border-[var(--border-hairline)] pt-6">
         <div className="flex items-center gap-4">
           <MiniRing pct={pct} />
           <div className="flex-1">
@@ -102,14 +104,14 @@ export function TrainingDayView({
           </div>
         </div>
         {alreadyCompletedThisWeek ? (
-          <p className="mt-4 text-center text-[var(--ink-soft)]">Día completado esta semana.</p>
+          <p className="mt-4 text-center text-[var(--ink-secondary)]">Día completado esta semana.</p>
         ) : (
           <div className="mt-4 text-center">
             <button
               type="button"
               disabled={!allDone || completingDay}
               onClick={() => onCompleteDay()}
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-[var(--terracota)] px-[22px] py-3 font-semibold text-white transition-transform active:scale-[.97] disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-[var(--hero-espresso-accent)] px-[22px] py-3 font-semibold text-white transition-transform active:scale-[.97] disabled:cursor-not-allowed disabled:opacity-50"
             >
               Completar Entrenamiento Día {day}
             </button>

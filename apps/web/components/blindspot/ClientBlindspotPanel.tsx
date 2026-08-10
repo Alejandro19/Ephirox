@@ -9,6 +9,7 @@ import {
   type BlindspotSessionLog,
   type BlindspotCaseStatus,
 } from '@/lib/blindspot-client';
+import { PermissionDeniedError } from '@/lib/api-client';
 import LockedOverlay from '@/components/ui/LockedOverlay';
 import { COACH_WHATSAPP_NUMBER } from '@/lib/constants';
 
@@ -48,6 +49,7 @@ function BlindspotBody() {
   const [tasks, setTasks] = useState<BlindspotTask[]>([]);
   const [sessionLogs, setSessionLogs] = useState<BlindspotSessionLog[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [permissionLocked, setPermissionLocked] = useState(false);
   const [helpSent, setHelpSent] = useState(false);
   const [helpLoading, setHelpLoading] = useState(false);
 
@@ -58,7 +60,8 @@ function BlindspotBody() {
       setTasks(res.tasks);
       setSessionLogs(res.sessionLogs);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Error al cargar tu Punto Ciego.');
+      if (e instanceof PermissionDeniedError) setPermissionLocked(true);
+      else setError(e instanceof Error ? e.message : 'Error al cargar tu Punto Ciego.');
     } finally {
       setLoading(false);
     }
@@ -90,18 +93,26 @@ function BlindspotBody() {
   }
 
   if (loading) {
-    return <p className="text-[13px] text-[var(--ink-soft)]">Cargando...</p>;
+    return <p className="text-[13px] text-[var(--ink-secondary)]">Cargando...</p>;
+  }
+
+  if (permissionLocked) {
+    return (
+      <LockedOverlay title="Módulo no disponible" subtitle="Este módulo ya no está disponible para tu tipo de cuenta.">
+        <div style={{ minHeight: 200 }} />
+      </LockedOverlay>
+    );
   }
 
   if (error) {
-    return <p className="text-[13px] text-red-600">{error}</p>;
+    return <p className="text-[13px] text-[var(--danger)]">{error}</p>;
   }
 
   if (!caseData) {
     return (
-      <section className="mb-5 rounded-[var(--radius)] border border-[var(--line)] bg-[var(--paper)] p-[26px]">
+      <section>
         <h2 className="mb-2 font-serif text-lg font-bold text-[var(--ink)]">Punto Ciego</h2>
-        <p className="text-[13px] text-[var(--ink-soft)]">
+        <p className="text-[13px] text-[var(--ink-secondary)]">
           Alejandro aún no ha iniciado tu evaluación en este módulo. Cuando la agenden contigo, aparecerá aquí.
         </p>
       </section>
@@ -113,39 +124,39 @@ function BlindspotBody() {
 
   return (
     <div>
-      <section className="mb-5 rounded-[var(--radius)] border border-[var(--line)] bg-[var(--paper)] p-[26px]">
+      <section>
         <p className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.08em] text-[#8A5FA0]">Punto Ciego · Caso #{caseData.caseNumber}</p>
         <h2 className="mb-2 font-serif text-lg font-bold text-[var(--ink)]">{STATUS_LABEL[caseData.status]}</h2>
         {caseData.therapistName && (
-          <p className="text-[13px] text-[var(--ink-soft)]">
+          <p className="text-[13px] text-[var(--ink-secondary)]">
             Terapeuta asignado: <span className="font-semibold text-[var(--ink)]">{caseData.therapistName}</span>
           </p>
         )}
       </section>
 
       {tasks.length > 0 && (
-        <section className="mb-5 rounded-[var(--radius)] border border-[var(--line)] bg-[var(--paper)] p-[26px]">
+        <section className="border-t border-[var(--border-hairline)] py-6">
           <h3 className="mb-3.5 font-serif text-base font-bold text-[var(--ink)]">Tus tareas</h3>
           <ul className="flex flex-col gap-2">
             {pendingTasks.map((task) => (
-              <li key={task.id} className="flex items-start justify-between gap-3 rounded-2xl border border-[var(--line)] p-3.5">
+              <li key={task.id} className="flex items-start justify-between gap-3 rounded-[var(--radius-card)] border border-[var(--border-hairline)] p-3.5">
                 <div>
                   <p className="text-[13.5px] font-semibold text-[var(--ink)]">{task.title}</p>
-                  {task.description && <p className="mt-1 text-[12px] text-[var(--ink-soft)]">{task.description}</p>}
-                  {task.dueDate && <p className="mt-1 text-[11px] text-[var(--ink-soft)]">Antes de: {task.dueDate}</p>}
+                  {task.description && <p className="mt-1 text-[12px] text-[var(--ink-secondary)]">{task.description}</p>}
+                  {task.dueDate && <p className="mt-1 text-[11px] text-[var(--ink-secondary)]">Antes de: {task.dueDate}</p>}
                 </div>
                 <button
                   onClick={() => handleCompleteTask(task.id)}
-                  className="shrink-0 rounded-full border border-[var(--line)] px-3 py-1.5 text-[11px] font-semibold text-[var(--ink)] hover:bg-black/5"
+                  className="shrink-0 rounded-full border border-[var(--border-hairline)] px-3 py-1.5 text-[11px] font-semibold text-[var(--ink)] hover:bg-black/5"
                 >
                   Marcar hecha
                 </button>
               </li>
             ))}
             {doneTasks.map((task) => (
-              <li key={task.id} className="flex items-center justify-between gap-3 rounded-2xl border border-[var(--line)] p-3.5 opacity-60">
+              <li key={task.id} className="flex items-center justify-between gap-3 rounded-[var(--radius-card)] border border-[var(--border-hairline)] p-3.5 opacity-60">
                 <p className="text-[13.5px] font-semibold text-[var(--ink)] line-through">{task.title}</p>
-                <span className="text-[11px] text-[var(--ink-soft)]">{task.status === 'completada' ? 'Completada' : 'Omitida'}</span>
+                <span className="text-[11px] text-[var(--ink-secondary)]">{task.status === 'completada' ? 'Completada' : 'Omitida'}</span>
               </li>
             ))}
           </ul>
@@ -153,12 +164,12 @@ function BlindspotBody() {
       )}
 
       {sessionLogs.length > 0 && (
-        <section className="mb-5 rounded-[var(--radius)] border border-[var(--line)] bg-[var(--paper)] p-[26px]">
+        <section className="border-t border-[var(--border-hairline)] py-6">
           <h3 className="mb-3.5 font-serif text-base font-bold text-[var(--ink)]">Tu avance</h3>
           <ul className="flex flex-col gap-3">
             {sessionLogs.map((log) => (
-              <li key={log.id} className="border-l-2 border-[var(--line)] pl-3.5">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--ink-soft)]">
+              <li key={log.id} className="border-l-2 border-[var(--border-hairline)] pl-3.5">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--ink-secondary)]">
                   {log.sessionDate} · {PROGRESS_LABEL[log.progressMarker]}
                 </p>
                 {log.clientNote && <p className="mt-1 text-[13px] text-[var(--ink)]">{log.clientNote}</p>}
@@ -168,16 +179,16 @@ function BlindspotBody() {
         </section>
       )}
 
-      <section className="rounded-[var(--radius)] border border-[var(--line)] bg-[var(--paper)] p-[26px]">
+      <section className="border-t border-[var(--border-hairline)] py-6">
         {helpSent ? (
-          <p className="text-[13px] text-[var(--ink-soft)]">Le avisamos a Alejandro. Te contactará lo antes posible.</p>
+          <p className="text-[13px] text-[var(--ink-secondary)]">Le avisamos a Alejandro. Te contactará lo antes posible.</p>
         ) : (
           <>
-            <p className="mb-2 text-[13px] text-[var(--ink-soft)]">¿Necesitas ayuda urgente?</p>
+            <p className="mb-2 text-[13px] text-[var(--ink-secondary)]">¿Necesitas ayuda urgente?</p>
             <button
               onClick={handleHelp}
               disabled={helpLoading}
-              className="rounded-full border border-[var(--line)] px-4 py-2 text-[12px] font-semibold text-[var(--ink)] hover:bg-black/5 disabled:opacity-50"
+              className="rounded-full border border-[var(--border-hairline)] px-4 py-2 text-[12px] font-semibold text-[var(--ink)] hover:bg-black/5 disabled:opacity-50"
             >
               {helpLoading ? 'Enviando...' : 'Avisar a Alejandro ahora'}
             </button>

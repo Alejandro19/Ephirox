@@ -3,7 +3,6 @@
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import SidebarRing from "./SidebarRing";
-import ClientNavItems from "./ClientNavItems";
 import AdminNavItems from "./AdminNavItems";
 import UserChip from "./UserChip";
 import { VIEW_TO_PATH } from "../../lib/constants";
@@ -15,9 +14,11 @@ type SidebarProps = {
   onCloseMobile: () => void;
 };
 
+// Solo se renderiza para role === "admin" — el panel cliente usa ClientTopbar
+// (ver AppShell.tsx) y el panel terapeuta usa TherapistTopbar.
 export default function Sidebar({ viewKey, mobileOpen, onCloseMobile }: SidebarProps) {
   const router = useRouter();
-  const { role, clientType, onboardingComplete } = useAuth();
+  const { role } = useAuth();
 
   const navigate = useCallback(
     (key: string) => {
@@ -28,8 +29,6 @@ export default function Sidebar({ viewKey, mobileOpen, onCloseMobile }: SidebarP
     [router, onCloseMobile],
   );
 
-  const isAdmin = role === "admin";
-
   if (!role) return null;
 
   return (
@@ -38,7 +37,7 @@ export default function Sidebar({ viewKey, mobileOpen, onCloseMobile }: SidebarP
       style={{
         width: 250,
         background: "var(--paper)",
-        borderRight: "1px solid var(--line)",
+        borderRight: "1px solid var(--border-hairline)",
         padding: "28px 18px",
         display: "flex",
         flexDirection: "column",
@@ -58,16 +57,7 @@ export default function Sidebar({ viewKey, mobileOpen, onCloseMobile }: SidebarP
       </div>
       <SidebarRing viewKey={viewKey} />
       <nav id="nav-items" style={{ flex: 1 }}>
-        {isAdmin ? (
-          <AdminNavItems viewKey={viewKey} onNavigate={navigate} />
-        ) : (
-          <ClientNavItems
-            clientType={clientType}
-            onboardingComplete={onboardingComplete}
-            viewKey={viewKey}
-            onNavigate={navigate}
-          />
-        )}
+        <AdminNavItems viewKey={viewKey} onNavigate={navigate} />
       </nav>
       <UserChip />
       <style jsx>{`

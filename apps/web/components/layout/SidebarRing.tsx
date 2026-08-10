@@ -1,64 +1,29 @@
 "use client";
 
-import { type ArcType, MODULE_THEME, ARC_COLOR_VAR } from "../../lib/constants";
+import { MODULE_THEME } from "../../lib/constants";
 
 type SidebarRingProps = {
   viewKey: string;
 };
 
+// El anillo ya no codifica el módulo por color (puntos/arcos de color por
+// módulo quedaron eliminados del sistema de diseño) — es una marca decorativa
+// fija en --ring-accent; solo la leyenda de abajo cambia según el módulo.
 export default function SidebarRing({ viewKey }: SidebarRingProps) {
   const cfg = MODULE_THEME[viewKey];
-  const activeArc: ArcType = cfg?.arc ?? "balanced";
   const ringLabel = cfg?.ringLabel ?? "La Tribu";
-
-  const arcStates = {
-    morning: activeArc === "morning" ? "active" : activeArc === "balanced" ? "balanced" : "",
-    afternoon: activeArc === "afternoon" ? "active" : activeArc === "balanced" ? "balanced" : "",
-    evening: activeArc === "evening" ? "active" : activeArc === "balanced" ? "balanced" : "",
-  };
-
-  const arcOpacity = (state: string) => {
-    if (state === "active") return 1;
-    if (state === "balanced") return 0.5;
-    return 0.25;
-  };
 
   return (
     <div className="sidebar-ring-wrap" style={{ textAlign: "center", margin: "4px 0 22px" }}>
       <svg viewBox="0 0 100 100" width="80" height="80" style={{ transform: "rotate(-90deg)" }}>
-        {/* morning arc (top-right) */}
-        <circle
-          cx="50" cy="50" r="40"
-          fill="none"
-          stroke={`var(${ARC_COLOR_VAR["morning"]})`}
-          strokeWidth="8" strokeLinecap="round"
-          strokeDasharray="76 176" strokeDashoffset="0"
-          opacity={arcOpacity(arcStates.morning)}
-        />
-        {/* afternoon arc (bottom-right) */}
-        <circle
-          cx="50" cy="50" r="40"
-          fill="none"
-          stroke={`var(${ARC_COLOR_VAR["afternoon"]})`}
-          strokeWidth="8" strokeLinecap="round"
-          strokeDasharray="76 176" strokeDashoffset="-83.8"
-          opacity={arcOpacity(arcStates.afternoon)}
-        />
-        {/* evening arc (bottom-left) */}
-        <circle
-          cx="50" cy="50" r="40"
-          fill="none"
-          stroke={`var(${ARC_COLOR_VAR["evening"]})`}
-          strokeWidth="8" strokeLinecap="round"
-          strokeDasharray="76 176" strokeDashoffset="-167.6"
-          opacity={arcOpacity(arcStates.evening)}
-        />
+        <circle cx="50" cy="50" r="40" fill="none" stroke="var(--border-hairline)" strokeWidth="8" />
+        <circle cx="50" cy="50" r="40" fill="none" stroke="var(--ring-accent)" strokeWidth="8" strokeLinecap="round" strokeDasharray="205 251" />
       </svg>
       <div
         className="sidebar-ring-label"
         style={{
           fontSize: "10.5px",
-          color: "var(--ink-soft)",
+          color: "var(--ink-secondary)",
           textAlign: "center",
           marginTop: "8px",
           fontWeight: 600,

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { IconFileDownload } from "../ui/icons";
 
 type MenuMeal = { name: string; options: { label: string; items: string[] }[] };
 type Supplement = { name: string; dose?: string; timing?: string; benefit?: string };
@@ -57,6 +58,7 @@ body{font-family:'Inter',Arial,sans-serif;color:#2B2621;padding:26mm 20mm 24mm;m
 
 function mdBold(text: string): string {
   return (text || "").replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+}
 
 export default function NutritionPdfGenerator({
   summary, dailyCals, proteinG, carbsG, fatG,
@@ -126,13 +128,12 @@ export default function NutritionPdfGenerator({
   return (
     <button onClick={handleDownload} disabled={generating}
       style={{ display: "inline-flex", alignItems: "center", gap: 8,
-        borderRadius: "9999px", background: generating ? "var(--cream)" : "var(--ink)",
-        color: generating ? "var(--ink-soft)" : "#F3EFE6",
-        border: generating ? "1px solid var(--line)" : "none",
+        borderRadius: "9999px", background: generating ? "var(--page-bg)" : "var(--ink)",
+        color: generating ? "var(--ink-secondary)" : "#F3EFE6",
+        border: generating ? "1px solid var(--border-hairline)" : "none",
         padding: "12px 24px", fontSize: 14, fontWeight: 600,
         cursor: generating ? "not-allowed" : "pointer", transition: "all .2s ease" }}>
-      {generating ? "Generando PDF…" : "📄 Descargar plan (PDF)"}
+      {generating ? "Generando PDF…" : (<><IconFileDownload size={14} /> Descargar plan (PDF)</>)}
     </button>
   );
-}
 }

@@ -2,12 +2,12 @@ import { getWeekStart } from './training-home-logic';
 import type { CortisolCompletion } from './cortisol-client';
 
 export const CORTISOL_EMOTIONS = [
-  { key: 'ansioso', emoji: '😰', label: 'Ansioso/a' },
-  { key: 'irritable', emoji: '😤', label: 'Irritable' },
-  { key: 'cansado', emoji: '😴', label: 'Cansado/a' },
-  { key: 'abrumado', emoji: '😵‍💫', label: 'Abrumado/a' },
-  { key: 'tranquilo', emoji: '😌', label: 'Tranquilo/a' },
-  { key: 'energia', emoji: '😄', label: 'Con energía' },
+  { key: 'ansioso', label: 'Ansioso/a' },
+  { key: 'irritable', label: 'Irritable' },
+  { key: 'cansado', label: 'Cansado/a' },
+  { key: 'abrumado', label: 'Abrumado/a' },
+  { key: 'tranquilo', label: 'Tranquilo/a' },
+  { key: 'energia', label: 'Con energía' },
 ] as const;
 
 export const CORTISOL_RECOMMENDATIONS: Record<string, { title: string; desc: string }> = {

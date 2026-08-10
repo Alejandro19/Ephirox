@@ -37,6 +37,7 @@ describe('OnboardingPage', () => {
       rest: [],
     });
     vi.mocked(geoClient.getCities).mockResolvedValue(['Bogotá']);
+    vi.mocked(onboardingClient.getPersonalInfoAccess).mockResolvedValue('standard');
   });
 
   it('redirects to /login when there is no session token', () => {

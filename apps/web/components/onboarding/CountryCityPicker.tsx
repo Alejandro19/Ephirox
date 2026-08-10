@@ -52,7 +52,7 @@ export function CountryCityPicker({ value, onChange, invalidFieldIds }: CountryC
       <div>
         <SelectField
           label="País de residencia"
-          placeholder="Selecciona tu país…"
+          placeholder="Seleccionar"
           value={value.country}
           onChange={handleCountryChange}
           options={[...priority, ...rest].map((c) => ({ value: c.isoCode, label: `${c.flag} ${c.name}` }))}

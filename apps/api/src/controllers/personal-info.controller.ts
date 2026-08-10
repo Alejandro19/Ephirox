@@ -1,12 +1,24 @@
 import type { Request, Response } from 'express';
 import type { PersonalInfoUpdateInput } from '@latribu/shared-types';
 import * as personalInfoService from '../services/personal-info.service.js';
+import * as rolesService from '../services/roles.service.js';
+import * as clientsService from '../services/clients.service.js';
 
 function ok(res: Response, data: Record<string, unknown>, status = 200) {
   return res.status(status).json({ success: true, ...data });
 }
 function err(res: Response, message: string, status = 400) {
   return res.status(status).json({ success: false, error: message });
+}
+
+export async function getPersonalInfoAccess(req: Request, res: Response) {
+  // Se resuelve por el tipo del cliente DUEÑO del :id, sin importar si quien
+  // llama es el propio cliente o un admin viéndolo — ownerOrAdmin ya
+  // garantiza que solo esos dos pueden llegar hasta acá.
+  const client = await clientsService.findClientById(req.params.id);
+  if (!client) return err(res, 'Cliente no encontrado.', 404);
+  const variant = await rolesService.resolvePersonalInfoVariant(client.clientType);
+  return ok(res, { variant });
 }
 
 export async function getPersonalInfo(req: Request, res: Response) {

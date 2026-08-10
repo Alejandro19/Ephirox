@@ -21,23 +21,22 @@ import { WellnessIndexHero, BienestarGeneral, EvolucionFisicaSection } from './E
 import { CheckinAccordion } from './CheckinAccordion';
 
 const cardStyle: React.CSSProperties = {
-  background: 'var(--paper)', border: '1px solid var(--line)',
-  borderRadius: 'var(--radius)', padding: '22px 24px', marginBottom: 18,
+  borderTop: '1px solid var(--border-hairline)', paddingTop: 20, paddingBottom: 20,
 };
 const cardTitleStyle: React.CSSProperties = {
   fontSize: 15, fontWeight: 700, color: 'var(--ink)', margin: '0 0 16px',
 };
 const labelStyle: React.CSSProperties = {
-  display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--ink-soft)', marginBottom: 4,
+  display: 'block', fontSize: 12, fontWeight: 400, color: 'var(--ink-secondary)', marginBottom: 4,
 };
 const fieldStyle: React.CSSProperties = {
-  width: 220, height: 40, borderRadius: 10, border: '1px solid var(--line)',
-  padding: '0 10px', fontSize: 13, background: 'var(--paper)', color: 'var(--ink)',
+  width: 220, height: 32, borderRadius: 0, border: 'none', borderBottom: '1px solid var(--border-input)',
+  padding: '0 2px 6px', fontSize: 14.5, fontWeight: 600, background: 'transparent', color: 'var(--ink)',
   outline: 'none', boxSizing: 'border-box',
 };
 const primaryButtonStyle: React.CSSProperties = {
   height: 40, padding: '0 22px', borderRadius: 9999, border: 'none', marginTop: 12,
-  background: 'var(--gold)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+  background: 'var(--ring-accent)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer',
 };
 
 function clientTz(): string {
@@ -122,7 +121,7 @@ export function AdminEvolutionPanel({ clientId }: { clientId: string }) {
     }
   }
 
-  if (loading) return <p style={{ color: 'var(--ink-soft)', fontSize: 14 }}>Cargando evolución del cliente…</p>;
+  if (loading) return <p style={{ color: 'var(--ink-secondary)', fontSize: 14 }}>Cargando evolución del cliente…</p>;
   if (error) return <p role="alert" style={{ color: 'var(--danger)' }}>{error}</p>;
 
   const accesoEvolucionFisica = client?.clientType !== 'lead_wellness';
@@ -161,7 +160,7 @@ export function AdminEvolutionPanel({ clientId }: { clientId: string }) {
       ) : (
         <div style={cardStyle}>
           <h3 style={cardTitleStyle}>Tu evolución física</h3>
-          <p style={{ fontSize: 13, color: 'var(--ink-soft)', margin: 0 }}>
+          <p style={{ fontSize: 13, color: 'var(--ink-secondary)', margin: 0 }}>
             Este cliente es Lead Wellness — la evolución física se le muestra bloqueada hasta que se active con un coach.
           </p>
         </div>

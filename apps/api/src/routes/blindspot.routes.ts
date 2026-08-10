@@ -12,6 +12,7 @@ import { validateBody } from '../middleware/validate.js';
 import { asyncHandler } from '../middleware/async-handler.js';
 import { authMiddleware, adminOnly, therapistOnly } from '../middleware/auth.middleware.js';
 import { caseAccessOnly, mentoringOnly } from '../middleware/blindspot-access.middleware.js';
+import { requirePermission } from '../middleware/require-permission.middleware.js';
 import * as blindspotController from '../controllers/blindspot.controller.js';
 
 export const blindspotRouter = Router();
@@ -54,6 +55,6 @@ blindspotRouter.post(
 blindspotRouter.post('/therapist/cases/:id/crisis', authMiddleware, caseAccessOnly, asyncHandler(blindspotController.therapistRaiseCrisis));
 
 // ==== CLIENTE ====
-blindspotRouter.get('/my-case', authMiddleware, mentoringOnly, asyncHandler(blindspotController.clientGetMyCase));
-blindspotRouter.patch('/my-case/tasks/:taskId', authMiddleware, mentoringOnly, asyncHandler(blindspotController.clientUpdateMyTask));
-blindspotRouter.post('/my-case/help', authMiddleware, mentoringOnly, asyncHandler(blindspotController.clientRequestHelp));
+blindspotRouter.get('/my-case', authMiddleware, mentoringOnly, requirePermission('blindspot'), asyncHandler(blindspotController.clientGetMyCase));
+blindspotRouter.patch('/my-case/tasks/:taskId', authMiddleware, mentoringOnly, requirePermission('blindspot'), asyncHandler(blindspotController.clientUpdateMyTask));
+blindspotRouter.post('/my-case/help', authMiddleware, mentoringOnly, requirePermission('blindspot'), asyncHandler(blindspotController.clientRequestHelp));

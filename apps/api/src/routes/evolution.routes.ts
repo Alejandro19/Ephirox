@@ -4,6 +4,7 @@ import { validateBody } from '../middleware/validate.js';
 import { asyncHandler } from '../middleware/async-handler.js';
 import { authMiddleware, adminOnly, ownerOrAdmin } from '../middleware/auth.middleware.js';
 import { requireOnboardingComplete } from '../middleware/community-access.middleware.js';
+import { requirePermission } from '../middleware/require-permission.middleware.js';
 import * as evolutionController from '../controllers/evolution.controller.js';
 import * as personalRecordsController from '../controllers/personal-records.controller.js';
 import * as clientsService from '../services/clients.service.js';
@@ -13,14 +14,14 @@ export const evolutionRouter = Router();
 // GET /api/clients/:id/evolution — dashboard completo
 evolutionRouter.get(
   '/clients/:id/evolution',
-  authMiddleware, ownerOrAdmin, requireOnboardingComplete,
+  authMiddleware, ownerOrAdmin, requireOnboardingComplete, requirePermission('evolution'),
   asyncHandler(evolutionController.getEvolution)
 );
 
 // POST /api/clients/:id/evolution — crear check-in
 evolutionRouter.post(
   '/clients/:id/evolution',
-  authMiddleware, ownerOrAdmin, requireOnboardingComplete,
+  authMiddleware, ownerOrAdmin, requireOnboardingComplete, requirePermission('evolution'),
   validateBody(EvolutionCheckinInputSchema),
   asyncHandler(evolutionController.createCheckin)
 );
@@ -28,7 +29,7 @@ evolutionRouter.post(
 // GET /api/clients/:id/personal-records
 evolutionRouter.get(
   '/clients/:id/personal-records',
-  authMiddleware, ownerOrAdmin, requireOnboardingComplete,
+  authMiddleware, ownerOrAdmin, requireOnboardingComplete, requirePermission('evolution'),
   asyncHandler(personalRecordsController.listRecords)
 );
 

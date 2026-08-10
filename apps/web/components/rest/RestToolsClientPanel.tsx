@@ -84,31 +84,31 @@ export function RestToolsClientPanel() {
   if (error) return <p role="alert" className="text-[var(--danger)]">{error}</p>;
 
   return (
-    <section className="rounded-[var(--radius)] border border-[var(--line)] bg-[var(--paper)] p-[26px]">
+    <section className="border-t border-[var(--border-hairline)] py-6">
       <h2 className="mb-4 font-serif text-lg font-bold text-[var(--ink)]">Herramientas para dormir</h2>
       {tools.length === 0 ? (
         <EmptyState message="Aún no hay herramientas." />
       ) : (
         tools.map((tool, i) => (
-          <div key={tool.id} className={`py-3 ${i === 0 ? '' : 'border-t border-[var(--line)]'}`}>
+          <div key={tool.id} className={`py-3 ${i === 0 ? '' : 'border-t border-[var(--border-hairline)]'}`}>
             <div className="flex items-center gap-3">
               <RestToolIcon action={tool.action} />
               <div className="flex-1">
                 <strong className="text-sm font-semibold text-[var(--ink)]">{tool.name}</strong>
-                {tool.meta && <span className="ml-2 text-xs text-[var(--ink-soft)]">{tool.meta}</span>}
+                {tool.meta && <span className="ml-2 text-xs text-[var(--ink-secondary)]">{tool.meta}</span>}
               </div>
               {tool.action === 'write' && (
-                <button type="button" onClick={() => toggleJournal(tool.id)} className="rounded-full border border-[var(--line)] px-3.5 py-1.5 text-xs font-semibold text-[var(--ink)]">
+                <button type="button" onClick={() => toggleJournal(tool.id)} className="rounded-full border border-[var(--border-input)] px-3.5 py-1.5 text-xs font-semibold text-[var(--ink)]">
                   Escribir
                 </button>
               )}
               {tool.action === 'play' && tool.audioUrl && (
-                <button type="button" onClick={() => toggleAudio(tool.id)} className="rounded-full border border-[var(--line)] px-3.5 py-1.5 text-xs font-semibold text-[var(--ink)]">
+                <button type="button" onClick={() => toggleAudio(tool.id)} className="rounded-full border border-[var(--border-input)] px-3.5 py-1.5 text-xs font-semibold text-[var(--ink)]">
                   {playingAudioId === tool.id ? 'Ocultar' : 'Reproducir'}
                 </button>
               )}
               {tool.action === 'play' && !tool.audioUrl && (
-                <button type="button" onClick={() => startTimer(tool)} className="rounded-full border border-[var(--line)] px-3.5 py-1.5 text-xs font-semibold text-[var(--ink)]">
+                <button type="button" onClick={() => startTimer(tool)} className="rounded-full border border-[var(--border-input)] px-3.5 py-1.5 text-xs font-semibold text-[var(--ink)]">
                   Reproducir
                 </button>
               )}
@@ -118,11 +118,11 @@ export function RestToolsClientPanel() {
             )}
             {journalOpenId === tool.id && (
               <div className="mt-2.5 rounded-xl border border-[#E7DFC9] bg-[#FBF7EC] p-3.5">
-                <label htmlFor={`rt-journal-${tool.id}`} className="mb-2 block text-xs font-semibold text-[var(--ink-soft)]">
+                <label htmlFor={`rt-journal-${tool.id}`} className="mb-2 block text-xs font-semibold text-[var(--ink-secondary)]">
                   Escribe lo que ronda tu cabeza — no se guarda, es solo para vaciar la mente antes de dormir.
                 </label>
                 <textarea id={`rt-journal-${tool.id}`} rows={4} className="w-full rounded-[10px] border border-[#E7DFC9] p-2.5 text-sm" />
-                <button type="button" onClick={() => toggleJournal(tool.id)} className="mt-2.5 rounded-full border border-[var(--line)] px-3.5 py-1.5 text-xs font-semibold text-[var(--ink)]">
+                <button type="button" onClick={() => toggleJournal(tool.id)} className="mt-2.5 rounded-full border border-[var(--border-input)] px-3.5 py-1.5 text-xs font-semibold text-[var(--ink)]">
                   Listo
                 </button>
               </div>
@@ -136,7 +136,7 @@ export function RestToolsClientPanel() {
                 ) : (
                   <p className="m-0 mb-2 text-sm font-semibold text-[#8A5FA0]">Reproduciendo…</p>
                 )}
-                <button type="button" onClick={stopTimer} className="rounded-full border border-[var(--line)] bg-white px-3.5 py-1.5 text-xs font-semibold text-[var(--ink)]">
+                <button type="button" onClick={stopTimer} className="rounded-full border border-[var(--border-input)] bg-white px-3.5 py-1.5 text-xs font-semibold text-[var(--ink)]">
                   Detener
                 </button>
               </div>

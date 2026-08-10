@@ -16,10 +16,9 @@ import {
 import { youtubeEmbedUrl } from '../../lib/training-timer-logic';
 import { CORTISOL_EMOTIONS, CORTISOL_RECOMMENDATIONS, calculateCortisolWeeklyStats } from '../../lib/cortisol-logic';
 import IdentityHeader from '../ui/IdentityHeader';
-import BreathCircles from '../ui/BreathCircles';
 import Badge from '../ui/Badge';
 import EmptyState from '../ui/EmptyState';
-import MiniRing from '../ui/MiniRing';
+import RingProgress from '../ui/RingProgress';
 import ProgressBar from '../ui/ProgressBar';
 
 const TECHNIQUE_ICON_PATHS: Record<string, React.ReactNode> = {
@@ -44,7 +43,7 @@ function TechniqueIcon({ type }: { type: string | null }) {
   const key = (type || '').toLowerCase();
   const path = TECHNIQUE_ICON_PATHS[key] || TECHNIQUE_ICON_PATHS.base;
   return (
-    <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#F1F5EC] text-[#5B7A4E]">
+    <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[var(--page-bg)]" style={{ color: 'var(--hero-espresso-accent)' }}>
       <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
         {path}
       </svg>
@@ -66,13 +65,13 @@ function CortisolPlayer({
   const embedUrl = youtubeEmbedUrl(technique.youtubeUrl);
   return (
     <div>
-      <button type="button" onClick={onBack} className="mb-3 inline-block bg-transparent p-0 text-xs font-semibold text-[#5C574E] hover:underline">
+      <button type="button" onClick={onBack} className="mb-3 inline-block bg-transparent p-0 text-xs font-semibold text-[var(--ink-secondary)] hover:underline">
         ← Gestión de Cortisol
       </button>
       <h1 className="mb-1 font-serif text-2xl font-bold text-[var(--ink)]">{technique.title}</h1>
-      <p className="mb-5 text-sm text-[var(--ink-soft)]">{[technique.type, technique.duration].filter(Boolean).join(' · ')}</p>
+      <p className="mb-5 text-sm text-[var(--ink-secondary)]">{[technique.type, technique.duration].filter(Boolean).join(' · ')}</p>
 
-      <div className="rounded-[var(--radius)] border border-[var(--line)] bg-[var(--paper)] p-[26px]">
+      <div className="rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--paper)] p-[26px]">
         {embedUrl ? (
           <div className="relative overflow-hidden rounded-[14px] bg-black pt-[56.25%]">
             <iframe
@@ -88,22 +87,32 @@ function CortisolPlayer({
             <audio src={technique.audioUrl} controls className="w-full" />
           </div>
         ) : (
-          <div className="py-10 text-center text-[var(--ink-soft)]">Sin video ni audio asignado.</div>
+          <div className="py-10 text-center text-[var(--ink-secondary)]">Sin video ni audio asignado.</div>
         )}
 
         {technique.description && <p className="mt-4 text-sm leading-relaxed text-[var(--ink)]">{technique.description}</p>}
 
         <div className="mt-5 flex justify-center gap-2.5">
           {doneToday ? (
-            <button type="button" disabled className="h-11 cursor-default rounded-full border border-[var(--line)] px-6 text-sm font-semibold text-[var(--ink-soft)]">
+            <button type="button" disabled className="h-11 cursor-default rounded-full border border-[var(--border-hairline)] px-6 text-sm font-semibold text-[var(--ink-secondary)]">
               Completado hoy ✓
             </button>
           ) : (
-            <button type="button" onClick={onComplete} className="h-11 rounded-full bg-[#5B7A4E] px-6 text-sm font-semibold text-white">
+            <button
+              type="button"
+              onClick={onComplete}
+              className="h-11 rounded-full px-6 text-sm font-semibold"
+              style={{ background: 'var(--hero-espresso-accent)', color: 'var(--hero-espresso)' }}
+            >
               Marcar completado
             </button>
           )}
-          <button type="button" onClick={onBack} className="h-11 rounded-full bg-[#2B2621] px-6 text-sm font-semibold text-white">
+          <button
+            type="button"
+            onClick={onBack}
+            className="h-11 rounded-full px-6 text-sm font-semibold"
+            style={{ background: 'var(--hero-espresso)', color: 'var(--hero-espresso-text)' }}
+          >
             Finalizar
           </button>
         </div>
@@ -167,7 +176,7 @@ export function ClientCortisolPanel({ clientId }: { clientId: string }) {
     return (
       <div>
         {header}
-        <p className="text-sm text-[var(--ink-soft)]">Cargando técnicas de cortisol…</p>
+        <p className="text-sm text-[var(--ink-secondary)]">Cargando técnicas de cortisol…</p>
       </div>
     );
   }
@@ -207,7 +216,7 @@ export function ClientCortisolPanel({ clientId }: { clientId: string }) {
     <div>
       {header}
 
-      <div className="mb-5 rounded-[var(--radius)] border border-[var(--line)] bg-[var(--paper)] p-[18px_20px]">
+      <div className="mb-6 border-b border-[var(--border-hairline)] pb-6">
         <p className="mb-2.5 text-xs font-bold text-[var(--ink)]">¿Cómo te sientes ahora mismo?</p>
         <div className="grid grid-cols-3 gap-2">
           {CORTISOL_EMOTIONS.map((o) => {
@@ -217,12 +226,17 @@ export function ClientCortisolPanel({ clientId }: { clientId: string }) {
                 key={o.key}
                 type="button"
                 onClick={() => handleSelectEmotion(o.key)}
-                className={`rounded-xl border px-1.5 py-2 text-center transition-colors ${
-                  selected ? 'border-[#5B7A4E] bg-[#5B7A4E]' : 'border-[#D9E4CE] bg-[#FBFDF9]'
-                }`}
+                className="rounded-xl border px-2.5 py-2.5 text-center transition-colors"
+                style={selected
+                  ? { borderColor: 'var(--hero-espresso-accent)', background: 'var(--hero-espresso-accent)' }
+                  : { borderColor: 'var(--border-input)', background: 'var(--page-bg)' }}
               >
-                <span className="mb-0.5 block text-[17px] leading-none">{o.emoji}</span>
-                <span className={`block text-[10px] font-bold leading-tight ${selected ? 'text-white' : 'text-[var(--ink-soft)]'}`}>{o.label}</span>
+                <span
+                  className="block text-[11.5px] font-bold leading-tight"
+                  style={{ color: selected ? 'var(--hero-espresso)' : 'var(--ink-secondary)' }}
+                >
+                  {o.label}
+                </span>
               </button>
             );
           })}
@@ -230,25 +244,31 @@ export function ClientCortisolPanel({ clientId }: { clientId: string }) {
       </div>
 
       <div
-        className="relative mb-5 overflow-hidden rounded-[20px] p-7 text-center"
-        style={{ background: 'linear-gradient(180deg, #EFF5E8, #DCE8CC)' }}
+        className="relative mt-8 mb-5 overflow-hidden rounded-[var(--radius-hero)] p-7 text-center"
+        style={{ background: 'var(--hero-espresso)', color: 'var(--hero-espresso-text)' }}
       >
-        <BreathCircles />
-        <p className="mb-1 text-[11px] font-bold uppercase tracking-wide text-[#6B8A5A]">Recomendada para ti ahora</p>
-        <h3 className="mb-1 font-serif text-lg font-bold text-[#3E4A34]">{recommended.title}</h3>
-        <p className="mb-3 text-sm text-[#6B7A5E]">{recommended.desc}</p>
+        <div
+          className="pointer-events-none absolute -right-10 -top-10 h-[180px] w-[180px] rounded-full"
+          style={{ background: 'radial-gradient(circle, rgba(217,183,126,.18) 0%, transparent 70%)' }}
+        />
+        <p className="relative z-10 mb-1 text-[11px] font-bold uppercase tracking-wide" style={{ color: 'var(--hero-espresso-accent)' }}>
+          Recomendada para ti ahora
+        </p>
+        <h3 className="relative z-10 mb-1 font-serif text-lg font-bold">{recommended.title}</h3>
+        <p className="relative z-10 mb-3 text-sm" style={{ color: 'var(--hero-espresso-text-muted)' }}>{recommended.desc}</p>
         {matched && (
           <button
             type="button"
             onClick={() => setActiveId(matched.id)}
-            className="h-11 rounded-full bg-[#5B7A4E] px-6 text-sm font-semibold text-white"
+            className="relative z-10 h-11 rounded-full px-6 text-sm font-semibold"
+            style={{ background: 'var(--hero-espresso-accent)', color: 'var(--hero-espresso)' }}
           >
             Empezar técnica
           </button>
         )}
       </div>
 
-      <section className="mb-5 rounded-[var(--radius)] border border-[var(--line)] bg-[var(--paper)] p-[26px]">
+      <section className="border-t border-[var(--border-hairline)] py-6">
         <h2 className="mb-4 font-serif text-lg font-bold text-[var(--ink)]">Tus técnicas</h2>
         {techniques.length === 0 ? (
           <EmptyState message="Aún no tienes técnicas asignadas." />
@@ -259,17 +279,17 @@ export function ClientCortisolPanel({ clientId }: { clientId: string }) {
               const hasAudio = !!t.audioUrl;
               const isPlayingAudio = playingAudioId === t.id;
               return (
-                <div key={t.id} className={`py-3 ${i === 0 ? '' : 'border-t border-[#E8EEDF]'}`}>
+                <div key={t.id} className={`py-3 ${i === 0 ? '' : 'border-t border-[var(--border-hairline)]'}`}>
                   <div className="flex items-center gap-3">
                     <TechniqueIcon type={t.type} />
                     <div className="flex-1">
                       <div className="text-sm font-semibold text-[var(--ink)]">
                         {t.title} {t.type && <Badge label={t.type} />}
                       </div>
-                      <div className="mt-0.5 text-xs text-[var(--ink-soft)]">{t.duration}</div>
+                      <div className="mt-0.5 text-xs text-[var(--ink-secondary)]">{t.duration}</div>
                     </div>
                     {hasVideo && (
-                      <button type="button" onClick={() => setActiveId(t.id)} className="rounded-full border border-[var(--line)] px-3.5 py-1.5 text-xs font-semibold text-[var(--ink)]">
+                      <button type="button" onClick={() => setActiveId(t.id)} className="rounded-full border border-[var(--border-input)] px-3.5 py-1.5 text-xs font-semibold text-[var(--ink)]">
                         Reproducir
                       </button>
                     )}
@@ -277,7 +297,7 @@ export function ClientCortisolPanel({ clientId }: { clientId: string }) {
                       <button
                         type="button"
                         onClick={() => setPlayingAudioId((prev) => (prev === t.id ? null : t.id))}
-                        className="rounded-full border border-[var(--line)] px-3.5 py-1.5 text-xs font-semibold text-[var(--ink)]"
+                        className="rounded-full border border-[var(--border-input)] px-3.5 py-1.5 text-xs font-semibold text-[var(--ink)]"
                       >
                         {isPlayingAudio ? 'Ocultar' : 'Reproducir'}
                       </button>
@@ -294,10 +314,10 @@ export function ClientCortisolPanel({ clientId }: { clientId: string }) {
       </section>
 
       {techniques.length > 0 && (
-        <section className="mb-5 rounded-[var(--radius)] border border-[var(--line)] bg-[var(--paper)] p-[26px]">
+        <section className="border-t border-[var(--border-hairline)] py-6">
           <h2 className="mb-4 font-serif text-lg font-bold text-[var(--ink)]">Momento de regulación</h2>
           <div className="flex items-center gap-4">
-            <MiniRing pct={weeklyStats.pct} strokeColor="#5B7A4E" trackColor="#D9E4CE" />
+            <RingProgress value={weeklyStats.pct} size={48} color="espresso" />
             <div className="flex-1">
               <ProgressBar done={weeklyStats.count} total={7} label="Esta semana" />
             </div>
@@ -306,9 +326,9 @@ export function ClientCortisolPanel({ clientId }: { clientId: string }) {
       )}
 
       {tip && (
-        <div className="rounded-[var(--radius)] border border-dashed border-[#D9E4CE] bg-[#FBFDF9] p-[18px_20px]">
-          <p className="m-0 text-xs text-[#4B5A3F]">
-            <strong>Sabías que</strong> {tip.content}
+        <div className="rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--page-bg)] p-[18px_20px]">
+          <p className="m-0 text-xs text-[var(--ink-secondary)]">
+            <strong className="text-[var(--ink)]">Sabías que</strong> {tip.content}
           </p>
         </div>
       )}

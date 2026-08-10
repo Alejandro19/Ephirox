@@ -1,5 +1,7 @@
 "use client";
 
+import { IconFlame } from "./icons";
+
 type StreakBadgeProps = {
   weeks: number;
   state?: "normal" | "risk" | "celebrate";
@@ -20,7 +22,7 @@ export default function StreakBadge({ weeks, state = "normal" }: StreakBadgeProp
         borderRadius: "100px", padding: "8px 14px", flexShrink: 0,
       }}
     >
-      <span style={{ fontSize: 16 }}>🔥</span>
+      <IconFlame size={16} style={{ color: colors.txt }} />
       <span style={{ fontFamily: "Fraunces, Georgia, serif", fontSize: 15, fontWeight: 700, color: colors.num }}>
         {weeks}
       </span>

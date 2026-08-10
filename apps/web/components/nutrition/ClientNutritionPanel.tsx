@@ -9,7 +9,7 @@ import IdentityHeader from '../ui/IdentityHeader';
 function MealIcon({ name }: { name: string }) {
   const isSnack = /snack|merienda|fruta|colaci[oó]n/i.test(name || '');
   return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="mr-2 flex-shrink-0 text-[#5B7A4E]">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="mr-2 flex-shrink-0 text-[var(--hero-piedra-accent)]">
       {isSnack ? (
         <>
           <path
@@ -32,7 +32,7 @@ function MealIcon({ name }: { name: string }) {
 
 function MealBlock({ meal, isFirst }: { meal: MenuMeal; isFirst: boolean }) {
   return (
-    <div className={`py-3.5 ${isFirst ? '' : 'border-t border-[#E8EEDF]'}`}>
+    <div className={`py-3.5 ${isFirst ? '' : 'border-t border-[var(--border-hairline)]'}`}>
       <div className="mb-2 flex items-center font-serif text-base font-semibold text-[var(--ink)]">
         <MealIcon name={meal.name} />
         {meal.name}
@@ -40,10 +40,10 @@ function MealBlock({ meal, isFirst }: { meal: MenuMeal; isFirst: boolean }) {
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
         {(meal.options || []).map((opt, i) => (
           <div key={i}>
-            <p className="mb-1 text-[10.5px] font-bold uppercase tracking-wide text-[#5B7A4E]">{opt.label}</p>
+            <p className="mb-1 text-[10.5px] font-bold uppercase tracking-wide text-[var(--hero-piedra-accent)]">{opt.label}</p>
             <ul className="space-y-1 text-sm leading-relaxed text-[var(--ink)]">
               {opt.items.map((item, j) => (
-                <li key={j} className="relative pl-3.5 before:absolute before:left-0 before:top-[8px] before:h-[5px] before:w-[5px] before:rounded-full before:bg-[#5B7A4E] before:content-['']">
+                <li key={j} className="relative pl-3.5 before:absolute before:left-0 before:top-[8px] before:h-[5px] before:w-[5px] before:rounded-full before:bg-[var(--hero-piedra-accent)] before:content-['']">
                   {item}
                 </li>
               ))}
@@ -57,18 +57,21 @@ function MealBlock({ meal, isFirst }: { meal: MenuMeal; isFirst: boolean }) {
 
 function MacroRing({ value, label }: { value: number | null | undefined; label: string }) {
   return (
-    <div className="flex h-14 w-14 flex-shrink-0 flex-col items-center justify-center rounded-full border-[3px] border-white/55 bg-white/10">
+    <div
+      className="flex h-14 w-14 flex-shrink-0 flex-col items-center justify-center rounded-full border-2"
+      style={{ borderColor: 'var(--hero-piedra-accent)', background: 'rgba(46,38,24,.06)', color: 'var(--hero-piedra-text)' }}
+    >
       <span className="text-[13px] font-bold leading-none">{value ?? '-'}g</span>
-      <span className="mt-0.5 text-[8px] uppercase tracking-wide opacity-80">{label}</span>
+      <span className="mt-0.5 text-[8px] uppercase tracking-wide" style={{ color: 'var(--hero-piedra-text-muted)' }}>{label}</span>
     </div>
   );
 }
 
 function MacroStat({ value, label }: { value: string | number | null | undefined; label: string }) {
   return (
-    <div className="rounded-xl bg-[#F7FAF3] px-1.5 py-3 text-center">
+    <div className="rounded-xl bg-[var(--page-bg)] px-1.5 py-3 text-center">
       <div className="font-serif text-xl font-bold text-[var(--ink)]">{value ?? '—'}</div>
-      <div className="mt-0.5 text-[9px] uppercase tracking-wide text-[#6B7A5E]">{label}</div>
+      <div className="mt-0.5 text-[9px] uppercase tracking-wide text-[var(--ink-secondary)]">{label}</div>
     </div>
   );
 }
@@ -166,7 +169,7 @@ export function ClientNutritionPanel({ clientId }: { clientId: string }) {
     <>
       <IdentityHeader title="Nutrición" subtitle="Plan de alimentación y protocolos asignados por tu mentor." />
       {mantra && (
-        <p className="mb-[22px] border-b border-[var(--line)] pb-[18px] font-serif text-xl font-medium italic leading-snug text-[var(--ink)]">
+        <p className="mb-[22px] border-b border-[var(--border-hairline)] pb-[18px] font-serif text-xl font-medium italic leading-snug text-[var(--ink)]">
           &quot;{mantra}&quot;
         </p>
       )}
@@ -177,7 +180,7 @@ export function ClientNutritionPanel({ clientId }: { clientId: string }) {
     return (
       <div>
         {header}
-        <p className="text-sm text-[var(--ink-soft)]">Cargando tu plan de nutrición…</p>
+        <p className="text-sm text-[var(--ink-secondary)]">Cargando tu plan de nutrición…</p>
       </div>
     );
   }
@@ -198,7 +201,7 @@ export function ClientNutritionPanel({ clientId }: { clientId: string }) {
     return (
       <div>
         {header}
-        <p className="text-[var(--ink-soft)]">Todavía no tienes un plan de nutrición asignado.</p>
+        <p className="text-[var(--ink-secondary)]">Todavía no tienes un plan de nutrición asignado.</p>
       </div>
     );
   }
@@ -212,20 +215,16 @@ export function ClientNutritionPanel({ clientId }: { clientId: string }) {
 
       {menu.length > 0 && (
         <div
-          className="relative mb-6 overflow-hidden rounded-[20px] p-7 text-white"
-          style={{ background: 'linear-gradient(135deg, #3E4A34, #4C5C40)' }}
+          className="relative mt-8 mb-6 overflow-hidden rounded-[var(--radius-hero)] p-7"
+          style={{ background: 'linear-gradient(135deg, var(--hero-piedra-start), var(--hero-piedra-end))', color: 'var(--hero-piedra-text)' }}
         >
-          <div
-            className="pointer-events-none absolute -right-10 -top-10 h-[180px] w-[180px] rounded-full"
-            style={{ background: 'radial-gradient(circle, rgba(255,255,255,.16) 0%, transparent 70%)' }}
-          />
-          <div className="relative z-10 flex items-center justify-between gap-5">
+          <div className="flex items-center justify-between gap-5">
             <div>
-              <p className="mb-2.5 text-[11px] font-bold uppercase tracking-wider text-[#B7D19A]">
+              <p className="mb-2.5 text-[11px] font-bold uppercase tracking-wider" style={{ color: 'var(--hero-piedra-accent)' }}>
                 {nextMeal ? `TU MENÚ · ${nextMeal.name.toUpperCase()}` : 'TU PLAN NUTRICIONAL'}
               </p>
               <p className="mb-1.5 font-serif text-xl font-semibold">{nextMealDish || nextMeal?.name || 'Aún sin menú registrado'}</p>
-              {plan.dailyCals ? <p className="text-[13px] opacity-75">Meta: {plan.dailyCals} kcal/día</p> : null}
+              {plan.dailyCals ? <p className="text-[13px]" style={{ color: 'var(--hero-piedra-text-muted)' }}>Meta: {plan.dailyCals} kcal/día</p> : null}
             </div>
             <div className="flex flex-shrink-0 gap-3.5">
               <MacroRing value={plan.proteinG} label="Prot" />
@@ -236,7 +235,7 @@ export function ClientNutritionPanel({ clientId }: { clientId: string }) {
         </div>
       )}
 
-      <section className="mb-5 rounded-[var(--radius)] border border-[var(--line)] bg-[var(--paper)] p-[26px]">
+      <section className="border-t border-[var(--border-hairline)] py-6">
         <h2 className="mb-4 font-serif text-lg font-bold text-[var(--ink)]">Tu objetivo nutricional</h2>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <MacroStat value={plan.dailyCals} label="Kcal / día" />
@@ -246,7 +245,7 @@ export function ClientNutritionPanel({ clientId }: { clientId: string }) {
         </div>
       </section>
 
-      <section className="mb-5 rounded-[var(--radius)] border border-[var(--line)] bg-[var(--paper)] p-[26px]">
+      <section className="border-t border-[var(--border-hairline)] py-6">
         <h2 className="mb-4 font-serif text-lg font-bold text-[var(--ink)]">Vista previa de tu plan</h2>
         {menu.length ? (
           <>
@@ -258,7 +257,7 @@ export function ClientNutritionPanel({ clientId }: { clientId: string }) {
                   href={plan.pdfUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex h-12 items-center rounded-full bg-[#5B7A4E] px-5 text-sm font-semibold text-white"
+                  className="inline-flex h-12 items-center rounded-full bg-[var(--hero-piedra-accent)] px-5 text-sm font-semibold text-white"
                 >
                   {plan.pdfName || 'Ver PDF'}
                 </a>
@@ -267,7 +266,7 @@ export function ClientNutritionPanel({ clientId }: { clientId: string }) {
                 <button
                   type="button"
                   onClick={() => setShowAllMeals((v) => !v)}
-                  className="inline-flex h-12 items-center gap-1.5 rounded-full border border-[#D9E4CE] px-5 text-sm text-[var(--ink)]"
+                  className="inline-flex h-12 items-center gap-1.5 rounded-full border border-[var(--border-input)] px-5 text-sm text-[var(--ink)]"
                 >
                   {showAllMeals ? 'Ver menos' : 'Ver más'}
                   <span className={`inline-block transition-transform ${showAllMeals ? 'rotate-180' : ''}`}>⌄</span>
@@ -276,18 +275,18 @@ export function ClientNutritionPanel({ clientId }: { clientId: string }) {
             </div>
           </>
         ) : (
-          <p className="py-6 text-center text-[var(--ink-soft)]">Tu mentor aún no ha cargado el plan de alimentación.</p>
+          <p className="py-6 text-center text-[var(--ink-secondary)]">Tu mentor aún no ha cargado el plan de alimentación.</p>
         )}
       </section>
 
       {(recommendations.length > 0 || plan.closingMessage) && (
-        <section className="mb-5 rounded-[var(--radius)] border border-[var(--line)] bg-[var(--paper)] p-[26px]">
+        <section className="border-t border-[var(--border-hairline)] py-6">
           {recommendations.length > 0 && (
             <>
               <h2 className="mb-3 font-serif text-lg font-bold text-[var(--ink)]">Recomendaciones</h2>
               <ul className="space-y-1.5 text-sm leading-relaxed text-[var(--ink)]">
                 {recommendations.map((r, i) => (
-                  <li key={i} className="relative pl-3.5 before:absolute before:left-0 before:top-[8px] before:h-[5px] before:w-[5px] before:rounded-full before:bg-[#5B7A4E] before:content-['']">
+                  <li key={i} className="relative pl-3.5 before:absolute before:left-0 before:top-[8px] before:h-[5px] before:w-[5px] before:rounded-full before:bg-[var(--hero-piedra-accent)] before:content-['']">
                     {r}
                   </li>
                 ))}
@@ -295,30 +294,33 @@ export function ClientNutritionPanel({ clientId }: { clientId: string }) {
             </>
           )}
           {plan.closingMessage && (
-            <p className={`font-serif text-base italic leading-relaxed text-[var(--ink)] ${recommendations.length ? 'mt-4 border-t border-[var(--line)] pt-4' : ''}`}>
+            <p className={`font-serif text-base italic leading-relaxed text-[var(--ink)] ${recommendations.length ? 'mt-4 border-t border-[var(--border-hairline)] pt-4' : ''}`}>
               &quot;{plan.closingMessage}&quot;
             </p>
           )}
         </section>
       )}
 
-      <section className="rounded-[var(--radius)] border border-[var(--line)] bg-[var(--paper)] p-[26px]">
+      <section className="border-t border-[var(--border-hairline)] py-6">
         <h2 className="mb-4 font-serif text-lg font-bold text-[var(--ink)]">Esquema de suplementación</h2>
         {supplements.length ? (
           <div>
             {supplements.map((s, i) => {
               const pill = supplementTimePill(s.timing);
               return (
-                <div key={s.id} className={`flex items-center gap-3 py-3 ${i === 0 ? '' : 'border-t border-[#E8EEDF]'}`}>
-                  <div className="flex h-[38px] w-[38px] flex-shrink-0 items-center justify-center rounded-full bg-[#F1F5EC] text-[#5B7A4E]">
+                <div key={s.id} className={`flex items-center gap-3 py-3 ${i === 0 ? '' : 'border-t border-[var(--border-hairline)]'}`}>
+                  <div className="flex h-[38px] w-[38px] flex-shrink-0 items-center justify-center rounded-full bg-[var(--page-bg)]" style={{ color: 'var(--hero-piedra-accent)' }}>
                     <SupplementIcon category={s.category} />
                   </div>
                   <div className="flex-1">
                     <div className="font-serif text-sm font-semibold text-[var(--ink)]">{s.name}</div>
-                    <div className="mt-0.5 text-[11px] text-[#6B7A5E]">{[s.dose, s.timing].filter(Boolean).join(' · ')}</div>
+                    <div className="mt-0.5 text-[11px] text-[var(--ink-secondary)]">{[s.dose, s.timing].filter(Boolean).join(' · ')}</div>
                   </div>
                   {pill && (
-                    <span className="ml-auto flex-shrink-0 whitespace-nowrap rounded-full bg-[#EFF5E8] px-2.5 py-1 text-[10px] font-semibold text-[#5B7A4E]">
+                    <span
+                      className="ml-auto flex-shrink-0 whitespace-nowrap rounded-full px-2.5 py-1 text-[10px] font-semibold"
+                      style={{ background: 'var(--border-hairline)', color: 'var(--hero-piedra-accent)' }}
+                    >
                       {pill}
                     </span>
                   )}
@@ -328,13 +330,13 @@ export function ClientNutritionPanel({ clientId }: { clientId: string }) {
             <button
               type="button"
               onClick={() => downloadSupplementsPdf(supplements)}
-              className="mt-3.5 rounded-full border border-[var(--line)] bg-transparent px-5 py-2.5 text-sm text-[var(--ink)]"
+              className="mt-3.5 rounded-full border border-[var(--border-input)] bg-transparent px-5 py-2.5 text-sm text-[var(--ink)]"
             >
               Descargar PDF
             </button>
           </div>
         ) : (
-          <p className="py-6 text-center text-[var(--ink-soft)]">Aún no tienes suplementos asignados.</p>
+          <p className="py-6 text-center text-[var(--ink-secondary)]">Aún no tienes suplementos asignados.</p>
         )}
       </section>
     </div>

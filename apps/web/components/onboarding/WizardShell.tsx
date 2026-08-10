@@ -3,12 +3,13 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { computeHiddenFieldIds, validateWizardModule, type WizardFieldConfig } from '@latribu/shared-types';
-import { WIZARD_MODULES, WIZARD_MODULE_10, CONDITIONAL_RULES } from '../../lib/wizard-modules';
+import { WIZARD_MODULES, WIZARD_MODULE_10, CONDITIONAL_RULES, WIZARD_GROUP_ICON } from '../../lib/wizard-modules';
 import { WizardField } from './WizardField';
 import { CountryCityPicker, type CountryCityValue } from './CountryCityPicker';
 import { Module3, EMPTY_MODULE3_DRAFT, validateModule3, type Module3Draft } from './Module3';
 import { Module10, EMPTY_MODULE10_DRAFT, type Module10Draft } from './Module10';
 import IdentityHeader from '../ui/IdentityHeader';
+import RingProgress from '../ui/RingProgress';
 import { upsertLabPanel } from '../../lib/lab-panels-client';
 import {
   putPersonalInfo,
@@ -56,6 +57,24 @@ const EXTERNAL_LABEL_TYPES = new Set(['segmented', 'chevron', 'time', 'file']);
 // más corto). Ahora las filas son fijas: activar/desactivar un campo
 // condicional solo agrega o quita SU PROPIA fila — el resto nunca se
 // remonta.
+// Agrupación temática visual (cards estilo Oura, ver metadata `group` en
+// lib/wizard-modules.ts): campos contiguos con el mismo `group` van juntos
+// en una sola card. Campos sin `group` (o el módulo entero, ej. Módulo 2 no
+// aplica) caen en un grupo `null` que se renderiza sin card envolvente.
+function groupFieldsIntoCards(fields: WizardFieldConfig[]): { group: string | null; fields: WizardFieldConfig[] }[] {
+  const cards: { group: string | null; fields: WizardFieldConfig[] }[] = [];
+  for (const field of fields) {
+    const key = field.group ?? null;
+    const last = cards[cards.length - 1];
+    if (last && last.group === key) {
+      last.fields.push(field);
+    } else {
+      cards.push({ group: key, fields: [field] });
+    }
+  }
+  return cards;
+}
+
 function groupFieldsIntoRows(fields: WizardFieldConfig[]): WizardFieldConfig[][] {
   const rows: WizardFieldConfig[][] = [];
   let pendingNarrow: WizardFieldConfig | null = null;
@@ -79,10 +98,10 @@ function groupFieldsIntoRows(fields: WizardFieldConfig[]): WizardFieldConfig[][]
 
 export type WizardShellProps = {
   clientId: string;
-  clientType?: string | null;
+  variant: 'standard' | 'mentoring';
 };
 
-export function WizardShell({ clientId, clientType }: WizardShellProps) {
+export function WizardShell({ clientId, variant }: WizardShellProps) {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [wizardData, setWizardData] = useState<WizardData>({});
@@ -95,9 +114,10 @@ export function WizardShell({ clientId, clientType }: WizardShellProps) {
   const [finalizeError, setFinalizeError] = useState<string | null>(null);
   const [complete, setComplete] = useState(false);
 
-  // Módulo 10 (Dispositivos y Laboratorios) solo existe para clientes tipo
-  // Mentoring — el resto sigue viendo exactamente los 9 módulos de siempre.
-  const modules = clientType === 'mentoring' ? [...WIZARD_MODULES, WIZARD_MODULE_10] : WIZARD_MODULES;
+  // Módulo 10 (Dispositivos y Laboratorios) solo existe para la variante
+  // Mentoring — resuelta por la matriz de Roles y Perfiles (ver
+  // onboarding/page.tsx), no por un clientType hardcodeado.
+  const modules = variant === 'mentoring' ? [...WIZARD_MODULES, WIZARD_MODULE_10] : WIZARD_MODULES;
   const totalModules = modules.length;
   const mod = modules.find((m) => m.n === step)!;
   const hiddenFieldIds = computeHiddenFieldIds(CONDITIONAL_RULES, wizardData);
@@ -238,7 +258,7 @@ export function WizardShell({ clientId, clientType }: WizardShellProps) {
         });
       }
 
-      if (clientType === 'mentoring') {
+      if (variant === 'mentoring') {
         onboardingReport.m10_wearable = module10Draft.wearable;
         onboardingReport.m10_aw_hrv = module10Draft.appleHealth.hrv;
         onboardingReport.m10_aw_fc_reposo = module10Draft.appleHealth.fcReposo;
@@ -296,18 +316,18 @@ export function WizardShell({ clientId, clientType }: WizardShellProps) {
       <div className="flex min-h-[60vh] flex-col items-center justify-center px-4">
         {/* Tarjeta estilo notificación push (icono + nombre de app + "ahora"),
             en vez del check genérico centrado — pedido explícito del usuario. */}
-        <div className="w-full max-w-sm rounded-2xl border border-[var(--line)] bg-[var(--paper)] p-4 shadow-[0_10px_35px_rgba(43,38,33,0.12)]">
+        <div className="w-full max-w-sm rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--paper)] p-4 shadow-[0_10px_35px_rgba(43,38,33,0.12)]">
           <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-[var(--sage-soft)] text-lg text-[var(--sage)]">
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-lg" style={{ background: 'rgba(217,183,126,.18)', color: 'var(--hero-espresso-accent)' }}>
               ✓
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center justify-between gap-2">
-                <p className="m-0 text-[11px] font-bold uppercase tracking-wider text-[var(--ink-soft)]">La Tribu</p>
-                <p className="m-0 text-[11px] text-[var(--ink-soft)]">ahora</p>
+                <p className="m-0 text-[11px] font-bold uppercase tracking-wider text-[var(--ink-secondary)]">La Tribu</p>
+                <p className="m-0 text-[11px] text-[var(--ink-secondary)]">ahora</p>
               </div>
               <p className="m-0 mt-0.5 font-serif text-base font-bold text-[var(--ink)]">¡Listo!</p>
-              <p className="m-0 mt-1 text-sm leading-snug text-[var(--ink-soft)]">
+              <p className="m-0 mt-1 text-sm leading-snug text-[var(--ink-secondary)]">
                 Datos guardados. Tu coach te contactará lo antes posible.
               </p>
             </div>
@@ -315,7 +335,7 @@ export function WizardShell({ clientId, clientType }: WizardShellProps) {
           <button
             type="button"
             onClick={() => router.push('/training')}
-            className="mt-4 w-full rounded-full bg-[var(--gold)] px-6 py-3 text-sm font-semibold text-white transition hover:brightness-95"
+            className="mt-4 w-full rounded-full bg-[var(--ink)] px-6 py-3 text-sm font-semibold text-white transition hover:brightness-95"
           >
             Aceptar
           </button>
@@ -325,9 +345,6 @@ export function WizardShell({ clientId, clientType }: WizardShellProps) {
   }
 
   const formPct = Math.round((step / totalModules) * 100);
-  const ringR = 30;
-  const ringCirc = 2 * Math.PI * ringR;
-  const ringFilled = (formPct / 100) * ringCirc;
 
   return (
     <div>
@@ -336,36 +353,16 @@ export function WizardShell({ clientId, clientType }: WizardShellProps) {
         subtitle="Conocerte nos permite diseñar tu experiencia dentro de La Tribu."
       />
 
-      {/* Hero: progreso del formulario */}
-      <div
-        className="relative mb-6 overflow-hidden rounded-[20px] p-7 text-white"
-        style={{ background: "linear-gradient(135deg, #2B2621, #3A322A)" }}
-      >
-        <div
-          className="pointer-events-none absolute -right-10 -top-10 h-44 w-44 rounded-full"
-          style={{ background: "radial-gradient(circle, rgba(255,255,255,.16) 0%, transparent 70%)" }}
-        />
-        <div className="relative z-10 flex items-center justify-between gap-5">
-          <div className="relative h-[70px] w-[70px] flex-shrink-0">
-            <svg viewBox="0 0 70 70" width="70" height="70" style={{ transform: "rotate(-90deg)" }}>
-              <circle cx="35" cy="35" r={ringR} fill="none" stroke="rgba(255,255,255,.2)" strokeWidth="6" />
-              <circle
-                cx="35" cy="35" r={ringR} fill="none" stroke="var(--gold)" strokeWidth="6"
-                strokeLinecap="round" strokeDasharray={`${ringFilled.toFixed(1)} ${ringCirc.toFixed(1)}`}
-              />
-            </svg>
-            <div className="absolute inset-0 flex items-center justify-center text-sm font-bold">
-              {formPct}%
-            </div>
-          </div>
-          <div className="flex-1">
-            <p className="m-0 mb-2.5 text-[11px] font-bold uppercase tracking-wider text-[var(--gold)]">
-              Módulo {step} de {totalModules}
-            </p>
-            <p className="m-0 mb-1 font-serif text-[21px] font-semibold">{mod.title}</p>
-            <p className="m-0 text-[13px] opacity-75">{formPct}% de tu formulario completado</p>
-          </div>
+      {/* Progreso del formulario — sin bloque de color, RingProgress como único acento */}
+      <div className="mb-6 flex items-center justify-between gap-5 border-t border-[var(--border-input)] pt-5">
+        <div className="flex-1">
+          <p className="m-0 mb-2.5 text-[11px] font-bold uppercase tracking-wider" style={{ color: 'var(--ring-accent)' }}>
+            Módulo {step} de {totalModules}
+          </p>
+          <p className="m-0 mb-1 font-serif text-[21px] font-semibold text-[var(--ink)]">{mod.title}</p>
+          <p className="m-0 text-[13px] text-[var(--ink-secondary)]">{formPct}% de tu formulario completado</p>
         </div>
+        <RingProgress value={formPct} size={70} strokeWidth={6} color="espresso" />
       </div>
 
       {/* Punticos de módulo */}
@@ -382,9 +379,9 @@ export function WizardShell({ clientId, clientType }: WizardShellProps) {
               aria-label={`Ir al módulo ${m.n}: ${m.title}`}
               className="flex h-8 w-8 items-center justify-center rounded-full border text-[13px] font-bold transition-colors"
               style={{
-                background: current ? "var(--gold)" : done ? "var(--sage)" : "var(--cream)",
-                borderColor: current ? "var(--gold)" : done ? "var(--sage)" : "var(--line)",
-                color: current || done ? "#fff" : "var(--ink-soft)",
+                background: current ? "var(--ring-accent)" : "transparent",
+                borderColor: current || done ? "var(--ring-accent)" : "var(--border-input)",
+                color: current ? "#fff" : done ? "var(--ring-accent)" : "var(--ink-secondary)",
               }}
             >
               {m.n}
@@ -393,55 +390,82 @@ export function WizardShell({ clientId, clientType }: WizardShellProps) {
         })}
       </div>
 
-      {/* Card del módulo actual */}
-      <div className="mb-5 rounded-[var(--radius)] border border-[var(--line)] bg-[var(--paper)] p-6">
+      {/* Módulo actual — sección abierta, sin fondo de color propio */}
+      <div className="border-t border-[var(--border-hairline)] py-6">
         <h2 className="m-0 mb-4 text-lg font-bold text-[var(--ink)]">
           Módulo {mod.n} · {mod.title}
         </h2>
 
-        <div className="space-y-4">
-          {groupFieldsIntoRows(mod.fields).map((row) => {
-            const visibleRow = row.filter((field) => !hiddenFieldIds.has(field.id));
-            if (visibleRow.length === 0) return null;
-            // Si el campo que acompañaba a este en su fila está oculto por una
-            // condición (ej. "alcohol_type" cuando "alcohol" = "Nunca"), el
-            // que queda no debe dejar la otra mitad de la fila en blanco —
-            // ocupa el ancho completo mientras esté solo.
-            const alone = visibleRow.length === 1;
-            const mixedLabelStyle =
-              visibleRow.length === 2 && EXTERNAL_LABEL_TYPES.has(visibleRow[0].type) !== EXTERNAL_LABEL_TYPES.has(visibleRow[1].type);
-            return (
-              <div key={row.map((f) => f.id).join('+')} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                {visibleRow.map((field) => {
-                  const needsSpacer = mixedLabelStyle && !EXTERNAL_LABEL_TYPES.has(field.type);
-                  const wrapperClass = [alone && 'sm:col-span-2', needsSpacer && 'sm:pt-6'].filter(Boolean).join(' ') || undefined;
+        <div className="space-y-3.5">
+          {groupFieldsIntoCards(mod.fields).map((card) => {
+            const visibleFields = card.fields.filter((f) => !hiddenFieldIds.has(f.id));
+            if (visibleFields.length === 0) return null;
+            const GroupIcon = card.group ? WIZARD_GROUP_ICON[card.group] : undefined;
+            const rows = (
+              <div className="space-y-4">
+                {groupFieldsIntoRows(card.fields).map((row) => {
+                  const visibleRow = row.filter((field) => !hiddenFieldIds.has(field.id));
+                  if (visibleRow.length === 0) return null;
+                  // Si el campo que acompañaba a este en su fila está oculto por una
+                  // condición (ej. "alcohol_type" cuando "alcohol" = "Nunca"), el
+                  // que queda no debe dejar la otra mitad de la fila en blanco —
+                  // ocupa el ancho completo mientras esté solo.
+                  const alone = visibleRow.length === 1;
+                  const mixedLabelStyle =
+                    visibleRow.length === 2 && EXTERNAL_LABEL_TYPES.has(visibleRow[0].type) !== EXTERNAL_LABEL_TYPES.has(visibleRow[1].type);
                   return (
-                  <div key={field.id} className={wrapperClass}>
-                    {field.type === 'country-picker' ? (
-                      <CountryCityPicker
-                        value={{
-                          country: (wizardData.country as string) || '',
-                          city: (wizardData.city as string) || '',
-                          phoneCode: (wizardData.phone_code as string) || '+57',
-                          phoneNumber: (wizardData.phone_number as string) || '',
-                        }}
-                        onChange={handleCountryCityChange}
-                        invalidFieldIds={invalidFieldIds}
-                      />
-                    ) : (
-                    <WizardField
-                      field={field}
-                      value={wizardData[field.id]}
-                      otroValue={otroValues[field.id]}
-                      invalid={invalidFieldIds.has(field.id)}
-                      onChange={handleFieldChange}
-                      onOtroChange={handleOtroChange}
-                      onFileChange={handleFileChange}
-                    />
-                    )}
-                  </div>
+                    <div key={row.map((f) => f.id).join('+')} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      {visibleRow.map((field) => {
+                        const needsSpacer = mixedLabelStyle && !EXTERNAL_LABEL_TYPES.has(field.type);
+                        const wrapperClass = [alone && 'sm:col-span-2', needsSpacer && 'sm:pt-6'].filter(Boolean).join(' ') || undefined;
+                        return (
+                        <div key={field.id} className={wrapperClass}>
+                          {field.type === 'country-picker' ? (
+                            <CountryCityPicker
+                              value={{
+                                country: (wizardData.country as string) || '',
+                                city: (wizardData.city as string) || '',
+                                phoneCode: (wizardData.phone_code as string) || '+57',
+                                phoneNumber: (wizardData.phone_number as string) || '',
+                              }}
+                              onChange={handleCountryCityChange}
+                              invalidFieldIds={invalidFieldIds}
+                            />
+                          ) : (
+                          <WizardField
+                            field={field}
+                            value={wizardData[field.id]}
+                            otroValue={otroValues[field.id]}
+                            invalid={invalidFieldIds.has(field.id)}
+                            onChange={handleFieldChange}
+                            onOtroChange={handleOtroChange}
+                            onFileChange={handleFileChange}
+                          />
+                          )}
+                        </div>
+                        );
+                      })}
+                    </div>
                   );
                 })}
+              </div>
+            );
+            if (!card.group) return <div key={card.fields[0].id}>{rows}</div>;
+            return (
+              <div
+                key={card.fields[0].id}
+                className="rounded-[14px] border border-[var(--border-hairline)] bg-[var(--paper)] p-5"
+              >
+                <div className="mb-4 flex items-center gap-2">
+                  {GroupIcon && <GroupIcon size={16} style={{ color: 'var(--hero-piedra-accent)' }} />}
+                  <span
+                    className="text-[10.5px] font-bold uppercase tracking-[0.05em]"
+                    style={{ color: 'var(--hero-piedra-accent)' }}
+                  >
+                    {card.group}
+                  </span>
+                </div>
+                {rows}
               </div>
             );
           })}
@@ -460,7 +484,7 @@ export function WizardShell({ clientId, clientType }: WizardShellProps) {
         )}
 
         {finalizeError && (
-          <p role="alert" className="mt-4 rounded-xl border border-[var(--danger)] bg-[var(--terracota-soft)] px-4 py-3 text-sm text-[var(--danger)]">
+          <p role="alert" className="mt-4 rounded-xl border border-[var(--danger)] bg-[rgba(193,70,47,.08)] px-4 py-3 text-sm text-[var(--danger)]">
             {finalizeError}
           </p>
         )}
@@ -470,7 +494,7 @@ export function WizardShell({ clientId, clientType }: WizardShellProps) {
             type="button"
             disabled={step === 1}
             onClick={() => setStep(step - 1)}
-            className="rounded-full border border-[var(--line)] bg-transparent px-6 py-3 text-sm font-semibold text-[var(--ink-soft)] transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-full border border-[var(--border-input)] bg-transparent px-6 py-3 text-sm font-semibold text-[var(--ink-secondary)] transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
           >
             Anterior
           </button>
@@ -478,7 +502,7 @@ export function WizardShell({ clientId, clientType }: WizardShellProps) {
             type="button"
             disabled={finalizing}
             onClick={handleContinue}
-            className="rounded-full bg-[var(--gold)] px-6 py-3 text-sm font-semibold text-white transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-full bg-[var(--ink)] px-6 py-3 text-sm font-semibold text-white transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {finalizing ? 'Guardando…' : step === totalModules ? 'Finalizar' : 'Continuar'}
           </button>

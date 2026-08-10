@@ -92,7 +92,7 @@ describe('PhrasesPanel', () => {
     render(<PhrasesPanel />);
     await waitFor(() => expect(screen.getByText('Frase de confirmación')).toBeInTheDocument());
 
-    fireEvent.click(screen.getAllByRole('button', { name: '🔀 Probar otra' })[0]);
+    fireEvent.click(screen.getAllByRole('button', { name: 'Probar otra' })[0]);
     await waitFor(() => expect(previewSpy).toHaveBeenCalledWith('confirmacion', undefined));
     await waitFor(() => expect(screen.getByText('Frase de prueba')).toBeInTheDocument());
   });

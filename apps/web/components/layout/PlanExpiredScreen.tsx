@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuth } from "../../lib/auth-context";
+import { IconLock } from "../ui/icons";
 
 export default function PlanExpiredScreen() {
   const { planEndDate } = useAuth();
@@ -19,7 +20,7 @@ export default function PlanExpiredScreen() {
         position: "fixed",
         inset: 0,
         zIndex: 3000,
-        background: "var(--cream)",
+        background: "var(--page-bg)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -32,7 +33,7 @@ export default function PlanExpiredScreen() {
           maxWidth: 440,
           width: "100%",
           background: "var(--paper)",
-          border: "1px solid var(--line)",
+          border: "1px solid var(--border-hairline)",
           borderRadius: "20px",
           padding: "40px 32px",
           textAlign: "center",
@@ -44,15 +45,15 @@ export default function PlanExpiredScreen() {
             width: 56,
             height: 56,
             borderRadius: "50%",
-            background: "var(--terracota-soft)",
+            background: "rgba(201,166,107,.14)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             margin: "0 auto 20px",
-            fontSize: 24,
+            color: "var(--ring-accent)",
           }}
         >
-          🔒
+          <IconLock size={24} />
         </div>
 
         <h2
@@ -70,7 +71,7 @@ export default function PlanExpiredScreen() {
         <p
           style={{
             fontSize: 14,
-            color: "var(--ink-soft)",
+            color: "var(--ink-secondary)",
             lineHeight: 1.6,
             margin: 0,
           }}

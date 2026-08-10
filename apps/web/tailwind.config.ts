@@ -11,8 +11,9 @@ const config: Config = {
       colors: {
         cream: "#FBF7F1",
         paper: "#FFFFFF",
-        ink: "#2B2420",
+        ink: "#1A1712",
         "ink-soft": "#6B6058",
+        "ink-secondary": "#8A867C",
         terracota: {
           DEFAULT: "#C1662F",
           soft: "#F1DDCB",
@@ -37,6 +38,23 @@ const config: Config = {
           line: "#D9E4CE",
           accent: "#5B7A4E",
         },
+        "page-bg": "#FCFAF6",
+        "hero-espresso": {
+          DEFAULT: "#3D3226",
+          text: "#F5EFE2",
+          "text-muted": "#B8ABA0",
+          accent: "#D9B77E",
+        },
+        "hero-piedra": {
+          start: "#E8DFCE",
+          end: "#C7B9A4",
+          text: "#2E2618",
+          "text-muted": "#5C513E",
+          accent: "#6B5C42",
+        },
+        "border-hairline": "#EAE6DC",
+        "border-input": "#E4E0D5",
+        "ring-accent": "#C9A66B",
       },
       fontFamily: {
         serif: ["Fraunces", "Georgia", "serif"],
@@ -44,6 +62,9 @@ const config: Config = {
       },
       borderRadius: {
         default: "16px",
+        hero: "16px",
+        card: "14px",
+        control: "9px",
       },
     },
   },

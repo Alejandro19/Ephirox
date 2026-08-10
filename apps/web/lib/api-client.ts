@@ -5,6 +5,14 @@
 
 const API_BASE = 'http://localhost:3003/api';
 
+// Lanzado por los *-client.ts cuando el backend responde 403 a un módulo
+// protegido por requirePermission/requirePersonalInfoAccess — permite a los
+// paneles distinguir "no tienes acceso a este módulo" (mostrar LockedOverlay)
+// de cualquier otro error (mostrar el mensaje genérico de siempre). Ver plan
+// "Roles y Perfiles" — así se aplica el bloqueo de acceso en la siguiente
+// navegación/refresco, sin cachear permisos en el cliente.
+export class PermissionDeniedError extends Error {}
+
 export type LoginResult = {
   success: boolean;
   token?: string;

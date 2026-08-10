@@ -14,40 +14,31 @@ type FloatingFieldProps = {
   hint?: string;
 };
 
-// Floating label: el label empieza dentro del campo y sube al hacer foco o
-// al tener contenido (técnica `peer` + placeholder=" " del design brief).
-// El placeholder nativo nunca se muestra (siempre placeholder-transparent):
-// un campo solo debe comunicar UNA cosa a la vez — el label — no un label
-// más un texto de ayuda superpuesto. Un campo deshabilitado (ej. "Ciudad"
-// antes de elegir país) fuerza el label arriba/chico igual que si tuviera
-// valor, ya que el estado visual "deshabilitado" ya comunica que no está
-// listo para usarse.
+// Jerarquía tipográfica pregunta/respuesta: el label es contexto secundario
+// (12px, normal, --ink-secondary) y siempre va estático arriba del campo —
+// nunca compite en tamaño con el valor. El valor es el dato real (14.5px,
+// semibold, --ink), lo primero que el ojo detecta al escanear.
 export default function FloatingField({
   id, label, value, onChange, type = "text", disabled, invalid, placeholder, step, list, hint,
 }: FloatingFieldProps) {
   return (
-    <div className="relative">
+    <div>
+      <label htmlFor={id} className="mb-1 block text-xs font-normal text-[var(--ink-secondary)]">
+        {label}
+      </label>
       <input
         id={id}
         type={type}
         step={step}
         list={list}
-        placeholder={placeholder ?? " "}
+        placeholder={placeholder}
         value={value}
         disabled={disabled}
         onChange={(e) => onChange(e.target.value)}
-        className={`peer h-16 w-full rounded-xl border ${invalid ? "border-[var(--danger)]" : "border-[#E7DFC9]"} bg-white px-3.5 pb-3 pt-7 text-[15px] text-[#2B2621] placeholder-transparent outline-none transition-colors focus:border-[var(--gold)] disabled:cursor-not-allowed disabled:bg-[#F5F1E9] disabled:opacity-70`}
+        className={`h-9 w-full border-0 border-b ${invalid ? "border-[var(--danger)]" : "border-[var(--border-input)]"} rounded-none bg-transparent px-0.5 py-1.5 text-[14.5px] font-semibold text-[var(--ink)] outline-none transition-colors placeholder:font-normal placeholder:text-[var(--ink-secondary)] focus:border-[var(--ink)] focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-50`}
       />
-      <label
-        htmlFor={id}
-        className={`pointer-events-none absolute left-3.5 right-3.5 top-5 truncate text-[12px] font-semibold leading-none text-[#8A8377] transition-all duration-150 peer-focus:text-[var(--gold)] ${
-          disabled ? "top-3" : "peer-focus:top-3 peer-[:not(:placeholder-shown)]:top-3"
-        }`}
-      >
-        {label}
-      </label>
       {invalid && <p role="alert" className="mt-1.5 text-xs text-[var(--danger)]">Este campo es obligatorio.</p>}
-      {!invalid && hint && <p className="mt-1.5 text-xs text-[var(--ink-soft)]">{hint}</p>}
+      {!invalid && hint && <p className="mt-1.5 text-xs text-[var(--ink-secondary)]">{hint}</p>}
     </div>
   );
 }
@@ -63,21 +54,17 @@ type FloatingTextareaProps = {
 
 export function FloatingTextarea({ id, label, value, onChange, invalid, rows = 1 }: FloatingTextareaProps) {
   return (
-    <div className="relative">
+    <div>
+      <label htmlFor={id} className="mb-1 block text-xs font-normal text-[var(--ink-secondary)]">
+        {label}
+      </label>
       <textarea
         id={id}
-        placeholder=" "
         value={value}
         rows={rows}
         onChange={(e) => onChange(e.target.value)}
-        className={`peer w-full resize-none rounded-xl border ${invalid ? "border-[var(--danger)]" : "border-[#E7DFC9]"} bg-white px-3.5 pb-2 pt-7 text-[15px] text-[#2B2621] placeholder-transparent outline-none transition-colors focus:border-[var(--gold)]`}
+        className={`w-full resize-none rounded-xl border ${invalid ? "border-[var(--danger)]" : "border-[var(--border-hairline)]"} bg-[var(--paper)] px-3.5 py-3 text-[14.5px] font-semibold text-[var(--ink)] outline-none transition-colors focus:border-[var(--ink)]`}
       />
-      <label
-        htmlFor={id}
-        className="pointer-events-none absolute left-3.5 right-3.5 top-3 truncate text-[12px] font-semibold text-[#8A8377] transition-all duration-150 peer-placeholder-shown:top-5 peer-focus:top-3 peer-focus:text-[var(--gold)]"
-      >
-        {label}
-      </label>
       {invalid && <p role="alert" className="mt-1.5 text-xs text-[var(--danger)]">Este campo es obligatorio.</p>}
     </div>
   );

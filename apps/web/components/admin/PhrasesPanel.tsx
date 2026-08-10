@@ -9,6 +9,7 @@ import {
   deletePhrase,
   drawPreviewPhrase,
 } from '../../lib/phrases-client';
+import { IconShuffle } from '../ui/icons';
 
 const CONTEXT_FILTERS: { key: string; label: string }[] = [
   { key: 'all', label: 'Todas' },
@@ -161,14 +162,14 @@ export function PhrasesPanel() {
           <h3>Pantalla de confirmación</h3>
           <p>{preview.confirmacion ? preview.confirmacion.text : 'No hay frases activas para este contexto.'}</p>
           <button type="button" onClick={() => handlePreview('confirmacion')}>
-            🔀 Probar otra
+            <IconShuffle size={13} /> Probar otra
           </button>
         </div>
         <div>
           <h3>Tarjeta de Instagram</h3>
           <p>{preview.instagram ? preview.instagram.text : 'No hay frases activas para este contexto.'}</p>
           <button type="button" onClick={() => handlePreview('instagram')}>
-            🔀 Probar otra
+            <IconShuffle size={13} /> Probar otra
           </button>
         </div>
       </div>

@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useAuth } from "../../lib/auth-context";
 import { getSessionToken } from "../../lib/api-client";
+import { IconBell } from "../ui/icons";
 
 type NotificationItem = {
   id: string;
@@ -75,8 +76,8 @@ export default function NotificationBell() {
           background: "none",
           border: "none",
           cursor: "pointer",
-          fontSize: 18,
-          color: "var(--ink-soft)",
+          display: "inline-flex",
+          color: "var(--ink-secondary)",
           padding: "4px 6px",
           opacity: 0.75,
           transition: "opacity 0.2s ease",
@@ -88,7 +89,7 @@ export default function NotificationBell() {
           e.currentTarget.style.opacity = "0.75";
         }}
       >
-        🔔
+        <IconBell size={18} />
         {/* Unread dot — Oura-style gold indicator */}
         {hasUnread && (
           <span
@@ -114,8 +115,8 @@ export default function NotificationBell() {
             right: 0,
             width: 300,
             background: "var(--paper)",
-            border: "1px solid var(--line)",
-            borderRadius: "var(--radius)",
+            border: "1px solid var(--border-hairline)",
+            borderRadius: "var(--radius-card)",
             padding: 6,
             zIndex: 50,
             maxHeight: 320,
@@ -126,7 +127,7 @@ export default function NotificationBell() {
             <div
               style={{
                 fontSize: 12,
-                color: "var(--ink-soft)",
+                color: "var(--ink-secondary)",
                 padding: "16px 10px",
                 textAlign: "center",
               }}
@@ -141,14 +142,14 @@ export default function NotificationBell() {
                   fontSize: 12,
                   color: "var(--ink)",
                   padding: "9px 8px",
-                  borderBottom: "1px solid var(--line)",
+                  borderBottom: "1px solid var(--border-hairline)",
                   lineHeight: 1.4,
-                  background: n.read ? "transparent" : "var(--cream)",
+                  background: n.read ? "transparent" : "var(--page-bg)",
                   borderRadius: n.read ? "0" : "8px",
                 }}
               >
                 <div>{n.message}</div>
-                <div style={{ fontSize: 10, color: "var(--ink-soft)", marginTop: 2 }}>
+                <div style={{ fontSize: 10, color: "var(--ink-secondary)", marginTop: 2 }}>
                   {new Date(n.created_at).toLocaleDateString("es-ES", {
                     day: "numeric",
                     month: "short",

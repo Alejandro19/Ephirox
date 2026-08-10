@@ -4,12 +4,13 @@ import { validateBody } from '../middleware/validate.js';
 import { asyncHandler } from '../middleware/async-handler.js';
 import { authMiddleware, adminOnly, ownerOrAdmin } from '../middleware/auth.middleware.js';
 import { requireEventsAccess } from '../middleware/community-access.middleware.js';
+import { requirePermission } from '../middleware/require-permission.middleware.js';
 import * as eventsController from '../controllers/events.controller.js';
 import * as communityReservationsController from '../controllers/community-reservations.controller.js';
 
 export const eventsRouter = Router();
 
-eventsRouter.get('/community/events', authMiddleware, requireEventsAccess, asyncHandler(eventsController.listEvents));
+eventsRouter.get('/community/events', authMiddleware, requireEventsAccess, requirePermission('community'), asyncHandler(eventsController.listEvents));
 
 eventsRouter.post(
   '/community/events',
@@ -27,6 +28,7 @@ eventsRouter.post(
   '/community/events/:eventId/reserve',
   authMiddleware,
   requireEventsAccess,
+  requirePermission('community'),
   asyncHandler(eventsController.reserveEvent)
 );
 
@@ -34,6 +36,7 @@ eventsRouter.delete(
   '/community/events/:eventId/reserve',
   authMiddleware,
   requireEventsAccess,
+  requirePermission('community'),
   asyncHandler(eventsController.cancelEventReservation)
 );
 
@@ -42,6 +45,7 @@ eventsRouter.get(
   authMiddleware,
   ownerOrAdmin,
   requireEventsAccess,
+  requirePermission('community'),
   asyncHandler(eventsController.listClientEventReservations)
 );
 

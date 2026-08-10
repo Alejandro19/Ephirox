@@ -65,9 +65,9 @@ export default function ClientSwitcher({
       <label
         style={{
           display: "block",
-          fontSize: 13,
-          fontWeight: 600,
-          color: "var(--ink-soft)",
+          fontSize: 12,
+          fontWeight: 400,
+          color: "var(--ink-secondary)",
           marginBottom: 6,
         }}
       >
@@ -87,20 +87,22 @@ export default function ClientSwitcher({
           placeholder="Escribe un nombre..."
           style={{
             flex: 1,
-            height: 44,
-            borderRadius: "var(--radius)",
-            border: "1px solid var(--line)",
-            padding: "0 14px",
-            fontSize: 14,
-            background: "var(--paper)",
+            height: 36,
+            borderRadius: 0,
+            border: "none",
+            borderBottom: "1px solid var(--border-input)",
+            padding: "0 2px 6px",
+            fontSize: 14.5,
+            fontWeight: 600,
+            background: "transparent",
             color: "var(--ink)",
             outline: "none",
           }}
           onFocus={(e) => {
-            e.currentTarget.style.borderColor = "var(--gold)";
+            e.currentTarget.style.borderBottomColor = "var(--ink)";
           }}
           onBlur={(e) => {
-            e.currentTarget.style.borderColor = "var(--line)";
+            e.currentTarget.style.borderBottomColor = "var(--border-input)";
           }}
         />
         <button
@@ -110,9 +112,9 @@ export default function ClientSwitcher({
             height: 44,
             padding: "0 16px",
             borderRadius: "9999px",
-            border: "1px solid var(--line)",
+            border: "1px solid var(--border-hairline)",
             background: "var(--paper)",
-            color: "var(--ink-soft)",
+            color: "var(--ink-secondary)",
             fontSize: 13,
             fontWeight: 500,
             cursor: "pointer",
@@ -131,7 +133,7 @@ export default function ClientSwitcher({
         <p
           style={{
             fontSize: 11,
-            color: "var(--sage)",
+            color: "var(--ring-accent)",
             marginTop: 6,
             fontWeight: 500,
           }}
