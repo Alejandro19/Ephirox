@@ -90,7 +90,7 @@ export function BienestarGeneral({
   cortisolStatus: KpiStatus | null;
 }) {
   return (
-    <div className="border-t border-[var(--border-hairline)] py-6">
+    <div className="mb-5 rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--paper)] p-6">
       <p className="mb-0.5 font-serif text-base font-bold text-[var(--ink)]">Bienestar general</p>
       <p className="mb-3.5 text-[11px] text-[var(--ink-secondary)]">Un resumen rápido — el detalle completo vive en sus propios módulos.</p>
       <div className="flex flex-wrap gap-3.5">
@@ -191,7 +191,7 @@ export function AdherenciaKpiCard({
   const pct = hasSessions ? Math.max(0, Math.min(100, Math.round((doneDays / expected) * 100))) : 0;
 
   return (
-    <div className="flex items-center gap-4 border-t border-[var(--border-hairline)] py-6">
+    <div className="mb-5 flex items-center gap-4 rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--paper)] p-6">
       <RingProgress value={hasSessions ? pct : 0} size={64} strokeWidth={7} color="piedra">
         <div className="flex flex-col items-center justify-center">
           <span className="font-serif text-base font-bold leading-none">{hasSessions ? `${pct}%` : '—'}</span>
@@ -407,10 +407,8 @@ export function EvolucionFisicaSection({
 
   return (
     <>
-      <div className="border-t border-[var(--border-hairline)] pt-6">
+      <div className="mb-5 rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--paper)] p-6">
         <p className="font-serif text-base font-bold text-[var(--ink)]">Tu evolución física</p>
-      </div>
-      <div className="pb-6">
         <p className="mb-4 mt-6 font-serif text-[15px] font-bold text-[var(--ink)]">KPIs principales</p>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <EvolutionKpiCard label="Peso" value={pesoVal} unit=" kg" delta={pesoDelta} metrica="peso" objetivos={objetivos} comparisonLabel={comparisonLabel} />
@@ -422,11 +420,11 @@ export function EvolucionFisicaSection({
         </p>
       </div>
       <AdherenciaKpiCard doneDays={disciplineStats?.doneDays ?? 0} expected={disciplineStats?.expected ?? 0} streakWeeks={streakWeeks} />
-      <div className="border-t border-[var(--border-hairline)] py-6">
+      <div className="mb-5 rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--paper)] p-6">
         <p className="mb-4 font-serif text-[15px] font-bold text-[var(--ink)]">Composición corporal</p>
         <CompositionDonut pesoTotal={lastInbody?.pesoTotal ?? lastAnthro?.peso ?? null} smm={lastInbody?.smm ?? null} grasaPct={lastInbody?.grasaPct ?? null} />
       </div>
-      <div className="border-t border-[var(--border-hairline)] py-6">
+      <div className="mb-5 rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--paper)] p-6">
         <p className="mb-1 font-serif text-[15px] font-bold text-[var(--ink)]">Evolución en el tiempo</p>
         <p className="mb-3 text-[11px] text-[var(--ink-secondary)]">Una gráfica por métrica, con fechas reales — aparece con tu segunda medición.</p>
         {hasEnoughForChart ? (
@@ -446,7 +444,7 @@ export function EvolucionFisicaSection({
           </div>
         )}
       </div>
-      <div className="border-t border-[var(--border-hairline)] py-6">
+      <div className="mb-5 rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--paper)] p-6">
         <p className="mb-4 font-serif text-[15px] font-bold text-[var(--ink)]">Medidas corporales</p>
         <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
           <MedidaTile label="Cintura" value={lastAnthro?.cintura ?? null} firstValue={firstAnthro?.cintura ?? null} />
@@ -484,7 +482,7 @@ export function EvolucionFisicaLocked({ onCta }: { onCta?: () => void }) {
           </div>
         </div>
         <AdherenciaKpiCard doneDays={9} expected={12} streakWeeks={3} />
-        <div className="border-t border-[var(--border-hairline)] py-6">
+        <div className="mb-5 rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--paper)] p-6">
           <p className="mb-4 font-serif text-[15px] font-bold text-[var(--ink)]">Medidas corporales</p>
           <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
             <MedidaTile label="Cintura" value={78} firstValue={80} />

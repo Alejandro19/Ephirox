@@ -61,6 +61,18 @@ export async function createModule(label: string): Promise<PermissionModule> {
   return module;
 }
 
+// Solo se pueden borrar módulos custom (creados desde la matriz) — los
+// módulos base del sistema (isCustom: false) no tienen esta opción para
+// evitar que un admin rompa el gating de un módulo real por error.
+export async function deleteModule(key: string): Promise<{ deleted: boolean; reason?: string }> {
+  const [module] = await db.select().from(permissionModules).where(eq(permissionModules.key, key)).limit(1);
+  if (!module) return { deleted: false, reason: 'Módulo no encontrado.' };
+  if (!module.isCustom) return { deleted: false, reason: 'No se puede borrar un módulo del sistema.' };
+  await db.delete(permissionModules).where(eq(permissionModules.key, key));
+  invalidateModuleAccessCache();
+  return { deleted: true };
+}
+
 export async function getMatrix(): Promise<{ modules: PermissionModule[]; matrix: ModuleAccessMatrix }> {
   const modules = await listModules();
   const rows = await db.select().from(clientTypeModulePermissions);

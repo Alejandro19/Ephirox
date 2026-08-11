@@ -2,10 +2,8 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import Sidebar from "./Sidebar";
 import ClientTopbar from "./ClientTopbar";
-import MobileTopbar from "./MobileTopbar";
-import NotificationBell from "./NotificationBell";
+import AdminTopbar from "./AdminTopbar";
 import PlanExpiredScreen from "./PlanExpiredScreen";
 import { useAuth } from "../../lib/auth-context";
 import {
@@ -73,7 +71,6 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const { role, isLoading, planExpired, token } = useAuth();
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [boundaryError, setBoundaryError] = useState<Error | null>(null);
-  const [mobileOpen, setMobileOpen] = useState(false);
 
   // ── Toast subscription ──
   useEffect(() => {
@@ -142,63 +139,20 @@ export default function AppShell({ children }: { children: ReactNode }) {
   }
 
   const viewKey = PATH_TO_VIEW[pathname] ?? "training";
-  const isClient = role !== "admin";
+  const isAdmin = role === "admin";
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", position: "relative", flexDirection: isClient ? "column" : "row" }}>
-      {isClient ? (
-        <>
-          <ClientTopbar viewKey={viewKey} />
-          <main
-            id="main-content"
-            style={{
-              flex: 1, padding: "36px 44px", overflowY: "auto",
-              background: "var(--page-bg)",
-            }}
-          >
-            {children}
-          </main>
-        </>
-      ) : (
-        <>
-          {/* Mobile backdrop */}
-          {mobileOpen && (
-            <div
-              style={{
-                display: "none",
-                position: "fixed", inset: 0,
-                background: "rgba(0,0,0,.4)", zIndex: 90,
-              }}
-              onClick={() => setMobileOpen(false)}
-            />
-          )}
-
-          {/* Sidebar */}
-          <Sidebar
-            viewKey={viewKey}
-            mobileOpen={mobileOpen}
-            onCloseMobile={() => setMobileOpen(false)}
-          />
-
-          {/* Main area */}
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, position: "relative" }}>
-            <MobileTopbar onToggleSidebar={() => setMobileOpen((v) => !v)} />
-            <div style={{ position: "absolute", top: 24, right: 32, zIndex: 40 }}>
-              <NotificationBell />
-            </div>
-            <main
-              id="main-content"
-              style={{
-                flex: 1, padding: "36px 44px", overflowY: "auto",
-                maxHeight: "100vh", background: "var(--cream)",
-                transition: "background 0.4s ease",
-              }}
-            >
-              {children}
-            </main>
-          </div>
-        </>
-      )}
+    <div style={{ display: "flex", minHeight: "100vh", position: "relative", flexDirection: "column" }}>
+      {isAdmin ? <AdminTopbar viewKey={viewKey} /> : <ClientTopbar viewKey={viewKey} />}
+      <main
+        id="main-content"
+        style={{
+          flex: 1, padding: "36px 44px", overflowY: "auto",
+          background: "var(--page-bg)",
+        }}
+      >
+        {children}
+      </main>
 
       {/* ── Toasts ── */}
       {toasts.length > 0 && (

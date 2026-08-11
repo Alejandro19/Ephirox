@@ -10,7 +10,7 @@ import {
   uploadTechniqueAudio,
   type CortisolTechnique,
 } from '../../lib/cortisol-client';
-import { formatDurationLabel } from '../../lib/cortisol-logic';
+import { formatDurationLabel, CORTISOL_EMOTIONS } from '../../lib/cortisol-logic';
 import { showToast } from '../layout/AppShell';
 import { CortisolTipsPanel } from './CortisolTipsPanel';
 import Accordion from '../ui/Accordion';
@@ -20,7 +20,8 @@ import EmptyState from '../ui/EmptyState';
 const TECHNIQUE_TYPES = ['Respiración', 'Breathwork', 'Meditación', 'Mindfulness'];
 
 const cardStyle: React.CSSProperties = {
-  borderTop: '1px solid var(--border-hairline)', paddingTop: 20, paddingBottom: 20,
+  background: 'var(--paper)', border: '1px solid var(--border-hairline)',
+  borderRadius: 'var(--radius-card)', padding: '22px 24px', marginBottom: 20,
 };
 const cardTitleStyle: React.CSSProperties = {
   fontSize: 15, fontWeight: 700, color: 'var(--ink)', margin: '0 0 16px',
@@ -55,7 +56,7 @@ const listRowStyle: React.CSSProperties = {
 };
 
 type EditDraft = {
-  title: string; type: string; minutes: string; seconds: string; youtubeUrl: string; description: string;
+  title: string; type: string; minutes: string; seconds: string; youtubeUrl: string; description: string; emotion: string;
 };
 
 function draftFromTechnique(t: CortisolTechnique): EditDraft {
@@ -66,7 +67,12 @@ function draftFromTechnique(t: CortisolTechnique): EditDraft {
     seconds: t.durationSeconds != null ? String(t.durationSeconds) : '',
     youtubeUrl: t.youtubeUrl || '',
     description: t.description || '',
+    emotion: t.emotion || '',
   };
+}
+
+function emotionLabel(key: string | null): string | null {
+  return CORTISOL_EMOTIONS.find((e) => e.key === key)?.label ?? null;
 }
 
 export function AdminCortisolPanel({ clientId }: { clientId: string }) {
@@ -79,6 +85,7 @@ export function AdminCortisolPanel({ clientId }: { clientId: string }) {
   const [seconds, setSeconds] = useState('');
   const [youtubeUrl, setYoutubeUrl] = useState('');
   const [description, setDescription] = useState('');
+  const [emotion, setEmotion] = useState('');
   const [audioFile, setAudioFile] = useState<File | null>(null);
 
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -107,6 +114,7 @@ export function AdminCortisolPanel({ clientId }: { clientId: string }) {
         duration_seconds: seconds ? Number(seconds) : undefined,
         youtube_url: youtubeUrl || undefined,
         description: description || undefined,
+        emotion: emotion || null,
       });
       if (audioFile) await uploadTechniqueAudio(clientId, created.id, audioFile);
       setTitle('');
@@ -115,6 +123,7 @@ export function AdminCortisolPanel({ clientId }: { clientId: string }) {
       setSeconds('');
       setYoutubeUrl('');
       setDescription('');
+      setEmotion('');
       setAudioFile(null);
       await refetch();
       showToast('Técnica asignada.', 'success');
@@ -140,6 +149,7 @@ export function AdminCortisolPanel({ clientId }: { clientId: string }) {
         duration_seconds: editDraft.seconds ? Number(editDraft.seconds) : null,
         youtube_url: editDraft.youtubeUrl || undefined,
         description: editDraft.description || undefined,
+        emotion: editDraft.emotion || null,
       });
       if (editAudioFile) await uploadTechniqueAudio(clientId, techId, editAudioFile);
       setEditingId(null);
@@ -206,7 +216,19 @@ export function AdminCortisolPanel({ clientId }: { clientId: string }) {
               <input aria-label="Segundos" type="number" min={0} max={59} style={fieldStyle} placeholder="seg" value={seconds} onChange={(e) => setSeconds(e.target.value)} />
             </div>
           </div>
+          <div>
+            <label style={labelStyle} htmlFor="ct-emotion">Emoción asociada</label>
+            <select id="ct-emotion" style={fieldStyle} value={emotion} onChange={(e) => setEmotion(e.target.value)}>
+              <option value="">Ninguna</option>
+              {CORTISOL_EMOTIONS.map((o) => (
+                <option key={o.key} value={o.key}>{o.label}</option>
+              ))}
+            </select>
+          </div>
         </div>
+        <p style={{ fontSize: 11.5, color: 'var(--ink-soft)', marginTop: 8 }}>
+          Cuando un cliente marque esta emoción, esta técnica es la que se recomienda en el hero y la que abre &quot;Empezar técnica&quot;.
+        </p>
 
         <label style={{ ...labelStyle, marginTop: 14 }} htmlFor="ct-youtube">Video (YouTube)</label>
         <input id="ct-youtube" style={fieldStyle} value={youtubeUrl} onChange={(e) => setYoutubeUrl(e.target.value)} />
@@ -256,6 +278,15 @@ export function AdminCortisolPanel({ clientId }: { clientId: string }) {
                                 <input aria-label={`Segundos-${t.id}`} type="number" min={0} max={59} style={fieldStyle} value={editDraft.seconds} onChange={(e) => setEditDraft({ ...editDraft, seconds: e.target.value })} />
                               </div>
                             </div>
+                            <div>
+                              <label style={labelStyle} htmlFor={`ct-edit-emotion-${t.id}`}>Emoción asociada</label>
+                              <select id={`ct-edit-emotion-${t.id}`} style={fieldStyle} value={editDraft.emotion} onChange={(e) => setEditDraft({ ...editDraft, emotion: e.target.value })}>
+                                <option value="">Ninguna</option>
+                                {CORTISOL_EMOTIONS.map((o) => (
+                                  <option key={o.key} value={o.key}>{o.label}</option>
+                                ))}
+                              </select>
+                            </div>
                           </div>
                           <label style={{ ...labelStyle, marginTop: 10 }} htmlFor={`ct-edit-youtube-${t.id}`}>Video (YouTube)</label>
                           <input id={`ct-edit-youtube-${t.id}`} style={fieldStyle} value={editDraft.youtubeUrl} onChange={(e) => setEditDraft({ ...editDraft, youtubeUrl: e.target.value })} />
@@ -282,6 +313,17 @@ export function AdminCortisolPanel({ clientId }: { clientId: string }) {
                         <>
                           <div style={{ flex: 1 }}>
                             <strong>{t.title}</strong> {t.type && <Badge label={t.type} />}
+                            {emotionLabel(t.emotion) && (
+                              <span
+                                style={{
+                                  display: 'inline-flex', marginLeft: 6, padding: '2px 8px', borderRadius: 9999,
+                                  background: 'rgba(201,166,107,.14)', color: 'var(--ring-accent)',
+                                  fontSize: 10.5, fontWeight: 700,
+                                }}
+                              >
+                                {emotionLabel(t.emotion)}
+                              </span>
+                            )}
                             <div style={{ color: 'var(--ink-soft)', fontSize: 13, marginTop: 4 }}>{t.duration}</div>
                           </div>
                           <label style={{ ...ghostButtonStyle, display: 'inline-flex', alignItems: 'center' }}>

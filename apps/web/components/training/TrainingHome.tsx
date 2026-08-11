@@ -5,6 +5,7 @@ import type { Exercise, TrainingCompletion, TrainingStreak } from '../../lib/tra
 import type { MindsetQuote } from '../../lib/quotes-client';
 import { isDayUnlocked, isDayCompletedThisWeek, calculateDisciplineStats } from '../../lib/training-home-logic';
 import IdentityHeader from '../ui/IdentityHeader';
+import MantraCard from '../ui/MantraCard';
 import { ProgressBar } from './TrainingVisuals';
 import { IconFlame, IconShield, IconLock } from '../ui/icons';
 
@@ -63,13 +64,7 @@ export function TrainingHome({
       <IdentityHeader title="Entrenamiento" subtitle={trainingDays ? 'Tu programa de ejercicios personalizado.' : undefined} />
 
       {quote && (
-        <div className="mb-[22px] border-b border-[var(--border-hairline)] pb-[18px] font-serif text-xl font-medium italic leading-snug text-[var(--ink)]">
-          <span className="mb-2 block font-sans text-xs font-semibold uppercase tracking-wide text-[var(--ink-secondary)]">
-            Hola {clientName}, repite después de mí:
-          </span>
-          &quot;{quote.quote}&quot;
-          {quote.author && <p className="mt-1.5 text-xs font-sans not-italic text-[var(--ink-secondary)]">— {quote.author}</p>}
-        </div>
+        <MantraCard mantra={quote.quote} lead={`Hola ${clientName}, repite después de mí:`} author={quote.author} />
       )}
 
       {heroDay !== null && (
@@ -118,7 +113,7 @@ export function TrainingHome({
       )}
 
       {streak && (
-        <section className="border-t border-[var(--border-hairline)] py-6">
+        <section className="rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--paper)] p-6 mb-5">
           <div className="mb-1 font-serif text-[15px] font-bold text-[var(--ink)]">Tu semana</div>
           <div className="flex items-center gap-2.5">
             {Array.from({ length: streak.sessionsRequiredThisWeek }, (_, i) => i + 1).map((n) => {
@@ -149,7 +144,7 @@ export function TrainingHome({
       )}
 
       {streak && (
-        <section className="border-t border-[var(--border-hairline)] py-6">
+        <section className="rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--paper)] p-6 mb-5">
           <div className="flex items-center gap-3">
             <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#F1EAF7] text-[#8A5FA0]">
               <IconShield size={15} />
@@ -176,7 +171,7 @@ export function TrainingHome({
         </section>
       )}
 
-      <section className="border-t border-[var(--border-hairline)] py-6">
+      <section className="rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--paper)] p-6 mb-5">
         <h2 className="mb-4 font-serif text-lg font-bold text-[var(--ink)]">Días de entrenamiento</h2>
         {days.length ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -214,7 +209,7 @@ export function TrainingHome({
       </section>
 
       {days.length > 0 && (
-        <section className="border-t border-[var(--border-hairline)] py-6">
+        <section className="rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--paper)] p-6 mb-5">
           <div className="overflow-hidden rounded-xl border border-[var(--border-hairline)]">
             <button
               type="button"

@@ -110,7 +110,7 @@ function BlindspotBody() {
 
   if (!caseData) {
     return (
-      <section>
+      <section className="rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--paper)] p-6">
         <h2 className="mb-2 font-serif text-lg font-bold text-[var(--ink)]">Punto Ciego</h2>
         <p className="text-[13px] text-[var(--ink-secondary)]">
           Alejandro aún no ha iniciado tu evaluación en este módulo. Cuando la agenden contigo, aparecerá aquí.
@@ -124,7 +124,7 @@ function BlindspotBody() {
 
   return (
     <div>
-      <section>
+      <section className="rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--paper)] p-6">
         <p className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.08em] text-[#8A5FA0]">Punto Ciego · Caso #{caseData.caseNumber}</p>
         <h2 className="mb-2 font-serif text-lg font-bold text-[var(--ink)]">{STATUS_LABEL[caseData.status]}</h2>
         {caseData.therapistName && (

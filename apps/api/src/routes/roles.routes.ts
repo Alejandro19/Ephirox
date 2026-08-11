@@ -15,6 +15,12 @@ rolesRouter.post(
   validateBody(ModuleCreateInputSchema),
   asyncHandler(rolesController.createModule)
 );
+rolesRouter.delete(
+  '/admin/roles/modules/:key',
+  authMiddleware,
+  adminOnly,
+  asyncHandler(rolesController.deleteModule)
+);
 rolesRouter.get('/admin/roles/matrix', authMiddleware, adminOnly, asyncHandler(rolesController.getMatrix));
 rolesRouter.put(
   '/admin/roles/matrix/:clientType',

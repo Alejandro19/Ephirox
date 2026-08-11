@@ -13,25 +13,6 @@ async function authorizedRequest<T>(path: string, method: string, body?: unknown
   return res.json();
 }
 
-export async function listModules(): Promise<PermissionModuleDto[]> {
-  const body = await authorizedRequest<{ success: boolean; modules: PermissionModuleDto[]; error?: string }>(
-    '/api/admin/roles/modules',
-    'GET'
-  );
-  if (!body.success) throw new Error(body.error || 'Error al obtener los módulos.');
-  return body.modules;
-}
-
-export async function createModule(label: string): Promise<PermissionModuleDto> {
-  const body = await authorizedRequest<{ success: boolean; module: PermissionModuleDto; error?: string }>(
-    '/api/admin/roles/modules',
-    'POST',
-    { label }
-  );
-  if (!body.success) throw new Error(body.error || 'Error al crear el módulo.');
-  return body.module;
-}
-
 export async function getMatrix(): Promise<{ modules: PermissionModuleDto[]; matrix: ModuleAccessMatrix }> {
   const body = await authorizedRequest<{ success: boolean; modules: PermissionModuleDto[]; matrix: ModuleAccessMatrix; error?: string }>(
     '/api/admin/roles/matrix',
@@ -48,6 +29,14 @@ export async function saveMatrixColumn(clientType: string, permissions: Record<s
     { permissions }
   );
   if (!body.success) throw new Error(body.error || 'Error al guardar los cambios.');
+}
+
+export async function deleteModule(key: string): Promise<void> {
+  const body = await authorizedRequest<{ success: boolean; error?: string }>(
+    `/api/admin/roles/modules/${key}`,
+    'DELETE'
+  );
+  if (!body.success) throw new Error(body.error || 'Error al borrar el módulo.');
 }
 
 export async function getCounts(): Promise<ClientTypeCounts> {

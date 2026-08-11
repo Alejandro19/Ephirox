@@ -81,13 +81,26 @@ describe('ClientNutritionPanel', () => {
     expect(print).toHaveBeenCalled();
   });
 
-  it('shows a link to the PDF when the plan has one', async () => {
+  it('downloads the nutrition plan PDF by opening a branded print window with the plan content', async () => {
     vi.mocked(nutritionClient.getNutrition).mockResolvedValue({
-      plan: { dailyCals: 2000, pdfUrl: 'https://x.co/plan.pdf', pdfName: 'plan.pdf', menuPlan: [{ name: 'Desayuno', options: [] }] },
+      plan: {
+        dailyCals: 2000,
+        menuPlan: [{ name: 'Desayuno', options: [{ label: 'Opción 1', items: ['Avena'] }] }],
+      },
       meals: [],
     });
     vi.mocked(supplementsClient.listSupplements).mockResolvedValue([]);
+    const write = vi.fn();
+    const print = vi.fn();
+    const fakeWindow = { document: { write, close: vi.fn() }, focus: vi.fn(), print };
+    vi.spyOn(window, 'open').mockReturnValue(fakeWindow as unknown as Window);
+
     render(<ClientNutritionPanel clientId="client-1" />);
-    await waitFor(() => expect(screen.getByRole('link', { name: 'plan.pdf' })).toHaveAttribute('href', 'https://x.co/plan.pdf'));
+    fireEvent.click(await screen.findByRole('button', { name: 'Descargar PDF' }));
+
+    expect(window.open).toHaveBeenCalledWith('', '_blank');
+    expect(write).toHaveBeenCalledWith(expect.stringContaining('Plan nutricional'));
+    expect(write).toHaveBeenCalledWith(expect.stringContaining('Desayuno'));
+    await waitFor(() => expect(print).toHaveBeenCalled());
   });
 });

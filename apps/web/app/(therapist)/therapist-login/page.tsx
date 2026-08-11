@@ -4,25 +4,24 @@ import React, { useEffect, useState, type FormEvent } from 'react';
 import { therapistLogin } from '@/lib/blindspot-client';
 import { saveSession, forgotPasswordRequest } from '@/lib/api-client';
 
-// Mismo patrón autocontenido que (auth)/login/page.tsx: tema día/noche por
-// hora real del dispositivo, fijado antes del primer pintado para evitar
-// flash del tema equivocado.
-const LOGIN_THEME_SCRIPT = `(function(){try{
-  var h=new Date().getHours();
-  var theme=h<18?'theme-login-light':'theme-login-dark';
-  var other=theme==='theme-login-light'?'theme-login-dark':'theme-login-light';
-  var root=document.documentElement;
-  if(!root.classList.contains(theme))root.classList.add(theme);
-  root.classList.remove(other);
-}catch(e){}})();`;
+// Mismo patrón que (auth)/login/page.tsx: paleta fija (sin variante
+// día/noche) — el panel izquierdo usa el café oscuro exclusivo de las
+// pantallas de login (#2A2015), el derecho siempre claro (--page-bg).
+const LOGIN_PANEL_BG = '#2A2015';
 
-function applyLoginTheme(): void {
-  const hour = new Date().getHours();
-  const theme = hour < 18 ? 'theme-login-light' : 'theme-login-dark';
-  const other = theme === 'theme-login-light' ? 'theme-login-dark' : 'theme-login-light';
-  const root = document.documentElement;
-  if (!root.classList.contains(theme)) root.classList.add(theme);
-  root.classList.remove(other);
+function BrandRing({ size = 64 }: { size?: number }) {
+  const thickness = Math.round(size * 0.125);
+  return (
+    <div className="relative z-[1]" style={{ width: size, height: size }}>
+      <div
+        style={{
+          position: 'absolute', inset: 0, borderRadius: '50%',
+          background: 'conic-gradient(from 0deg, #D9B77E, #D97E5F, #8A5FA0, #5B8F6B, #D9B77E)',
+        }}
+      />
+      <div style={{ position: 'absolute', inset: thickness, borderRadius: '50%', background: LOGIN_PANEL_BG }} />
+    </div>
+  );
 }
 
 // Igual que en el login de clientes: solo se recuerda el email, nunca la
@@ -43,12 +42,6 @@ export default function TherapistLoginPage(): React.ReactElement {
   const [forgotLoading, setForgotLoading] = useState(false);
   const [forgotSent, setForgotSent] = useState(false);
   const [forgotError, setForgotError] = useState<string | null>(null);
-
-  useEffect(() => {
-    applyLoginTheme();
-    const interval = setInterval(applyLoginTheme, 5 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, []);
 
   useEffect(() => {
     const remembered = typeof window !== 'undefined' ? window.localStorage.getItem(REMEMBER_EMAIL_KEY) : null;
@@ -102,14 +95,16 @@ export default function TherapistLoginPage(): React.ReactElement {
   }
 
   const inputClasses =
-    'block w-full h-11 rounded-xl px-4 text-sm transition-all duration-200 ease-in-out outline-none bg-[var(--lf-input-bg)] border border-[var(--lf-input-border)] text-[var(--lf-input-text)] placeholder:text-[var(--lf-label)] placeholder:opacity-60 focus:border-[var(--lf-link)] focus:ring-4 focus:ring-[var(--lf-link)]/10';
-  const labelClasses = 'block text-sm font-medium text-[var(--lf-label)] transition-colors duration-[600ms]';
+    'block w-full h-9 border-0 border-b border-[var(--border-input)] rounded-none bg-transparent px-0.5 py-1.5 text-[14px] text-[var(--ink)] outline-none transition-colors placeholder:text-[var(--ink-secondary)] placeholder:opacity-60 focus:border-[var(--ink)]';
+  const labelClasses = 'block text-[11px] font-semibold uppercase tracking-wide text-[var(--ink-secondary)]';
+  const primaryButtonClasses =
+    'relative inline-flex w-full items-center justify-center h-11 rounded-[9px] font-semibold tracking-wide transition-all duration-200 ease-out active:scale-[0.98] active:brightness-95 disabled:cursor-not-allowed disabled:opacity-60 gap-2';
+  const primaryButtonStyle = { background: LOGIN_PANEL_BG, color: '#F5EFE2' };
+  const linkClasses = 'underline underline-offset-4 font-medium text-sm hover:opacity-80 transition-opacity';
+  const linkStyle = { color: 'var(--hero-piedra-accent)' };
 
   return (
     <>
-      {/* eslint-disable-next-line @next/next/no-sync-scripts */}
-      <script dangerouslySetInnerHTML={{ __html: LOGIN_THEME_SCRIPT }} />
-
       {enteringLabel && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-5 bg-[var(--page-bg)]">
           <svg className="animate-spin" viewBox="0 0 100 100" width="64" height="64" aria-hidden="true" style={{ animationDuration: '1.4s' }}>
@@ -119,34 +114,30 @@ export default function TherapistLoginPage(): React.ReactElement {
           </svg>
           <div className="flex flex-col items-center gap-1">
             <p className="font-serif text-xl font-bold text-[var(--ink)]">La Tribu</p>
-            <p className="text-sm text-[var(--ink-soft)]">{enteringLabel}</p>
+            <p className="text-sm text-[var(--ink-secondary)]">{enteringLabel}</p>
           </div>
         </div>
       )}
 
       <div className="min-h-screen w-full bg-[var(--page-bg)] flex items-center justify-center p-4">
         {/* md:min-h fija el mismo tamaño estándar de tarjeta que el login de clientes. */}
-        <div className="max-w-4xl w-full md:min-h-[600px] grid grid-cols-1 md:grid-cols-2 rounded-3xl overflow-hidden shadow-[0_30px_80px_-15px_rgba(43,36,32,0.18)]">
+        <div className="max-w-4xl w-full md:min-h-[600px] grid grid-cols-1 md:grid-cols-2 rounded-[20px] overflow-hidden shadow-[0_20px_50px_rgba(26,23,18,0.12)]">
 
           {/* ========== LADO IZQUIERDO — IDENTIDAD LA TRIBU ========== */}
-          <div className="relative overflow-hidden p-12 flex flex-col items-center justify-center text-center" style={{ background: 'var(--hero-espresso)' }}>
+          <div className="relative overflow-hidden p-12 flex flex-col items-center justify-center text-center" style={{ background: LOGIN_PANEL_BG }}>
             <div
-              className="pointer-events-none absolute -right-16 -top-16 h-[280px] w-[280px] rounded-full"
-              style={{ background: 'radial-gradient(circle, rgba(217,183,126,.18) 0%, transparent 70%)' }}
+              className="pointer-events-none absolute rounded-full"
+              style={{ width: 260, height: 260, background: 'radial-gradient(circle, rgba(217,183,126,.22) 0%, transparent 70%)' }}
             />
-
-            <svg className="relative z-[1] -rotate-90" viewBox="0 0 100 100" width="56" height="56" aria-hidden="true">
-              <circle cx="50" cy="50" r="40" fill="none" strokeWidth="8" stroke="rgba(255,255,255,.2)" />
-              <circle cx="50" cy="50" r="40" fill="none" strokeWidth="8" strokeLinecap="round" strokeDasharray="205 251" stroke="var(--hero-espresso-accent)" />
-            </svg>
-            <h1 className="relative z-[1] font-serif text-[32px] font-bold mt-[18px] mb-1.5" style={{ color: 'var(--hero-espresso-text)' }}>La Tribu</h1>
-            <p className="relative z-[1] font-serif italic text-[15px]" style={{ color: 'var(--hero-espresso-text-muted)' }}>Comunidad de bienestar y alto rendimiento.</p>
+            <BrandRing size={64} />
+            <h1 className="relative z-[1] font-serif text-2xl font-bold mt-[18px] mb-1.5" style={{ color: '#F5EFE2' }}>La Tribu</h1>
+            <p className="relative z-[1] font-serif italic text-[12.5px]" style={{ color: '#B0A296' }}>Comunidad de bienestar y alto rendimiento.</p>
           </div>
 
           {/* ========== LADO DERECHO — FORMULARIO ========== */}
-          <div className="bg-[var(--lf-bg)] p-12 flex flex-col justify-center transition-colors duration-[600ms]">
-            <h2 className="text-2xl font-semibold tracking-tight mb-6 text-[var(--lf-title)] transition-colors duration-[600ms]">
-              {view === 'login' ? 'Acceso Terapeutas' : 'Recuperar contraseña'}
+          <div className="p-12 flex flex-col justify-center" style={{ background: 'var(--page-bg)' }}>
+            <h2 className="font-serif text-[19px] font-semibold mb-6" style={{ color: 'var(--ink)' }}>
+              {view === 'login' ? 'Acceso terapeutas' : 'Recuperar contraseña'}
             </h2>
 
             {view === 'forgot' ? (
@@ -178,7 +169,8 @@ export default function TherapistLoginPage(): React.ReactElement {
                     <button
                       type="submit"
                       disabled={forgotLoading}
-                      className="relative inline-flex w-full items-center justify-center h-11 rounded-xl bg-[var(--lf-btn-bg)] text-[var(--lf-btn-text)] font-semibold tracking-wide transition-all duration-200 ease-out active:scale-[0.98] active:brightness-95 disabled:cursor-not-allowed disabled:opacity-60 gap-2"
+                      className={primaryButtonClasses}
+                      style={primaryButtonStyle}
                     >
                       {forgotLoading ? 'Enviando…' : 'Enviar instrucciones'}
                     </button>
@@ -188,7 +180,8 @@ export default function TherapistLoginPage(): React.ReactElement {
                   <button
                     type="button"
                     onClick={() => { setView('login'); setForgotError(null); setForgotSent(false); }}
-                    className="text-[var(--lf-link)] hover:opacity-80 underline underline-offset-4 transition-colors duration-[600ms] font-medium text-sm"
+                    className={linkClasses}
+                    style={linkStyle}
                   >
                     Volver a iniciar sesión
                   </button>
@@ -227,19 +220,21 @@ export default function TherapistLoginPage(): React.ReactElement {
                     className={inputClasses}
                   />
                 </div>
-                <label className="flex items-center gap-2 text-sm text-[var(--lf-label)] transition-colors duration-[600ms] cursor-pointer select-none">
+                <label className="flex items-center gap-2 text-sm cursor-pointer select-none" style={{ color: 'var(--ink-secondary)' }}>
                   <input
                     type="checkbox"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
-                    className="h-4 w-4 rounded border-[var(--lf-input-border)] accent-[var(--lf-link)]"
+                    className="h-4 w-4 rounded border-[var(--border-input)]"
+                    style={{ accentColor: LOGIN_PANEL_BG }}
                   />
                   Recuérdame
                 </label>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="relative inline-flex w-full items-center justify-center h-11 rounded-xl bg-[var(--lf-btn-bg)] text-[var(--lf-btn-text)] font-semibold tracking-wide transition-all duration-200 ease-out active:scale-[0.98] active:brightness-95 disabled:cursor-not-allowed disabled:opacity-60 gap-2"
+                  className={primaryButtonClasses}
+                  style={primaryButtonStyle}
                 >
                   {loading ? (
                     <span className="flex items-center gap-2">
@@ -254,13 +249,15 @@ export default function TherapistLoginPage(): React.ReactElement {
                   )}
                 </button>
 
-                <div className="text-center mt-2">
+                <div className="text-center mt-4 text-sm" style={{ color: 'var(--ink-secondary)' }}>
+                  ¿Olvidaste tu contraseña?{' '}
                   <button
                     type="button"
                     onClick={() => { setView('forgot'); setError(null); }}
-                    className="text-[var(--lf-link)] hover:opacity-80 underline underline-offset-4 transition-colors duration-[600ms] font-medium text-sm"
+                    className={linkClasses}
+                    style={linkStyle}
                   >
-                    ¿Has olvidado tu contraseña?
+                    Recupérala
                   </button>
                 </div>
               </form>

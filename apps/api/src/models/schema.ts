@@ -52,6 +52,8 @@ export const adminNotifications = pgTable('admin_notifications', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 });
 
+export type AdminNotification = typeof adminNotifications.$inferSelect;
+
 export type Admin = typeof admins.$inferSelect;
 export type Client = typeof clients.$inferSelect;
 export type NewClient = typeof clients.$inferInsert;
@@ -294,6 +296,10 @@ export const cortisolTechniques = pgTable('cortisol_techniques', {
   audioUrl: text('audio_url'),
   audioName: text('audio_name'),
   sortOrder: integer('sort_order').default(0),
+  // Emoción del check-in ('ansioso' | 'irritable' | ... — ver CORTISOL_EMOTIONS
+  // en apps/web/lib/cortisol-logic.ts) para la que esta técnica es la
+  // recomendación del hero — null si no está asignada a ninguna.
+  emotion: text('emotion'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 });
 

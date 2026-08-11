@@ -17,7 +17,8 @@ import { showToast } from "../layout/AppShell";
 import { OnboardingSummaryAccordion } from "./OnboardingSummaryAccordion";
 
 const cardStyle: React.CSSProperties = {
-  borderTop: "1px solid var(--border-hairline)", paddingTop: 20, paddingBottom: 20,
+  background: "var(--paper)", border: "1px solid var(--border-hairline)",
+  borderRadius: "var(--radius-card)", padding: "22px 24px", marginBottom: 20,
 };
 
 const cardTitleStyle: React.CSSProperties = {
@@ -204,6 +205,7 @@ export default function AdminClientDetail({ clientId }: { clientId: string }) {
         <OnboardingSummaryAccordion
           personalInfo={personalInfo}
           clientType={client.client_type || client.clientType || null}
+          clientId={clientId}
         />
       </div>
     </div>

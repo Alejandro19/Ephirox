@@ -1,8 +1,11 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import type { WizardFieldConfig } from '@latribu/shared-types';
 import { WIZARD_MODULES, WIZARD_MODULE_10 } from '../../lib/wizard-modules';
 import type { PersonalInfo } from '../../lib/personal-info-client';
+import { getPhotos, type ProgressPhoto } from '../../lib/personal-info-client';
+import { getEvolutionData, type AnthropometricRecord, type InbodyRecord } from '../../lib/evolution-client';
 import Accordion from '../ui/Accordion';
 
 const labelStyle: React.CSSProperties = {
@@ -65,6 +68,115 @@ function FieldGrid({ rows }: { rows: [string, React.ReactNode][] }) {
   );
 }
 
+const subheadStyle: React.CSSProperties = {
+  fontSize: 12.5, fontWeight: 700, color: 'var(--ink)', margin: '18px 0 8px',
+};
+const rowStyle: React.CSSProperties = {
+  display: 'flex', flexWrap: 'wrap', gap: '4px 18px', padding: '8px 0',
+  borderBottom: '1px solid var(--border-hairline)', fontSize: 12.5, color: 'var(--ink)',
+};
+
+function fmt(value: number | string | null | undefined, suffix = ''): string {
+  return value === null || value === undefined || value === '' ? '—' : `${value}${suffix}`;
+}
+
+// Medidas, InBody y fotos de progreso viven en el módulo "Mi Evolución"
+// (mismos endpoints que ClientEvolutionPanel/AdminEvolutionPanel) — este
+// bloque los trae de solo lectura para que el admin no tenga que saltar de
+// pantalla al revisar el resumen de onboarding de un cliente.
+function BodyComposition({ clientId }: { clientId: string }) {
+  const [anthropometrics, setAnthropometrics] = useState<AnthropometricRecord[]>([]);
+  const [inbody, setInbody] = useState<InbodyRecord[]>([]);
+  const [photos, setPhotos] = useState<ProgressPhoto[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    Promise.all([getEvolutionData(clientId), getPhotos(clientId).catch(() => [])])
+      .then(([evo, photoList]) => {
+        if (cancelled) return;
+        setAnthropometrics(evo.anthropometrics);
+        setInbody(evo.inbody);
+        setPhotos(photoList);
+      })
+      .catch((e: Error) => { if (!cancelled) setError(e.message); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [clientId]);
+
+  if (loading) return <p style={{ fontSize: 12.5, color: 'var(--ink-secondary)', marginTop: 14 }}>Cargando medidas, InBody y fotos…</p>;
+  if (error) return <p style={{ fontSize: 12.5, color: 'var(--danger)', marginTop: 14 }}>{error}</p>;
+
+  return (
+    <div>
+      <p style={subheadStyle}>Medidas registradas ({anthropometrics.length})</p>
+      {anthropometrics.length === 0 ? (
+        <p style={{ fontSize: 12.5, color: 'var(--ink-secondary)', margin: 0 }}>Sin medidas registradas.</p>
+      ) : (
+        anthropometrics.map((a) => (
+          <div key={a.id} style={rowStyle}>
+            <span style={{ fontWeight: 700, minWidth: 90 }}>{a.fecha}</span>
+            <span>Peso: {fmt(a.peso, ' kg')}</span>
+            <span>Cintura: {fmt(a.cintura, ' cm')}</span>
+            <span>Brazos: {fmt(a.brazos, ' cm')}</span>
+            <span>Hombros: {fmt(a.hombros, ' cm')}</span>
+            <span>Piernas: {fmt(a.piernas, ' cm')}</span>
+            <span>Glúteo: {fmt(a.gluteo, ' cm')}</span>
+          </div>
+        ))
+      )}
+
+      <p style={subheadStyle}>Registros InBody ({inbody.length})</p>
+      {inbody.length === 0 ? (
+        <p style={{ fontSize: 12.5, color: 'var(--ink-secondary)', margin: 0 }}>Sin registros InBody.</p>
+      ) : (
+        inbody.map((r) => (
+          <div key={r.id} style={rowStyle}>
+            <span style={{ fontWeight: 700, minWidth: 90 }}>{r.fecha ?? '—'}</span>
+            <span>Talla: {fmt(r.altura, ' cm')}</span>
+            <span>Peso: {fmt(r.pesoTotal, ' kg')}</span>
+            <span>Peso ideal: {fmt(r.pesoObjetivo, ' kg')}</span>
+            <span>SMM: {fmt(r.smm, ' kg')}</span>
+            <span>Masa ósea: {fmt(r.masaOsea, ' kg')}</span>
+            <span>% Grasa: {fmt(r.grasaPct, '%')}</span>
+            <span>IMC: {fmt(r.imc)}</span>
+            <span>Grasa visceral: {fmt(r.grasaVisceral)}</span>
+            <span>Agua corporal (ECW/TBW): {fmt(r.ecwTbw)}</span>
+            <span>BMR: {fmt(r.bmr, ' kcal')}</span>
+            {r.fileUrl && (
+              <a href={r.fileUrl} target="_blank" rel="noreferrer" style={{ color: 'var(--ring-accent)', fontWeight: 600, textDecoration: 'underline' }}>
+                Ver archivo
+              </a>
+            )}
+          </div>
+        ))
+      )}
+
+      <p style={subheadStyle}>Fotos de progreso ({photos.length})</p>
+      {photos.length === 0 ? (
+        <p style={{ fontSize: 12.5, color: 'var(--ink-secondary)', margin: 0 }}>Sin fotos registradas.</p>
+      ) : (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+          {photos.map((p) => (
+            <a key={p.id} href={p.photoUrl} target="_blank" rel="noreferrer" style={{ display: 'block', textDecoration: 'none' }}>
+              <img
+                src={p.photoUrl}
+                alt={`${p.angle ?? 'Foto'} · ${p.fecha}`}
+                style={{ width: 84, height: 84, objectFit: 'cover', borderRadius: 10, border: '1px solid var(--border-hairline)' }}
+              />
+              <span style={{ display: 'block', marginTop: 3, fontSize: 10.5, color: 'var(--ink-secondary)', textAlign: 'center' }}>
+                {p.angle ?? '—'} · {p.fecha}
+              </span>
+            </a>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ModuleHeader({ n, title }: { n: number; title: string }) {
   return (
     <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -85,9 +197,11 @@ function ModuleHeader({ n, title }: { n: number; title: string }) {
 export function OnboardingSummaryAccordion({
   personalInfo,
   clientType,
+  clientId,
 }: {
   personalInfo: PersonalInfo | null;
   clientType: string | null;
+  clientId: string;
 }) {
   if (!personalInfo || !personalInfo.completedAt) {
     return <p style={{ color: 'var(--ink-secondary)', fontSize: 13 }}>Este cliente aún no completó el formulario de onboarding.</p>;
@@ -120,9 +234,7 @@ export function OnboardingSummaryAccordion({
           ['% Grasa corporal', personalInfo.bodyFat != null ? `${personalInfo.bodyFat}%` : null],
         ]}
       />
-      <p style={{ marginTop: 12, fontSize: 12, color: 'var(--ink-secondary)' }}>
-        El historial completo de medidas, fotos de progreso y registros InBody está en el módulo &quot;Mi Evolución&quot;.
-      </p>
+      <BodyComposition clientId={clientId} />
     </div>
   );
 

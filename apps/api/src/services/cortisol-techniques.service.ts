@@ -23,6 +23,7 @@ function toTechniqueFields(input: CortisolTechniqueInput) {
     durationSeconds: input.duration_seconds ?? null,
     description: input.description ?? null,
     youtubeUrl: input.youtube_url ?? null,
+    emotion: input.emotion ?? null,
   };
 }
 

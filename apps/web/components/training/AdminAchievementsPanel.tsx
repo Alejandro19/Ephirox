@@ -7,7 +7,8 @@ import RingProgress from '../ui/RingProgress';
 import { IconTrophy, IconMedal } from '../ui/icons';
 
 const cardStyle: React.CSSProperties = {
-  borderTop: '1px solid var(--border-hairline)', paddingTop: 20, paddingBottom: 20,
+  background: 'var(--paper)', border: '1px solid var(--border-hairline)',
+  borderRadius: 'var(--radius-card)', padding: '22px 24px', marginBottom: 20,
 };
 const cardTitleStyle: React.CSSProperties = {
   fontSize: 15, fontWeight: 700, color: 'var(--ink)', margin: '0 0 16px',

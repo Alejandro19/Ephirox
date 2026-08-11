@@ -3,6 +3,42 @@
 import { useEffect, useState, useCallback } from 'react';
 import { type MindsetQuote, listQuotes, createQuote, updateQuote, deleteQuote } from '../../lib/quotes-client';
 
+const cardStyle: React.CSSProperties = {
+  background: 'var(--paper)', border: '1px solid var(--border-hairline)',
+  borderRadius: 'var(--radius-card)', padding: '22px 24px', marginBottom: 20,
+};
+const cardTitleStyle: React.CSSProperties = {
+  fontSize: 15, fontWeight: 700, color: 'var(--ink)', margin: '0 0 16px',
+};
+const labelStyle: React.CSSProperties = {
+  display: 'block', fontSize: 12, fontWeight: 400, color: 'var(--ink-secondary)', marginBottom: 4,
+};
+const fieldStyle: React.CSSProperties = {
+  width: '100%', height: 32, borderRadius: 0, border: 'none', borderBottom: '1px solid var(--border-input)',
+  padding: '0 2px 6px', fontSize: 14.5, fontWeight: 600, background: 'transparent', color: 'var(--ink)',
+  outline: 'none', boxSizing: 'border-box',
+};
+const textareaStyle: React.CSSProperties = {
+  width: '100%', borderRadius: 10, border: '1px solid var(--border-hairline)',
+  padding: 10, fontSize: 14.5, fontWeight: 600, background: 'var(--page-bg)', color: 'var(--ink)',
+  outline: 'none', boxSizing: 'border-box', minHeight: 60, resize: 'vertical', fontFamily: 'inherit',
+};
+const draftCardStyle: React.CSSProperties = {
+  background: 'var(--page-bg)', border: '1px solid var(--border-hairline)', borderRadius: 14, padding: 16, marginBottom: 10,
+};
+const ghostButtonStyle: React.CSSProperties = {
+  height: 32, padding: '0 14px', borderRadius: 9999, border: '1px solid var(--border-hairline)',
+  background: 'transparent', color: 'var(--ink-secondary)', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+};
+const dangerButtonStyle: React.CSSProperties = {
+  height: 32, padding: '0 14px', borderRadius: 9999, border: '1px solid var(--danger)',
+  background: 'transparent', color: 'var(--danger)', fontSize: 12, fontWeight: 600, cursor: 'pointer', flexShrink: 0,
+};
+const primaryButtonStyle: React.CSSProperties = {
+  height: 40, padding: '0 22px', borderRadius: 9999, border: 'none',
+  background: 'var(--ring-accent)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+};
+
 export function QuotesPanel() {
   const [quotes, setQuotes] = useState<MindsetQuote[]>([]);
   const [newQuote, setNewQuote] = useState('');
@@ -60,46 +96,54 @@ export function QuotesPanel() {
   }
 
   return (
-    <section>
-      <h2>Frases de mentalidad</h2>
-      {error && <p role="alert">{error}</p>}
+    <div style={cardStyle}>
+      <h3 style={cardTitleStyle}>Frases de mentalidad</h3>
+      {error && <p role="alert" style={{ color: 'var(--danger)', fontSize: 13 }}>{error}</p>}
 
-      <label htmlFor="qt-new-quote">Frase</label>
-      <textarea id="qt-new-quote" value={newQuote} onChange={(e) => setNewQuote(e.target.value)} />
-      <label htmlFor="qt-new-author">Autor (opcional)</label>
-      <input id="qt-new-author" value={newAuthor} onChange={(e) => setNewAuthor(e.target.value)} />
-      <button type="button" onClick={handleCreate}>
-        Agregar
-      </button>
+      <div style={draftCardStyle}>
+        <label style={labelStyle} htmlFor="qt-new-quote">Frase</label>
+        <textarea id="qt-new-quote" style={textareaStyle} value={newQuote} onChange={(e) => setNewQuote(e.target.value)} />
+        <label style={{ ...labelStyle, marginTop: 12 }} htmlFor="qt-new-author">Autor (opcional)</label>
+        <input id="qt-new-author" style={fieldStyle} value={newAuthor} onChange={(e) => setNewAuthor(e.target.value)} />
+        <button type="button" onClick={handleCreate} style={{ ...primaryButtonStyle, marginTop: 14 }}>
+          Agregar
+        </button>
+      </div>
 
-      {quotes.length === 0 && <p>Aún no hay frases en la biblioteca.</p>}
+      {quotes.length === 0 && <p style={{ color: 'var(--ink-secondary)', fontSize: 13 }}>Aún no hay frases en la biblioteca.</p>}
       {quotes.map((quote) =>
         editingId === quote.id ? (
-          <div key={quote.id}>
-            <label htmlFor={`qt-edit-quote-${quote.id}`}>Frase</label>
-            <textarea id={`qt-edit-quote-${quote.id}`} value={editQuote} onChange={(e) => setEditQuote(e.target.value)} />
-            <label htmlFor={`qt-edit-author-${quote.id}`}>Autor (opcional)</label>
-            <input id={`qt-edit-author-${quote.id}`} value={editAuthor} onChange={(e) => setEditAuthor(e.target.value)} />
-            <button type="button" onClick={() => handleSaveEdit(quote.id)}>
-              Guardar
-            </button>
-            <button type="button" onClick={() => setEditingId(null)}>
-              Cancelar
-            </button>
+          <div key={quote.id} style={draftCardStyle}>
+            <label style={labelStyle} htmlFor={`qt-edit-quote-${quote.id}`}>Frase</label>
+            <textarea id={`qt-edit-quote-${quote.id}`} style={textareaStyle} value={editQuote} onChange={(e) => setEditQuote(e.target.value)} />
+            <label style={{ ...labelStyle, marginTop: 12 }} htmlFor={`qt-edit-author-${quote.id}`}>Autor (opcional)</label>
+            <input id={`qt-edit-author-${quote.id}`} style={fieldStyle} value={editAuthor} onChange={(e) => setEditAuthor(e.target.value)} />
+            <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
+              <button type="button" onClick={() => handleSaveEdit(quote.id)} style={primaryButtonStyle}>
+                Guardar
+              </button>
+              <button type="button" onClick={() => setEditingId(null)} style={ghostButtonStyle}>
+                Cancelar
+              </button>
+            </div>
           </div>
         ) : (
-          <div key={quote.id}>
-            <p>{quote.quote}</p>
-            {quote.author && <div>— {quote.author}</div>}
-            <button type="button" onClick={() => startEdit(quote)}>
-              Editar
-            </button>
-            <button type="button" onClick={() => handleDelete(quote.id)}>
-              Eliminar
-            </button>
+          <div key={quote.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '12px 0', borderBottom: '1px solid var(--border-hairline)' }}>
+            <div>
+              <p style={{ fontSize: 14, color: 'var(--ink)', margin: 0 }}>{quote.quote}</p>
+              {quote.author && <div style={{ fontSize: 12, color: 'var(--ink-secondary)', marginTop: 4 }}>— {quote.author}</div>}
+            </div>
+            <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+              <button type="button" onClick={() => startEdit(quote)} style={ghostButtonStyle}>
+                Editar
+              </button>
+              <button type="button" onClick={() => handleDelete(quote.id)} style={dangerButtonStyle}>
+                Eliminar
+              </button>
+            </div>
           </div>
         )
       )}
-    </section>
+    </div>
   );
 }

@@ -166,7 +166,7 @@ function TrendChart({ points }: { points: WearableMetrica[] }) {
   const scores = points.map((p) => p.suenoScore).filter((s): s is number => s != null);
   if (!scores.length) {
     return (
-      <section className="border-t border-[var(--border-hairline)] py-6">
+      <section className="rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--paper)] p-6 mb-5">
         <h2 className="mb-4 font-serif text-lg font-bold text-[var(--ink)]">Tendencia · últimos 7 días</h2>
         <EmptyState message="Aún no hay suficientes días sincronizados para ver la tendencia." />
       </section>
@@ -191,7 +191,7 @@ function TrendChart({ points }: { points: WearableMetrica[] }) {
   for (let v = yMin; v <= yMax; v += 10) gridValues.push(v);
 
   return (
-    <section className="border-t border-[var(--border-hairline)] py-6">
+    <section className="rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--paper)] p-6 mb-5">
       <h2 className="mb-4 font-serif text-lg font-bold text-[var(--ink)]">Tendencia · últimos 7 días</h2>
       <svg viewBox={`0 0 ${w} ${h}`} className="w-full" style={{ height: 180 }} role="img" aria-label="Tendencia del puntaje de sueño de los últimos 7 días">
         {gridValues.map((v) => (
@@ -242,7 +242,7 @@ function ProtocolCard({ protocol }: { protocol: SleepProtocol }) {
   const lines = (protocol?.protocolText || '').split('\n').map((l) => l.trim()).filter(Boolean);
 
   return (
-    <section className="border-t border-[var(--border-hairline)] py-6">
+    <section className="rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--paper)] p-6 mb-5">
       <p className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.08em] text-[#8A5FA0]">Actualizado con tu data</p>
       <h2 className="mb-3.5 font-serif text-lg font-bold text-[var(--ink)]">Tu protocolo de sueño personalizado</h2>
       {lines.length ? (

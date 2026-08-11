@@ -20,6 +20,13 @@ export async function createModule(req: Request, res: Response) {
   return ok(res, { module }, 201);
 }
 
+export async function deleteModule(req: Request, res: Response) {
+  const { key } = req.params;
+  const result = await rolesService.deleteModule(key);
+  if (!result.deleted) return err(res, result.reason || 'No se pudo borrar el módulo.', 400);
+  return ok(res, { message: 'Módulo eliminado.' });
+}
+
 export async function getMatrix(_req: Request, res: Response) {
   const { modules, matrix } = await rolesService.getMatrix();
   return ok(res, { modules, matrix });

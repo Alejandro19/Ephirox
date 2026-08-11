@@ -24,6 +24,7 @@ import { labPanelsRouter } from './routes/lab-panels.routes.js';
 import { wearableRouter, wearableOAuthRouter } from './routes/wearable.routes.js';
 import { blindspotRouter } from './routes/blindspot.routes.js';
 import { rolesRouter } from './routes/roles.routes.js';
+import { adminNotificationsRouter, clientNotificationsRouter } from './routes/notifications.routes.js';
 
 export function createApp() {
   const app = express();
@@ -63,6 +64,8 @@ export function createApp() {
   app.use('/api/wearable', wearableOAuthRouter);
   app.use('/api/blindspot', blindspotRouter);
   app.use('/api', rolesRouter);
+  app.use('/api', adminNotificationsRouter);
+  app.use('/api/clients', clientNotificationsRouter);
 
   // Error handler
   app.use((error: unknown, req: Request, res: Response, _next: NextFunction) => {

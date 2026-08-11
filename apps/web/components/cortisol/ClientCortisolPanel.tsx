@@ -207,16 +207,22 @@ export function ClientCortisolPanel({ clientId }: { clientId: string }) {
   }
 
   const emotion = checkin ? checkin.emotion : null;
-  const recommended = (emotion && CORTISOL_RECOMMENDATIONS[emotion]) || CORTISOL_RECOMMENDATIONS.cansado;
-  const matched =
-    techniques.find((t) => (t.title || '').trim().toLowerCase() === recommended.title.toLowerCase()) || techniques[0] || null;
+  // El admin asigna, por cliente, qué técnica corresponde a cada emoción
+  // (CortisolTechnique.emotion) — esa asignación explícita manda sobre el
+  // texto genérico de CORTISOL_RECOMMENDATIONS, que solo queda como
+  // fallback para cuando ninguna técnica tiene esa emoción asignada.
+  const matched = (emotion && techniques.find((t) => t.emotion === emotion)) || techniques[0] || null;
+  const fallback = (emotion && CORTISOL_RECOMMENDATIONS[emotion]) || CORTISOL_RECOMMENDATIONS.cansado;
+  const recommended = emotion && matched && matched.emotion === emotion
+    ? { title: matched.title, desc: matched.description || fallback.desc }
+    : fallback;
   const weeklyStats = calculateCortisolWeeklyStats(completions);
 
   return (
     <div>
       {header}
 
-      <div className="mb-6 border-b border-[var(--border-hairline)] pb-6">
+      <div className="mb-5 rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--paper)] p-6">
         <p className="mb-2.5 text-xs font-bold text-[var(--ink)]">¿Cómo te sientes ahora mismo?</p>
         <div className="grid grid-cols-3 gap-2">
           {CORTISOL_EMOTIONS.map((o) => {
@@ -268,7 +274,7 @@ export function ClientCortisolPanel({ clientId }: { clientId: string }) {
         )}
       </div>
 
-      <section className="border-t border-[var(--border-hairline)] py-6">
+      <section className="rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--paper)] p-6 mb-5">
         <h2 className="mb-4 font-serif text-lg font-bold text-[var(--ink)]">Tus técnicas</h2>
         {techniques.length === 0 ? (
           <EmptyState message="Aún no tienes técnicas asignadas." />
@@ -314,7 +320,7 @@ export function ClientCortisolPanel({ clientId }: { clientId: string }) {
       </section>
 
       {techniques.length > 0 && (
-        <section className="border-t border-[var(--border-hairline)] py-6">
+        <section className="rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--paper)] p-6 mb-5">
           <h2 className="mb-4 font-serif text-lg font-bold text-[var(--ink)]">Momento de regulación</h2>
           <div className="flex items-center gap-4">
             <RingProgress value={weeklyStats.pct} size={48} color="espresso" />

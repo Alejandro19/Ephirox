@@ -1,6 +1,6 @@
 # session-memory.md
 
-> **Última actualización:** 2026-08-09
+> **Última actualización:** 2026-08-10
 > **Propósito:** Resumen ejecutivo por sesión (orden cronológico) y plan de continuidad inmediato para la siguiente sesión.
 
 ---
@@ -246,6 +246,83 @@ Corregidos por regresión real de esta sesión o por mocks incompletos: `admin-t
 
 ---
 
+## Resumen Ejecutivo — Sesión 2026-08-10 — Login, topbar admin, Cortisol por emoción, cards agrupadas
+
+Sesión larga con varios pedidos encadenados del usuario. Todo en `apps/web`/`apps/api`, cero cambios en `server.js`/`index.html` (raíz).
+
+### 1. Rediseño del login (cliente/admin y terapeuta)
+
+Aplicado el prompt v2 del usuario (`login/page.tsx`, `therapist-login/page.tsx`): panel izquierdo `#2A2015` exclusivo de login (no reemplaza `--hero-espresso` en el resto de la app), halo radial + anillo de marca conic-gradient, panel derecho siempre `--page-bg` (se eliminó el sistema de tema día/noche `theme-login-light/dark` que hacía que el panel se viera oscuro según la hora — esa era la causa real del reclamo de legibilidad). Card `rounded-[20px]` + sombra. Los puntos 1 (bug de encoding) y 3 (logos sociales faltantes) del prompt se investigaron a fondo y **no existían** en el código actual — no se tocó nada ahí.
+Iteración posterior: Google y Apple en una sola fila (antes apilados), textos cortos "Google"/"Apple", Google SDK a `theme:'outline'`/ancho 170px para que quepa junto a Apple. "¿Olvidaste tu contraseña? Recupérala" separado en texto+link (mismo patrón que el link de registro).
+**Bug real encontrado y corregido:** el botón de Google desaparecía al navegar entre login/registro/recuperar y volver — `google.accounts.id.renderButton()` pinta un nodo del DOM concreto que se desmonta con cada cambio de `view`; el `ref` de objeto + efecto con `deps: []` nunca volvía a pintar en el nodo nuevo. Corregido con un callback ref (`setGoogleButtonNode`) que repinta cada vez que el nodo se remonta.
+**Pendiente sin resolver, flagueado al usuario:** `reset-password/page.tsx` y `therapist/set-password/page.tsx` siguen con el sistema de tema día/noche viejo (`--lf-*` en `globals.css`) — quedarán visualmente inconsistentes con el login nuevo hasta que se decida si se migran también.
+
+### 2. Panel admin: topbar horizontal reemplaza el sidebar vertical
+
+A pedido explícito del usuario (revierte la decisión de la Fase 4 del plan de diseño premium, que dejaba a admin con sidebar). Nuevo `components/layout/AdminTopbar.tsx` (mismo patrón que `ClientTopbar`/`TherapistTopbar`: gradiente piedra, tabs con subrayado animado, dropdown de cuenta, colapso a drawer <1280px), con "Administración" como dropdown propio (Clientes/Frases/Roles). `AppShell.tsx` ahora siempre usa layout de columna (topbar arriba, sin fila+sidebar).
+Se quitó "Información Personal" del propio menú del admin (llevaba a `/onboarding`, que es el wizard de datos del CLIENTE — el admin no tiene datos propios ahí, por eso siempre salía "no disponible"; ahora esa info se gestiona por cliente desde Administración → Clientes).
+**Borrados por quedar sin uso:** `Sidebar.tsx`, `AdminNavItems.tsx`, `SidebarRing.tsx`, `UserChip.tsx`, `MobileTopbar.tsx`, y la constante `MODULE_THEME` en `lib/constants.ts` (solo la consumía `SidebarRing`).
+
+### 3. Nutrición: PDF generado en vez de subida manual
+
+El botón "Ver PDF"/subida manual del admin (`nt-pdf`) dependía de que alguien subiera un archivo a mano. Se restauró el generador de PDF de marca de la arquitectura anterior (`downloadNutritionPdf`, portado de `old_index.html:3865-3969` vía `git show HEAD:old_index.html`, ya que el archivo está borrado en el working tree pero sigue en el historial) — genera el documento completo (portada, macros, menú, recomendaciones, suplementos, cierre) a partir de los datos vigentes del plan, sin depender de un archivo subido. Botón "Descargar PDF" junto a "Ver más" en el panel cliente. Se quitó el input de archivo del panel admin (`AdminNutritionPanel.tsx`) y el estado/función que ya no se usaban.
+
+### 4. Módulo Frases (admin) — restyle completo
+
+`QuotesPanel.tsx` y `PhrasesPanel.tsx` no tenían ni una clase de estilo (HTML sin estilar desde siempre, nunca migrado). Reescritos con el mismo lenguaje visual que el resto del admin (cardStyle, labelStyle, fieldStyle, botones pill).
+
+### 5. Roles y Perfiles — quitar "Agregar módulo", agregar "Eliminar módulo"
+
+Se quitó `RolesAddModuleBar.tsx` (y `createModule`/`listModules` de `lib/roles-client.ts`, sin más consumidores) a pedido del usuario. Como el usuario había creado un módulo custom de prueba desde esa barra y pidió borrarlo, se agregó la capacidad de eliminar (backend: `deleteModule` en `roles.service.ts`/`roles.controller.ts`, ruta `DELETE /admin/roles/modules/:key`, solo permite borrar módulos `isCustom: true`, nunca los del sistema; frontend: botón "Eliminar" junto a cada módulo custom en `RolesMatrixTable.tsx`) — el usuario lo borra él mismo desde ahí.
+
+### 6. Sistema de notificaciones — activado de cero
+
+La campanita (`NotificationBell.tsx`) y la página `/admin/notifications` ya existían en el frontend pero pegaban a `/api/admin/notifications` y `/api/clients/:id/notifications`, que **no existían en el backend** (404 "Endpoint no encontrado") — las tablas `admin_notifications`/`client_notifications` ya estaban en el schema y varios servicios ya insertaban filas ahí, pero nadie las leía. Se construyeron `notifications.service.ts`/`.controller.ts`/`.routes.ts` (list + mark-as-read para ambos, montadas en `app.ts`). Se corrigió `NotificationBell.tsx` para consumir camelCase (`createdAt`/`clientId`, no `created_at`/`client_id` como el resto de la app ya migrada) y se le agregó marcar-como-leída + link "Ver cliente" (antes solo existían en la página de admin separada). Se borró esa página/componente (`admin/notifications/page.tsx`, `AdminNotificationsPanel.tsx`) y el ítem "Notificaciones" del nav admin — la campanita es ahora la única UI de notificaciones.
+
+### 7. Cards agrupadas — panel admin y panel cliente
+
+**Admin:** los 10 paneles admin (`Admin{Nutrition,Cortisol,Training,Rest,Evolution,Blindspot,Community}Panel`, `RestToolsAdminPanel`, `AdminAchievementsPanel`, `AdminClientDetail`) compartían el mismo `cardStyle` local con solo `borderTop` (sin caja real) — cambiado a caja completa (fondo `--paper`, borde, `--radius-card`, `marginBottom: 20`) en los 10 a la vez. Mismo arreglo en `AdminClientList.tsx` (bloques inline propios, no usaban `cardStyle`) y `RolesMatrixTable.tsx`.
+**Cliente:** Entrenamiento, Nutrición, Gestión de Cortisol, Hackeando el sueño y Mi Evolución usaban `<section className="border-t border-[var(--border-hairline)] py-6">` (línea superior plana, sin caja) — convertido a `rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--paper)] p-6 mb-5` en todos los archivos (`TrainingHome.tsx`, `ClientNutritionPanel.tsx`, `ClientCortisolPanel.tsx`, `ClientRestPanel.tsx`, `EvolutionVisuals.tsx` — 5 sub-secciones ahí, incluyendo fusionar "Tu evolución física" + "KPIs principales" en una sola card ya que antes eran dos divs adyacentes sin borde inferior/superior). Punto Ciego y Comunidad ya estaban bien (no se tocaron).
+De paso, las citas/mantras de Entrenamiento y Nutrición (antes un `<p>` con solo `border-b`, inconsistente) se migraron al componente compartido `MantraCard.tsx` que ya usaban Descanso/Evolución/Comunidad — se le agregó un prop `author` opcional para que Entrenamiento (que usa `MindsetQuote` con autor, no el banco de mantras genérico) también pudiera reusarlo.
+
+### 8. Cortisol — técnica asignada por emoción
+
+Antes, el hero "Recomendada para ti ahora" y el botón "Empezar técnica" adivinaban la técnica buscando una cuyo `title` coincidiera textualmente (case-insensitive) con un string hardcodeado en `CORTISOL_RECOMMENDATIONS` — frágil, no configurable. Se agregó columna `emotion` a `cortisol_techniques` (migración directa por script `tsx`/`postgres` desechable, aplicada a `DATABASE_URL` y `TEST_DATABASE_URL` — nunca `drizzle-kit push`, ver nota de memoria existente) + `CortisolTechniqueInputSchema` en `packages/shared-types` (requirió `pnpm run build` ahí). Admin ahora asigna, al crear/editar una técnica, la emoción a la que corresponde (select + badge dorado en la lista). Cliente: `matched = techniques.find(t => t.emotion === emotion)` manda sobre el fallback hardcodeado; "Empezar técnica" abre exactamente esa técnica.
+
+### 9. Acordeón admin — Composición corporal con datos reales
+
+`OnboardingSummaryAccordion.tsx` (usado en `AdminClientDetail.tsx`) solo mostraba las respuestas del wizard inicial + un texto "mira Mi Evolución". Ahora trae y muestra ahí mismo (nuevo prop `clientId`, reusa `getEvolutionData` de `evolution-client.ts` y `getPhotos` de `personal-info-client.ts`, mismos endpoints que Mi Evolución): medidas antropométricas por fecha, registros InBody completos (talla/altura, peso, peso ideal/`pesoObjetivo`, SMM, masa ósea/`masaOsea`, % grasa, IMC, grasa visceral, agua corporal ECW/TBW, BMR, link al archivo) y miniaturas de fotos de progreso.
+
+### 10. Verificación
+
+`tsc --noEmit` y `next build` limpios en `apps/web` y `apps/api` en cada paso. Suite web completa corrida varias veces: siempre los mismos ~5-11 fallos de la baseline ya documentada (`login-page.test.tsx` determinístico, `wizard-shell-*.test.tsx` flaky bajo carga — varía cuál de los archivos `wizard-shell-*` falla según la corrida, nunca en aislamiento), cero regresiones nuevas atribuibles a esta sesión. Suite de `apps/api`: mismos fallos preexistentes de siempre en `storage.test.ts`/`rest-tools.routes.test.ts` (credenciales de Supabase Storage inválidas en el entorno, ya documentado en sesiones anteriores) — tests dirigidos a lo tocado hoy (`roles.routes.test.ts`, `cortisol-techniques.routes.test.ts`) pasan completos salvo esos mismos 2 de storage.
+
+---
+
+## Próximas actividades — Siguiente sesión (actualizada 2026-08-10)
+
+### Actividad 1 — Decidir sobre `login-page.test.tsx` / `LoginForm.tsx`
+
+- (Sigue sin resolver desde 2026-08-09 tarde.) Confirmar si se quiere restaurar el ruteo inteligente post-login conectando `components/auth/LoginForm.tsx` de verdad en `app/(auth)/login/page.tsx`, o si se prefiere borrar `LoginForm.tsx` como código muerto y simplificar/eliminar esos 5 tests.
+
+### Actividad 2 — `reset-password` / `therapist/set-password` con el tema día/noche viejo
+
+- Estas dos pantallas siguen usando `theme-login-light/dark` (`--lf-*` en `globals.css`), ahora visualmente inconsistentes con el login rediseñado (`#2A2015`/`--page-bg` fijos). Decidir si se migran al mismo patrón fijo.
+
+### Actividad 3 — Revisar flakiness de `wizard-shell-finalize.test.tsx` (y afines)
+
+- (Sigue sin resolver.) No es una regresión de código, es contención de CPU en la suite completa — evaluar `--pool=threads --poolOptions.threads.singleThread` o correr ese archivo aislado en CI si molesta.
+
+### Actividad 4 — Revisar visualmente en `dev:web` los cambios de hoy
+
+- Topbar admin (colapso <1280px, dropdown de Administración), campanita con marcar-como-leída y "Ver cliente", botón "Descargar PDF" en Nutrición, técnica por emoción en Cortisol (asignar en admin → verificar que "Empezar técnica" abra la correcta en cliente), cards agrupadas nuevas en los 5 módulos de cliente + 10 de admin, Composición corporal con datos reales en el detalle de cliente.
+
+### Actividad 5 — Construir los 6 módulos placeholder del panel de terapeuta
+
+- (Sigue pendiente de sesiones anteriores, sin tocar.) Mi perfil, Mis clientes, Mi agenda, Recursos clínicos, Comunidad de terapeutas, Dashboards.
+
+---
+
 ## Notas adicionales
 
 - **No modificar `server.js` ni `index.html` (raíz):** son el monolito legacy que Vercel sigue deployando en producción desde `origin/main`. Todo desarrollo nuevo va en `apps/api` / `apps/web`, commiteado en `backup-migracion-2026-08-05`.
@@ -255,3 +332,6 @@ Corregidos por regresión real de esta sesión o por mocks incompletos: `admin-t
 - **Nunca commitear/pushear a `origin/main` directamente** — riesgo real de romper el deploy de producción en Vercel.
 - **Nunca cambiar de rama, commitear o pushear sin pedido explícito del usuario en ese turno**, incluso si ya se autorizó antes en la misma sesión.
 - **Nunca encadenar `git stash` con un comando largo y `git stash pop` en una sola invocación de shell** (ej. `git stash && npx vitest run && git stash pop`) — si el comando del medio se corta por timeout, el `stash pop` puede quedar aplicado a medias y corromper archivos silenciosamente (visto en la sesión 2026-08-09 tarde). Si hace falta comparar contra un estado previo, usar `git show <ref>:<path>` para leer sin tocar el working tree, o ejecutar cada paso (`stash`, el comando, `stash pop`) como llamadas separadas.
+- **Cambios de schema (nueva columna/tabla):** nunca `drizzle-kit push` (se cuelga esperando confirmación de un TUI invisible en background). Escribir un script `tsx` desechable con el paquete `postgres` (mismo patrón que `apps/api/src/db/index.ts`), correr el DDL a mano (`ALTER TABLE ... ADD COLUMN IF NOT EXISTS ...`) contra `DATABASE_URL` y `TEST_DATABASE_URL` (las dos, no se sincronizan solas), borrar el script al terminar, y reflejar el cambio a mano en `apps/api/src/models/schema.ts` (Drizzle no lo detecta solo).
+- **Panel admin usa topbar horizontal (`AdminTopbar.tsx`), no sidebar** desde la sesión 2026-08-10 — `Sidebar.tsx`/`AdminNavItems.tsx`/`SidebarRing.tsx`/`UserChip.tsx`/`MobileTopbar.tsx` fueron borrados por quedar sin uso. Los tres roles (cliente, terapeuta, admin) usan topbar horizontal ahora, ninguno usa sidebar vertical.
+- **API camelCase, no snake_case:** las respuestas del backend (Drizzle) usan las mismas keys camelCase que las columnas TS del schema (`createdAt`, `clientId`, etc.), nunca snake_case — si un componente nuevo espera `created_at`/`client_id` lo más probable es que esté copiado de un patrón legacy y haya que corregirlo, no que el backend esté mal.

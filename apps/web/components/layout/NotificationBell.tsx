@@ -8,9 +8,12 @@ import { IconBell } from "../ui/icons";
 type NotificationItem = {
   id: string;
   message: string;
-  created_at: string;
+  createdAt: string;
   read: boolean;
+  clientId?: string;
 };
+
+const API_BASE = "http://localhost:3003/api";
 
 export default function NotificationBell() {
   const { role, user } = useAuth();
@@ -26,8 +29,8 @@ export default function NotificationBell() {
 
       const url =
         role === "admin"
-          ? `http://localhost:3003/api/admin/notifications`
-          : `http://localhost:3003/api/clients/${user.id}/notifications`;
+          ? `${API_BASE}/admin/notifications`
+          : `${API_BASE}/clients/${user.id}/notifications`;
 
       const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
@@ -35,11 +38,9 @@ export default function NotificationBell() {
 
       if (res.ok) {
         const data = await res.json();
-        const items: NotificationItem[] = Array.isArray(data)
-          ? data
-          : data.notifications ?? [];
+        const items: NotificationItem[] = Array.isArray(data) ? data : data.notifications ?? [];
         setNotifications(items.slice(0, 20));
-        setHasUnread(items.some((n: NotificationItem) => !n.read));
+        setHasUnread(items.some((n) => !n.read));
       }
     } catch {
       // Silently fail — notifications are non-critical
@@ -62,6 +63,25 @@ export default function NotificationBell() {
       return () => document.removeEventListener("mousedown", handleClick);
     }
   }, [open]);
+
+  async function markRead(id: string) {
+    const token = getSessionToken();
+    if (!token) return;
+    setNotifications((prev) => {
+      const next = prev.map((n) => (n.id === id ? { ...n, read: true } : n));
+      setHasUnread(next.some((n) => !n.read));
+      return next;
+    });
+    try {
+      const url =
+        role === "admin"
+          ? `${API_BASE}/admin/notifications/${id}/read`
+          : `${API_BASE}/clients/${user?.id}/notifications/${id}/read`;
+      await fetch(url, { method: "PATCH", headers: { Authorization: `Bearer ${token}` } });
+    } catch {
+      // Silently fail — a stale "unread" state on next refetch is harmless
+    }
+  }
 
   return (
     <div ref={bellRef} style={{ position: "relative" }}>
@@ -113,13 +133,13 @@ export default function NotificationBell() {
             position: "absolute",
             top: 36,
             right: 0,
-            width: 300,
+            width: 320,
             background: "var(--paper)",
             border: "1px solid var(--border-hairline)",
             borderRadius: "var(--radius-card)",
             padding: 6,
             zIndex: 50,
-            maxHeight: 320,
+            maxHeight: 360,
             overflowY: "auto",
           }}
         >
@@ -149,13 +169,36 @@ export default function NotificationBell() {
                 }}
               >
                 <div>{n.message}</div>
-                <div style={{ fontSize: 10, color: "var(--ink-secondary)", marginTop: 2 }}>
-                  {new Date(n.created_at).toLocaleDateString("es-ES", {
-                    day: "numeric",
-                    month: "short",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 4 }}>
+                  <span style={{ fontSize: 10, color: "var(--ink-secondary)" }}>
+                    {new Date(n.createdAt).toLocaleDateString("es-ES", {
+                      day: "numeric",
+                      month: "short",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                  <span style={{ display: "flex", gap: 8 }}>
+                    {role === "admin" && n.clientId && (
+                      <a
+                        href={`/admin/clients/${n.clientId}`}
+                        style={{ fontSize: 10, fontWeight: 600, color: "var(--ring-accent)", textDecoration: "none" }}
+                      >
+                        Ver cliente
+                      </a>
+                    )}
+                    {!n.read && (
+                      <button
+                        onClick={() => markRead(n.id)}
+                        style={{
+                          background: "none", border: "none", padding: 0, cursor: "pointer",
+                          fontSize: 10, fontWeight: 600, color: "var(--ring-accent)",
+                        }}
+                      >
+                        Marcar leída
+                      </button>
+                    )}
+                  </span>
                 </div>
               </div>
             ))

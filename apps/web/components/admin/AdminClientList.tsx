@@ -89,7 +89,10 @@ export default function AdminClientList() {
       </div>
 
       {/* Nuevo cliente */}
-      <div style={{ borderTop: "1px solid var(--border-hairline)", paddingTop: 20, paddingBottom: 20, marginBottom: 8 }}>
+      <div style={{
+        background: "var(--paper)", border: "1px solid var(--border-hairline)",
+        borderRadius: "var(--radius-card)", padding: "22px 24px", marginBottom: 20,
+      }}>
         <h3 style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)",
           margin: "0 0 16px" }}>Nuevo cliente</h3>
         <div style={{ display: "grid",
@@ -119,7 +122,10 @@ export default function AdminClientList() {
       </div>
 
       {/* Tabla de clientes */}
-      <div style={{ borderTop: "1px solid var(--border-hairline)", paddingTop: 20 }}>
+      <div style={{
+        background: "var(--paper)", border: "1px solid var(--border-hairline)",
+        borderRadius: "var(--radius-card)", padding: "22px 24px",
+      }}>
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
           <thead>
             <tr>{["Nombre","Email","Estado","Tipo","Vence",""].map(h => (

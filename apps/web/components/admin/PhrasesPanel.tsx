@@ -18,6 +18,50 @@ const CONTEXT_FILTERS: { key: string; label: string }[] = [
   { key: 'ambas', label: 'Ambas' },
 ];
 
+const cardStyle: React.CSSProperties = {
+  background: 'var(--paper)', border: '1px solid var(--border-hairline)',
+  borderRadius: 'var(--radius-card)', padding: '22px 24px', marginBottom: 20,
+};
+const cardTitleStyle: React.CSSProperties = {
+  fontSize: 15, fontWeight: 700, color: 'var(--ink)', margin: '0 0 16px',
+};
+const labelStyle: React.CSSProperties = {
+  display: 'block', fontSize: 12, fontWeight: 400, color: 'var(--ink-secondary)', marginBottom: 4,
+};
+const fieldStyle: React.CSSProperties = {
+  width: '100%', height: 32, borderRadius: 0, border: 'none', borderBottom: '1px solid var(--border-input)',
+  padding: '0 2px 6px', fontSize: 14.5, fontWeight: 600, background: 'transparent', color: 'var(--ink)',
+  outline: 'none', boxSizing: 'border-box',
+};
+const selectStyle: React.CSSProperties = { ...fieldStyle, height: 36 };
+const textareaStyle: React.CSSProperties = {
+  width: '100%', borderRadius: 10, border: '1px solid var(--border-hairline)',
+  padding: 10, fontSize: 14.5, fontWeight: 600, background: 'var(--page-bg)', color: 'var(--ink)',
+  outline: 'none', boxSizing: 'border-box', minHeight: 60, resize: 'vertical', fontFamily: 'inherit',
+};
+const draftCardStyle: React.CSSProperties = {
+  background: 'var(--page-bg)', border: '1px solid var(--border-hairline)', borderRadius: 14, padding: 16, marginBottom: 10,
+};
+const ghostButtonStyle: React.CSSProperties = {
+  height: 32, padding: '0 14px', borderRadius: 9999, border: '1px solid var(--border-hairline)',
+  background: 'transparent', color: 'var(--ink-secondary)', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+};
+const dangerButtonStyle: React.CSSProperties = {
+  height: 32, padding: '0 14px', borderRadius: 9999, border: '1px solid var(--danger)',
+  background: 'transparent', color: 'var(--danger)', fontSize: 12, fontWeight: 600, cursor: 'pointer', flexShrink: 0,
+};
+const primaryButtonStyle: React.CSSProperties = {
+  height: 40, padding: '0 22px', borderRadius: 9999, border: 'none',
+  background: 'var(--ring-accent)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+};
+const filterPillStyle = (active: boolean): React.CSSProperties => ({
+  height: 30, padding: '0 14px', borderRadius: 9999,
+  border: active ? '1px solid var(--ring-accent)' : '1px solid var(--border-hairline)',
+  background: active ? 'rgba(201,166,107,.14)' : 'transparent',
+  color: active ? 'var(--ring-accent)' : 'var(--ink-secondary)',
+  fontSize: 12, fontWeight: 600, cursor: 'pointer', marginRight: 8,
+});
+
 export function PhrasesPanel() {
   const [phrases, setPhrases] = useState<AdminPhrase[]>([]);
   const [filter, setFilter] = useState('all');
@@ -97,82 +141,108 @@ export function PhrasesPanel() {
   const list = filter === 'all' ? phrases : phrases.filter((p) => p.context === filter);
 
   return (
-    <section>
-      <h2>Frases Card RR.SS</h2>
-      {error && <p role="alert">{error}</p>}
+    <div style={cardStyle}>
+      <h3 style={cardTitleStyle}>Frases Card RR.SS</h3>
+      {error && <p role="alert" style={{ color: 'var(--danger)', fontSize: 13 }}>{error}</p>}
 
-      <div>
+      <div style={{ marginBottom: 16 }}>
         {CONTEXT_FILTERS.map(({ key, label }) => (
-          <button key={key} type="button" onClick={() => setFilter(key)}>
+          <button key={key} type="button" onClick={() => setFilter(key)} style={filterPillStyle(filter === key)}>
             {label}
           </button>
         ))}
       </div>
 
-      <label htmlFor="ph-new-text">Nueva frase</label>
-      <textarea id="ph-new-text" value={newText} onChange={(e) => setNewText(e.target.value)} />
-      <label htmlFor="ph-new-context">Contexto</label>
-      <select id="ph-new-context" value={newContext} onChange={(e) => setNewContext(e.target.value)}>
-        <option value="confirmacion">Confirmación</option>
-        <option value="instagram">Instagram</option>
-        <option value="ambas">Ambas</option>
-      </select>
-      <button type="button" onClick={handleCreate}>
-        + Agregar frase
-      </button>
-
-      {list.length === 0 && <p>No hay frases para este filtro.</p>}
-      {list.map((phrase) =>
-        editingId === phrase.id ? (
-          <div key={phrase.id}>
-            <label htmlFor={`ph-edit-text-${phrase.id}`}>Frase</label>
-            <textarea id={`ph-edit-text-${phrase.id}`} value={editText} onChange={(e) => setEditText(e.target.value)} />
-            <label htmlFor={`ph-edit-context-${phrase.id}`}>Contexto</label>
-            <select id={`ph-edit-context-${phrase.id}`} value={editContext} onChange={(e) => setEditContext(e.target.value)}>
+      <div style={draftCardStyle}>
+        <label style={labelStyle} htmlFor="ph-new-text">Nueva frase</label>
+        <textarea id="ph-new-text" style={textareaStyle} value={newText} onChange={(e) => setNewText(e.target.value)} />
+        <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end', marginTop: 12, flexWrap: 'wrap' }}>
+          <div style={{ flex: 1, minWidth: 160 }}>
+            <label style={labelStyle} htmlFor="ph-new-context">Contexto</label>
+            <select id="ph-new-context" style={selectStyle} value={newContext} onChange={(e) => setNewContext(e.target.value)}>
               <option value="confirmacion">Confirmación</option>
               <option value="instagram">Instagram</option>
               <option value="ambas">Ambas</option>
             </select>
-            <button type="button" onClick={() => handleSaveEdit(phrase.id)}>
-              Guardar
-            </button>
-            <button type="button" onClick={() => setEditingId(null)}>
-              Cancelar
-            </button>
+          </div>
+          <button type="button" onClick={handleCreate} style={primaryButtonStyle}>
+            + Agregar frase
+          </button>
+        </div>
+      </div>
+
+      {list.length === 0 && <p style={{ color: 'var(--ink-secondary)', fontSize: 13 }}>No hay frases para este filtro.</p>}
+      {list.map((phrase) =>
+        editingId === phrase.id ? (
+          <div key={phrase.id} style={draftCardStyle}>
+            <label style={labelStyle} htmlFor={`ph-edit-text-${phrase.id}`}>Frase</label>
+            <textarea id={`ph-edit-text-${phrase.id}`} style={textareaStyle} value={editText} onChange={(e) => setEditText(e.target.value)} />
+            <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end', marginTop: 12, flexWrap: 'wrap' }}>
+              <div style={{ flex: 1, minWidth: 160 }}>
+                <label style={labelStyle} htmlFor={`ph-edit-context-${phrase.id}`}>Contexto</label>
+                <select id={`ph-edit-context-${phrase.id}`} style={selectStyle} value={editContext} onChange={(e) => setEditContext(e.target.value)}>
+                  <option value="confirmacion">Confirmación</option>
+                  <option value="instagram">Instagram</option>
+                  <option value="ambas">Ambas</option>
+                </select>
+              </div>
+              <button type="button" onClick={() => handleSaveEdit(phrase.id)} style={primaryButtonStyle}>
+                Guardar
+              </button>
+              <button type="button" onClick={() => setEditingId(null)} style={ghostButtonStyle}>
+                Cancelar
+              </button>
+            </div>
           </div>
         ) : (
-          <div key={phrase.id}>
-            <p>{phrase.text}</p>
-            <span>{phrase.context}</span>
-            <button type="button" onClick={() => handleToggleActive(phrase)}>
-              {phrase.active ? '● Activa' : '○ Inactiva'}
-            </button>
-            <button type="button" onClick={() => startEdit(phrase)}>
-              Editar
-            </button>
-            <button type="button" onClick={() => handleDelete(phrase.id)}>
-              Eliminar
-            </button>
+          <div key={phrase.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '12px 0', borderBottom: '1px solid var(--border-hairline)' }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ fontSize: 14, color: 'var(--ink)', margin: 0 }}>{phrase.text}</p>
+              <span style={{ fontSize: 11, color: 'var(--ink-secondary)', textTransform: 'uppercase', letterSpacing: '.04em' }}>{phrase.context}</span>
+            </div>
+            <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+              <button
+                type="button"
+                onClick={() => handleToggleActive(phrase)}
+                style={{
+                  ...ghostButtonStyle,
+                  borderColor: phrase.active ? 'var(--ring-accent)' : 'var(--border-hairline)',
+                  color: phrase.active ? 'var(--ring-accent)' : 'var(--ink-secondary)',
+                }}
+              >
+                {phrase.active ? '● Activa' : '○ Inactiva'}
+              </button>
+              <button type="button" onClick={() => startEdit(phrase)} style={ghostButtonStyle}>
+                Editar
+              </button>
+              <button type="button" onClick={() => handleDelete(phrase.id)} style={dangerButtonStyle}>
+                Eliminar
+              </button>
+            </div>
           </div>
         )
       )}
 
-      <div>
-        <div>
-          <h3>Pantalla de confirmación</h3>
-          <p>{preview.confirmacion ? preview.confirmacion.text : 'No hay frases activas para este contexto.'}</p>
-          <button type="button" onClick={() => handlePreview('confirmacion')}>
+      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginTop: 20 }}>
+        <div style={{ ...draftCardStyle, flex: 1, minWidth: 220, marginBottom: 0 }}>
+          <h4 style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)', margin: '0 0 8px' }}>Pantalla de confirmación</h4>
+          <p style={{ fontSize: 13, color: 'var(--ink-secondary)', margin: '0 0 12px' }}>
+            {preview.confirmacion ? preview.confirmacion.text : 'No hay frases activas para este contexto.'}
+          </p>
+          <button type="button" onClick={() => handlePreview('confirmacion')} style={{ ...ghostButtonStyle, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
             <IconShuffle size={13} /> Probar otra
           </button>
         </div>
-        <div>
-          <h3>Tarjeta de Instagram</h3>
-          <p>{preview.instagram ? preview.instagram.text : 'No hay frases activas para este contexto.'}</p>
-          <button type="button" onClick={() => handlePreview('instagram')}>
+        <div style={{ ...draftCardStyle, flex: 1, minWidth: 220, marginBottom: 0 }}>
+          <h4 style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)', margin: '0 0 8px' }}>Tarjeta de Instagram</h4>
+          <p style={{ fontSize: 13, color: 'var(--ink-secondary)', margin: '0 0 12px' }}>
+            {preview.instagram ? preview.instagram.text : 'No hay frases activas para este contexto.'}
+          </p>
+          <button type="button" onClick={() => handlePreview('instagram')} style={{ ...ghostButtonStyle, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
             <IconShuffle size={13} /> Probar otra
           </button>
         </div>
       </div>
-    </section>
+    </div>
   );
 }

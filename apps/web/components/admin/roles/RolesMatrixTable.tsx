@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { CLIENT_TYPES } from "@latribu/shared-types";
 import type { PermissionModuleDto, ModuleAccessMatrix } from "@latribu/shared-types";
 import { CLIENT_TYPE_LABELS } from "../../../lib/constants";
-import { saveMatrixColumn } from "../../../lib/roles-client";
+import { saveMatrixColumn, deleteModule } from "../../../lib/roles-client";
 import { showToast } from "../../layout/AppShell";
 
 type RolesMatrixTableProps = {
@@ -18,6 +18,21 @@ const cellStyle: React.CSSProperties = { padding: "10px 12px", textAlign: "cente
 export default function RolesMatrixTable({ modules, matrix, onSaved }: RolesMatrixTableProps) {
   const [edits, setEdits] = useState<ModuleAccessMatrix>(matrix);
   const [savingType, setSavingType] = useState<string | null>(null);
+  const [deletingKey, setDeletingKey] = useState<string | null>(null);
+
+  async function handleDelete(module: PermissionModuleDto) {
+    if (!window.confirm(`¿Borrar el módulo "${module.label}"? Esto quita el acceso configurado para todos los tipos de cliente.`)) return;
+    setDeletingKey(module.key);
+    try {
+      await deleteModule(module.key);
+      showToast("Módulo eliminado.", "success");
+      onSaved();
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : "Error al borrar el módulo.", "error");
+    } finally {
+      setDeletingKey(null);
+    }
+  }
 
   // La matriz llega async (fetch inicial, y de nuevo tras agregar un
   // módulo) — cada vez que cambia la referencia se resincroniza el estado
@@ -57,7 +72,10 @@ export default function RolesMatrixTable({ modules, matrix, onSaved }: RolesMatr
   }
 
   return (
-    <div style={{ borderTop: "1px solid var(--border-hairline)", paddingTop: 4 }}>
+    <div style={{
+      background: "var(--paper)", border: "1px solid var(--border-hairline)",
+      borderRadius: "var(--radius-card)", padding: "22px 24px",
+    }}>
       <div style={{ overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
           <thead>
@@ -82,7 +100,24 @@ export default function RolesMatrixTable({ modules, matrix, onSaved }: RolesMatr
             {modules.map((module, i) => (
               <tr key={module.key} style={{ borderBottom: i < modules.length - 1 ? "0.5px solid var(--border-hairline)" : "none" }}>
                 <td style={{ ...cellStyle, textAlign: "left" }}>
-                  <div style={{ fontWeight: 600, color: "var(--ink)" }}>{module.label}</div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div style={{ fontWeight: 600, color: "var(--ink)" }}>{module.label}</div>
+                    {module.isCustom && (
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(module)}
+                        disabled={deletingKey === module.key}
+                        style={{
+                          background: "none", border: "1px solid var(--danger)", borderRadius: 9999,
+                          padding: "2px 10px", fontSize: 10.5, fontWeight: 600, color: "var(--danger)",
+                          cursor: deletingKey === module.key ? "not-allowed" : "pointer",
+                          opacity: deletingKey === module.key ? 0.6 : 1, flexShrink: 0,
+                        }}
+                      >
+                        {deletingKey === module.key ? "Borrando…" : "Eliminar"}
+                      </button>
+                    )}
+                  </div>
                   {module.note && <div style={{ fontSize: 11, color: "var(--ink-secondary)", marginTop: 2 }}>{module.note}</div>}
                 </td>
                 {CLIENT_TYPES.map((clientType) => (

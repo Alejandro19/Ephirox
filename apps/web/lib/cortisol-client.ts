@@ -29,6 +29,7 @@ export type CortisolTechnique = {
   youtubeUrl: string | null;
   audioUrl: string | null;
   audioName: string | null;
+  emotion: string | null;
 };
 
 export type CortisolTip = { id: string; content: string } | null;
@@ -46,6 +47,7 @@ export type CortisolTechniquePatch = {
   youtube_url?: string;
   audio_url?: null;
   audio_name?: null;
+  emotion?: string | null;
 };
 
 export async function listTechniques(clientId: string): Promise<CortisolTechnique[]> {

@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useState } from "react";
 import IdentityHeader from "../../../../components/ui/IdentityHeader";
 import RolesCountCards from "../../../../components/admin/roles/RolesCountCards";
-import RolesAddModuleBar from "../../../../components/admin/roles/RolesAddModuleBar";
 import RolesMatrixTable from "../../../../components/admin/roles/RolesMatrixTable";
 import { getMatrix, getCounts } from "../../../../lib/roles-client";
 import type { PermissionModuleDto, ModuleAccessMatrix, ClientTypeCounts } from "@latribu/shared-types";
@@ -37,7 +36,6 @@ export default function AdminRolesPage() {
         subtitle="Marca los módulos a los que tiene acceso cada tipo de cliente y guarda los cambios."
       />
       <RolesCountCards counts={counts} />
-      <RolesAddModuleBar onCreated={refetch} />
       {error && (
         <p role="alert" style={{ color: "var(--danger)", fontSize: 13, marginBottom: 16 }}>
           {error}

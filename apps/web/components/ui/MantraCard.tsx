@@ -3,9 +3,10 @@
 type MantraCardProps = {
   mantra: string;
   lead?: string;
+  author?: string | null;
 };
 
-export default function MantraCard({ mantra, lead }: MantraCardProps) {
+export default function MantraCard({ mantra, lead, author }: MantraCardProps) {
   return (
     <div
       style={{
@@ -39,6 +40,21 @@ export default function MantraCard({ mantra, lead }: MantraCardProps) {
         </span>
       )}
       &ldquo;{mantra}&rdquo;
+      {author && (
+        <span
+          style={{
+            display: "block",
+            marginTop: 6,
+            fontSize: 12,
+            fontStyle: "normal",
+            fontFamily: "inherit",
+            fontWeight: 400,
+            color: "var(--ink-secondary)",
+          }}
+        >
+          — {author}
+        </span>
+      )}
     </div>
   );
 }

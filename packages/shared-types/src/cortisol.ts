@@ -4,6 +4,10 @@ export const CORTISOL_TECHNIQUE_TYPES = ['Respiración', 'Breathwork', 'Meditaci
 export const CortisolTechniqueTypeSchema = z.enum(CORTISOL_TECHNIQUE_TYPES);
 export type CortisolTechniqueType = z.infer<typeof CortisolTechniqueTypeSchema>;
 
+export const CORTISOL_EMOTIONS = ['ansioso', 'irritable', 'cansado', 'abrumado', 'tranquilo', 'energia'] as const;
+export const CortisolEmotionSchema = z.enum(CORTISOL_EMOTIONS);
+export type CortisolEmotion = z.infer<typeof CortisolEmotionSchema>;
+
 export const CortisolTechniqueInputSchema = z.object({
   title: z.string().min(1),
   type: CortisolTechniqueTypeSchema.optional(),
@@ -12,12 +16,11 @@ export const CortisolTechniqueInputSchema = z.object({
   duration_seconds: z.coerce.number().int().min(0).nullable().optional(),
   description: z.string().nullable().optional(),
   youtube_url: z.string().url().nullable().optional(),
+  // Emoción para la que esta técnica es la recomendación del hero en el
+  // panel de cliente — null/omitida si no está asignada a ninguna.
+  emotion: CortisolEmotionSchema.nullable().optional(),
 });
 export type CortisolTechniqueInput = z.infer<typeof CortisolTechniqueInputSchema>;
-
-export const CORTISOL_EMOTIONS = ['ansioso', 'irritable', 'cansado', 'abrumado', 'tranquilo', 'energia'] as const;
-export const CortisolEmotionSchema = z.enum(CORTISOL_EMOTIONS);
-export type CortisolEmotion = z.infer<typeof CortisolEmotionSchema>;
 
 export const CortisolCheckinInputSchema = z.object({
   emotion: CortisolEmotionSchema,

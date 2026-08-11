@@ -27,7 +27,7 @@ describe('ClientCortisolPanel', () => {
   it('shows the assigned techniques and the tip of the day', async () => {
     mockFetches({
       techniques: [
-        { id: 't1', title: 'Respiración 4-7-8', type: 'Respiración', duration: '5 min', durationMinutes: 5, durationSeconds: null, description: null, videoUrl: null, videoName: null, youtubeUrl: null, audioUrl: null, audioName: null },
+        { id: 't1', title: 'Respiración 4-7-8', type: 'Respiración', duration: '5 min', durationMinutes: 5, durationSeconds: null, description: null, videoUrl: null, videoName: null, youtubeUrl: null, audioUrl: null, audioName: null, emotion: null },
       ],
       tip: { id: 'tip1', content: 'Duerme 8 horas.' },
     });
@@ -47,7 +47,7 @@ describe('ClientCortisolPanel', () => {
     const user = userEvent.setup();
     mockFetches({
       techniques: [
-        { id: 't1', title: 'Meditación guiada', type: 'Meditación', duration: null, durationMinutes: null, durationSeconds: null, description: null, videoUrl: null, videoName: null, youtubeUrl: 'https://youtube.com/watch?v=abcdef', audioUrl: null, audioName: null },
+        { id: 't1', title: 'Meditación guiada', type: 'Meditación', duration: null, durationMinutes: null, durationSeconds: null, description: null, videoUrl: null, videoName: null, youtubeUrl: 'https://youtube.com/watch?v=abcdef', audioUrl: null, audioName: null, emotion: null },
       ],
     });
 
@@ -70,5 +70,23 @@ describe('ClientCortisolPanel', () => {
     await user.click(screen.getByRole('button', { name: /Tranquilo\/a/ }));
 
     await waitFor(() => expect(cortisolClient.postCheckin).toHaveBeenCalledWith('client-1', 'tranquilo'));
+  });
+
+  it('recommends and plays the technique the admin assigned to the checked-in emotion', async () => {
+    const user = userEvent.setup();
+    mockFetches({
+      techniques: [
+        { id: 't1', title: 'Respiración de caja', type: 'Respiración', duration: null, durationMinutes: null, durationSeconds: null, description: 'Ordena tus pensamientos.', videoUrl: null, videoName: null, youtubeUrl: 'https://youtube.com/watch?v=boxbreath', audioUrl: null, audioName: null, emotion: 'ansioso' },
+        { id: 't2', title: 'Meditación guiada', type: 'Meditación', duration: null, durationMinutes: null, durationSeconds: null, description: null, videoUrl: null, videoName: null, youtubeUrl: null, audioUrl: null, audioName: null, emotion: null },
+      ],
+      checkin: { id: 'c1', emotion: 'ansioso', checkinDate: '2026-08-02' },
+    });
+
+    render(<ClientCortisolPanel clientId="client-1" />);
+    await waitFor(() => screen.getByText('Recomendada para ti ahora'));
+    expect(screen.getByRole('heading', { level: 3, name: 'Respiración de caja' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Empezar técnica' }));
+    expect(await screen.findByRole('heading', { name: 'Respiración de caja' })).toBeInTheDocument();
   });
 });

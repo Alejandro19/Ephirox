@@ -26,7 +26,6 @@ export const CLIENT_NAV: NavItem[] = [
 
 export const ADMIN_NAV: NavItem[] = [
   { key: "admin-hub", label: "Administración" },
-  { key: "personal-info", label: "Información Personal" },
   { key: "training", label: "Entrenamiento" },
   { key: "nutrition", label: "Nutrición" },
   { key: "cortisol", label: "Gestión de Cortisol" },
@@ -34,7 +33,6 @@ export const ADMIN_NAV: NavItem[] = [
   { key: "blindspot", label: "Punto Ciego" },
   { key: "evolution", label: "Mi Evolución" },
   { key: "community", label: "Comunidad Wellness" },
-  { key: "admin-notifications", label: "Notificaciones" },
 ];
 
 export const ADMIN_HUB_SUBITEMS: NavItem[] = [
@@ -50,24 +48,6 @@ export const CLIENT_TYPE_LABELS: Record<string, string> = {
   mentoring: "Mentoring",
 };
 
-// --- Module Theme ---
-// El anillo del sidebar ya no codifica el módulo por color (ver
-// SidebarRing.tsx) — solo se conserva la leyenda contextual.
-
-export type ModuleThemeConfig = {
-  ringLabel: string;
-};
-
-export const MODULE_THEME: Record<string, ModuleThemeConfig> = {
-  "personal-info": { ringLabel: "Tu espacio personal" },
-  training: { ringLabel: "Fase: Enfoque" },
-  nutrition: { ringLabel: "Fase: Sostén" },
-  cortisol: { ringLabel: "Fase: Calma" },
-  rest: { ringLabel: "Fase: Descanso" },
-  community: { ringLabel: "Fase: Comunidad" },
-  evolution: { ringLabel: "Tu progreso" },
-  blindspot: { ringLabel: "Punto Ciego" },
-};
 
 // --- Mantras ---
 
@@ -125,7 +105,6 @@ export const VIEW_TO_PATH: Record<string, string> = {
   "admin-clients": "/admin/clients",
   "admin-quotes": "/admin/phrases",
   "admin-roles": "/admin/roles",
-  "admin-notifications": "/admin/notifications",
 };
 
 export const PATH_TO_VIEW: Record<string, string> = {
@@ -141,5 +120,4 @@ export const PATH_TO_VIEW: Record<string, string> = {
   "/admin/clients": "admin-clients",
   "/admin/phrases": "admin-quotes",
   "/admin/roles": "admin-roles",
-  "/admin/notifications": "admin-notifications",
 };

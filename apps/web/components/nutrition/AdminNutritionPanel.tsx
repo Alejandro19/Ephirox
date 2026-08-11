@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { getNutrition, saveNutritionPlan, uploadNutritionPdf, type NutritionPlan, type MenuMeal } from '../../lib/nutrition-client';
+import { getNutrition, saveNutritionPlan, type MenuMeal } from '../../lib/nutrition-client';
 import { listSupplements, createSupplement, updateSupplement, deleteSupplement, type Supplement } from '../../lib/supplements-client';
 import { showToast } from '../layout/AppShell';
 
@@ -32,7 +32,8 @@ function supplementsToRows(list: Supplement[]): SupplementRowDraft[] {
 }
 
 const cardStyle: React.CSSProperties = {
-  borderTop: '1px solid var(--border-hairline)', paddingTop: 20, paddingBottom: 20,
+  background: 'var(--paper)', border: '1px solid var(--border-hairline)',
+  borderRadius: 'var(--radius-card)', padding: '22px 24px', marginBottom: 20,
 };
 const cardTitleStyle: React.CSSProperties = {
   fontSize: 15, fontWeight: 700, color: 'var(--ink)', margin: '0 0 16px',
@@ -69,7 +70,6 @@ export function AdminNutritionPanel({ clientId }: AdminNutritionPanelProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [plan, setPlan] = useState<NutritionPlan>({});
 
   const [summary, setSummary] = useState('');
   const [dailyCals, setDailyCals] = useState('');
@@ -88,7 +88,6 @@ export function AdminNutritionPanel({ clientId }: AdminNutritionPanelProps) {
       getNutrition(clientId),
       listSupplements(clientId).catch(() => []),
     ]);
-    setPlan(fetchedPlan);
     setSummary(fetchedPlan.summary || '');
     setDailyCals(fetchedPlan.dailyCals != null ? String(fetchedPlan.dailyCals) : '');
     setProteinG(fetchedPlan.proteinG != null ? String(fetchedPlan.proteinG) : '');
@@ -136,16 +135,6 @@ export function AdminNutritionPanel({ clientId }: AdminNutritionPanelProps) {
       const next = prev.filter((r) => r.key !== key);
       return next.length ? next : [{ key: `new-${++draftCounter.current}`, id: null, name: '', brand: '', dose: '', timing: '' }];
     });
-  }
-
-  async function handleUploadPdf(file: File) {
-    try {
-      const updated = await uploadNutritionPdf(clientId, file);
-      setPlan(updated);
-      showToast('PDF cargado.', 'success');
-    } catch (e) {
-      showToast((e as Error).message, 'error');
-    }
   }
 
   async function handleSave() {
@@ -231,22 +220,6 @@ export function AdminNutritionPanel({ clientId }: AdminNutritionPanelProps) {
             <input id="nt-fat" type="number" style={fieldStyle} value={fatG} onChange={(e) => setFatG(e.target.value)} />
           </div>
         </div>
-
-        <label style={labelStyle} htmlFor="nt-pdf">PDF del plan (opcional)</label>
-        <input
-          id="nt-pdf"
-          type="file"
-          accept="application/pdf"
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) handleUploadPdf(file);
-          }}
-        />
-        {plan.pdfUrl && (
-          <a href={plan.pdfUrl} target="_blank" rel="noreferrer" style={{ display: 'block', marginTop: 6, fontSize: 12, color: 'var(--ring-accent)' }}>
-            {plan.pdfName || 'Ver PDF'}
-          </a>
-        )}
       </div>
 
       <div style={cardStyle}>

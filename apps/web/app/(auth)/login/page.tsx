@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, type FormEvent } from 'react';
+import React, { useState, useEffect, useRef, useCallback, type FormEvent } from 'react';
 import {
   loginRequest, saveSession, type LoginResult,
   fetchGoogleClientId, googleLoginRequest,
@@ -52,34 +52,32 @@ declare global {
 }
 
 // ============================================================
-// FASE 0 — PÁGINA DE LOGIN AUTOCONTENIDA (CERO DEPENDENCIAS EXTERNAS)
-// Split Screen: izquierda (identidad La Tribu) / derecha (formulario)
-// Tema día/noche por hora real del dispositivo (no prefers-color-scheme),
-// portado 1:1 del front antiguo: antes de las 18:00 tema "light", desde
-// las 18:00 tema "dark" — los paneles hero/formulario intercambian toda
-// su paleta entre uno y otro (ver .theme-login-* en globals.css).
+// PÁGINA DE LOGIN — Split Screen: izquierda (identidad La Tribu) /
+// derecha (formulario). Paleta fija (sin variante día/noche): el panel
+// izquierdo usa un café más oscuro y profundo (#2A2015) EXCLUSIVO de
+// esta pantalla — no reemplaza --hero-espresso en el resto de la app —
+// y el panel derecho es siempre claro (--page-bg) para legibilidad.
 // ============================================================
 
-// Código fuente del script que fija el tema en <html> ANTES del primer
-// pintado (se ejecuta durante el parseo del HTML, antes de que React
-// hidrate) — así no hay flash del tema equivocado ni salto de color al
-// refrescar la página.
-const LOGIN_THEME_SCRIPT = `(function(){try{
-  var h=new Date().getHours();
-  var theme=h<18?'theme-login-light':'theme-login-dark';
-  var other=theme==='theme-login-light'?'theme-login-dark':'theme-login-light';
-  var root=document.documentElement;
-  if(!root.classList.contains(theme))root.classList.add(theme);
-  root.classList.remove(other);
-}catch(e){}})();`;
+// Anillo de marca (conic-gradient dorado→coral→morado→verde) — mismo
+// mark que el logo del ring de progreso, pero como aro cerrado 100%
+// (identidad, no dato). El círculo interior matchea el fondo del panel
+// para que se lea como un aro, no como un disco.
+const LOGIN_PANEL_BG = '#2A2015';
 
-function applyLoginTheme(): void {
-  const hour = new Date().getHours();
-  const theme = hour < 18 ? 'theme-login-light' : 'theme-login-dark';
-  const other = theme === 'theme-login-light' ? 'theme-login-dark' : 'theme-login-light';
-  const root = document.documentElement;
-  if (!root.classList.contains(theme)) root.classList.add(theme);
-  root.classList.remove(other);
+function BrandRing({ size = 64 }: { size?: number }) {
+  const thickness = Math.round(size * 0.125);
+  return (
+    <div className="relative z-[1]" style={{ width: size, height: size }}>
+      <div
+        style={{
+          position: 'absolute', inset: 0, borderRadius: '50%',
+          background: 'conic-gradient(from 0deg, #D9B77E, #D97E5F, #8A5FA0, #5B8F6B, #D9B77E)',
+        }}
+      />
+      <div style={{ position: 'absolute', inset: thickness, borderRadius: '50%', background: LOGIN_PANEL_BG }} />
+    </div>
+  );
 }
 
 export default function LoginPage(): React.ReactElement {
@@ -121,8 +119,38 @@ export default function LoginPage(): React.ReactElement {
   const [authMessage, setAuthMessage] = useState<string | null>(null);
 
   // --- Google Sign-In ---
-  const googleButtonRef = useRef<HTMLDivElement>(null);
+  // El botón se desmonta y remonta cada vez que se cambia de vista
+  // (login -> recuperar/registro -> login), porque ese bloque de JSX vive
+  // dentro de un ternario por `view`. google.accounts.id.renderButton()
+  // solo pinta en el nodo del DOM que existía cuando se llamó, así que un
+  // ref de objeto normal + un efecto con deps [] deja el botón vacío al
+  // volver a 'login' (el nuevo nodo nunca recibe el render). Un callback
+  // ref + estos valores guardados en refs permiten volver a pintar el
+  // botón cada vez que el nodo se remonta, sin repetir el fetch del
+  // client ID ni el `initialize()`.
+  const googleButtonNodeRef = useRef<HTMLDivElement | null>(null);
+  const googleClientIdRef = useRef<string | null>(null);
+  const googleInitializedRef = useRef(false);
   const [googleReady, setGoogleReady] = useState(false);
+
+  const renderGoogleButtonIfReady = useCallback(() => {
+    const node = googleButtonNodeRef.current;
+    const clientId = googleClientIdRef.current;
+    if (!node || !clientId || typeof window === 'undefined' || !window.google?.accounts) return;
+    window.google.accounts.id.renderButton(node, {
+      theme: 'outline',
+      size: 'large',
+      shape: 'rectangular',
+      width: 170,
+      text: 'continue_with',
+    });
+    setGoogleReady(true);
+  }, []);
+
+  const setGoogleButtonNode = useCallback((node: HTMLDivElement | null) => {
+    googleButtonNodeRef.current = node;
+    if (node) renderGoogleButtonIfReady();
+  }, [renderGoogleButtonIfReady]);
 
   // --- Apple Sign-In ---
   // appleReady solo pasa a true si el backend tiene APPLE_CLIENT_ID
@@ -130,15 +158,6 @@ export default function LoginPage(): React.ReactElement {
   // deshabilitado de más abajo. El SDK y el flujo ya quedan completos acá,
   // listos para activarse solos apenas exista la cuenta de desarrollador.
   const [appleReady, setAppleReady] = useState(false);
-
-  useEffect(() => {
-    // Cubre navegación interna (SPA) hacia /login, donde el <script>
-    // inline no vuelve a ejecutarse. Redundante pero inofensivo en la
-    // carga inicial (mismo tema, sin parpadeo).
-    applyLoginTheme();
-    const interval = setInterval(applyLoginTheme, 5 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -187,23 +206,20 @@ export default function LoginPage(): React.ReactElement {
         return;
       }
       const clientId = await clientIdPromise;
-      if (cancelled || !clientId || !googleButtonRef.current) return;
-      window.google.accounts.id.initialize({
-        client_id: clientId,
-        callback: handleGoogleCredentialResponse,
-        // FedCM: diálogo nativo del navegador en vez del popup con la
-        // pantalla completa de accounts.google.com — bastante más rápido y
-        // es el flujo que Google recomienda de aquí en adelante.
-        use_fedcm_for_prompt: true,
-      });
-      window.google.accounts.id.renderButton(googleButtonRef.current, {
-        theme: 'filled_black',
-        size: 'large',
-        shape: 'pill',
-        width: 280,
-        text: 'continue_with',
-      });
-      setGoogleReady(true);
+      if (cancelled || !clientId) return;
+      googleClientIdRef.current = clientId;
+      if (!googleInitializedRef.current) {
+        window.google.accounts.id.initialize({
+          client_id: clientId,
+          callback: handleGoogleCredentialResponse,
+          // FedCM: diálogo nativo del navegador en vez del popup con la
+          // pantalla completa de accounts.google.com — bastante más rápido y
+          // es el flujo que Google recomienda de aquí en adelante.
+          use_fedcm_for_prompt: true,
+        });
+        googleInitializedRef.current = true;
+      }
+      renderGoogleButtonIfReady();
     }
 
     initGoogleSignIn();
@@ -362,13 +378,17 @@ export default function LoginPage(): React.ReactElement {
     }
   }
 
-  const inputClasses: string = 'block w-full h-11 rounded-xl px-4 text-sm transition-all duration-200 ease-in-out outline-none bg-[var(--lf-input-bg)] border border-[var(--lf-input-border)] text-[var(--lf-input-text)] placeholder:text-[var(--lf-label)] placeholder:opacity-60 focus:border-[var(--lf-link)] focus:ring-4 focus:ring-[var(--lf-link)]/10';
-  const labelClasses: string = 'block text-sm font-medium text-[var(--lf-label)] transition-colors duration-[600ms]';
+  const inputClasses: string =
+    'block w-full h-9 border-0 border-b border-[var(--border-input)] rounded-none bg-transparent px-0.5 py-1.5 text-[14px] text-[var(--ink)] outline-none transition-colors placeholder:text-[var(--ink-secondary)] placeholder:opacity-60 focus:border-[var(--ink)]';
+  const labelClasses: string = 'block text-[11px] font-semibold uppercase tracking-wide text-[var(--ink-secondary)]';
+  const primaryButtonClasses: string =
+    'relative inline-flex w-full items-center justify-center h-11 rounded-[9px] font-semibold tracking-wide transition-all duration-200 ease-out active:scale-[0.98] active:brightness-95 disabled:cursor-not-allowed disabled:opacity-60 gap-2';
+  const primaryButtonStyle = { background: LOGIN_PANEL_BG, color: '#F5EFE2' };
+  const linkClasses: string = 'underline underline-offset-4 font-medium text-sm hover:opacity-80 transition-opacity';
+  const linkStyle = { color: 'var(--hero-piedra-accent)' };
 
   return (
     <>
-      {/* eslint-disable-next-line @next/next/no-sync-scripts */}
-      <script dangerouslySetInnerHTML={{ __html: LOGIN_THEME_SCRIPT }} />
 
       {/* Pantalla transitoria mientras se procesa el login (con Google o con
           email/contraseña) y se entra a la plataforma — cubre el tramo hasta
@@ -392,27 +412,23 @@ export default function LoginPage(): React.ReactElement {
         {/* md:min-h fija un tamaño de tarjeta estándar — no debe crecer o
             encogerse según cuántos botones tenga cada formulario (login,
             registro, recuperar contraseña). */}
-        <div className="max-w-4xl w-full md:min-h-[600px] grid grid-cols-1 md:grid-cols-2 rounded-3xl overflow-hidden shadow-[0_30px_80px_-15px_rgba(43,36,32,0.18)]">
+        <div className="max-w-4xl w-full md:min-h-[600px] grid grid-cols-1 md:grid-cols-2 rounded-[20px] overflow-hidden shadow-[0_20px_50px_rgba(26,23,18,0.12)]">
 
           {/* ========== LADO IZQUIERDO — IDENTIDAD LA TRIBU ========== */}
-          <div className="relative overflow-hidden p-12 flex flex-col items-center justify-center text-center" style={{ background: 'var(--hero-espresso)' }}>
+          <div className="relative overflow-hidden p-12 flex flex-col items-center justify-center text-center" style={{ background: LOGIN_PANEL_BG }}>
             <div
-              className="pointer-events-none absolute -right-16 -top-16 h-[280px] w-[280px] rounded-full"
-              style={{ background: 'radial-gradient(circle, rgba(217,183,126,.18) 0%, transparent 70%)' }}
+              className="pointer-events-none absolute rounded-full"
+              style={{ width: 260, height: 260, background: 'radial-gradient(circle, rgba(217,183,126,.22) 0%, transparent 70%)' }}
             />
-
-            <svg className="relative z-[1] -rotate-90" viewBox="0 0 100 100" width="56" height="56" aria-hidden="true">
-              <circle cx="50" cy="50" r="40" fill="none" strokeWidth="8" stroke="rgba(255,255,255,.2)" />
-              <circle cx="50" cy="50" r="40" fill="none" strokeWidth="8" strokeLinecap="round" strokeDasharray="205 251" stroke="var(--hero-espresso-accent)" />
-            </svg>
-            <h1 className="relative z-[1] font-serif text-[32px] font-bold mt-[18px] mb-1.5" style={{ color: 'var(--hero-espresso-text)' }}>La Tribu</h1>
-            <p className="relative z-[1] font-serif italic text-[15px]" style={{ color: 'var(--hero-espresso-text-muted)' }}>Comunidad de bienestar y alto rendimiento.</p>
+            <BrandRing size={64} />
+            <h1 className="relative z-[1] font-serif text-2xl font-bold mt-[18px] mb-1.5" style={{ color: '#F5EFE2' }}>La Tribu</h1>
+            <p className="relative z-[1] font-serif italic text-[12.5px]" style={{ color: '#B0A296' }}>Comunidad de bienestar y alto rendimiento.</p>
           </div>
 
           {/* ========== LADO DERECHO — FORMULARIO ========== */}
-          <div className="bg-[var(--lf-bg)] p-12 flex flex-col justify-center transition-colors duration-[600ms]">
-            <h2 className="text-2xl font-semibold tracking-tight mb-6 text-[var(--lf-title)] transition-colors duration-[600ms]">
-              {view === 'login' ? 'Acceso Miembros' : view === 'register' ? 'Crea tu cuenta premium' : 'Recuperar contraseña'}
+          <div className="p-12 flex flex-col justify-center" style={{ background: 'var(--page-bg)' }}>
+            <h2 className="font-serif text-[19px] font-semibold mb-6" style={{ color: 'var(--ink)' }}>
+              {view === 'login' ? 'Acceso miembros' : view === 'register' ? 'Crea tu cuenta premium' : 'Recuperar contraseña'}
             </h2>
 
             {view === 'forgot' ? (
@@ -444,7 +460,8 @@ export default function LoginPage(): React.ReactElement {
                     <button
                       type="submit"
                       disabled={forgotLoading}
-                      className="relative inline-flex w-full items-center justify-center h-11 rounded-xl bg-[var(--lf-btn-bg)] text-[var(--lf-btn-text)] font-semibold tracking-wide transition-all duration-200 ease-out active:scale-[0.98] active:brightness-95 disabled:cursor-not-allowed disabled:opacity-60 gap-2"
+                      className={primaryButtonClasses}
+                      style={primaryButtonStyle}
                     >
                       {forgotLoading ? 'Enviando…' : 'Enviar instrucciones'}
                     </button>
@@ -454,7 +471,8 @@ export default function LoginPage(): React.ReactElement {
                   <button
                     type="button"
                     onClick={() => { setView('login'); setForgotError(null); setForgotSent(false); }}
-                    className="text-[var(--lf-link)] hover:opacity-80 underline underline-offset-4 transition-colors duration-[600ms] font-medium text-sm"
+                    className={linkClasses}
+                    style={linkStyle}
                   >
                     Volver a iniciar sesión
                   </button>
@@ -480,16 +498,17 @@ export default function LoginPage(): React.ReactElement {
                   <label htmlFor="login-password" className={labelClasses}>Contraseña</label>
                   <input id="login-password" type="password" autoComplete="current-password" required value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} placeholder="••••••••" className={inputClasses} />
                 </div>
-                <label className="flex items-center gap-2 text-sm text-[var(--lf-label)] transition-colors duration-[600ms] cursor-pointer select-none">
+                <label className="flex items-center gap-2 text-sm cursor-pointer select-none" style={{ color: 'var(--ink-secondary)' }}>
                   <input
                     type="checkbox"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
-                    className="h-4 w-4 rounded border-[var(--lf-input-border)] accent-[var(--lf-link)]"
+                    className="h-4 w-4 rounded border-[var(--border-input)]"
+                    style={{ accentColor: LOGIN_PANEL_BG }}
                   />
                   Recuérdame
                 </label>
-                <button type="submit" disabled={loginLoading} className="relative inline-flex w-full items-center justify-center h-11 rounded-xl bg-[var(--lf-btn-bg)] text-[var(--lf-btn-text)] font-semibold tracking-wide transition-all duration-200 ease-out active:scale-[0.98] active:brightness-95 disabled:cursor-not-allowed disabled:opacity-60 gap-2">
+                <button type="submit" disabled={loginLoading} className={primaryButtonClasses} style={primaryButtonStyle}>
                   {loginLoading ? (<span className="flex items-center gap-2"><svg className="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>Ingresando…</span>) : 'Entrar'}
                 </button>
 
@@ -499,64 +518,59 @@ export default function LoginPage(): React.ReactElement {
                     botón "aparecía solo" un par de segundos después del resto del
                     formulario. Reservar el espacio de entrada evita ese salto. */}
                 <div className="flex items-center gap-2.5 my-4">
-                  <span className="flex-1 h-px bg-[var(--lf-input-border)] transition-colors duration-[600ms]" />
-                  <span className="text-[11px] uppercase tracking-wide text-[var(--lf-foot)] transition-colors duration-[600ms]">o</span>
-                  <span className="flex-1 h-px bg-[var(--lf-input-border)] transition-colors duration-[600ms]" />
+                  <span className="flex-1 h-px bg-[var(--border-input)]" />
+                  <span className="text-[11px] uppercase tracking-wide" style={{ color: 'var(--ink-secondary)' }}>o continúa con</span>
+                  <span className="flex-1 h-px bg-[var(--border-input)]" />
                 </div>
                 {/* Google Identity Services renderiza su propio botón (iframe) dentro del
                     div con ref — mientras no esté listo, un placeholder del mismo alto
-                    ocupa su lugar para que no haya salto de layout cuando aparezca. */}
-                <div className="relative flex justify-center" style={{ minHeight: 44 }}>
-                  {!googleReady && (
-                    <div
-                      aria-hidden="true"
-                      className="absolute inset-0 flex items-center justify-center gap-2 rounded-full border border-[var(--lf-input-border)] bg-[var(--lf-input-bg)] text-[var(--lf-input-text)] text-sm font-medium opacity-60"
-                    >
-                      <svg width="16" height="16" viewBox="0 0 48 48" aria-hidden="true">
-                        <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 3l6-6C34.5 5.1 29.6 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21 21-9.4 21-21c0-1.4-.1-2.7-.4-3.5z"/>
-                        <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.9 18.9 13 24 13c3.1 0 5.8 1.1 8 3l6-6C34.5 5.1 29.6 3 24 3 16.3 3 9.7 7.3 6.3 14.7z"/>
-                        <path fill="#4CAF50" d="M24 45c5.5 0 10.4-2.1 14.1-5.6l-6.5-5.5C29.6 35.6 26.9 37 24 37c-5.3 0-9.7-3.3-11.3-8l-6.6 5.1C9.6 40.6 16.3 45 24 45z"/>
-                        <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.2 4.2-4.1 5.6l6.5 5.5C40.9 36.6 45 30.9 45 24c0-1.4-.1-2.7-.4-3.5z"/>
-                      </svg>
-                      Continuar con Google
-                    </div>
-                  )}
-                  <div ref={googleButtonRef} className="flex justify-center" />
-                </div>
+                    ocupa su lugar para que no haya salto de layout cuando aparezca.
+                    Ambos botones sociales van en una sola fila (flex-1 cada uno). */}
+                <div className="flex items-stretch gap-3">
+                  <div className="relative flex-1 flex justify-center" style={{ minHeight: 44 }}>
+                    {!googleReady && (
+                      <div
+                        aria-hidden="true"
+                        className="absolute inset-0 flex items-center justify-center gap-2 rounded-[9px] border border-[var(--border-input)] text-sm font-medium"
+                        style={{ background: 'transparent', color: 'var(--ink)' }}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 48 48" aria-hidden="true">
+                          <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 3l6-6C34.5 5.1 29.6 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21 21-9.4 21-21c0-1.4-.1-2.7-.4-3.5z"/>
+                          <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.9 18.9 13 24 13c3.1 0 5.8 1.1 8 3l6-6C34.5 5.1 29.6 3 24 3 16.3 3 9.7 7.3 6.3 14.7z"/>
+                          <path fill="#4CAF50" d="M24 45c5.5 0 10.4-2.1 14.1-5.6l-6.5-5.5C29.6 35.6 26.9 37 24 37c-5.3 0-9.7-3.3-11.3-8l-6.6 5.1C9.6 40.6 16.3 45 24 45z"/>
+                          <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.2 4.2-4.1 5.6l6.5 5.5C40.9 36.6 45 30.9 45 24c0-1.4-.1-2.7-.4-3.5z"/>
+                        </svg>
+                        Google
+                      </div>
+                    )}
+                    <div ref={setGoogleButtonNode} className="flex justify-center" />
+                  </div>
 
-                {appleReady ? (
                   <button
                     type="button"
-                    onClick={handleAppleClick}
-                    className="w-full h-11 mt-2.5 rounded-xl bg-black text-white text-sm font-medium flex items-center justify-center gap-2 transition-opacity hover:opacity-90"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff" aria-hidden="true">
-                      <path d="M16.365 1.43c0 1.14-.493 2.27-1.177 3.08-.744.9-1.99 1.57-2.987 1.57-.12 0-.23-.02-.3-.03-.01-.06-.04-.22-.04-.39 0-1.15.572-2.27 1.206-2.98.804-.94 2.142-1.64 3.248-1.68.03.13.05.28.05.43zm4.565 15.71c-.03.07-.463 1.58-1.518 3.12-.945 1.34-1.94 2.71-3.43 2.71-1.517 0-1.9-.88-3.63-.88-1.698 0-2.302.91-3.67.91-1.377 0-2.332-1.26-3.428-2.8-1.287-1.82-2.323-4.63-2.323-7.28 0-4.28 2.797-6.55 5.552-6.55 1.448 0 2.675.95 3.6.95.865 0 2.222-1.01 3.902-1.01.613 0 2.886.06 4.374 2.19-.13.08-2.383 1.39-2.383 4.26 0 3.4 2.982 4.55 3.043 4.57z" />
-                    </svg>
-                    Continuar con Apple
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    disabled
-                    title="Próximamente"
-                    aria-disabled="true"
-                    className="w-full h-11 mt-2.5 rounded-xl border border-[var(--lf-input-border)] bg-[var(--lf-input-bg)] text-[var(--lf-input-text)] text-sm font-medium flex items-center justify-center gap-2 opacity-60 cursor-not-allowed transition-colors duration-[600ms]"
+                    onClick={appleReady ? handleAppleClick : undefined}
+                    disabled={!appleReady}
+                    title={appleReady ? undefined : 'Próximamente'}
+                    aria-disabled={!appleReady}
+                    className="flex-1 h-11 rounded-[9px] border border-[var(--border-input)] text-sm font-medium flex items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-60 transition-opacity hover:opacity-80"
+                    style={{ background: 'transparent', color: 'var(--ink)' }}
                   >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                       <path d="M16.365 1.43c0 1.14-.493 2.27-1.177 3.08-.744.9-1.99 1.57-2.987 1.57-.12 0-.23-.02-.3-.03-.01-.06-.04-.22-.04-.39 0-1.15.572-2.27 1.206-2.98.804-.94 2.142-1.64 3.248-1.68.03.13.05.28.05.43zm4.565 15.71c-.03.07-.463 1.58-1.518 3.12-.945 1.34-1.94 2.71-3.43 2.71-1.517 0-1.9-.88-3.63-.88-1.698 0-2.302.91-3.67.91-1.377 0-2.332-1.26-3.428-2.8-1.287-1.82-2.323-4.63-2.323-7.28 0-4.28 2.797-6.55 5.552-6.55 1.448 0 2.675.95 3.6.95.865 0 2.222-1.01 3.902-1.01.613 0 2.886.06 4.374 2.19-.13.08-2.383 1.39-2.383 4.26 0 3.4 2.982 4.55 3.043 4.57z" />
                     </svg>
-                    Continuar con Apple
+                    Apple
                   </button>
-                )}
+                </div>
 
-                <div className="text-center mt-2">
+                <div className="text-center mt-4 text-sm" style={{ color: 'var(--ink-secondary)' }}>
+                  ¿Olvidaste tu contraseña?{' '}
                   <button
                     type="button"
                     onClick={() => { setView('forgot'); setLoginError(null); }}
-                    className="text-[var(--lf-link)] hover:opacity-80 underline underline-offset-4 transition-colors duration-[600ms] font-medium text-sm"
+                    className={linkClasses}
+                    style={linkStyle}
                   >
-                    ¿Has olvidado tu contraseña?
+                    Recupérala
                   </button>
                 </div>
               </form>
@@ -583,20 +597,22 @@ export default function LoginPage(): React.ReactElement {
                   <label htmlFor="register-confirm" className={labelClasses}>Confirmar contraseña</label>
                   <input id="register-confirm" type="password" autoComplete="new-password" required value={regConfirm} onChange={(e) => setRegConfirm(e.target.value)} placeholder="Repite tu contraseña" className={inputClasses} />
                 </div>
-                <button type="submit" disabled={regLoading} className="relative inline-flex w-full items-center justify-center h-11 rounded-xl bg-[var(--lf-btn-bg)] text-[var(--lf-btn-text)] font-semibold tracking-wide transition-all duration-200 ease-out active:scale-[0.98] active:brightness-95 disabled:cursor-not-allowed disabled:opacity-60 gap-2">
+                <button type="submit" disabled={regLoading} className={primaryButtonClasses} style={primaryButtonStyle}>
                   {regLoading ? (<span className="flex items-center gap-2"><svg className="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>Creando cuenta…</span>) : 'Crear cuenta'}
                 </button>
               </form>
             )}
 
             {view !== 'forgot' && (
-              <div className="text-center mt-6">
+              <div className="text-center mt-6 text-sm" style={{ color: 'var(--ink-secondary)' }}>
+                {view === 'login' ? '¿Aún no tienes cuenta? ' : '¿Ya tienes cuenta? '}
                 <button
                   type="button"
                   onClick={() => { setView(view === 'login' ? 'register' : 'login'); setLoginError(null); setRegError(null); }}
-                  className="text-[var(--lf-link)] hover:opacity-80 underline underline-offset-4 transition-colors duration-[600ms] font-medium text-sm"
+                  className={linkClasses}
+                  style={linkStyle}
                 >
-                  {view === 'login' ? '¿Aún no tienes cuenta? Regístrate' : '¿Ya tienes cuenta? Inicia sesión'}
+                  {view === 'login' ? 'Regístrate' : 'Inicia sesión'}
                 </button>
               </div>
             )}

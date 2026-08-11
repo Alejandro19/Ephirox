@@ -37,20 +37,6 @@ describe('AdminRolesPage', () => {
     expect(screen.getByText('Entrenamiento')).toBeInTheDocument();
   });
 
-  it('creates a module and refetches the matrix', async () => {
-    vi.mocked(rolesClient.createModule).mockResolvedValue({
-      id: '4', key: 'nuevo_modulo', label: 'Nuevo módulo', note: null, sortOrder: 3, isCustom: true,
-    });
-    render(<AdminRolesPage />);
-    await screen.findByText('Entrenamiento');
-
-    fireEvent.change(screen.getByPlaceholderText('Nombre del nuevo módulo'), { target: { value: 'Nuevo módulo' } });
-    fireEvent.click(screen.getByRole('button', { name: /agregar módulo/i }));
-
-    await waitFor(() => expect(rolesClient.createModule).toHaveBeenCalledWith('Nuevo módulo'));
-    await waitFor(() => expect(rolesClient.getMatrix).toHaveBeenCalledTimes(2));
-  });
-
   it('saves only the toggled column when its Guardar button is clicked', async () => {
     vi.mocked(rolesClient.saveMatrixColumn).mockResolvedValue(undefined);
     render(<AdminRolesPage />);
