@@ -1,6 +1,6 @@
 # session-memory.md
 
-> **Última actualización:** 2026-08-10
+> **Última actualización:** 2026-08-15
 > **Propósito:** Resumen ejecutivo por sesión (orden cronológico) y plan de continuidad inmediato para la siguiente sesión.
 
 ---
@@ -323,6 +323,107 @@ Antes, el hero "Recomendada para ti ahora" y el botón "Empezar técnica" adivin
 
 ---
 
+## Resumen Ejecutivo — Sesión 2026-08-15 — Nutrición/Club/Retiros, Índice de bienestar, membresías Explorador/Premium, fotos en Comunidad
+
+### 1. Testing NFC/QR en el celular vía túneles de cloudflared
+
+Se diagnosticó y resolvió una cadena de bloqueos para poder probar el flujo NFC→confirmar-sesión desde el teléfono en la misma wifi que la Mac: `localhost` en una URL apunta al propio teléfono (no a la Mac) → se pasó a la IP LAN → HTTPS-Only Mode del navegador bloquea HTTP plano → Google OAuth rechaza orígenes de IP privada por completo → solución final: túneles `cloudflared` (`brew install cloudflared`), que además se caían solos por QUIC/UDP degradado en la red del usuario — corregido agregando `--protocol http2`. Los `.env.local` de `apps/web` se fueron actualizando con las URLs de túnel según iban rotando.
+
+### 2. Ronda de bugs desde capturas de mobile
+
+- Botones de Google/Apple desalineados en mobile: causa raíz un `width:170` fijo en `renderButton` de Google; se probó ancho dinámico y luego `ResizeObserver` (inestable, encogía el botón de Apple) — se resolvió con una altura fija `GOOGLE_APPLE_BUTTON_HEIGHT = 44` para ambos.
+- Menú hamburguesa no abría en los 3 topbars: un `transform` inline siempre pisaba la clase `.open` — se sacó el inline y se agregó la regla base en CSS.
+- Notificaciones desbordaban en mobile; anillo de macros de Nutrición desbordaba en mobile.
+- Doble llamada a `confirmSession` bajo React Strict Mode (dev) causaba un 500 espurio — un `useRef` guard evita que el branch NFC corra dos veces por instancia de página.
+- Cierre de sesión prematuro en blips de red justo después de loguearse: `refreshAuth()` trataba CUALQUIER fallo de `/auth/me` como token inválido — se agregó `AuthInvalidError` (solo en 401/403) + reintentos con backoff antes de limpiar la sesión.
+- Desalineación vertical de campos en Módulos 2/6/8 del wizard de onboarding: `ChevronStepper`/`SliderField`/`TimeField` dibujan su label en fila propia arriba de la caja, distinto a `SelectField`/`FloatingField` — se corrigió una vez armando el emparejamiento de filas (`WizardShell.tsx`), pero quedó un bug real: `slider` no estaba en el set `EXTERNAL_LABEL_TYPES` que dispara la corrección de alto — con datos cargados (texto en negro, no placeholder) el desalineamiento se hacía obvio. Corregido agregando `slider` al set.
+
+### 2b. Explorado y descartado: `LoginForm.tsx`/`login-page.test.tsx`
+
+No se tocó — sigue como Actividad 1 pendiente (ver abajo).
+
+### 3. Nutrición — rediseño de hero, Recetas saludables, Tips and tricks, reposicionamiento de marca (7 fases)
+
+Prompt grande de 4 partes ejecutado con flujo research→plan→clarificar→aprobar→ejecutar (3 agentes Explore + 1 Plan + 4 `AskUserQuestion`, todas con la opción recomendada):
+- **Hero de Nutrición**: rediseñado a "Meta nutricional diaria" con 3 `RingProgress` reales (% de kcal por macro: prot×4/carb×4/grasa×9), reemplazando los tiles viejos y el `MacroRing` local duplicado.
+- **Recetas saludables**: tabla nueva `recipes` (PDF admin-managed, mismo patrón multer+Supabase Storage que el PDF de plan nutricional), biblioteca global vista por todos los clientes de Nutrición.
+- **Tips and tricks**: tabla nueva `nutrition_tips`, mismo patrón que `cortisol_tips`, biblioteca global.
+- **Comunidad → Club Wellness**: solo renombre de copy visible (constants.ts, topbars, community page) — cero cambios de rutas/tablas/nombres internos.
+- **"Solicita tu membresía"**: bug real confirmado y corregido — el registro nunca devolvía token pero el frontend lo exigía para considerar éxito, así que todo registro exitoso mostraba error. Se simplificó a nombre+email sin contraseña.
+- **Número de miembro automático**: secuencia Postgres (`member_number_seq`) asignada atómicamente dentro de una transacción en `updateStatus()` al pasar a `active`, con backfill retroactivo por antigüedad para clientes ya activos. Nueva `MemberCard.tsx` en el home.
+- **Retiros en Club Wellness**: tercera sección junto a Eventos/Terapias, mismo sistema de reservas (tablas `community_retreats`/`retreat_reservations`), gateado igual que Terapias (bloqueado para Lead Wellness).
+
+Migraciones SQL corridas a mano contra `DATABASE_URL` y `TEST_DATABASE_URL` (nunca `drizzle-kit push`, como siempre). Suite completa de `apps/api` (276 tests) y `apps/web` verificada sin regresiones al cierre de las 7 fases.
+
+### 4. Fixes puntuales post-entrega
+
+- Botón de Google roto: el túnel de cloudflared usado para las pruebas NFC ya estaba muerto y `apps/web/.env.local` seguía apuntando ahí — se volvió a `http://localhost:3003` para pruebas en el navegador de la Mac (con nota de volver a levantar el túnel si hace falta probar desde el celular).
+- "Descargar PDF" quitado de la card de suplementos (y la función local que ya no se usaba).
+- Texto morado del protocolo de sueño (Descanso) cambiado a negro, tanto en la vista del cliente como en el panel admin donde se escribe.
+- Recetas/Tips "no aparecían": no era bug — simplemente no había contenido cargado (las secciones se ocultan vacías por diseño). Se aprovechó para mover la administración de Tips (antes sin ningún link de acceso) a una card dentro del panel admin de Nutrición, junto a Recetas — se sacó la página standalone `/admin/nutrition-tips` del hub de Administración.
+- Anillos de Nutrición: ajustados de tamaño/color varias veces según feedback (más grandes → más chicos, piedra → espresso → piedra) hasta converger en 68px, un solo tono espresso con track translúcido (el track claro por defecto de `RingProgress` no se leía bien sobre fondo oscuro).
+- Recetas/Tips reordenadas al final del módulo de Nutrición (después de Suplementos), no justo debajo del hero.
+- Heroes de Nutrición y Club Wellness unificados a espresso plano (igual que Entrenamiento), con el mismo destello radial decorativo que ya tenía Entrenamiento/Cortisol.
+
+### 5. Índice de bienestar — nuevo, unificado con Mi Evolución
+
+Ya existía un "Índice de bienestar general" en Mi Evolución (40% entrenamiento/30% sueño/30% cortisol, calculado en el cliente). El pedido nuevo era un KPI en el home con pesos distintos (15/15/15/15/40 entrenamiento/nutrición/cortisol/sueño/evolución) renormalizados según qué módulos tiene realmente el tipo de cliente. Se resolvió el solape con 3 preguntas ya respondidas (todas la opción recomendada): nutrición queda siempre excluida (sin dato medible hoy), el componente "Mi Evolución" reusa el cálculo clásico existente (anidado, entrenamiento/sueño/cortisol cuentan dos veces — intencional), y se unifica en un solo índice (mismo valor en home y Mi Evolución, fuente de verdad en el backend).
+
+Implementación: `apps/api/src/services/wellness-index.service.ts` (nuevo, consulta `client_type_module_permissions` vía `isModuleAllowedForType`), tabla `wellness_index_history` (snapshot semanal, upsert por `client_id`+lunes-de-la-semana, usado para el delta "vs. semana pasada"), endpoint `GET /api/clients/:id/wellness-index`. Frontend: `WellnessIndexCard.tsx` nueva en el home (oculta para Lead Wellness), y `ClientEvolutionPanel.tsx`/`AdminEvolutionPanel.tsx` dejaron de calcular localmente — ahora consumen el mismo endpoint. Se retiró `computeWellnessIndex` de `apps/web/lib/evolution-logic.ts` (y su test) al quedar sin callers, para no mantener dos fórmulas divergiendo con el tiempo. Hallazgo real durante la investigación: la matriz de Roles y Perfiles en la base de datos ya tenía `lead_wellness: training=false, nutrition=false` (editado a mano por Alejandro desde el admin) pero el frontend de esos dos módulos nunca capturaba el 403 (ver sección 7).
+
+### 6. Member card — fix de logo, anillo más fino
+
+El logo real (`BrandRing`) ya estaba en la member card — el problema era que el fondo de la card era un *gradient* mientras `BrandRing` recibía un color plano como `background`, así que el círculo interior no calzaba con el fondo real detrás (se veía como un parche, no un "donut" limpio). Fondo cambiado a plano. De paso, a pedido explícito, el trazo del anillo (`BrandRing.tsx`) se hizo ~45% más fino (`size * 0.22` → `size * 0.12`) en toda la app.
+
+### 7. Membresías: Club Explorador / Online / Presencial / Elite
+
+- **Nombres cara-al-cliente**: nuevo `MEMBERSHIP_LABELS` en `constants.ts` (Lead Wellness→"Club Explorador", Coaching Online→"Club Online", Coaching 1:1→"Club Presencial", Mentoring→"Club Elite"), separado de `CLIENT_TYPE_LABELS` (queda igual para admin). Aplicado en member card y en el copy hardcodeado de "plan Mentoring" en Descanso/Punto Ciego.
+- **Login con dos puertas de entrada**: "Únete como Explorador" (nombre+email o Google/Apple, alta **instantánea** `status:active`/`clientType:lead_wellness`, sin contraseña, auto-login inmediato con el mismo token que un login normal) vs. "Membresía Premium" (la solicitud con aprobación manual que ya existía, sin cambios de comportamiento). Nueva función `createActiveExplorerClient` en `clients.service.ts` (asigna número de miembro atómicamente, igual que `updateStatus`). `RegisterInputSchema` ganó un campo `intent` (`explorer`|`membership_request`) — requirió rebuild de `packages/shared-types`.
+- **Regla unificada de SSO**: Google/Apple con un email que no existe en la base ahora crea un Explorador activo con token de una, en vez de quedar `pending` en cola de aprobación (comportamiento anterior). Cambio de conducta real en producción, hecho a pedido explícito.
+- **`<LockedBenefit variant="apply"|"upgrade">`** nuevo (`apps/web/components/ui/LockedBenefit.tsx`), envolviendo el `LockedOverlay` ya existente. Reemplazó los candados de copy hardcodeado en Terapias, Retiros y Hackeando el sueño (Club Elite específico). Se agregó además a Entrenamiento y Nutrición, que hoy NO tenían ningún manejo de 403 en el frontend (`training-client.ts`/`nutrition-client.ts` nunca chequeaban `res.status === 403`) aunque el backend ya los bloqueaba para Lead Wellness — decisión explícita de Alejandro de completar ese bloqueo visualmente ahora. `variant="apply"` queda construido pero sin caller real hoy: una cuenta `inactive` no puede ni loguearse (bloqueada en el login mismo), así que nunca llega a ver un módulo bloqueado — queda listo por si esa regla cambia más adelante.
+
+### 8. Fotos y edición en Eventos/Terapias/Retiros (Club Wellness admin)
+
+- Subida de foto opcional (16:9→2:1 según tipo, JPG/PNG, máx 5MB) al crear cada uno, con preview local antes de subir (`ImageField.tsx`, nuevo — `FileField.tsx` no soportaba preview de imagen). Backend: endpoint separado `POST .../:id/upload-image` por cada uno (multer + `uploadFile()`, mismo patrón que Recetas), no combinado con el create JSON existente, para no tener que tocar los schemas/tests ya validados.
+- Bug real encontrado y corregido: `updateEvent`/`updateRetreat` en el backend borraban `event_date`/`start_date`/`end_date` en CUALQUIER update parcial que no repitiera esos campos (ternario sin rama `undefined`) — afectaba silenciosamente al simple botón "Desactivar". Corregido para distinguir "campo ausente = no tocar" de "campo vacío = borrar a propósito".
+- Botón "Editar" agregado a las 3 listas "publicados" (antes solo Desactivar/Eliminar) — formulario inline con todos los campos + reemplazo de foto.
+- Precio de retiros pasado a USD (antes formateaba como pesos colombianos).
+- Tamaño de las cards de Eventos/Terapias/Retiros reducido en 2 pasadas (padding, tipografía, foto) según feedback iterativo — Eventos terminó con una foto más cuadrada (2:1) que Terapias/Retiros (2.4:1) porque se veía demasiado alargada; Retiros combinó "Fecha inicio"+"Fecha fin" en un solo campo "Fechas" y pasó a grilla de 3 columnas para ocupar menos alto.
+
+### 9. Verificación
+
+`tsc --noEmit` y `next build` limpios en `apps/web` y `apps/api` en cada fase. Suites completos corridos repetidas veces a lo largo de la sesión: siempre la misma baseline ya documentada (`login-page.test.tsx` determinístico por `router.push` vs. `window.location.href`, `wizard-shell-finalize.test.tsx`/`training.routes.test.ts` flaky por contención de CPU bajo carga completa, ~15 tests de Supabase Storage con credenciales inválidas en este entorno) — cero regresiones nuevas atribuibles a esta sesión, siempre reconfirmadas corriendo el archivo sospechoso aislado antes de descartarlas.
+
+### 10. Commit y push
+
+Todo lo de esta sesión (167 archivos) se commiteó en un solo commit sobre `backup-migracion-2026-08-05` y se pusheó a `origin/backup-migracion-2026-08-05`. Se dejó fuera a propósito `index.html` (raíz, 567KB) — copia de referencia del monolito legacy, sin trackear en git igual que `BIO360*`.
+
+---
+
+## Próximas actividades — Siguiente sesión (actualizada 2026-08-15)
+
+### Actividad 1 — Decidir sobre `login-page.test.tsx` / `LoginForm.tsx`
+
+- (Sigue sin resolver desde 2026-08-09 tarde.) Confirmar si se quiere restaurar el ruteo inteligente post-login conectando `components/auth/LoginForm.tsx` de verdad en `app/(auth)/login/page.tsx`, o si se prefiere borrar `LoginForm.tsx` como código muerto y simplificar/eliminar esos 5 tests (los mismos que siguen fallando en la suite completa por testear `router.push`, que la página real no usa).
+
+### Actividad 2 — `reset-password` / `therapist/set-password` con el tema día/noche viejo
+
+- (Sigue sin resolver.) Estas dos pantallas siguen usando `theme-login-light/dark` (`--lf-*` en `globals.css`), visualmente inconsistentes con el login/set-password nuevos (`#2A2015`/`--page-bg` fijos).
+
+### Actividad 3 — Construir los 6 módulos placeholder del panel de terapeuta
+
+- (Sigue pendiente de varias sesiones atrás, sin tocar.) Mi perfil, Mis clientes, Mi agenda, Recursos clínicos, Comunidad de terapeutas, Dashboards.
+
+### Actividad 4 — Revisar visualmente en `dev:web` los cambios de hoy
+
+- Login con las dos puertas de entrada (Explorador auto-login, Premium con solicitud), `<LockedBenefit>` en los 5 módulos donde se aplicó, member card con el anillo/fondo corregido, subida de fotos en Eventos/Terapias/Retiros + botón Editar, Índice de bienestar en el home. Todo se verificó por tests/tsc/build, no hay confirmación visual en navegador real de esta sesión.
+
+### Actividad 5 — `variant="apply"` de `<LockedBenefit>` sin caller real
+
+- Queda construido y probado pero nunca se dispara en la app hoy (una cuenta `inactive` no puede loguearse, así que nunca ve un módulo bloqueado). Si en algún momento se decide dejar loguear a cuentas pendientes con todo bloqueado en vez de rechazarlas en el login, ahí se conectaría.
+
+---
+
 ## Notas adicionales
 
 - **No modificar `server.js` ni `index.html` (raíz):** son el monolito legacy que Vercel sigue deployando en producción desde `origin/main`. Todo desarrollo nuevo va en `apps/api` / `apps/web`, commiteado en `backup-migracion-2026-08-05`.
@@ -335,3 +436,4 @@ Antes, el hero "Recomendada para ti ahora" y el botón "Empezar técnica" adivin
 - **Cambios de schema (nueva columna/tabla):** nunca `drizzle-kit push` (se cuelga esperando confirmación de un TUI invisible en background). Escribir un script `tsx` desechable con el paquete `postgres` (mismo patrón que `apps/api/src/db/index.ts`), correr el DDL a mano (`ALTER TABLE ... ADD COLUMN IF NOT EXISTS ...`) contra `DATABASE_URL` y `TEST_DATABASE_URL` (las dos, no se sincronizan solas), borrar el script al terminar, y reflejar el cambio a mano en `apps/api/src/models/schema.ts` (Drizzle no lo detecta solo).
 - **Panel admin usa topbar horizontal (`AdminTopbar.tsx`), no sidebar** desde la sesión 2026-08-10 — `Sidebar.tsx`/`AdminNavItems.tsx`/`SidebarRing.tsx`/`UserChip.tsx`/`MobileTopbar.tsx` fueron borrados por quedar sin uso. Los tres roles (cliente, terapeuta, admin) usan topbar horizontal ahora, ninguno usa sidebar vertical.
 - **API camelCase, no snake_case:** las respuestas del backend (Drizzle) usan las mismas keys camelCase que las columnas TS del schema (`createdAt`, `clientId`, etc.), nunca snake_case — si un componente nuevo espera `created_at`/`client_id` lo más probable es que esté copiado de un patrón legacy y haya que corregirlo, no que el backend esté mal.
+- **Cuidado con `campo ? new Date(campo) : null` en updates parciales de servicios `updateX()`:** si el campo no viene en el `input` (undefined), ese ternario igual evalúa a `null` y borra el valor existente en la base — a diferencia de `campo ?? undefined` (que sí deja el valor intacto cuando falta). Encontrado y corregido en `events.service.ts`/`retreats.service.ts` (2026-08-15): togglear "Desactivar" borraba silenciosamente la fecha del evento. Antes de escribir un `updateX()` nuevo con campos de fecha, usar el patrón correcto: `campo !== undefined ? (campo ? new Date(campo) : null) : undefined`. Vale la pena revisar si el mismo patrón roto existe en otros `updateX()` no tocados todavía.
