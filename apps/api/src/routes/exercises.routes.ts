@@ -4,6 +4,7 @@ import { validateBody } from '../middleware/validate.js';
 import { asyncHandler } from '../middleware/async-handler.js';
 import { authMiddleware, adminOnly, ownerOrAdmin } from '../middleware/auth.middleware.js';
 import { requirePermission } from '../middleware/require-permission.middleware.js';
+import { revalidateCache } from '../middleware/cache-control.middleware.js';
 import * as exercisesController from '../controllers/exercises.controller.js';
 
 export const exercisesRouter = Router();
@@ -13,6 +14,7 @@ exercisesRouter.get(
   authMiddleware,
   ownerOrAdmin,
   requirePermission('training'),
+  revalidateCache,
   asyncHandler(exercisesController.listExercises)
 );
 

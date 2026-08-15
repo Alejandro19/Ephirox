@@ -21,10 +21,10 @@ export function WellnessIndexHero({ index }: { index: number | null }) {
         </div>
       </RingProgress>
       <div>
-        <p className="mb-1 font-serif text-base font-bold">Índice de bienestar general</p>
+        <p className="mb-1 font-serif text-base font-bold">Índice de bienestar</p>
         <p className="text-[11.5px] leading-relaxed" style={{ color: 'var(--hero-piedra-text-muted)' }}>
-          Promedio ponderado de constancia de entrenamiento (40%), calidad de sueño (30%) y regulación de cortisol
-          (30%). Los componentes sin datos aún se excluyen del cálculo, en vez de contar como cero.
+          Promedio ponderado de tus módulos activos (entrenamiento, sueño, cortisol y tu evolución física). Los
+          componentes sin datos aún se excluyen del cálculo, en vez de contar como cero.
         </p>
       </div>
     </div>

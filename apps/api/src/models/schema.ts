@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, boolean, integer, serial, date, jsonb, timestamp, numeric, unique } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, boolean, integer, serial, date, jsonb, timestamp, numeric, unique, index } from 'drizzle-orm/pg-core';
 
 export const admins = pgTable('admins', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -17,6 +17,8 @@ export const clients = pgTable('clients', {
   passwordHash: text('password_hash'),
   googleId: text('google_id'),
   appleId: text('apple_id'),
+  // true cuando el admin asigna una contraseña temporal — obliga a cambiarla en el primer login (mismo patrón que therapists.mustChangePassword).
+  mustChangePassword: boolean('must_change_password').notNull().default(false),
   status: text('status').notNull().default('active'),
   plan: text('plan').notNull().default('Miembro'),
   clientType: text('client_type').notNull().default('lead_wellness'),
@@ -39,6 +41,11 @@ export const clients = pgTable('clients', {
   inbodyReminderEnabled: boolean('inbody_reminder_enabled').notNull().default(true),
   inbodyReminderSentThisCycle: boolean('inbody_reminder_sent_this_cycle').notNull().default(false),
   nextCheckinDate: date('next_checkin_date'),
+  // Autoasignado (secuencia Postgres, ver updateStatus en clients.service.ts)
+  // en el momento exacto en que un admin activa al cliente — nunca se
+  // ingresa a mano. Null hasta la primera activación.
+  memberNumber: integer('member_number').unique(),
+  activatedAt: timestamp('activated_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 });
@@ -50,7 +57,9 @@ export const adminNotifications = pgTable('admin_notifications', {
   message: text('message').notNull(),
   read: boolean('read').notNull().default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-});
+}, (table) => ({
+  clientIdIdx: index('admin_notifications_client_id_idx').on(table.clientId),
+}));
 
 export type AdminNotification = typeof adminNotifications.$inferSelect;
 
@@ -96,7 +105,9 @@ export const anthropometricRecords = pgTable('anthropometric_records', {
   gluteo: numeric('gluteo', { precision: 5, scale: 1 }).$type<number>(),
   notas: text('notas'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-});
+}, (table) => ({
+  clientIdIdx: index('anthropometric_records_client_id_idx').on(table.clientId),
+}));
 
 export const progressPhotos = pgTable('progress_photos', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -107,7 +118,9 @@ export const progressPhotos = pgTable('progress_photos', {
   fecha: date('fecha').notNull().defaultNow(),
   mesNum: integer('mes_num'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-});
+}, (table) => ({
+  clientIdIdx: index('progress_photos_client_id_idx').on(table.clientId),
+}));
 
 export const bioInbodyRecords = pgTable('bio_inbody_records', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -129,7 +142,9 @@ export const bioInbodyRecords = pgTable('bio_inbody_records', {
   fileUrl: text('file_url'),
   fileName: text('file_name'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-});
+}, (table) => ({
+  clientIdIdx: index('bio_inbody_records_client_id_idx').on(table.clientId),
+}));
 
 export type PersonalInfo = typeof personalInfo.$inferSelect;
 export type AnthropometricRecord = typeof anthropometricRecords.$inferSelect;
@@ -152,7 +167,9 @@ export const exercises = pgTable('exercises', {
   sortOrder: integer('sort_order').notNull().default(0),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
-});
+}, (table) => ({
+  clientIdIdx: index('exercises_client_id_idx').on(table.clientId),
+}));
 
 export const trainingCompletions = pgTable('training_completions', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -161,7 +178,9 @@ export const trainingCompletions = pgTable('training_completions', {
   completedDate: date('completed_date').notNull().defaultNow(),
   source: text('source').notNull().default('manual'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-});
+}, (table) => ({
+  clientIdIdx: index('training_completions_client_id_idx').on(table.clientId),
+}));
 
 export const clientNotifications = pgTable('client_notifications', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -169,7 +188,9 @@ export const clientNotifications = pgTable('client_notifications', {
   message: text('message').notNull(),
   read: boolean('read').notNull().default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-});
+}, (table) => ({
+  clientIdIdx: index('client_notifications_client_id_idx').on(table.clientId),
+}));
 
 export type Exercise = typeof exercises.$inferSelect;
 export type TrainingCompletion = typeof trainingCompletions.$inferSelect;
@@ -189,7 +210,9 @@ export const trainingProtectorUses = pgTable('training_protector_uses', {
   clientId: uuid('client_id').notNull().references(() => clients.id, { onDelete: 'cascade' }),
   weekStart: date('week_start').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-});
+}, (table) => ({
+  clientIdIdx: index('training_protector_uses_client_id_idx').on(table.clientId),
+}));
 
 export const achievementLogs = pgTable('achievement_logs', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -197,7 +220,9 @@ export const achievementLogs = pgTable('achievement_logs', {
   type: text('type').notNull(),
   weekNumber: integer('week_number').notNull(),
   earnedAt: timestamp('earned_at', { withTimezone: true }).defaultNow(),
-});
+}, (table) => ({
+  clientIdIdx: index('achievement_logs_client_id_idx').on(table.clientId),
+}));
 
 export const mindsetQuotes = pgTable('mindset_quotes', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -260,7 +285,9 @@ export const meals = pgTable('meals', {
   tags: text('tags').array().default([]),
   sortOrder: integer('sort_order').default(0),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-});
+}, (table) => ({
+  clientIdIdx: index('meals_client_id_idx').on(table.clientId),
+}));
 
 export const supplements = pgTable('supplements', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -275,7 +302,9 @@ export const supplements = pgTable('supplements', {
   sortOrder: integer('sort_order').default(0),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
-});
+}, (table) => ({
+  clientIdIdx: index('supplements_client_id_idx').on(table.clientId),
+}));
 
 export type NutritionPlan = typeof nutritionPlans.$inferSelect;
 export type Meal = typeof meals.$inferSelect;
@@ -301,7 +330,9 @@ export const cortisolTechniques = pgTable('cortisol_techniques', {
   // recomendación del hero — null si no está asignada a ninguna.
   emotion: text('emotion'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-});
+}, (table) => ({
+  clientIdIdx: index('cortisol_techniques_client_id_idx').on(table.clientId),
+}));
 
 export const cortisolCompletions = pgTable('cortisol_completions', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -309,7 +340,9 @@ export const cortisolCompletions = pgTable('cortisol_completions', {
   techniqueId: uuid('technique_id').references(() => cortisolTechniques.id, { onDelete: 'set null' }),
   completedDate: date('completed_date').notNull().defaultNow(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-});
+}, (table) => ({
+  clientIdIdx: index('cortisol_completions_client_id_idx').on(table.clientId),
+}));
 
 export const cortisolCheckins = pgTable('cortisol_checkins', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -317,7 +350,9 @@ export const cortisolCheckins = pgTable('cortisol_checkins', {
   emotion: text('emotion').notNull(),
   checkinDate: date('checkin_date').notNull().defaultNow(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-});
+}, (table) => ({
+  clientIdIdx: index('cortisol_checkins_client_id_idx').on(table.clientId),
+}));
 
 export const cortisolTips = pgTable('cortisol_tips', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -330,6 +365,29 @@ export type CortisolTechnique = typeof cortisolTechniques.$inferSelect;
 export type CortisolCompletion = typeof cortisolCompletions.$inferSelect;
 export type CortisolCheckin = typeof cortisolCheckins.$inferSelect;
 export type CortisolTip = typeof cortisolTips.$inferSelect;
+
+export const nutritionTips = pgTable('nutrition_tips', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  content: text('content').notNull(),
+  sortOrder: integer('sort_order').notNull().default(0),
+  active: boolean('active').notNull().default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+export type NutritionTip = typeof nutritionTips.$inferSelect;
+
+export const recipes = pgTable('recipes', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: text('name').notNull(),
+  category: text('category'),
+  pdfUrl: text('pdf_url').notNull(),
+  pdfName: text('pdf_name').notNull(),
+  active: boolean('active').notNull().default(true),
+  sortOrder: integer('sort_order').notNull().default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+export type Recipe = typeof recipes.$inferSelect;
 
 export const sleepProtocols = pgTable('sleep_protocols', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -350,6 +408,9 @@ export const sleepLogs = pgTable('sleep_logs', {
 }, (table) => ({
   // sleep.service.ts hace upsert por día con onConflictDoUpdate({ target: [clientId, date] }) —
   // este constraint es lo que ese ON CONFLICT necesita para resolver el arbiter index.
+  // clientDateUnique ya cubre lookups por client_id solo (regla de prefijo
+  // izquierdo de btree: client_id es la primera columna) — no hace falta un
+  // índice aparte solo para client_id.
   clientDateUnique: unique('sleep_logs_client_id_date_unique').on(table.clientId, table.date),
 }));
 
@@ -377,7 +438,9 @@ export const eventReservations = pgTable('event_reservations', {
   clientId: uuid('client_id').notNull().references(() => clients.id, { onDelete: 'cascade' }),
   status: text('status').notNull().default('confirmada'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-});
+}, (table) => ({
+  clientIdIdx: index('event_reservations_client_id_idx').on(table.clientId),
+}));
 
 export const communityTherapies = pgTable('community_therapies', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -397,12 +460,42 @@ export const therapyReservations = pgTable('therapy_reservations', {
   clientId: uuid('client_id').notNull().references(() => clients.id, { onDelete: 'cascade' }),
   status: text('status').notNull().default('confirmada'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-});
+}, (table) => ({
+  clientIdIdx: index('therapy_reservations_client_id_idx').on(table.clientId),
+}));
 
 export type CommunityEvent = typeof communityEvents.$inferSelect;
 export type EventReservation = typeof eventReservations.$inferSelect;
 export type CommunityTherapy = typeof communityTherapies.$inferSelect;
 export type TherapyReservation = typeof therapyReservations.$inferSelect;
+
+export const communityRetreats = pgTable('community_retreats', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  title: text('title').notNull(),
+  description: text('description'),
+  startDate: timestamp('start_date', { withTimezone: true }),
+  endDate: timestamp('end_date', { withTimezone: true }),
+  location: text('location'),
+  capacity: integer('capacity'),
+  priceCents: integer('price_cents'),
+  imageUrl: text('image_url'),
+  active: boolean('active').default(true),
+  sortOrder: integer('sort_order').default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+export const retreatReservations = pgTable('retreat_reservations', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  retreatId: uuid('retreat_id').notNull().references(() => communityRetreats.id, { onDelete: 'cascade' }),
+  clientId: uuid('client_id').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+  status: text('status').notNull().default('confirmada'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (table) => ({
+  clientIdIdx: index('retreat_reservations_client_id_idx').on(table.clientId),
+}));
+
+export type CommunityRetreat = typeof communityRetreats.$inferSelect;
+export type RetreatReservation = typeof retreatReservations.$inferSelect;
 
 // ==== EVOLUTION MODULE TABLES ====
 
@@ -422,7 +515,9 @@ export const evolutionCheckins = pgTable('evolution_checkins', {
   painNotes: text('pain_notes'),
   stressScore: integer('stress_score'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-});
+}, (table) => ({
+  clientIdIdx: index('evolution_checkins_client_id_idx').on(table.clientId),
+}));
 
 export const personalRecords = pgTable('personal_records', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -432,7 +527,9 @@ export const personalRecords = pgTable('personal_records', {
   currentValue: text('current_value'),
   sortOrder: integer('sort_order').default(0),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-});
+}, (table) => ({
+  clientIdIdx: index('personal_records_client_id_idx').on(table.clientId),
+}));
 
 export type EvolutionCheckin = typeof evolutionCheckins.$inferSelect;
 export type PersonalRecord = typeof personalRecords.$inferSelect;
@@ -547,7 +644,9 @@ export const blindspotCases = pgTable('blindspot_cases', {
   crisisFlaggedBy: text('crisis_flagged_by'), // 'cliente' | 'terapeuta' | 'admin'
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
-});
+}, (table) => ({
+  clientIdIdx: index('blindspot_cases_client_id_idx').on(table.clientId),
+}));
 
 export const blindspotTasks = pgTable('blindspot_tasks', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -608,3 +707,20 @@ export const clientTypeModulePermissions = pgTable('client_type_module_permissio
 
 export type PermissionModule = typeof permissionModules.$inferSelect;
 export type ClientTypeModulePermission = typeof clientTypeModulePermissions.$inferSelect;
+
+// Historial semanal del Índice de bienestar (home + Mi Evolución, mismo
+// valor en los dos lugares). Se recalcula/upsertea al cargar cualquiera de
+// esas dos pantallas — sin cron — usando el lunes de la semana ISO vigente
+// como period_start; la fila de la semana anterior es la base del delta.
+export const wellnessIndexHistory = pgTable('wellness_index_history', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  clientId: uuid('client_id').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+  periodStart: date('period_start').notNull(),
+  value: integer('value').notNull(),
+  componentsUsed: jsonb('components_used'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (table) => ({
+  clientPeriodUnique: unique('wellness_index_history_client_id_period_start_unique').on(table.clientId, table.periodStart),
+}));
+
+export type WellnessIndexHistoryRow = typeof wellnessIndexHistory.$inferSelect;

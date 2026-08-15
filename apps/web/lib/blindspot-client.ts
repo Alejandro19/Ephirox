@@ -124,6 +124,20 @@ export async function adminSetTherapistActive(id: string, active: boolean): Prom
   if (!body.success) throw new Error(body.error || 'Error al actualizar el terapeuta.');
 }
 
+export async function adminUpdateTherapist(
+  id: string,
+  patch: Partial<{ name: string; email: string; specialty: string | null; phone: string | null; active: boolean }>
+): Promise<Therapist> {
+  const body = await authorizedRequest<{ success: boolean; therapist: Therapist; error?: string }>(`/api/blindspot/therapists/${id}`, 'PATCH', patch);
+  if (!body.success) throw new Error(body.error || 'Error al actualizar el terapeuta.');
+  return body.therapist;
+}
+
+export async function adminDeleteTherapist(id: string): Promise<void> {
+  const body = await authorizedRequest<{ success: boolean; error?: string }>(`/api/blindspot/therapists/${id}`, 'DELETE');
+  if (!body.success) throw new Error(body.error || 'Error al eliminar el terapeuta.');
+}
+
 // ==== TERAPEUTA ====
 
 export type TherapistCaseListItem = BlindspotCase & { clientName: string; lastSessionAt: string | null };

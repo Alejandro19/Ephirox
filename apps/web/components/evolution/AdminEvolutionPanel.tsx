@@ -1,20 +1,21 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
-import { getEvolutionData, updateNextCheckinDate, type EvolutionData } from '../../lib/evolution-client';
+import { useEffect, useState } from 'react';
+import useSWR from 'swr';
+import { getEvolutionData, updateNextCheckinDate } from '../../lib/evolution-client';
 import { listCompletions as listCortisolCompletions, listCheckins as listCortisolCheckins, type CortisolCompletion, type CortisolCheckinRecord } from '../../lib/cortisol-client';
 import { calculateCortisolWeeklyStats } from '../../lib/cortisol-logic';
 import { listLogs as listSleepLogs, type SleepLog } from '../../lib/sleep-client';
 import { listTrainingCompletions, type TrainingCompletion } from '../../lib/training-client';
 import { calculateDisciplineStats } from '../../lib/training-home-logic';
 import { fetchClient, type ClientDetail } from '../../lib/clients-client';
+import { getWellnessIndex } from '../../lib/wellness-index-client';
 import {
   calculateSleepQualityAvg,
   formatSleepHours,
   monthlyAverages,
   EMOCION_SCORE,
   getWellnessTrendStatus,
-  computeWellnessIndex,
 } from '../../lib/evolution-logic';
 import { showToast } from '../layout/AppShell';
 import { WellnessIndexHero, BienestarGeneral, EvolucionFisicaSection } from './EvolutionVisuals';
@@ -48,73 +49,36 @@ function clientTz(): string {
   }
 }
 
+async function fetchEvolutionBundle(clientId: string) {
+  const [evo, cortisolCompletions, cortisolCheckins, fullClient, sleepLogs, trainingCompletions, wellnessIndex] = await Promise.all([
+    getEvolutionData(clientId),
+    listCortisolCompletions(clientId).catch(() => [] as CortisolCompletion[]),
+    listCortisolCheckins(clientId).catch(() => [] as CortisolCheckinRecord[]),
+    fetchClient(clientId).catch(() => null as ClientDetail | null),
+    listSleepLogs(clientId).catch(() => [] as SleepLog[]),
+    listTrainingCompletions(clientId).catch(() => [] as TrainingCompletion[]),
+    getWellnessIndex(clientId).catch(() => null),
+  ]);
+  return { evo, cortisolCompletions, cortisolCheckins, fullClient, sleepLogs, trainingCompletions, wellnessIndex };
+}
+
 export function AdminEvolutionPanel({ clientId }: { clientId: string }) {
-  const [evolution, setEvolution] = useState<EvolutionData | null>(null);
-  const [client, setClient] = useState<ClientDetail | null>(null);
-  const [sleepAvg, setSleepAvg] = useState<number | null>(null);
-  const [weeklyRegulation, setWeeklyRegulation] = useState<number | null>(null);
-  const [sleepDelta, setSleepDelta] = useState<number | null>(null);
-  const [cortisolDelta, setCortisolDelta] = useState<number | null>(null);
-  const [disciplineStats, setDisciplineStats] = useState<{ doneDays: number; expected: number } | null>(null);
-  const [wellnessIndex, setWellnessIndex] = useState<number | null>(null);
+  const { data, error, isLoading, mutate } = useSWR(['evolution-bundle', clientId], () =>
+    fetchEvolutionBundle(clientId),
+  );
   const [nextCheckinDate, setNextCheckinDate] = useState('');
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  const loadAll = useCallback(async () => {
-    setLoading(true);
-    try {
-      const [evo, cortisolCompletions, cortisolCheckins, fullClient, sleepLogs, trainingCompletions] = await Promise.all([
-        getEvolutionData(clientId),
-        listCortisolCompletions(clientId).catch(() => [] as CortisolCompletion[]),
-        listCortisolCheckins(clientId).catch(() => [] as CortisolCheckinRecord[]),
-        fetchClient(clientId).catch(() => null),
-        listSleepLogs(clientId).catch(() => [] as SleepLog[]),
-        listTrainingCompletions(clientId).catch(() => [] as TrainingCompletion[]),
-      ]);
-
-      setEvolution(evo);
-      setClient(fullClient);
-      setNextCheckinDate(fullClient?.nextCheckinDate || '');
-
-      const avgSleep = calculateSleepQualityAvg(evo.checkins);
-      setSleepAvg(avgSleep);
-      setWeeklyRegulation(calculateCortisolWeeklyStats(cortisolCompletions).count);
-
-      const sleepMonths = monthlyAverages(sleepLogs, 'date', 'quality');
-      const sleepLast = sleepMonths.length ? sleepMonths[sleepMonths.length - 1].avg : null;
-      const sleepPrev = sleepMonths.length >= 2 ? sleepMonths[sleepMonths.length - 2].avg : null;
-      setSleepDelta(sleepLast != null && sleepPrev != null ? sleepLast - sleepPrev : null);
-
-      const cortisolScored = cortisolCheckins
-        .map((c) => ({ checkinDate: c.checkinDate, score: EMOCION_SCORE[c.emotion] ?? null }))
-        .filter((c): c is { checkinDate: string; score: number } => c.score != null);
-      const cortisolMonths = monthlyAverages(cortisolScored, 'checkinDate', 'score');
-      const cortisolLast = cortisolMonths.length ? cortisolMonths[cortisolMonths.length - 1].avg : null;
-      const cortisolPrev = cortisolMonths.length >= 2 ? cortisolMonths[cortisolMonths.length - 2].avg : null;
-      setCortisolDelta(cortisolLast != null && cortisolPrev != null ? cortisolLast - cortisolPrev : null);
-
-      const stats = fullClient?.trainingDays ? calculateDisciplineStats(trainingCompletions, fullClient.trainingDays) : null;
-      setDisciplineStats(stats);
-      setWellnessIndex(computeWellnessIndex({ trainingPct: stats?.pct ?? null, sleepAvg: sleepLast, cortisolAvg: cortisolLast }));
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setLoading(false);
-    }
-  }, [clientId]);
 
   useEffect(() => {
-    loadAll();
-  }, [loadAll]);
+    if (data) setNextCheckinDate(data.fullClient?.nextCheckinDate || '');
+  }, [data]);
 
   async function handleSaveNextCheckin() {
     setSaving(true);
     try {
       await updateNextCheckinDate(clientId, nextCheckinDate || null);
       showToast('Fecha guardada.', 'success');
-      await loadAll();
+      await mutate();
     } catch (e) {
       showToast((e as Error).message, 'error');
     } finally {
@@ -122,8 +86,29 @@ export function AdminEvolutionPanel({ clientId }: { clientId: string }) {
     }
   }
 
-  if (loading) return <p style={{ color: 'var(--ink-secondary)', fontSize: 14 }}>Cargando evolución del cliente…</p>;
-  if (error) return <p role="alert" style={{ color: 'var(--danger)' }}>{error}</p>;
+  if (isLoading) return <p style={{ color: 'var(--ink-secondary)', fontSize: 14 }}>Cargando evolución del cliente…</p>;
+  if (error) return <p role="alert" style={{ color: 'var(--danger)' }}>{(error as Error).message}</p>;
+  if (!data) return null;
+
+  const { evo, cortisolCompletions, cortisolCheckins, fullClient: client, sleepLogs, trainingCompletions, wellnessIndex } = data;
+
+  const sleepAvg = calculateSleepQualityAvg(evo.checkins);
+  const weeklyRegulation = calculateCortisolWeeklyStats(cortisolCompletions).count;
+
+  const sleepMonths = monthlyAverages(sleepLogs, 'date', 'quality');
+  const sleepLast = sleepMonths.length ? sleepMonths[sleepMonths.length - 1].avg : null;
+  const sleepPrev = sleepMonths.length >= 2 ? sleepMonths[sleepMonths.length - 2].avg : null;
+  const sleepDelta = sleepLast != null && sleepPrev != null ? sleepLast - sleepPrev : null;
+
+  const cortisolScored = cortisolCheckins
+    .map((c) => ({ checkinDate: c.checkinDate, score: EMOCION_SCORE[c.emotion] ?? null }))
+    .filter((c): c is { checkinDate: string; score: number } => c.score != null);
+  const cortisolMonths = monthlyAverages(cortisolScored, 'checkinDate', 'score');
+  const cortisolLast = cortisolMonths.length ? cortisolMonths[cortisolMonths.length - 1].avg : null;
+  const cortisolPrev = cortisolMonths.length >= 2 ? cortisolMonths[cortisolMonths.length - 2].avg : null;
+  const cortisolDelta = cortisolLast != null && cortisolPrev != null ? cortisolLast - cortisolPrev : null;
+
+  const disciplineStats = client?.trainingDays ? calculateDisciplineStats(trainingCompletions, client.trainingDays) : null;
 
   const accesoEvolucionFisica = client?.clientType !== 'lead_wellness';
 
@@ -140,7 +125,7 @@ export function AdminEvolutionPanel({ clientId }: { clientId: string }) {
         </div>
       </div>
 
-      <WellnessIndexHero index={wellnessIndex} />
+      <WellnessIndexHero index={wellnessIndex?.value ?? null} />
       <BienestarGeneral
         sleepAvg={sleepAvg != null ? formatSleepHours(sleepAvg) : null}
         weeklyRegulation={weeklyRegulation}
@@ -151,8 +136,8 @@ export function AdminEvolutionPanel({ clientId }: { clientId: string }) {
       />
       {accesoEvolucionFisica ? (
         <EvolucionFisicaSection
-          anthropometrics={evolution?.anthropometrics ?? []}
-          inbody={evolution?.inbody ?? []}
+          anthropometrics={evo?.anthropometrics ?? []}
+          inbody={evo?.inbody ?? []}
           objetivos={client?.objetivos}
           inbodyCadenceType={client?.inbodyCadenceType}
           disciplineStats={disciplineStats}
@@ -167,7 +152,7 @@ export function AdminEvolutionPanel({ clientId }: { clientId: string }) {
         </div>
       )}
 
-      <CheckinAccordion clientId={clientId} onSaved={loadAll} />
+      <CheckinAccordion clientId={clientId} onSaved={() => mutate()} />
     </div>
   );
 }

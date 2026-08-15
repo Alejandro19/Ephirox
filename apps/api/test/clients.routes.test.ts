@@ -40,6 +40,21 @@ describe('clients routes (CRUD)', () => {
     createdClientId = res.body.client.id;
   });
 
+  it('creates a client with mustChangePassword when the "Contraseña temporal" checkbox is set', async () => {
+    const email = `crud-temp-client-${Date.now()}@example.com`;
+    const res = await request(app)
+      .post('/api/clients')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ name: 'Temp Password Client', email, password: 'secret', mustChangePassword: true });
+    expect(res.status).toBe(201);
+    expect(res.body.client.mustChangePassword).toBe(true);
+
+    const loginRes = await request(app).post('/api/auth/login').send({ email, password: 'secret' });
+    expect(loginRes.body.mustChangePassword).toBe(true);
+
+    await db.delete(clients).where(eq(clients.id, res.body.client.id));
+  });
+
   it('lists clients as admin, including the one just created', async () => {
     const res = await request(app).get('/api/clients').set('Authorization', `Bearer ${adminToken}`);
     expect(res.status).toBe(200);

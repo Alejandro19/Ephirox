@@ -1,9 +1,9 @@
 // ============================================================
 // FASE 0 — API CLIENT SIMPLIFICADO
-// URL base hardcodeada a localhost:3003. Sin cachés ni interceptores.
+// Sin cachés ni interceptores.
 // ============================================================
 
-const API_BASE = 'http://localhost:3003/api';
+const API_BASE = `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3003'}/api`;
 
 // Lanzado por los *-client.ts cuando el backend responde 403 a un módulo
 // protegido por requirePermission/requirePersonalInfoAccess — permite a los
@@ -19,6 +19,9 @@ export type LoginResult = {
   role?: 'admin' | 'cliente' | 'terapeuta';
   user?: { id: string; name: string; email: string };
   onboardingComplete?: boolean;
+  // true cuando el admin le asignó una contraseña temporal al crear la
+  // cuenta — el login debe mandar a definir una nueva antes de entrar.
+  mustChangePassword?: boolean;
   clientType?: string;
   permissions?: Record<string, boolean>;
   planExpired?: boolean;
@@ -31,8 +34,20 @@ export type LoginResult = {
 
 export type RegisterResult = {
   success: boolean;
+  // intent="membership_request" (Solicita tu membresía): la cuenta queda
+  // "inactive" hasta que un admin la active — nunca devuelve token.
+  pending?: boolean;
+  // intent="explorer" (Únete como Explorador): la cuenta queda activa al
+  // instante — mismos campos que LoginResult, para auto-loguear de una.
   token?: string;
+  role?: 'cliente';
   user?: { id: string; name: string; email: string };
+  clientType?: string;
+  permissions?: Record<string, boolean>;
+  planExpired?: boolean;
+  planEndDate?: string;
+  onboardingComplete?: boolean;
+  message?: string;
   error?: string;
 };
 
@@ -68,12 +83,12 @@ export async function loginRequest(email: string, password: string): Promise<Log
   }
 }
 
-export async function registerRequest(name: string, email: string, password: string): Promise<RegisterResult> {
+export async function registerRequest(name: string, email: string, intent: 'explorer' | 'membership_request'): Promise<RegisterResult> {
   try {
     const res = await fetch(`${API_BASE}/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, password }),
+      body: JSON.stringify({ name, email, intent }),
     });
     return res.json();
   } catch {
@@ -167,12 +182,20 @@ export async function changePasswordRequest(currentPassword: string, newPassword
   }
 }
 
+// Lanzado únicamente cuando el token en sí es inválido/expiró (401/403) —
+// distinto de un fallo transitorio de red o del servidor, que no debe cerrar
+// una sesión recién iniciada (ver refreshAuth en auth-context.tsx).
+export class AuthInvalidError extends Error {}
+
 export async function fetchAuthMe(): Promise<MeResult> {
   const token = getSessionToken();
-  if (!token) throw new Error('No hay sesión activa.');
+  if (!token) throw new AuthInvalidError('No hay sesión activa.');
   const res = await fetch(`${API_BASE}/auth/me`, {
     headers: { Authorization: `Bearer ${token}` },
   });
+  if (res.status === 401 || res.status === 403) {
+    throw new AuthInvalidError('Sesión inválida o expirada.');
+  }
   const data: MeResult = await res.json();
   if (!res.ok || !data.success) throw new Error(data.error || 'No se pudo validar la sesión.');
   return data;

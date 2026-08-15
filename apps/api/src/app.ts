@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import compression from 'compression';
 import type { Request, Response, NextFunction } from 'express';
 import { authRouter } from './routes/auth.routes.js';
 import { clientsRouter } from './routes/clients.routes.js';
@@ -14,12 +15,16 @@ import { adminPhrasesRouter } from './routes/admin-phrases.routes.js';
 import { adminQuotesRouter } from './routes/admin-quotes.routes.js';
 import { restToolsRouter } from './routes/rest-tools.routes.js';
 import { adminCortisolTipsRouter } from './routes/admin-cortisol-tips.routes.js';
+import { adminNutritionTipsRouter } from './routes/admin-nutrition-tips.routes.js';
+import { recipesRouter } from './routes/recipes.routes.js';
 import { cortisolTechniquesRouter } from './routes/cortisol-techniques.routes.js';
 import { cortisolLogsRouter } from './routes/cortisol-logs.routes.js';
 import { sleepRouter } from './routes/sleep.routes.js';
 import { eventsRouter } from './routes/events.routes.js';
 import { therapiesRouter } from './routes/therapies.routes.js';
+import { retreatsRouter } from './routes/retreats.routes.js';
 import { evolutionRouter } from './routes/evolution.routes.js';
+import { wellnessIndexRouter } from './routes/wellness-index.routes.js';
 import { labPanelsRouter } from './routes/lab-panels.routes.js';
 import { wearableRouter, wearableOAuthRouter } from './routes/wearable.routes.js';
 import { blindspotRouter } from './routes/blindspot.routes.js';
@@ -32,6 +37,10 @@ export function createApp() {
 
   // FASE 0: CORS universal para desarrollo
   app.use(cors({ origin: '*', credentials: true }));
+
+  // gzip/brotli en todas las respuestas — las de listados (evolution,
+  // achievements, etc.) son JSON repetitivo, comprimen muy bien.
+  app.use(compression());
 
   app.use(express.json({ limit: '10mb' }));
 
@@ -46,9 +55,13 @@ export function createApp() {
   app.use('/api', adminQuotesRouter);
   app.use('/api', restToolsRouter);
   app.use('/api', adminCortisolTipsRouter);
+  app.use('/api', adminNutritionTipsRouter);
+  app.use('/api', recipesRouter);
   app.use('/api', eventsRouter);
   app.use('/api', therapiesRouter);
+  app.use('/api', retreatsRouter);
   app.use('/api', evolutionRouter);
+  app.use('/api', wellnessIndexRouter);
   app.use('/api/auth', authRouter);
   app.use('/api/clients', clientsRouter);
   app.use('/api/clients', personalInfoRouter);

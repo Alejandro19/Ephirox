@@ -16,6 +16,25 @@ function err(res: Response, message: string, status = 400) {
   return res.status(status).json({ success: false, error: message });
 }
 
+// Alta de "Club Explorador" (registro directo o SSO con una identidad
+// nueva): activa al instante, misma forma de respuesta que login() para que
+// el frontend reutilice el mismo código de "guardar sesión y navegar" — sin
+// `pending`, con `token` de una.
+async function explorerCreatedResponse(res: Response, client: Awaited<ReturnType<typeof clientsService.createActiveExplorerClient>>) {
+  const token = authService.signToken({ id: client.id, role: 'cliente', name: client.name, email: client.email, plan: client.plan, clientType: client.clientType });
+  return ok(res, {
+    token,
+    role: 'cliente',
+    user: { id: client.id, name: client.name, email: client.email, plan: client.plan },
+    permissions: client.permissions,
+    clientType: client.clientType,
+    planExpired: false,
+    planEndDate: client.planEndDate,
+    onboardingComplete: false,
+    message: 'Bienvenido al Club como Explorador.',
+  }, 201);
+}
+
 export async function login(req: Request, res: Response) {
   const { email, password } = req.body as LoginInput;
   const emailLower = email.toLowerCase().trim();
@@ -39,6 +58,7 @@ export async function login(req: Request, res: Response) {
   return ok(res, {
     token,
     role: 'cliente',
+    mustChangePassword: client.mustChangePassword,
     user: { id: client.id, name: client.name, email: client.email, plan: client.plan },
     permissions: client.permissions,
     clientType: client.clientType,
@@ -74,13 +94,18 @@ export async function therapistLogin(req: Request, res: Response) {
 }
 
 export async function register(req: Request, res: Response) {
-  const { name, email, password } = req.body as RegisterInput;
+  const { name, email, password, intent } = req.body as RegisterInput;
   const emailLower = email.toLowerCase().trim();
   const [existingAdmin, existingClient] = await Promise.all([
     adminsService.findAdminByEmail(emailLower),
     clientsService.findClientByEmail(emailLower),
   ]);
   if (existingAdmin || existingClient) return err(res, 'Ese email ya está registrado.', 409);
+
+  if (intent === 'explorer') {
+    const client = await clientsService.createActiveExplorerClient({ name, email: emailLower });
+    return explorerCreatedResponse(res, client);
+  }
 
   await clientsService.createInactiveClient({ name, email: emailLower, password });
   return ok(res, { pending: true, message: 'Tu cuenta fue creada y quedará activa cuando el administrador la confirme.' }, 201);
@@ -232,8 +257,11 @@ export async function googleLogin(req: Request, res: Response) {
     });
   }
 
-  await clientsService.createInactiveClient({ name: displayName, email: emailLower, googleId });
-  return ok(res, { pending: true, message: 'Tu cuenta fue creada y quedará activa cuando el administrador la confirme.' }, 201);
+  // Regla unificada: cualquier identidad nueva por SSO se vuelve Club
+  // Explorador al instante — el SSO nunca es una vía directa a un tier
+  // pago ni pasa por la cola de aprobación de la solicitud Premium.
+  const newClient = await clientsService.createActiveExplorerClient({ name: displayName, email: emailLower, googleId });
+  return explorerCreatedResponse(res, newClient);
 }
 
 export async function appleLogin(req: Request, res: Response) {
@@ -273,6 +301,8 @@ export async function appleLogin(req: Request, res: Response) {
     });
   }
 
-  await clientsService.createInactiveClient({ name: displayName, email: emailLower, appleId });
-  return ok(res, { pending: true, message: 'Tu cuenta fue creada y quedará activa cuando el administrador la confirme.' }, 201);
+  // Misma regla unificada que Google: identidad nueva por SSO = Club
+  // Explorador al instante, nunca un tier pago ni una solicitud pendiente.
+  const newClient = await clientsService.createActiveExplorerClient({ name: displayName, email: emailLower, appleId });
+  return explorerCreatedResponse(res, newClient);
 }

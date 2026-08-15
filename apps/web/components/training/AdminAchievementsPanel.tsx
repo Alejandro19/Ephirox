@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { getAchievements, getStreak, type Achievement } from '../../lib/training-client';
+import useSWR from 'swr';
+import { getAchievements, getStreak } from '../../lib/training-client';
 import { computeAchievements } from '../../lib/training-card';
 import RingProgress from '../ui/RingProgress';
 import { IconTrophy, IconMedal } from '../ui/icons';
@@ -27,29 +27,20 @@ function formatDate(iso: string): string {
 }
 
 export function AdminAchievementsPanel({ clientId }: { clientId: string }) {
-  const [achievements, setAchievements] = useState<Achievement[]>([]);
-  const [streakWeeks, setStreakWeeks] = useState<number | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    Promise.all([
+  const { data, error, isLoading: loading } = useSWR(['training-achievements', clientId], async () => {
+    const [achievements, streak] = await Promise.all([
       getAchievements(clientId),
       getStreak(clientId, clientTz()).catch(() => null),
-    ])
-      .then(([list, streak]) => {
-        setAchievements(list);
-        setStreakWeeks(streak?.streakWeeks ?? null);
-      })
-      .catch((e: Error) => setError(e.message))
-      .finally(() => setLoading(false));
-  }, [clientId]);
+    ]);
+    return { achievements, streakWeeks: streak?.streakWeeks ?? null };
+  });
 
   if (loading) return <div style={cardStyle}><p style={{ color: 'var(--ink-secondary)', margin: 0 }}>Cargando medallas y trofeos…</p></div>;
-  if (error) return <div style={cardStyle}><p style={{ color: 'var(--danger)', margin: 0 }}>{error}</p></div>;
+  if (error) return <div style={cardStyle}><p style={{ color: 'var(--danger)', margin: 0 }}>{(error as Error).message}</p></div>;
+  if (!data) return null;
 
-  const { medalsInCurrentCycle, trophiesEarned } = computeAchievements(streakWeeks ?? 0);
-  const sorted = [...achievements].sort((a, b) => (a.earnedAt < b.earnedAt ? 1 : -1));
+  const { medalsInCurrentCycle, trophiesEarned } = computeAchievements(data.streakWeeks ?? 0);
+  const sorted = [...data.achievements].sort((a, b) => (a.earnedAt < b.earnedAt ? 1 : -1));
 
   return (
     <div style={cardStyle}>

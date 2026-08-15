@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import multer from 'multer';
 import { CommunityEventInputSchema } from '@latribu/shared-types';
 import { validateBody } from '../middleware/validate.js';
 import { asyncHandler } from '../middleware/async-handler.js';
@@ -7,6 +8,8 @@ import { requireEventsAccess } from '../middleware/community-access.middleware.j
 import { requirePermission } from '../middleware/require-permission.middleware.js';
 import * as eventsController from '../controllers/events.controller.js';
 import * as communityReservationsController from '../controllers/community-reservations.controller.js';
+
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 
 export const eventsRouter = Router();
 
@@ -23,6 +26,14 @@ eventsRouter.post(
 eventsRouter.put('/community/events/:eventId', authMiddleware, adminOnly, asyncHandler(eventsController.updateEvent));
 
 eventsRouter.delete('/community/events/:eventId', authMiddleware, adminOnly, asyncHandler(eventsController.deleteEvent));
+
+eventsRouter.post(
+  '/community/events/:eventId/upload-image',
+  authMiddleware,
+  adminOnly,
+  upload.single('image'),
+  asyncHandler(eventsController.uploadEventImage)
+);
 
 eventsRouter.post(
   '/community/events/:eventId/reserve',

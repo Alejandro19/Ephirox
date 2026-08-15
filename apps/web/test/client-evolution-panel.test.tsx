@@ -1,18 +1,21 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { renderWithSWR as render } from './swr-test-utils';
 import { ClientEvolutionPanel } from '../components/evolution/ClientEvolutionPanel';
 import * as evolutionClient from '../lib/evolution-client';
 import * as cortisolClient from '../lib/cortisol-client';
 import * as sleepClient from '../lib/sleep-client';
 import * as trainingClient from '../lib/training-client';
 import * as clientsClient from '../lib/clients-client';
+import * as wellnessIndexClient from '../lib/wellness-index-client';
 
 vi.mock('../lib/evolution-client');
 vi.mock('../lib/cortisol-client');
 vi.mock('../lib/sleep-client');
 vi.mock('../lib/training-client');
 vi.mock('../lib/clients-client');
+vi.mock('../lib/wellness-index-client');
 
 const anthro: evolutionClient.AnthropometricRecord = {
   id: 'a1', clientId: 'client-1', fecha: '2026-07-01', semana: null, mesNum: 1,
@@ -50,13 +53,16 @@ function mockFetches({
     id: 'client-1', name: 'Ana', email: 'a@x.com', plan: '', status: 'active', clientType,
     trainingDays, objetivos: { peso: 'bajar', grasa_corporal: 'bajar', masa_muscular: 'subir' }, nextCheckinDate: null, inbodyCadenceType: 'mensual',
   });
+  vi.mocked(wellnessIndexClient.getWellnessIndex).mockResolvedValue({
+    value: 72, previousValue: 64, delta: 8, trend: 'up', componentsUsed: { training: 60, sleep: 80, cortisol: 90, evolution: 70 },
+  });
 }
 
 describe('ClientEvolutionPanel', () => {
   it('shows the wellness index hero and the general wellbeing summary', async () => {
     mockFetches();
     render(<ClientEvolutionPanel clientId="client-1" />);
-    expect(await screen.findByText('Índice de bienestar general')).toBeInTheDocument();
+    expect(await screen.findByText('Índice de bienestar')).toBeInTheDocument();
     expect(screen.getByText('Bienestar general')).toBeInTheDocument();
     expect(screen.getByText('Hackeando el sueño')).toBeInTheDocument();
     expect(screen.getByText('Gestión de Cortisol')).toBeInTheDocument();

@@ -6,8 +6,10 @@ import {
   createClient,
   type ClientSummary,
 } from "../../lib/clients-client";
+import { adminCreateTherapist } from "../../lib/blindspot-client";
 import { CLIENT_TYPE_LABELS } from "../../lib/constants";
 import { showToast } from "../layout/AppShell";
+import AdminTherapistList from "./AdminTherapistList";
 
 function isPlanExpired(c: ClientSummary): boolean {
   if (!c.plan_end_date) return false;
@@ -43,14 +45,33 @@ const tdStyle: React.CSSProperties = {
   verticalAlign: "middle",
 };
 
+function segmentButtonStyle(active: boolean): React.CSSProperties {
+  return {
+    height: 36, padding: "0 18px", borderRadius: 9999, fontSize: 13, fontWeight: 700, cursor: "pointer",
+    border: active ? "none" : "1px solid var(--border-hairline)",
+    background: active ? "var(--ring-accent)" : "transparent",
+    color: active ? "#fff" : "var(--ink-secondary)",
+  };
+}
+
 export default function AdminClientList() {
   const [clients, setClients] = useState<ClientSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Cliente y terapeuta se registran desde el mismo módulo — antes vivían
+  // por separado (terapeuta se creaba desde Punto Ciego → pestaña
+  // Terapeutas), cada uno conserva solo los campos que le corresponden.
+  const [newEntityType, setNewEntityType] = useState<"cliente" | "terapeuta">("cliente");
   const [newName, setNewName] = useState("");
   const [newEmail, setNewEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [newSpecialty, setNewSpecialty] = useState("");
+  const [newMustChangePassword, setNewMustChangePassword] = useState(false);
   const [creating, setCreating] = useState(false);
+  // Fuerza a AdminTherapistList a remontarse (y re-pedir su lista) cuando se
+  // crea un terapeuta nuevo desde este formulario.
+  const [therapistListKey, setTherapistListKey] = useState(0);
 
   const load = useCallback(async () => {
     setLoading(true); setError(null);
@@ -61,18 +82,39 @@ export default function AdminClientList() {
 
   useEffect(() => { load(); }, [load]);
 
+  const clearNewEntityFields = () => {
+    setNewName(""); setNewEmail(""); setNewPassword(""); setNewSpecialty(""); setNewMustChangePassword(false);
+  };
+
   const handleCreate = async () => {
     if (!newName || !newEmail || !newPassword) {
       showToast("Completa todos los campos.", "error"); return;
     }
     setCreating(true);
     try {
-      await createClient({ name: newName, email: newEmail, password: newPassword });
-      setNewName(""); setNewEmail(""); setNewPassword("");
-      showToast("Cliente creado correctamente.", "success");
-      await load();
+      if (newEntityType === "terapeuta") {
+        if (newPassword.length < 8) {
+          showToast("La contraseña temporal debe tener al menos 8 caracteres.", "error");
+          setCreating(false);
+          return;
+        }
+        await adminCreateTherapist({ name: newName, email: newEmail, password: newPassword, specialty: newSpecialty || undefined });
+        clearNewEntityFields();
+        showToast("Terapeuta creado. Esa contraseña es temporal — deberá cambiarla en su primer ingreso.", "success");
+        setTherapistListKey((k) => k + 1);
+      } else {
+        await createClient({ name: newName, email: newEmail, password: newPassword, mustChangePassword: newMustChangePassword });
+        clearNewEntityFields();
+        showToast(
+          newMustChangePassword
+            ? "Cliente creado. Esa contraseña es temporal — deberá cambiarla en su próximo ingreso."
+            : "Cliente creado correctamente.",
+          "success"
+        );
+        await load();
+      }
     } catch (e: unknown) {
-      showToast(e instanceof Error ? e.message : "Error al crear cliente.", "error");
+      showToast(e instanceof Error ? e.message : `Error al crear ${newEntityType}.`, "error");
     } finally { setCreating(false); }
   };
 
@@ -88,37 +130,67 @@ export default function AdminClientList() {
           Gestiona los miembros de La Tribu.</p>
       </div>
 
-      {/* Nuevo cliente */}
+      {/* Nuevo cliente / terapeuta */}
       <div style={{
         background: "var(--paper)", border: "1px solid var(--border-hairline)",
         borderRadius: "var(--radius-card)", padding: "22px 24px", marginBottom: 20,
       }}>
-        <h3 style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)",
-          margin: "0 0 16px" }}>Nuevo cliente</h3>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between",
+          marginBottom: 16, flexWrap: "wrap", gap: 12 }}>
+          <h3 style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)", margin: 0 }}>
+            {newEntityType === "terapeuta" ? "Nuevo terapeuta" : "Nuevo cliente"}
+          </h3>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button type="button" style={segmentButtonStyle(newEntityType === "cliente")}
+              onClick={() => { setNewEntityType("cliente"); clearNewEntityFields(); }}>
+              Cliente
+            </button>
+            <button type="button" style={segmentButtonStyle(newEntityType === "terapeuta")}
+              onClick={() => { setNewEntityType("terapeuta"); clearNewEntityFields(); }}>
+              Terapeuta
+            </button>
+          </div>
+        </div>
         <div style={{ display: "grid",
           gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
           gap: 14, marginBottom: 16 }}>
-          <div><label style={{ display: "block", fontSize: 12, fontWeight: 400,
+          <div><label htmlFor="new-entity-name" style={{ display: "block", fontSize: 12, fontWeight: 400,
             color: "var(--ink-secondary)", marginBottom: 4 }}>Nombre</label>
-            <input value={newName} onChange={(e) => setNewName(e.target.value)}
+            <input id="new-entity-name" value={newName} onChange={(e) => setNewName(e.target.value)}
               placeholder="Nombre completo" style={inputStyle} /></div>
-          <div><label style={{ display: "block", fontSize: 12, fontWeight: 400,
+          <div><label htmlFor="new-entity-email" style={{ display: "block", fontSize: 12, fontWeight: 400,
             color: "var(--ink-secondary)", marginBottom: 4 }}>Email</label>
-            <input value={newEmail} onChange={(e) => setNewEmail(e.target.value)}
+            <input id="new-entity-email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)}
               placeholder="correo@ejemplo.com" style={inputStyle} /></div>
-          <div><label style={{ display: "block", fontSize: 12, fontWeight: 400,
-            color: "var(--ink-secondary)", marginBottom: 4 }}>Contraseña</label>
-            <input type="password" value={newPassword}
+          <div><label htmlFor="new-entity-password" style={{ display: "block", fontSize: 12, fontWeight: 400,
+            color: "var(--ink-secondary)", marginBottom: 4 }}>
+              {newEntityType === "terapeuta" ? "Contraseña temporal" : "Contraseña"}</label>
+            <input id="new-entity-password" type={newEntityType === "terapeuta" ? "text" : "password"} value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="••••••••" style={inputStyle} /></div>
+              placeholder={newEntityType === "terapeuta" ? "Mínimo 8 caracteres" : "••••••••"}
+              style={inputStyle} /></div>
+          {newEntityType === "terapeuta" && (
+            <div><label htmlFor="new-entity-specialty" style={{ display: "block", fontSize: 12, fontWeight: 400,
+              color: "var(--ink-secondary)", marginBottom: 4 }}>Especialidad</label>
+              <input id="new-entity-specialty" value={newSpecialty} onChange={(e) => setNewSpecialty(e.target.value)}
+                placeholder="Biodescodificación" style={inputStyle} /></div>
+          )}
         </div>
+        {newEntityType === "cliente" && (
+          <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13,
+            color: "var(--ink-secondary)", cursor: "pointer", userSelect: "none", marginBottom: 16 }}>
+            <input type="checkbox" checked={newMustChangePassword}
+              onChange={(e) => setNewMustChangePassword(e.target.checked)} />
+            Contraseña temporal — deberá definir una nueva en su próximo ingreso
+          </label>
+        )}
         <button onClick={handleCreate} disabled={creating}
           style={{ display: "inline-flex", alignItems: "center", gap: 6,
             borderRadius: "9999px", background: "var(--ring-accent)", color: "#fff",
             border: "none", padding: "10px 24px", fontSize: 13, fontWeight: 600,
             cursor: creating ? "not-allowed" : "pointer",
             opacity: creating ? 0.7 : 1 }}>
-          {creating ? "Creando…" : "Crear cliente"}</button>
+          {creating ? "Creando…" : newEntityType === "terapeuta" ? "Crear terapeuta" : "Crear cliente"}</button>
       </div>
 
       {/* Tabla de clientes */}
@@ -126,7 +198,8 @@ export default function AdminClientList() {
         background: "var(--paper)", border: "1px solid var(--border-hairline)",
         borderRadius: "var(--radius-card)", padding: "22px 24px",
       }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+        <div style={{ overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, minWidth: 640 }}>
           <thead>
             <tr>{["Nombre","Email","Estado","Tipo","Vence",""].map(h => (
               <th key={h} style={thStyle}>{h}</th>))}</tr>
@@ -157,10 +230,13 @@ export default function AdminClientList() {
             })}
           </tbody>
         </table>
+        </div>
         {clients.length === 0 && <p style={{ textAlign: "center",
           color: "var(--ink-secondary)", fontSize: 13, padding: "32px 0" }}>
           No hay clientes registrados.</p>}
       </div>
+
+      <AdminTherapistList key={therapistListKey} />
     </div>
   );
 }

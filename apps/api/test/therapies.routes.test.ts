@@ -79,4 +79,30 @@ describe('therapies routes', () => {
     expect(res.status).toBe(200);
     expect(res.body.reservations).toHaveLength(1);
   });
+
+  it('admin uploads a photo for a therapy', async () => {
+    const createRes = await request(app)
+      .post('/api/community/therapies')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ title: 'Masaje', provider: 'Clínica Aliada', discount_pct: 30 });
+    const therapyId = createRes.body.therapy.id;
+
+    const uploadRes = await request(app)
+      .post(`/api/community/therapies/${therapyId}/upload-image`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .attach('image', Buffer.from('fake png bytes'), { filename: 'masaje.png', contentType: 'image/png' });
+    expect(uploadRes.status).toBe(200);
+    expect(uploadRes.body.therapy.imageUrl).toEqual(expect.stringContaining('http'));
+    expect(uploadRes.body.therapy.provider).toBe('Clínica Aliada');
+  });
+
+  it('rejects a non-image upload for a therapy photo', async () => {
+    const createRes = await request(app).post('/api/community/therapies').set('Authorization', `Bearer ${adminToken}`).send({ title: 'Terapia' });
+    const therapyId = createRes.body.therapy.id;
+    const res = await request(app)
+      .post(`/api/community/therapies/${therapyId}/upload-image`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .attach('image', Buffer.from('not an image'), { filename: 'foto.txt', contentType: 'text/plain' });
+    expect(res.status).toBe(400);
+  });
 });

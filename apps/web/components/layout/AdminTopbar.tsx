@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "../../lib/auth-context";
 import { ADMIN_NAV, ADMIN_HUB_SUBITEMS, VIEW_TO_PATH } from "../../lib/constants";
 import NotificationBell from "./NotificationBell";
+import BrandRing from "../ui/BrandRing";
 
 type AdminTopbarProps = {
   viewKey: string;
@@ -47,6 +48,15 @@ export default function AdminTopbar({ viewKey }: AdminTopbarProps) {
   const hubActive = HUB_SUBKEYS.includes(viewKey);
   const initial = (user?.name ?? "A").charAt(0).toUpperCase();
 
+  // Precarga todas las rutas del topbar (incluyendo el submenú de Administración)
+  // una vez montado, para que el siguiente módulo ya esté tibio antes del clic.
+  useEffect(() => {
+    [...ADMIN_HUB_SUBITEMS, ...FLAT_NAV].forEach((item) => {
+      router.prefetch(VIEW_TO_PATH[item.key] || `/${item.key}`);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <>
       <header
@@ -62,17 +72,27 @@ export default function AdminTopbar({ viewKey }: AdminTopbarProps) {
           background: "linear-gradient(135deg, var(--hero-piedra-start), var(--hero-piedra-end))",
         }}
       >
-        <span
+        <button
+          onClick={() => router.push("/")}
+          aria-label="Ir al menú principal"
           style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
             fontFamily: "Fraunces, Georgia, serif",
             fontSize: 19,
             fontWeight: 700,
             color: "var(--hero-piedra-text)",
             flexShrink: 0,
+            background: "none",
+            border: "none",
+            padding: 0,
+            cursor: "pointer",
           }}
         >
+          <BrandRing size={24} background="var(--hero-piedra-start)" />
           La Tribu
-        </span>
+        </button>
 
         <nav className="admin-nav-row" style={{ display: "flex", alignItems: "center", gap: 10, flex: 1, minWidth: 0 }}>
           <div ref={hubRef} style={{ position: "relative" }}>
@@ -147,14 +167,14 @@ export default function AdminTopbar({ viewKey }: AdminTopbarProps) {
           })}
         </nav>
 
-        <div className="admin-topbar-actions" style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+        <div className="admin-topbar-actions" style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0, marginLeft: "auto" }}>
           <span className="bell-circle">
             <NotificationBell />
           </span>
           <div ref={accountRef} style={{ position: "relative" }}>
             <button
               onClick={() => setAccountOpen((v) => !v)}
-              aria-label="Cuenta"
+              aria-label="Membresía"
               style={{
                 width: 32, height: 32, borderRadius: "50%",
                 border: "1px solid var(--hero-piedra-accent)",
@@ -219,7 +239,7 @@ export default function AdminTopbar({ viewKey }: AdminTopbarProps) {
         style={{
           position: "fixed", top: 0, right: 0, bottom: 0, width: "82vw", maxWidth: 300,
           background: "var(--page-bg)", zIndex: 110, padding: "24px 20px", overflowY: "auto",
-          transform: "translateX(100%)", transition: "transform 0.28s ease",
+          transition: "transform 0.28s ease",
           display: "flex", flexDirection: "column", gap: 4,
         }}
       >
@@ -300,6 +320,9 @@ export default function AdminTopbar({ viewKey }: AdminTopbarProps) {
         }
         .bell-circle:hover {
           background: var(--hero-espresso);
+        }
+        .admin-drawer {
+          transform: translateX(100%);
         }
         .admin-drawer.open {
           transform: translateX(0);

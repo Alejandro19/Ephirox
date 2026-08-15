@@ -80,18 +80,47 @@ describe('auth routes', () => {
     await db.update(clients).set({ status: 'active' }).where(eq(clients.id, clientId));
   });
 
-  it('registers a new client as inactive and pending', async () => {
+  it('registers a new client as inactive and pending (membership_request)', async () => {
     const res = await request(app)
       .post('/api/auth/register')
-      .send({ name: 'New Register', email: 'new-register@example.com', password: 'secret' });
+      .send({ name: 'New Register', email: 'new-register@example.com', password: 'secret', intent: 'membership_request' });
     expect(res.status).toBe(201);
     expect(res.body.pending).toBe(true);
+  });
+
+  it('accepts a membership request with no password ("Solicita tu membresía") and never returns a token', async () => {
+    const res = await request(app)
+      .post('/api/auth/register')
+      .send({ name: 'New Register', email: 'new-register@example.com', intent: 'membership_request' });
+    expect(res.status).toBe(201);
+    expect(res.body.pending).toBe(true);
+    expect(res.body.token).toBeUndefined();
+
+    const [created] = await db.select().from(clients).where(eq(clients.email, 'new-register@example.com'));
+    expect(created.status).toBe('inactive');
+    expect(created.passwordHash).toBeNull();
+  });
+
+  it('registers a new client as an instantly-active Club Explorador and auto-logs in (intent="explorer")', async () => {
+    const res = await request(app)
+      .post('/api/auth/register')
+      .send({ name: 'New Explorer', email: 'new-register@example.com', intent: 'explorer' });
+    expect(res.status).toBe(201);
+    expect(res.body.token).toEqual(expect.any(String));
+    expect(res.body.pending).toBeUndefined();
+    expect(res.body.clientType).toBe('lead_wellness');
+
+    const [created] = await db.select().from(clients).where(eq(clients.email, 'new-register@example.com'));
+    expect(created.status).toBe('active');
+    expect(created.clientType).toBe('lead_wellness');
+    expect(created.passwordHash).toBeNull();
+    expect(created.memberNumber).not.toBeNull();
   });
 
   it('rejects registering an email that already exists', async () => {
     const res = await request(app)
       .post('/api/auth/register')
-      .send({ name: 'Dup', email: adminEmail, password: 'secret' });
+      .send({ name: 'Dup', email: adminEmail, password: 'secret', intent: 'membership_request' });
     expect(res.status).toBe(409);
   });
 
@@ -191,6 +220,58 @@ describe('therapist forced password change', () => {
     expect(decoded.mustChangePassword).toBe(false);
 
     const loginRes = await request(app).post('/api/auth/therapist/login').send({ email: therapistEmail, password: 'permanent-pass-456' });
+    expect(loginRes.status).toBe(200);
+    expect(loginRes.body.mustChangePassword).toBe(false);
+  });
+});
+
+describe('client forced password change (contraseña temporal desde Crear Usuario)', () => {
+  const app = createApp();
+  const tempClientEmail = `auth-temp-client-${Date.now()}@example.com`;
+  const plainClientEmail = `auth-plain-client-${Date.now()}@example.com`;
+  let tempClientId: string;
+  let plainClientId: string;
+
+  beforeAll(async () => {
+    const [client] = await db
+      .insert(clients)
+      .values({ name: 'Temp Client', email: tempClientEmail, passwordHash: await hashPassword('temp-pass-123'), status: 'active', mustChangePassword: true })
+      .returning();
+    tempClientId = client.id;
+
+    const [plain] = await db
+      .insert(clients)
+      .values({ name: 'Plain Client', email: plainClientEmail, passwordHash: await hashPassword('plain-pass-123'), status: 'active' })
+      .returning();
+    plainClientId = plain.id;
+  });
+
+  afterAll(async () => {
+    await db.delete(clients).where(eq(clients.id, tempClientId));
+    await db.delete(clients).where(eq(clients.id, plainClientId));
+  });
+
+  it('a client created with a temporary password (checkbox in Crear Usuario) must change it on first login', async () => {
+    const res = await request(app).post('/api/auth/login').send({ email: tempClientEmail, password: 'temp-pass-123' });
+    expect(res.status).toBe(200);
+    expect(res.body.mustChangePassword).toBe(true);
+  });
+
+  it('a client created without the checkbox does not need to change their password', async () => {
+    const res = await request(app).post('/api/auth/login').send({ email: plainClientEmail, password: 'plain-pass-123' });
+    expect(res.status).toBe(200);
+    expect(res.body.mustChangePassword).toBe(false);
+  });
+
+  it('change-password clears mustChangePassword for a client', async () => {
+    const token = signToken({ id: tempClientId, role: 'cliente', name: 'Temp Client', email: tempClientEmail });
+    const changeRes = await request(app)
+      .post('/api/auth/change-password')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ currentPassword: 'temp-pass-123', newPassword: 'permanent-pass-456' });
+    expect(changeRes.status).toBe(200);
+
+    const loginRes = await request(app).post('/api/auth/login').send({ email: tempClientEmail, password: 'permanent-pass-456' });
     expect(loginRes.status).toBe(200);
     expect(loginRes.body.mustChangePassword).toBe(false);
   });

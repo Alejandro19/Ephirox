@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import type { CommunityTherapyInput } from '@latribu/shared-types';
 import * as therapiesService from '../services/therapies.service.js';
+import { uploadFile } from '../storage/index.js';
 
 function ok(res: Response, data: Record<string, unknown>, status = 200) {
   return res.status(status).json({ success: true, ...data });
@@ -28,6 +29,15 @@ export async function updateTherapy(req: Request, res: Response) {
 export async function deleteTherapy(req: Request, res: Response) {
   await therapiesService.deleteTherapy(req.params.therapyId);
   return ok(res, { message: 'Terapia eliminada.' });
+}
+
+export async function uploadTherapyImage(req: Request, res: Response) {
+  if (!req.file) return err(res, 'No se recibió ninguna imagen.');
+  if (req.file.mimetype !== 'image/jpeg' && req.file.mimetype !== 'image/png') return err(res, 'Formato inválido. Usa JPG o PNG.');
+  const imageUrl = await uploadFile('therapies', req.file.buffer, req.file.mimetype, req.file.originalname);
+  const therapy = await therapiesService.setTherapyImage(req.params.therapyId, imageUrl);
+  if (!therapy) return err(res, 'Terapia no encontrada.', 404);
+  return ok(res, { therapy });
 }
 
 export async function reserveTherapy(req: Request, res: Response) {

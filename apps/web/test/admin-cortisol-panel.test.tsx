@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { renderWithSWR as render } from './swr-test-utils';
 import { AdminCortisolPanel } from '../components/cortisol/AdminCortisolPanel';
 import * as cortisolClient from '../lib/cortisol-client';
 import * as cortisolTipsClient from '../lib/cortisol-tips-client';

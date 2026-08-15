@@ -119,4 +119,74 @@ describe('LoginPage', () => {
     await waitFor(() => expect(pushMock).toHaveBeenCalledWith('/training'));
     expect(pushMock).not.toHaveBeenCalledWith('/onboarding');
   });
+
+  it('shows the confirmation message for a successful membership request (regression: the backend never returns a token here)', async () => {
+    (fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+      json: async () => ({ success: true, pending: true, message: 'Tu cuenta fue creada y quedará activa cuando el administrador la confirme.' }),
+    });
+
+    render(<LoginPage />);
+    fireEvent.click(screen.getByRole('button', { name: 'Membresía Premium' }));
+    fireEvent.change(screen.getByLabelText('Nombre completo'), { target: { value: 'Ana López' } });
+    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'ana@example.com' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Enviar solicitud' }));
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Tu solicitud fue enviada.');
+    const registerCall = (fetch as unknown as ReturnType<typeof vi.fn>).mock.calls.find(([url]) => String(url).includes('/auth/register'));
+    const [, options] = registerCall!;
+    expect(JSON.parse(options.body)).toMatchObject({ intent: 'membership_request' });
+  });
+
+  it('shows an error when the membership request fails', async () => {
+    (fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+      json: async () => ({ success: false, error: 'Ese email ya está registrado.' }),
+    });
+
+    render(<LoginPage />);
+    fireEvent.click(screen.getByRole('button', { name: 'Membresía Premium' }));
+    fireEvent.change(screen.getByLabelText('Nombre completo'), { target: { value: 'Ana López' } });
+    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'ana@example.com' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Enviar solicitud' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Ese email ya está registrado.');
+  });
+
+  it('auto-logs in (saves the session token) right after joining as an Explorer (intent="explorer")', async () => {
+    (fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+      json: async () => ({
+        success: true,
+        token: 'abc.def.ghi',
+        role: 'cliente',
+        user: { id: '6', name: 'Nueva Exploradora', email: 'explorer@example.com' },
+        clientType: 'lead_wellness',
+        onboardingComplete: false,
+        message: 'Bienvenido al Club como Explorador.',
+      }),
+    });
+
+    render(<LoginPage />);
+    fireEvent.click(screen.getByRole('button', { name: 'Únete como Explorador' }));
+    fireEvent.change(screen.getByLabelText('Nombre completo'), { target: { value: 'Nueva Exploradora' } });
+    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'explorer@example.com' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Unirme al Club' }));
+
+    await waitFor(() => expect(window.sessionStorage.getItem('latribu_token')).toBe('abc.def.ghi'));
+    const registerCall = (fetch as unknown as ReturnType<typeof vi.fn>).mock.calls.find(([url]) => String(url).includes('/auth/register'));
+    const [, options] = registerCall!;
+    expect(JSON.parse(options.body)).toMatchObject({ intent: 'explorer' });
+  });
+
+  it('shows an error when joining as an Explorer fails', async () => {
+    (fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+      json: async () => ({ success: false, error: 'Ese email ya está registrado.' }),
+    });
+
+    render(<LoginPage />);
+    fireEvent.click(screen.getByRole('button', { name: 'Únete como Explorador' }));
+    fireEvent.change(screen.getByLabelText('Nombre completo'), { target: { value: 'Nueva Exploradora' } });
+    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'explorer@example.com' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Unirme al Club' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Ese email ya está registrado.');
+  });
 });

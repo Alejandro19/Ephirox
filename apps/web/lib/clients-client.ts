@@ -21,6 +21,9 @@ export type ClientDetail = ClientSummary & {
   objetivos?: Record<string, string>;
   nextCheckinDate?: string | null;
   inbodyCadenceType?: string;
+  // Autoasignado al activar el cliente (ver updateStatus en clients.service.ts) — null hasta entonces.
+  memberNumber?: number | null;
+  activatedAt?: string | null;
 };
 
 export async function fetchClients(): Promise<ClientSummary[]> {
@@ -47,6 +50,7 @@ export async function createClient(payload: {
   name: string;
   email: string;
   password: string;
+  mustChangePassword?: boolean;
 }): Promise<void> {
   const token = getSessionToken();
   const res = await fetch(`${API_BASE_URL}/api/clients`, {

@@ -1,11 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { screen, fireEvent, waitFor } from '@testing-library/react';
+import { renderWithSWR as render } from './swr-test-utils';
 import { TrainingShell } from '../components/training/TrainingShell';
+import { showToast } from '../components/layout/AppShell';
 import * as trainingClient from '../lib/training-client';
 import * as quotesClient from '../lib/quotes-client';
 
 vi.mock('../lib/training-client');
 vi.mock('../lib/quotes-client');
+vi.mock('../components/layout/AppShell', () => ({ showToast: vi.fn() }));
 
 function exercise(id: string, dayNumber: number, category: trainingClient.ExerciseCategory = 'strength'): trainingClient.Exercise {
   return {
@@ -27,6 +30,7 @@ function exercise(id: string, dayNumber: number, category: trainingClient.Exerci
 
 describe('TrainingShell', () => {
   beforeEach(() => {
+    vi.clearAllMocks();
     vi.mocked(trainingClient.getClientTrainingDays).mockResolvedValue(1);
     vi.mocked(trainingClient.getClientName).mockResolvedValue('Ana');
     vi.mocked(trainingClient.listExercises).mockResolvedValue([exercise('e1', 1)]);
@@ -92,7 +96,11 @@ describe('TrainingShell', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Marcar completado' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Volver al día' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Completar Entrenamiento Día 1' }));
-    await screen.findByText('Ya confirmaste tu sesión de hoy — vuelve mañana para el siguiente día.');
+    // El aviso ahora se muestra como toast (showToast), no como texto embebido en la página.
+    await waitFor(() =>
+      expect(showToast).toHaveBeenCalledWith('Ya confirmaste tu sesión de hoy — vuelve mañana para el siguiente día.', 'info'),
+    );
+    expect(await screen.findByRole('button', { name: /Día 1/ })).toBeInTheDocument();
   });
 
   it('does not treat an old (prior-week) completion as completed this week', async () => {
@@ -134,7 +142,7 @@ describe('TrainingShell', () => {
     expect(await screen.findByRole('button', { name: /Día 1/ })).toBeInTheDocument();
   });
 
-  it('shows the completionNotice (not the confirmed screen) when alreadyConfirmedToday is true', async () => {
+  it('shows a toast (not the confirmed screen) when alreadyConfirmedToday is true', async () => {
     vi.mocked(trainingClient.listExercises).mockResolvedValue([exercise('e1', 1, 'warmup')]);
     vi.mocked(trainingClient.confirmSession).mockResolvedValue({
       alreadyConfirmedToday: true,
@@ -148,7 +156,9 @@ describe('TrainingShell', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Marcar completado' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Volver al día' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Completar Entrenamiento Día 1' }));
-    expect(await screen.findByText(/Ya confirmaste tu sesión de hoy/)).toBeInTheDocument();
+    await waitFor(() =>
+      expect(showToast).toHaveBeenCalledWith('Ya confirmaste tu sesión de hoy — vuelve mañana para el siguiente día.', 'info'),
+    );
     expect(screen.queryByText('¡Sesión confirmada!')).not.toBeInTheDocument();
   });
 
@@ -172,5 +182,12 @@ describe('TrainingShell', () => {
     render(<TrainingShell clientId="c1" />);
     expect(await screen.findByText('Entrenamiento')).toBeInTheDocument();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('shows a LockedBenefit upgrade card when the module is not allowed for this client type (403)', async () => {
+    const { PermissionDeniedError } = await import('../lib/api-client');
+    vi.mocked(trainingClient.getClientTrainingDays).mockRejectedValueOnce(new PermissionDeniedError('No tienes acceso a este módulo.'));
+    render(<TrainingShell clientId="c1" />);
+    expect(await screen.findByText('Beneficio exclusivo de una membresía superior')).toBeInTheDocument();
   });
 });

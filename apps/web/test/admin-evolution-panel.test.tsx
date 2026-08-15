@@ -1,18 +1,21 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { renderWithSWR as render } from './swr-test-utils';
 import { AdminEvolutionPanel } from '../components/evolution/AdminEvolutionPanel';
 import * as evolutionClient from '../lib/evolution-client';
 import * as cortisolClient from '../lib/cortisol-client';
 import * as sleepClient from '../lib/sleep-client';
 import * as trainingClient from '../lib/training-client';
 import * as clientsClient from '../lib/clients-client';
+import * as wellnessIndexClient from '../lib/wellness-index-client';
 
 vi.mock('../lib/evolution-client');
 vi.mock('../lib/cortisol-client');
 vi.mock('../lib/sleep-client');
 vi.mock('../lib/training-client');
 vi.mock('../lib/clients-client');
+vi.mock('../lib/wellness-index-client');
 
 function mockFetches({ clientType = 'coaching_1_1', nextCheckinDate = null as string | null } = {}) {
   vi.mocked(evolutionClient.getEvolutionData).mockResolvedValue({ checkins: [], anthropometrics: [], inbody: [] });
@@ -24,13 +27,16 @@ function mockFetches({ clientType = 'coaching_1_1', nextCheckinDate = null as st
     id: 'c1', name: 'Ana', email: 'a@x.com', plan: '', status: 'active', clientType,
     trainingDays: 4, objetivos: {}, nextCheckinDate, inbodyCadenceType: 'mensual',
   });
+  vi.mocked(wellnessIndexClient.getWellnessIndex).mockResolvedValue({
+    value: 72, previousValue: 64, delta: 8, trend: 'up', componentsUsed: { training: 60, sleep: 80, cortisol: 90, evolution: 70 },
+  });
 }
 
 describe('AdminEvolutionPanel', () => {
   it('shows the wellness dashboard and the next-checkin-date admin field', async () => {
     mockFetches({ nextCheckinDate: '2026-09-01' });
     render(<AdminEvolutionPanel clientId="c1" />);
-    expect(await screen.findByText('Índice de bienestar general')).toBeInTheDocument();
+    expect(await screen.findByText('Índice de bienestar')).toBeInTheDocument();
     expect(screen.getByLabelText('Fecha de la próxima medición')).toHaveValue('2026-09-01');
   });
 

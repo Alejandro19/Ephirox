@@ -35,16 +35,6 @@ function isWideField(field: WizardFieldConfig): boolean {
   );
 }
 
-// 'segmented'/'chevron'/'time'/'file' dibujan su label ARRIBA de la caja (una
-// fila aparte, ~24px de alto); el resto de los campos (select, text, date,
-// slider) no tienen esa fila — su caja empieza pegada al borde superior de su
-// celda. Emparejados en una misma fila de la grilla, eso deja las dos cajas a
-// distinta altura (ver capturas: "Hora del último café" vs "Consumo de
-// alcohol", "Último chequeo médico" vs "Subir chequeo médico"). Cuando el par
-// mezcla ambos estilos, el campo sin fila de label recibe un `pt-6` para
-// bajar su caja y emparejarla con la del otro.
-const EXTERNAL_LABEL_TYPES = new Set(['segmented', 'chevron', 'time', 'file']);
-
 // El emparejamiento de filas se calcula UNA sola vez a partir de la lista
 // estática de campos del módulo — nunca a partir de cuáles están ocultos en
 // este momento. Antes se filtraban los campos ocultos ANTES de armar los
@@ -411,13 +401,10 @@ export function WizardShell({ clientId, variant }: WizardShellProps) {
                   // que queda no debe dejar la otra mitad de la fila en blanco —
                   // ocupa el ancho completo mientras esté solo.
                   const alone = visibleRow.length === 1;
-                  const mixedLabelStyle =
-                    visibleRow.length === 2 && EXTERNAL_LABEL_TYPES.has(visibleRow[0].type) !== EXTERNAL_LABEL_TYPES.has(visibleRow[1].type);
                   return (
                     <div key={row.map((f) => f.id).join('+')} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       {visibleRow.map((field) => {
-                        const needsSpacer = mixedLabelStyle && !EXTERNAL_LABEL_TYPES.has(field.type);
-                        const wrapperClass = [alone && 'sm:col-span-2', needsSpacer && 'sm:pt-6'].filter(Boolean).join(' ') || undefined;
+                        const wrapperClass = alone ? 'sm:col-span-2' : undefined;
                         return (
                         <div key={field.id} className={wrapperClass}>
                           {field.type === 'country-picker' ? (

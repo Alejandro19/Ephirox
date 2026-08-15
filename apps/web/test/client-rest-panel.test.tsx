@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { renderWithSWR as render } from './swr-test-utils';
 import { ClientRestPanel } from '../components/rest/ClientRestPanel';
 import * as wearableClient from '../lib/wearable-client';
 import * as sleepClient from '../lib/sleep-client';
@@ -96,8 +97,8 @@ describe('ClientRestPanel', () => {
     mockFetches({ clientType: 'coaching_1_1' });
     render(<ClientRestPanel clientId="client-1" />);
 
-    expect(await screen.findByText('Solo disponible para Mentoría')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Conocer planes' }));
+    expect(await screen.findByText('Beneficio exclusivo de Club Elite')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Sube de categoría' }));
     expect(openSpy).toHaveBeenCalledWith(expect.stringContaining('wa.me'), '_blank');
   });
 });

@@ -1,22 +1,16 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import useSWR from 'swr';
 import { listSupplements, type Supplement } from '../../lib/supplements-client';
 
 export function ClientSupplementsPanel({ clientId }: { clientId: string }) {
-  const [supplements, setSupplements] = useState<Supplement[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: supplements = [] as Supplement[], error, isLoading } = useSWR(
+    ['supplements', clientId],
+    () => listSupplements(clientId),
+  );
 
-  useEffect(() => {
-    listSupplements(clientId)
-      .then(setSupplements)
-      .catch((e: Error) => setError(e.message))
-      .finally(() => setLoading(false));
-  }, [clientId]);
-
-  if (loading) return <p>Cargando tus suplementos...</p>;
-  if (error) return <p role="alert">{error}</p>;
+  if (isLoading) return <p>Cargando tus suplementos...</p>;
+  if (error) return <p role="alert">{(error as Error).message}</p>;
   if (supplements.length === 0) return <p>Todavía no tienes suplementos asignados.</p>;
 
   return (

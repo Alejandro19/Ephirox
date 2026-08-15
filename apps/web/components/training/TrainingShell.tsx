@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
-import type { Exercise, ExerciseCategory, TrainingCompletion, TrainingStreak } from '../../lib/training-client';
+import { useState } from 'react';
+import useSWR from 'swr';
+import type { ExerciseCategory, TrainingStreak } from '../../lib/training-client';
 import {
   getClientTrainingDays,
   getClientName,
@@ -12,11 +13,14 @@ import {
   useProtector,
 } from '../../lib/training-client';
 import { isDayCompletedThisWeek } from '../../lib/training-home-logic';
-import { getQuoteOfTheDay, type MindsetQuote } from '../../lib/quotes-client';
+import { getQuoteOfTheDay } from '../../lib/quotes-client';
+import { PermissionDeniedError } from '../../lib/api-client';
 import { TrainingHome } from './TrainingHome';
 import { TrainingDayView } from './TrainingDayView';
 import { TrainingPlayer } from './TrainingPlayer';
 import { SessionConfirmedScreen } from './SessionConfirmedScreen';
+import { showToast } from '../layout/AppShell';
+import LockedBenefit from '../ui/LockedBenefit';
 
 export type TrainingShellProps = {
   clientId: string;
@@ -30,55 +34,35 @@ function clientTz(): string {
   }
 }
 
+async function fetchTrainingBundle(clientId: string) {
+  const tz = clientTz();
+  const [trainingDays, clientName, exercises, completions, streak, quote] = await Promise.all([
+    getClientTrainingDays(clientId),
+    getClientName(clientId),
+    listExercises(clientId),
+    listTrainingCompletions(clientId),
+    getStreak(clientId, tz),
+    getQuoteOfTheDay(clientId).catch(() => null),
+  ]);
+  return { trainingDays, clientName, exercises, completions, streak, quote };
+}
+
 export function TrainingShell({ clientId }: TrainingShellProps) {
-  const [trainingDays, setTrainingDays] = useState(0);
-  const [exercises, setExercises] = useState<Exercise[]>([]);
-  const [completions, setCompletions] = useState<TrainingCompletion[]>([]);
-  const [streak, setStreak] = useState<TrainingStreak | null>(null);
-  const [quote, setQuote] = useState<MindsetQuote | null>(null);
-  const [clientName, setClientName] = useState('');
+  const { data, error: loadError, isLoading: loading, mutate } = useSWR(['training-bundle', clientId], () =>
+    fetchTrainingBundle(clientId),
+  );
   const [day, setDay] = useState<number | null>(null);
   const [category, setCategory] = useState<ExerciseCategory | null>(null);
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
   const [completingDay, setCompletingDay] = useState(false);
   const [protectorPending, setProtectorPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [completionNotice, setCompletionNotice] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [confirmedResult, setConfirmedResult] = useState<{ streak: TrainingStreak; phrase: string | null } | null>(null);
-  // Sin esto, TrainingHome se monta con trainingDays=0 antes de que load()
-  // resuelva y muestra por un instante el estado "sin días configurados"
-  // aunque el cliente sí tenga rutina — un flash de contenido incorrecto.
-  const [loading, setLoading] = useState(true);
-
-  const load = useCallback(async () => {
-    const tz = clientTz();
-    const [days, name, exerciseList, completionList, streakState, quoteOfTheDay] = await Promise.all([
-      getClientTrainingDays(clientId),
-      getClientName(clientId),
-      listExercises(clientId),
-      listTrainingCompletions(clientId),
-      getStreak(clientId, tz),
-      getQuoteOfTheDay(clientId).catch(() => null),
-    ]);
-    setTrainingDays(days);
-    setClientName(name);
-    setExercises(exerciseList);
-    setCompletions(completionList);
-    setStreak(streakState);
-    setQuote(quoteOfTheDay);
-  }, [clientId]);
-
-  useEffect(() => {
-    load()
-      .catch((e: Error) => setError(e.message))
-      .finally(() => setLoading(false));
-  }, [load]);
 
   function openDay(d: number) {
     setDay(d);
     setCategory(null);
     setCompletedIds(new Set());
-    setCompletionNotice(null);
   }
 
   function backToHome() {
@@ -95,15 +79,15 @@ export function TrainingShell({ clientId }: TrainingShellProps) {
     setCompletingDay(true);
     try {
       const result = await confirmSession(clientId, clientTz());
-      await load();
+      await mutate();
       if (result.alreadyConfirmedToday) {
         backToHome();
-        setCompletionNotice('Ya confirmaste tu sesión de hoy — vuelve mañana para el siguiente día.');
+        showToast('Ya confirmaste tu sesión de hoy — vuelve mañana para el siguiente día.', 'info');
       } else {
         setConfirmedResult({ streak: result.streak, phrase: result.phrase });
       }
     } catch (e) {
-      setError((e as Error).message);
+      setActionError((e as Error).message);
     } finally {
       setCompletingDay(false);
     }
@@ -118,9 +102,9 @@ export function TrainingShell({ clientId }: TrainingShellProps) {
     setProtectorPending(true);
     try {
       const streakState = await useProtector(clientId, clientTz());
-      setStreak(streakState);
+      await mutate((current) => (current ? { ...current, streak: streakState } : current), { revalidate: false });
     } catch (e) {
-      setError((e as Error).message);
+      setActionError((e as Error).message);
     } finally {
       setProtectorPending(false);
     }
@@ -131,7 +115,14 @@ export function TrainingShell({ clientId }: TrainingShellProps) {
   }
 
   if (loading) return <p style={{ color: 'var(--ink-soft)', fontSize: 14 }}>Cargando tu rutina…</p>;
+  if (loadError instanceof PermissionDeniedError) {
+    return <LockedBenefit variant="upgrade" benefit="tu plan de entrenamiento" />;
+  }
+  const error = actionError || (loadError ? (loadError as Error).message : null);
   if (error) return <p role="alert">{error}</p>;
+  if (!data) return null;
+
+  const { trainingDays, exercises, completions, streak, quote, clientName } = data;
 
   if (confirmedResult) {
     return (
@@ -172,14 +163,6 @@ export function TrainingShell({ clientId }: TrainingShellProps) {
 
   return (
     <>
-      {completionNotice && (
-        <p>
-          {completionNotice}
-          <button type="button" onClick={() => setCompletionNotice(null)}>
-            Cerrar
-          </button>
-        </p>
-      )}
       <TrainingHome
         trainingDays={trainingDays}
         exercises={exercises}

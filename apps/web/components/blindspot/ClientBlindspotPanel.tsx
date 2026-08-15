@@ -1,11 +1,11 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
+import useSWR from 'swr';
 import {
   clientGetMyCase,
   clientCompleteTask,
   clientRequestHelp,
-  type BlindspotTask,
   type BlindspotSessionLog,
   type BlindspotCaseStatus,
 } from '@/lib/blindspot-client';
@@ -31,8 +31,8 @@ export function ClientBlindspotPanel({ clientType }: { clientType: string | null
   if (clientType !== 'mentoring') {
     return (
       <LockedOverlay
-        title="Solo disponible para Mentoría"
-        subtitle="Punto Ciego — la auditoría de tu punto ciego con referido a terapeuta especializado — es parte del plan Mentoring."
+        title="Solo disponible para Club Elite"
+        subtitle="Punto Ciego — la auditoría de tu punto ciego con referido a terapeuta especializado — es parte del Club Elite."
         ctaLabel="Conocer planes"
         onCta={() => window.open(`https://wa.me/${COACH_WHATSAPP_NUMBER}`, '_blank')}
       >
@@ -44,39 +44,17 @@ export function ClientBlindspotPanel({ clientType }: { clientType: string | null
 }
 
 function BlindspotBody() {
-  const [loading, setLoading] = useState(true);
-  const [caseData, setCaseData] = useState<{ id: string; caseNumber: number; status: BlindspotCaseStatus; therapistName: string | null } | null>(null);
-  const [tasks, setTasks] = useState<BlindspotTask[]>([]);
-  const [sessionLogs, setSessionLogs] = useState<BlindspotSessionLog[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [permissionLocked, setPermissionLocked] = useState(false);
+  const { data, error: fetchError, isLoading, mutate } = useSWR('blindspot-my-case', clientGetMyCase);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [helpSent, setHelpSent] = useState(false);
   const [helpLoading, setHelpLoading] = useState(false);
-
-  const refetch = useCallback(async () => {
-    try {
-      const res = await clientGetMyCase();
-      setCaseData(res.case);
-      setTasks(res.tasks);
-      setSessionLogs(res.sessionLogs);
-    } catch (e) {
-      if (e instanceof PermissionDeniedError) setPermissionLocked(true);
-      else setError(e instanceof Error ? e.message : 'Error al cargar tu Punto Ciego.');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    refetch();
-  }, [refetch]);
 
   async function handleCompleteTask(taskId: string) {
     try {
       await clientCompleteTask(taskId);
-      await refetch();
+      await mutate();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Error al actualizar la tarea.');
+      setActionError(e instanceof Error ? e.message : 'Error al actualizar la tarea.');
     }
   }
 
@@ -86,17 +64,17 @@ function BlindspotBody() {
       await clientRequestHelp();
       setHelpSent(true);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Error al enviar la solicitud.');
+      setActionError(e instanceof Error ? e.message : 'Error al enviar la solicitud.');
     } finally {
       setHelpLoading(false);
     }
   }
 
-  if (loading) {
+  if (isLoading) {
     return <p className="text-[13px] text-[var(--ink-secondary)]">Cargando...</p>;
   }
 
-  if (permissionLocked) {
+  if (fetchError && fetchError instanceof PermissionDeniedError) {
     return (
       <LockedOverlay title="Módulo no disponible" subtitle="Este módulo ya no está disponible para tu tipo de cuenta.">
         <div style={{ minHeight: 200 }} />
@@ -104,9 +82,14 @@ function BlindspotBody() {
     );
   }
 
+  const error = actionError || (fetchError ? (fetchError instanceof Error ? fetchError.message : 'Error al cargar tu Punto Ciego.') : null);
   if (error) {
     return <p className="text-[13px] text-[var(--danger)]">{error}</p>;
   }
+
+  const caseData = data?.case ?? null;
+  const tasks = data?.tasks ?? [];
+  const sessionLogs = data?.sessionLogs ?? [];
 
   if (!caseData) {
     return (

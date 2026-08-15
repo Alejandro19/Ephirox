@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
+import { renderWithSWR as render } from './swr-test-utils';
 import { ClientSupplementsPanel } from '../components/supplements/ClientSupplementsPanel';
 import * as supplementsClient from '../lib/supplements-client';
 

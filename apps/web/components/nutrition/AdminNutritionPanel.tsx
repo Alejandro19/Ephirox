@@ -1,9 +1,12 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import useSWR from 'swr';
 import { getNutrition, saveNutritionPlan, type MenuMeal } from '../../lib/nutrition-client';
 import { listSupplements, createSupplement, updateSupplement, deleteSupplement, type Supplement } from '../../lib/supplements-client';
 import { showToast } from '../layout/AppShell';
+import { AdminRecipesPanel } from './AdminRecipesPanel';
+import { NutritionTipsPanel } from './NutritionTipsPanel';
 
 export type AdminNutritionPanelProps = { clientId: string };
 
@@ -66,9 +69,15 @@ const dangerButtonStyle: React.CSSProperties = {
   background: 'transparent', color: 'var(--danger)', fontSize: 12, fontWeight: 600, cursor: 'pointer', flexShrink: 0,
 };
 
+async function fetchNutritionAdminBundle(clientId: string) {
+  const [{ plan }, supplements] = await Promise.all([getNutrition(clientId), listSupplements(clientId).catch(() => [])]);
+  return { plan, supplements };
+}
+
 export function AdminNutritionPanel({ clientId }: AdminNutritionPanelProps) {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data, error, isLoading: loading, mutate } = useSWR(['nutrition-admin-bundle', clientId], () =>
+    fetchNutritionAdminBundle(clientId),
+  );
   const [saving, setSaving] = useState(false);
 
   const [summary, setSummary] = useState('');
@@ -83,11 +92,9 @@ export function AdminNutritionPanel({ clientId }: AdminNutritionPanelProps) {
   const [deletedSupplementIds, setDeletedSupplementIds] = useState<string[]>([]);
   const draftCounter = useRef(0);
 
-  const refetch = useCallback(async () => {
-    const [{ plan: fetchedPlan }, supplements] = await Promise.all([
-      getNutrition(clientId),
-      listSupplements(clientId).catch(() => []),
-    ]);
+  useEffect(() => {
+    if (!data) return;
+    const { plan: fetchedPlan, supplements } = data;
     setSummary(fetchedPlan.summary || '');
     setDailyCals(fetchedPlan.dailyCals != null ? String(fetchedPlan.dailyCals) : '');
     setProteinG(fetchedPlan.proteinG != null ? String(fetchedPlan.proteinG) : '');
@@ -98,14 +105,11 @@ export function AdminNutritionPanel({ clientId }: AdminNutritionPanelProps) {
     setMenuRows(menuToRows(fetchedPlan.menuPlan));
     setSupplementRows(supplementsToRows(supplements));
     setDeletedSupplementIds([]);
-  }, [clientId]);
+  }, [data]);
 
-  useEffect(() => {
-    setLoading(true);
-    refetch()
-      .catch((e: Error) => setError(e.message))
-      .finally(() => setLoading(false));
-  }, [refetch]);
+  async function refetch() {
+    await mutate();
+  }
 
   function addMenuRow() {
     draftCounter.current += 1;
@@ -182,7 +186,7 @@ export function AdminNutritionPanel({ clientId }: AdminNutritionPanelProps) {
   }
 
   if (loading) return <p style={{ color: 'var(--ink-secondary)', fontSize: 14 }}>Cargando plan de nutrición…</p>;
-  if (error) return <p style={{ color: 'var(--danger)' }}>{error}</p>;
+  if (error) return <p style={{ color: 'var(--danger)' }}>{(error as Error).message}</p>;
 
   return (
     <div>
@@ -329,6 +333,16 @@ export function AdminNutritionPanel({ clientId }: AdminNutritionPanelProps) {
         >
           {saving ? 'Guardando…' : 'Guardar plan'}
         </button>
+      </div>
+
+      <div style={cardStyle}>
+        <h3 style={cardTitleStyle}>Recetas saludables</h3>
+        <AdminRecipesPanel />
+      </div>
+
+      <div style={cardStyle}>
+        <h3 style={cardTitleStyle}>Tips de nutrición</h3>
+        <NutritionTipsPanel />
       </div>
     </div>
   );

@@ -52,6 +52,22 @@ describe('events routes', () => {
     expect(deleteRes.status).toBe(200);
   });
 
+  it('toggling active with a partial update does not wipe the event date (regression)', async () => {
+    const createRes = await request(app)
+      .post('/api/community/events')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ title: 'Sesión grupal', event_date: '2026-09-01T16:00:00Z', location: 'Estudio' });
+    const eventId = createRes.body.event.id;
+
+    const toggleRes = await request(app)
+      .put(`/api/community/events/${eventId}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ active: false });
+    expect(toggleRes.status).toBe(200);
+    expect(toggleRes.body.event.eventDate).not.toBeNull();
+    expect(toggleRes.body.event.active).toBe(false);
+  });
+
   it('rejects a client from creating an event (admin-only)', async () => {
     const res = await request(app).post('/api/community/events').set('Authorization', `Bearer ${clientToken}`).send({ title: 'X' });
     expect(res.status).toBe(403);
@@ -110,5 +126,35 @@ describe('events routes', () => {
     const res = await request(app).get(`/api/clients/${clientId}/event-reservations`).set('Authorization', `Bearer ${clientToken}`);
     expect(res.status).toBe(200);
     expect(res.body.reservations).toHaveLength(1);
+  });
+
+  it('rejects a non-image upload for an event photo', async () => {
+    const createRes = await request(app).post('/api/community/events').set('Authorization', `Bearer ${adminToken}`).send({ title: 'Evento' });
+    const eventId = createRes.body.event.id;
+    const res = await request(app)
+      .post(`/api/community/events/${eventId}/upload-image`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .attach('image', Buffer.from('not an image'), { filename: 'foto.txt', contentType: 'text/plain' });
+    expect(res.status).toBe(400);
+  });
+
+  it('admin uploads a photo for an event without wiping its other fields (event_date)', async () => {
+    const createRes = await request(app)
+      .post('/api/community/events')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ title: 'Ice Bath', event_date: '2026-09-01T16:00:00Z', location: 'Nordico' });
+    const eventId = createRes.body.event.id;
+
+    const uploadRes = await request(app)
+      .post(`/api/community/events/${eventId}/upload-image`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .attach('image', Buffer.from('fake jpg bytes'), { filename: 'ice-bath.jpg', contentType: 'image/jpeg' });
+    expect(uploadRes.status).toBe(200);
+    expect(uploadRes.body.event.imageUrl).toEqual(expect.stringContaining('http'));
+    expect(uploadRes.body.event.eventDate).not.toBeNull();
+
+    const listRes = await request(app).get('/api/community/events').set('Authorization', `Bearer ${clientToken}`);
+    const listed = listRes.body.events.find((e: { id: string }) => e.id === eventId);
+    expect(listed.imageUrl).toEqual(expect.stringContaining('http'));
   });
 });

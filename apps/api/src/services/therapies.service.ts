@@ -50,6 +50,11 @@ export async function deleteTherapy(therapyId: string): Promise<void> {
   await db.delete(communityTherapies).where(eq(communityTherapies.id, therapyId));
 }
 
+export async function setTherapyImage(therapyId: string, imageUrl: string): Promise<CommunityTherapy | null> {
+  const [therapy] = await db.update(communityTherapies).set({ imageUrl }).where(eq(communityTherapies.id, therapyId)).returning();
+  return therapy ?? null;
+}
+
 export async function reserveTherapy(therapyId: string, clientId: string): Promise<{ reservation: TherapyReservation | null; conflict: boolean }> {
   const existing = await db
     .select()

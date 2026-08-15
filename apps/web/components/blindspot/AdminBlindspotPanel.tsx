@@ -1,7 +1,8 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
-import { getSessionToken } from '@/lib/api-client';
+import { useEffect, useState } from 'react';
+import useSWR from 'swr';
+import { fetchClients, type ClientSummary } from '@/lib/clients-client';
 import {
   adminListCases,
   adminGetCase,
@@ -9,19 +10,13 @@ import {
   adminUpdateCase,
   adminAcknowledgeCrisis,
   adminListTherapists,
-  adminCreateTherapist,
-  adminSetTherapistActive,
   type BlindspotCase,
   type BlindspotCaseStatus,
-  type BlindspotTask,
-  type BlindspotSessionLog,
   type Therapist,
 } from '@/lib/blindspot-client';
 import { showToast } from '@/components/layout/AppShell';
 
-const API_BASE = 'http://localhost:3003/api';
-
-type ClientOption = { id: string; name: string; clientType: string };
+type ClientOption = ClientSummary;
 
 const cardStyle: React.CSSProperties = {
   background: 'var(--paper)', border: '1px solid var(--border-hairline)',
@@ -47,18 +42,6 @@ const ghostButtonStyle: React.CSSProperties = {
   height: 32, padding: '0 14px', borderRadius: 9999, border: '1px solid var(--border-hairline)',
   background: 'transparent', color: 'var(--ink-secondary)', fontSize: 12, fontWeight: 600, cursor: 'pointer',
 };
-const dangerButtonStyle: React.CSSProperties = {
-  height: 32, padding: '0 14px', borderRadius: 9999, border: '1px solid var(--danger)',
-  background: 'transparent', color: 'var(--danger)', fontSize: 12, fontWeight: 600, cursor: 'pointer', flexShrink: 0,
-};
-function tabButtonStyle(active: boolean): React.CSSProperties {
-  return {
-    height: 38, padding: '0 20px', borderRadius: 9999, fontSize: 13, fontWeight: 700, cursor: 'pointer',
-    border: active ? 'none' : '1px solid var(--border-hairline)',
-    background: active ? 'var(--ring-accent)' : 'transparent',
-    color: active ? '#fff' : 'var(--ink-secondary)',
-  };
-}
 
 const STATUS_OPTIONS: BlindspotCaseStatus[] = ['evaluando', 'referido', 'en_proceso', 'cerrado'];
 const STATUS_LABEL: Record<BlindspotCaseStatus, string> = {
@@ -66,36 +49,23 @@ const STATUS_LABEL: Record<BlindspotCaseStatus, string> = {
 };
 
 export function AdminBlindspotPanel() {
-  const [tab, setTab] = useState<'casos' | 'terapeutas'>('casos');
-  const [cases, setCases] = useState<BlindspotCase[]>([]);
-  const [clients, setClients] = useState<ClientOption[]>([]);
-  const [therapists, setTherapists] = useState<Therapist[]>([]);
-  const [loading, setLoading] = useState(true);
   const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null);
 
-  const refetch = useCallback(async () => {
-    try {
-      const [caseList, therapistList] = await Promise.all([adminListCases(), adminListTherapists()]);
-      setCases(caseList);
-      setTherapists(therapistList);
-    } catch (e) {
-      showToast(e instanceof Error ? e.message : 'Error al cargar Punto Ciego.', 'error');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const { data, isLoading, mutate } = useSWR('blindspot-admin-cases-therapists', async () => {
+    const [caseList, therapistList] = await Promise.all([adminListCases(), adminListTherapists()]);
+    return { cases: caseList, therapists: therapistList };
+  });
+  // Misma key de caché que ClientSwitcher ("admin-clients-list") — si el admin
+  // ya visitó otro módulo antes, la lista de clientes sale de caché al instante.
+  const { data: allClients = [] } = useSWR('admin-clients-list', fetchClients);
 
-  useEffect(() => {
-    refetch();
-    const token = getSessionToken();
-    if (!token) return;
-    fetch(`${API_BASE}/clients`, { headers: { Authorization: `Bearer ${token}` } })
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.clients) setClients(data.clients.filter((c: ClientOption) => c.clientType === 'mentoring'));
-      })
-      .catch(() => {});
-  }, [refetch]);
+  const cases = data?.cases ?? [];
+  const therapists = data?.therapists ?? [];
+  const clients = allClients.filter((c) => c.clientType === 'mentoring');
+
+  async function refetch() {
+    await mutate();
+  }
 
   function therapistName(id: string | null): string {
     if (!id) return '— sin asignar —';
@@ -105,30 +75,19 @@ export function AdminBlindspotPanel() {
     return clients.find((c) => c.id === id)?.name ?? id;
   }
 
-  if (loading) return <p style={{ color: 'var(--ink-secondary)', fontSize: 13 }}>Cargando...</p>;
+  if (isLoading) return <p style={{ color: 'var(--ink-secondary)', fontSize: 13 }}>Cargando...</p>;
 
   return (
-    <div>
-      <div style={{ display: 'flex', gap: 10, marginBottom: 18 }}>
-        <button style={tabButtonStyle(tab === 'casos')} onClick={() => setTab('casos')}>Casos</button>
-        <button style={tabButtonStyle(tab === 'terapeutas')} onClick={() => setTab('terapeutas')}>Terapeutas</button>
-      </div>
-
-      {tab === 'casos' ? (
-        <CasesTab
-          cases={cases}
-          clients={clients}
-          therapists={therapists}
-          selectedCaseId={selectedCaseId}
-          onSelect={setSelectedCaseId}
-          onRefetch={refetch}
-          therapistName={therapistName}
-          clientName={clientName}
-        />
-      ) : (
-        <TherapistsTab therapists={therapists} onRefetch={refetch} />
-      )}
-    </div>
+    <CasesTab
+      cases={cases}
+      clients={clients}
+      therapists={therapists}
+      selectedCaseId={selectedCaseId}
+      onSelect={setSelectedCaseId}
+      onRefetch={refetch}
+      therapistName={therapistName}
+      clientName={clientName}
+    />
   );
 }
 
@@ -290,25 +249,21 @@ function CasesTab({
 }
 
 function CaseDetail({ blindspotCase, therapists, onRefetch }: { blindspotCase: BlindspotCase; therapists: Therapist[]; onRefetch: () => Promise<void> }) {
-  const [tasks, setTasks] = useState<BlindspotTask[]>([]);
-  const [sessionLogs, setSessionLogs] = useState<BlindspotSessionLog[]>([]);
+  const { data, error: loadError } = useSWR(['blindspot-case-detail', blindspotCase.id], () =>
+    adminGetCase(blindspotCase.id),
+  );
+  const tasks = data?.tasks ?? [];
+  const sessionLogs = data?.sessionLogs ?? [];
   const [notes, setNotes] = useState(blindspotCase.adminPrivateNotes ?? '');
   const [saving, setSaving] = useState(false);
 
-  const load = useCallback(async () => {
-    try {
-      const res = await adminGetCase(blindspotCase.id);
-      setTasks(res.tasks);
-      setSessionLogs(res.sessionLogs);
-      setNotes(res.case.adminPrivateNotes ?? '');
-    } catch (e) {
-      showToast(e instanceof Error ? e.message : 'Error al cargar el detalle.', 'error');
-    }
-  }, [blindspotCase.id]);
+  useEffect(() => {
+    if (data) setNotes(data.case.adminPrivateNotes ?? '');
+  }, [data]);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    if (loadError) showToast(loadError instanceof Error ? loadError.message : 'Error al cargar el detalle.', 'error');
+  }, [loadError]);
 
   async function handleStatusChange(status: BlindspotCaseStatus) {
     try {
@@ -373,7 +328,7 @@ function CaseDetail({ blindspotCase, therapists, onRefetch }: { blindspotCase: B
         <p style={{ margin: 0, fontSize: 13.5, color: 'var(--ink)' }}>{blindspotCase.initialAssessment.areaPercibida}</p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 16 }}>
         <div>
           <label style={labelStyle}>Estado</label>
           <select style={fieldStyle} value={blindspotCase.status} onChange={(e) => handleStatusChange(e.target.value as BlindspotCaseStatus)}>
@@ -429,88 +384,3 @@ function CaseDetail({ blindspotCase, therapists, onRefetch }: { blindspotCase: B
   );
 }
 
-function TherapistsTab({ therapists, onRefetch }: { therapists: Therapist[]; onRefetch: () => Promise<void> }) {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [specialty, setSpecialty] = useState('');
-  const [creating, setCreating] = useState(false);
-
-  async function handleCreate() {
-    if (!name || !email || password.length < 8) {
-      showToast('Nombre, email y contraseña de al menos 8 caracteres.', 'error');
-      return;
-    }
-    setCreating(true);
-    try {
-      await adminCreateTherapist({ name, email, password, specialty: specialty || undefined });
-      showToast('Terapeuta creado. Esa contraseña es temporal — deberá cambiarla en su primer ingreso.', 'success');
-      setName('');
-      setEmail('');
-      setPassword('');
-      setSpecialty('');
-      await onRefetch();
-    } catch (e) {
-      showToast(e instanceof Error ? e.message : 'Error al crear el terapeuta.', 'error');
-    } finally {
-      setCreating(false);
-    }
-  }
-
-  async function handleToggleActive(t: Therapist) {
-    try {
-      await adminSetTherapistActive(t.id, !t.active);
-      await onRefetch();
-    } catch (e) {
-      showToast(e instanceof Error ? e.message : 'Error al actualizar.', 'error');
-    }
-  }
-
-  return (
-    <div>
-      <div style={cardStyle}>
-        <h3 style={cardTitleStyle}>Nuevo terapeuta</h3>
-        <div style={{ display: 'grid', gap: 12 }}>
-          <div>
-            <label style={labelStyle}>Nombre</label>
-            <input style={fieldStyle} value={name} onChange={(e) => setName(e.target.value)} />
-          </div>
-          <div>
-            <label style={labelStyle}>Email</label>
-            <input style={fieldStyle} type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-          </div>
-          <div>
-            <label style={labelStyle}>Contraseña temporal</label>
-            <input style={fieldStyle} type="text" value={password} onChange={(e) => setPassword(e.target.value)} />
-          </div>
-          <div>
-            <label style={labelStyle}>Especialidad</label>
-            <input style={fieldStyle} value={specialty} onChange={(e) => setSpecialty(e.target.value)} placeholder="Biodescodificación" />
-          </div>
-          <button style={primaryButtonStyle} onClick={handleCreate} disabled={creating}>
-            {creating ? 'Creando...' : 'Crear terapeuta'}
-          </button>
-        </div>
-      </div>
-
-      <div style={cardStyle}>
-        <h3 style={cardTitleStyle}>Terapeutas</h3>
-        {therapists.length === 0 ? (
-          <p style={{ color: 'var(--ink-secondary)', fontSize: 13 }}>Aún no hay terapeutas.</p>
-        ) : (
-          therapists.map((t) => (
-            <div key={t.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border-hairline)' }}>
-              <div>
-                <p style={{ margin: 0, fontSize: 13.5, fontWeight: 700, color: 'var(--ink)' }}>{t.name}</p>
-                <p style={{ margin: '2px 0 0', fontSize: 11.5, color: 'var(--ink-secondary)' }}>{t.email} · {t.specialty ?? 'sin especialidad'}</p>
-              </div>
-              <button style={t.active ? dangerButtonStyle : ghostButtonStyle} onClick={() => handleToggleActive(t)}>
-                {t.active ? 'Desactivar' : 'Activar'}
-              </button>
-            </div>
-          ))
-        )}
-      </div>
-    </div>
-  );
-}

@@ -306,7 +306,7 @@ function CaseDetail({ blindspotCase, onRefetch }: { blindspotCase: TherapistCase
       {/* a. Datos personales */}
       <div style={sectionStyle}>
         <p style={{ ...trackedLabelStyle, fontSize: 12.5, marginBottom: 12 }}>Datos personales</p>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 14 }}>
           {personalFields.map(([label, value]) => (
             <div key={label}>
               <span style={trackedLabelStyle}>{label}</span>
@@ -317,7 +317,7 @@ function CaseDetail({ blindspotCase, onRefetch }: { blindspotCase: TherapistCase
       </div>
 
       {/* b. Motivo de consulta / Área percibida */}
-      <div style={{ ...sectionStyle, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+      <div style={{ ...sectionStyle, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 20 }}>
         <div>
           <span style={trackedLabelStyle}>Motivo de consulta</span>
           <p style={{ margin: 0, fontSize: 13.5, color: 'var(--ink)' }}>{blindspotCase.initialAssessment.motivoConsulta}</p>
@@ -391,7 +391,7 @@ function CaseDetail({ blindspotCase, onRefetch }: { blindspotCase: TherapistCase
       <div style={sectionStyle}>
         <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)', marginBottom: 10 }}>Registrar sesión</p>
         <div style={{ display: 'grid', gap: 10 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10 }}>
             <div>
               <span style={trackedLabelStyle}>Fecha</span>
               <input type="date" style={fieldStyle} value={sessionDate} onChange={(e) => setSessionDate(e.target.value)} />

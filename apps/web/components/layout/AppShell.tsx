@@ -146,8 +146,9 @@ export default function AppShell({ children }: { children: ReactNode }) {
       {isAdmin ? <AdminTopbar viewKey={viewKey} /> : <ClientTopbar viewKey={viewKey} />}
       <main
         id="main-content"
+        className="app-main-content"
         style={{
-          flex: 1, padding: "36px 44px", overflowY: "auto",
+          flex: 1, overflowY: "auto",
           background: "var(--page-bg)",
         }}
       >
@@ -186,6 +187,14 @@ export default function AppShell({ children }: { children: ReactNode }) {
         @keyframes toast-in {
           from { opacity: 0; transform: translateY(20px); }
           to   { opacity: 1; transform: translateY(0); }
+        }
+        .app-main-content {
+          padding: 36px 44px;
+        }
+        @media (max-width: 640px) {
+          .app-main-content {
+            padding: 20px 16px;
+          }
         }
       `}</style>
     </div>

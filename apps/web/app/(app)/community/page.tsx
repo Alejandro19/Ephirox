@@ -1,45 +1,21 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { getSessionToken } from '@/lib/api-client';
+import { useAuth } from '@/lib/auth-context';
 import { ClientCommunityPanel } from '@/components/community/ClientCommunityPanel';
 import { AdminCommunityPanel } from '@/components/community/AdminCommunityPanel';
 import IdentityHeader from '@/components/ui/IdentityHeader';
 
-function decodeClientIdFromToken(token: string): string | null {
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    return typeof payload.id === 'string' ? payload.id : null;
-  } catch {
-    return null;
-  }
-}
-
-function decodeRoleFromToken(token: string): string | null {
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    return typeof payload.role === 'string' ? payload.role : null;
-  } catch {
-    return null;
-  }
-}
-
 export default function CommunityPage() {
-  const [clientId, setClientId] = useState<string | null>(null);
-  const [role, setRole] = useState<string | null>(null);
-
-  useEffect(() => {
-    const token = getSessionToken();
-    if (token) {
-      setClientId(decodeClientIdFromToken(token));
-      setRole(decodeRoleFromToken(token));
-    }
-  }, []);
+  // AppShell ya bloquea el render de esta página hasta que useAuth() termina
+  // de cargar (ver components/layout/AppShell.tsx) — leer directo de acá evita
+  // el doble-render que causaba decodificar el JWT de nuevo en cada page.tsx.
+  const { role, user } = useAuth();
+  const clientId = user?.id ?? null;
 
   if (role === 'admin') {
     return (
       <div>
-        <IdentityHeader title="Comunidad Wellness" subtitle="Publica eventos y terapias, y revisa quién ha reservado." />
+        <IdentityHeader title="Club Wellness" subtitle="Publica eventos y terapias, y revisa quién ha reservado." />
         <AdminCommunityPanel />
       </div>
     );

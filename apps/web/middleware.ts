@@ -22,7 +22,10 @@ export function middleware(request: NextRequest) {
 
   if (!token) {
     const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("from", pathname);
+    // Se preserva también el query string (no solo el pathname) — sin esto,
+    // un cliente que tapea el sticker NFC (/training?m=entrenamiento&a=confirmar)
+    // con la sesión vencida perdía la acción pendiente al pasar por /login.
+    loginUrl.searchParams.set("from", pathname + request.nextUrl.search);
     return NextResponse.redirect(loginUrl);
   }
 

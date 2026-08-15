@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getProtocol, saveProtocol, type SleepProtocol } from '../../lib/sleep-client';
+import useSWR from 'swr';
+import { getProtocol, saveProtocol } from '../../lib/sleep-client';
 import { fetchClient } from '../../lib/clients-client';
 import { isMentoringClient } from '../../lib/rest-logic';
 import { showToast } from '../layout/AppShell';
@@ -29,27 +30,30 @@ const textareaStyle: React.CSSProperties = {
 };
 const primaryButtonStyle: React.CSSProperties = {
   height: 40, padding: '0 22px', borderRadius: 9999, border: 'none',
-  background: '#8A5FA0', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+  background: 'var(--ink)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer',
 };
 
 export function AdminRestPanel({ clientId }: { clientId: string }) {
-  const [loading, setLoading] = useState(true);
+  const { data, error: loadError, isLoading: loading } = useSWR(['rest-admin-protocol', clientId], async () => {
+    const [protocol, client] = await Promise.all([getProtocol(clientId).catch(() => null), fetchClient(clientId).catch(() => null)]);
+    return { protocol, mentoring: isMentoringClient(client?.clientType) };
+  });
   const [saving, setSaving] = useState(false);
-  const [mentoring, setMentoring] = useState(false);
   const [protocolText, setProtocolText] = useState('');
   const [supplement, setSupplement] = useState('');
 
   useEffect(() => {
-    setLoading(true);
-    Promise.all([getProtocol(clientId).catch(() => null), fetchClient(clientId).catch(() => null)])
-      .then(([protocol, client]: [SleepProtocol, { clientType?: string } | null]) => {
-        setProtocolText(protocol?.protocolText || '');
-        setSupplement(protocol?.supplement || '');
-        setMentoring(isMentoringClient(client?.clientType));
-      })
-      .catch((e: Error) => showToast(e.message, 'error'))
-      .finally(() => setLoading(false));
-  }, [clientId]);
+    if (data) {
+      setProtocolText(data.protocol?.protocolText || '');
+      setSupplement(data.protocol?.supplement || '');
+    }
+  }, [data]);
+
+  useEffect(() => {
+    if (loadError) showToast((loadError as Error).message, 'error');
+  }, [loadError]);
+
+  const mentoring = data?.mentoring ?? false;
 
   async function handleSave() {
     setSaving(true);
@@ -75,7 +79,7 @@ export function AdminRestPanel({ clientId }: { clientId: string }) {
           <h3 style={cardTitleStyle}>Protocolo personalizado</h3>
           <label style={labelStyle} htmlFor="sp-protocol-text">
             Protocolo — una línea por recomendación. Envuelve la acción concreta entre **doble asterisco** para
-            resaltarla en morado oscuro; el resto de la línea se muestra en cursiva.
+            resaltarla en negrita; el resto de la línea se muestra en cursiva.
           </label>
           <textarea
             id="sp-protocol-text"

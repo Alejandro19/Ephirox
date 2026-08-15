@@ -56,6 +56,10 @@ export const TherapistCreateSchema = z.object({
 export type TherapistCreateInput = z.infer<typeof TherapistCreateSchema>;
 
 export const TherapistUpdateSchema = z.object({
-  active: z.boolean(),
+  name: z.string().min(1).max(200).optional(),
+  email: z.string().email().optional(),
+  specialty: z.string().max(200).nullable().optional(),
+  phone: z.string().max(50).nullable().optional(),
+  active: z.boolean().optional(),
 });
 export type TherapistUpdateInput = z.infer<typeof TherapistUpdateSchema>;

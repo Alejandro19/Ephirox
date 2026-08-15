@@ -64,16 +64,20 @@ describe('POST /api/auth/google', () => {
     expect(res.body.role).toBe('admin');
   });
 
-  it('creates a new inactive client when no account matches', async () => {
+  it('creates a new active Club Explorador client and auto-logs in when no account matches', async () => {
     setGoogleVerifierForTests({
       verifyIdToken: async () => ({ getPayload: () => fakePayload() }),
     });
     const res = await request(app).post('/api/auth/google').send({ credential: 'fake' });
     expect(res.status).toBe(201);
-    expect(res.body.pending).toBe(true);
+    expect(res.body.token).toEqual(expect.any(String));
+    expect(res.body.clientType).toBe('lead_wellness');
+    expect(res.body.pending).toBeUndefined();
 
     const created = await db.select().from(clients).where(eq(clients.email, 'google-user@example.com'));
     expect(created).toHaveLength(1);
-    expect(created[0].status).toBe('inactive');
+    expect(created[0].status).toBe('active');
+    expect(created[0].clientType).toBe('lead_wellness');
+    expect(created[0].memberNumber).not.toBeNull();
   });
 });

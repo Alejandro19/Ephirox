@@ -20,7 +20,7 @@ type NutritionPdfGeneratorProps = {
 
 const PDF_CSS = `
 @page{margin:0}*{box-sizing:border-box}
-body{font-family:'Inter',Arial,sans-serif;color:#2B2621;padding:26mm 20mm 24mm;max-width:760px;margin:0 auto}
+body{font-family:'Inter',Arial,sans-serif;color:#2B2621;padding:26mm 20mm 10mm;max-width:760px;margin:0 auto}
 .pdf-meal,.pdf-supp-row,.pdf-closing,.pdf-section{break-inside:avoid;page-break-inside:avoid}
 .pdf-meal,.pdf-section{padding-top:12mm}
 .pdf-header{display:flex;flex-direction:column;align-items:flex-start;text-align:left;margin-top:0}
@@ -49,10 +49,10 @@ body{font-family:'Inter',Arial,sans-serif;color:#2B2621;padding:26mm 20mm 24mm;m
 .pdf-supp-row{margin-bottom:10px}
 .pdf-supp-name{font-weight:700;font-size:11pt}
 .pdf-supp-detail{font-size:9.5pt;color:#8A8377;margin-top:2px}
-.pdf-closing{text-align:center;margin:36px 0 4px;padding-top:12mm}
+.pdf-closing{text-align:center;margin:20px 0 4px;padding-top:12mm}
 .pdf-closing-rule{width:30%;margin:0 auto 16px;border:none;border-top:1px solid #E7DFC9}
 .pdf-closing-quote{font-family:'Fraunces',serif;font-style:italic;font-weight:500;font-size:12pt;line-height:1.5;color:#2B2621}
-.pdf-footer{text-align:center;margin-top:60px}
+.pdf-footer{text-align:center;margin-top:24px;page-break-inside:avoid;break-inside:avoid}
 .pdf-footer-word{font-family:'Fraunces',serif;font-weight:700;font-size:15pt;color:#5B7A4E;margin:0 0 6px}
 .pdf-footer-tagline{font-size:8pt;color:#8A8377;margin:0}`;
 

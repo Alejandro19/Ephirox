@@ -116,4 +116,23 @@ describe('admin phrases routes', () => {
     expect(res.status).toBe(200);
     expect(res.body.phrase).toBeNull();
   });
+
+  // Fase 3 del plan de optimización de navegación: GET /admin/phrases debe
+  // marcarse "private, no-cache" (revalidar siempre, nunca servir de caché
+  // sin preguntarle al servidor) y soportar conditional GET vía el ETag que
+  // Express ya genera — sin esto, el header queda sin usarse nunca.
+  it('sets Cache-Control: private, no-cache and answers a matching If-None-Match with 304', async () => {
+    const first = await request(app).get('/api/admin/phrases').set('Authorization', `Bearer ${adminToken}`);
+    expect(first.status).toBe(200);
+    expect(first.headers['cache-control']).toBe('private, no-cache');
+    const etag = first.headers['etag'];
+    expect(etag).toBeTruthy();
+
+    const revalidated = await request(app)
+      .get('/api/admin/phrases')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .set('If-None-Match', etag);
+    expect(revalidated.status).toBe(304);
+    expect(revalidated.text).toBe('');
+  });
 });

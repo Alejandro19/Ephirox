@@ -5,6 +5,7 @@ export const ClientCreateInputSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1),
   plan: z.string().optional(),
+  mustChangePassword: z.boolean().optional(),
 });
 export type ClientCreateInput = z.infer<typeof ClientCreateInputSchema>;
 

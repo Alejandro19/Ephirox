@@ -32,16 +32,29 @@ export type TherapyReservation = {
   clientPhone: string | null;
 };
 
-export async function getConfirmedReservations(): Promise<{ eventReservations: EventReservation[]; therapyReservations: TherapyReservation[] }> {
+export type RetreatReservation = {
+  id: string;
+  retreatId: string;
+  retreatTitle: string;
+  retreatStartDate: string | null;
+  retreatEndDate: string | null;
+  retreatLocation: string | null;
+  clientName: string;
+  clientPhone: string | null;
+};
+
+export async function getConfirmedReservations(): Promise<{ eventReservations: EventReservation[]; therapyReservations: TherapyReservation[]; retreatReservations: RetreatReservation[] }> {
   const body = await authorizedRequest<{
     success: boolean;
     eventReservations: EventReservation[];
     therapyReservations: TherapyReservation[];
+    retreatReservations: RetreatReservation[];
     error?: string;
   }>('/api/community/reservations', 'GET');
   if (!body.success) throw new Error(body.error || 'Error al obtener reservaciones.');
   return {
     eventReservations: body.eventReservations,
     therapyReservations: body.therapyReservations,
+    retreatReservations: body.retreatReservations,
   };
 }

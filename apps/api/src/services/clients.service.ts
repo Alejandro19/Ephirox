@@ -1,4 +1,4 @@
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, sql } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import { clients, adminNotifications, type Client } from '../models/schema.js';
 import { hashPassword } from './auth.service.js';
@@ -52,8 +52,40 @@ export async function createInactiveClient(input: { name: string; email: string;
   return client;
 }
 
+// Alta instantánea de "Club Explorador" — activa de una, sin cola de
+// aprobación. Nunca lleva contraseña (ni siquiera temporal): el registro la
+// loguea directo (ver auth.controller.ts) y, si más adelante quiere entrar
+// por email/password, usa el flujo ya existente de "¿Olvidaste tu
+// contraseña?" para fijar una por primera vez. Recibe número de miembro y
+// activatedAt de una, con la misma secuencia atómica que updateStatus() usa
+// para activaciones manuales — así la member card también le aparece.
+export async function createActiveExplorerClient(input: { name: string; email: string; googleId?: string; appleId?: string }): Promise<Client> {
+  return db.transaction(async (tx) => {
+    const [client] = await tx
+      .insert(clients)
+      .values({
+        name: input.name, email: input.email, passwordHash: null,
+        googleId: input.googleId, appleId: input.appleId,
+        status: 'active', clientType: 'lead_wellness',
+        memberNumber: sql`nextval('member_number_seq')`,
+        activatedAt: new Date(),
+      })
+      .returning();
+    const via = input.googleId ? ' con Google' : input.appleId ? ' con Apple' : '';
+    await tx.insert(adminNotifications).values({
+      clientId: client.id,
+      type: 'new_registration',
+      message: `${input.name} se unió como Explorador${via}.`,
+    });
+    return client;
+  });
+}
+
 export async function updateClientPassword(id: string, passwordHash: string): Promise<void> {
-  await db.update(clients).set({ passwordHash }).where(eq(clients.id, id));
+  // Cualquier cambio de contraseña (change-password normal o reset por token)
+  // satisface la obligación de la temporal — se limpia acá para no duplicar
+  // esta lógica en cada endpoint que termina llamando esta función.
+  await db.update(clients).set({ passwordHash, mustChangePassword: false }).where(eq(clients.id, id));
 }
 
 export async function updateClientGoogleId(id: string, googleId: string): Promise<void> {
@@ -75,7 +107,7 @@ export async function listClients(): Promise<Client[]> {
   return db.select().from(clients).orderBy(desc(clients.createdAt));
 }
 
-export type CreateClientInput = { name: string; email: string; password: string; plan?: string };
+export type CreateClientInput = { name: string; email: string; password: string; plan?: string; mustChangePassword?: boolean };
 
 export async function createClient(input: CreateClientInput): Promise<Client> {
   const emailLower = input.email.toLowerCase().trim();
@@ -87,7 +119,13 @@ export async function createClient(input: CreateClientInput): Promise<Client> {
   const passwordHash = await hashPassword(input.password);
   const [client] = await db
     .insert(clients)
-    .values({ name: input.name, email: emailLower, passwordHash, plan: input.plan || 'Miembro' })
+    .values({
+      name: input.name,
+      email: emailLower,
+      passwordHash,
+      plan: input.plan || 'Miembro',
+      mustChangePassword: input.mustChangePassword ?? false,
+    })
     .returning();
   return client;
 }
@@ -110,7 +148,35 @@ export async function updatePermissions(id: string, permissions: Record<string, 
 }
 
 export async function updateStatus(id: string, status: 'active' | 'inactive'): Promise<Client | null> {
-  return updateClient(id, { status });
+  // Activar (inactive -> active) es el único momento en que se asigna el
+  // número de miembro — de forma atómica vía secuencia de Postgres dentro de
+  // una transacción, para que dos activaciones concurrentes nunca choquen.
+  // Idempotente: si el cliente ya tenía número (se desactivó y se reactiva),
+  // no se vuelve a asignar ni se pisa activatedAt.
+  return db.transaction(async (tx) => {
+    if (status === 'active') {
+      const [existing] = await tx.select({ memberNumber: clients.memberNumber }).from(clients).where(eq(clients.id, id)).limit(1);
+      if (existing && existing.memberNumber == null) {
+        const [client] = await tx
+          .update(clients)
+          .set({
+            status,
+            memberNumber: sql`nextval('member_number_seq')`,
+            activatedAt: new Date(),
+            updatedAt: new Date(),
+          })
+          .where(eq(clients.id, id))
+          .returning();
+        return client ?? null;
+      }
+    }
+    const [client] = await tx
+      .update(clients)
+      .set({ status, updatedAt: new Date() })
+      .where(eq(clients.id, id))
+      .returning();
+    return client ?? null;
+  });
 }
 
 export async function updateClientType(id: string, clientType: string): Promise<Client | null> {

@@ -73,25 +73,3 @@ export const comparisonLabelByCadence: Record<string, string> = {
   bimestral: 'vs hace 2 meses',
   personalizado: 'vs medición anterior',
 };
-
-// Índice de bienestar general: promedio ponderado 40/30/30 (constancia de
-// entrenamiento / calidad de sueño / regulación de cortisol). Un componente
-// sin datos aún se excluye del promedio — el peso se redistribuye entre los
-// que sí tienen datos, nunca cuenta como cero.
-export function computeWellnessIndex({
-  trainingPct,
-  sleepAvg,
-  cortisolAvg,
-}: {
-  trainingPct: number | null;
-  sleepAvg: number | null;
-  cortisolAvg: number | null;
-}): number | null {
-  const components: Array<{ weight: number; score: number }> = [];
-  if (trainingPct != null) components.push({ weight: 0.4, score: Math.max(0, Math.min(100, trainingPct)) });
-  if (sleepAvg != null) components.push({ weight: 0.3, score: (sleepAvg / 5) * 100 });
-  if (cortisolAvg != null) components.push({ weight: 0.3, score: (cortisolAvg / 5) * 100 });
-  if (!components.length) return null;
-  const totalWeight = components.reduce((s, c) => s + c.weight, 0);
-  return Math.round(components.reduce((s, c) => s + c.score * (c.weight / totalWeight), 0));
-}

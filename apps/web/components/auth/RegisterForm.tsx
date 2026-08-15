@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { registerRequest, saveSession } from "../../lib/api-client";
+import { registerRequest } from "../../lib/api-client";
 
 type RegisterFormProps = {
   isNight: boolean;
@@ -42,14 +42,13 @@ export default function RegisterForm({
     setIsLoading(true);
 
     try {
-      const result = await registerRequest(name, email, password);
-      if (!result.success || !result.token) {
+      const result = await registerRequest(name, email, "membership_request");
+      if (!result.success) {
         const msg = result.error || "Error al registrarse.";
         setError(msg);
         onError?.(msg);
         return;
       }
-      saveSession(result.token);
       onSuccess?.(result);
     } catch {
       const msg = "Error de conexión. Intenta de nuevo.";

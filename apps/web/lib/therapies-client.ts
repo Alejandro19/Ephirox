@@ -4,10 +4,11 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3
 
 async function authorizedRequest<T>(path: string, method: string, body?: unknown): Promise<T> {
   const token = getSessionToken();
+  const isFormData = body instanceof FormData;
   const res = await fetch(`${API_BASE_URL}${path}`, {
     method,
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: body != null ? JSON.stringify(body) : undefined,
+    headers: { Authorization: `Bearer ${token}`, ...(isFormData ? {} : { 'Content-Type': 'application/json' }) },
+    body: isFormData ? body : body != null ? JSON.stringify(body) : undefined,
   });
   if (res.status === 403) {
     const errorBody = await res.json().catch(() => ({}));
@@ -22,6 +23,7 @@ export type CommunityTherapy = {
   description: string | null;
   discountPct: number | null;
   provider: string | null;
+  imageUrl: string | null;
   active: boolean;
   confirmed_count: number;
 };
@@ -41,6 +43,14 @@ export async function createTherapy(input: { title: string; description?: string
 export async function updateTherapy(therapyId: string, input: Partial<{ title: string; description: string; discount_pct: number; provider: string; active: boolean }>): Promise<CommunityTherapy> {
   const body = await authorizedRequest<{ success: boolean; therapy: CommunityTherapy; error?: string }>(`/api/community/therapies/${therapyId}`, 'PUT', input);
   if (!body.success) throw new Error(body.error || 'Error al actualizar la terapia.');
+  return body.therapy;
+}
+
+export async function uploadTherapyImage(therapyId: string, file: File): Promise<CommunityTherapy> {
+  const formData = new FormData();
+  formData.append('image', file);
+  const body = await authorizedRequest<{ success: boolean; therapy: CommunityTherapy; error?: string }>(`/api/community/therapies/${therapyId}/upload-image`, 'POST', formData);
+  if (!body.success) throw new Error(body.error || 'Error al subir la foto.');
   return body.therapy;
 }
 

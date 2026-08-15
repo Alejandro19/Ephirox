@@ -1,26 +1,18 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import useSWR from 'swr';
 import { listSupplements, createSupplement, deleteSupplement, type Supplement } from '../../lib/supplements-client';
 
 export function AdminSupplementsPanel({ clientId }: { clientId: string }) {
-  const [supplements, setSupplements] = useState<Supplement[]>([]);
+  const { data: supplements = [] as Supplement[], isLoading, mutate } = useSWR(
+    ['supplements', clientId],
+    () => listSupplements(clientId),
+  );
   const [name, setName] = useState('');
   const [dose, setDose] = useState('');
   const [category, setCategory] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  async function refetch() {
-    const result = await listSupplements(clientId);
-    setSupplements(result);
-  }
-
-  useEffect(() => {
-    refetch()
-      .catch((e: Error) => setError(e.message))
-      .finally(() => setLoading(false));
-  }, [clientId]);
 
   async function handleCreate() {
     if (!name.trim()) return;
@@ -29,7 +21,7 @@ export function AdminSupplementsPanel({ clientId }: { clientId: string }) {
       setName('');
       setDose('');
       setCategory('');
-      await refetch();
+      await mutate();
     } catch (e) {
       setError((e as Error).message);
     }
@@ -38,13 +30,13 @@ export function AdminSupplementsPanel({ clientId }: { clientId: string }) {
   async function handleDelete(suppId: string) {
     try {
       await deleteSupplement(clientId, suppId);
-      await refetch();
+      await mutate();
     } catch (e) {
       setError((e as Error).message);
     }
   }
 
-  if (loading) return <p>Cargando suplementos...</p>;
+  if (isLoading) return <p>Cargando suplementos...</p>;
 
   return (
     <div>

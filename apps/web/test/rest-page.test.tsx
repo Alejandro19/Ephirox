@@ -5,6 +5,9 @@ import RestPage from '../app/(app)/rest/page';
 vi.mock('../lib/api-client', () => ({
   getSessionToken: () => 'header.eyJpZCI6ImNsaWVudC0xIn0.signature',
 }));
+vi.mock('../lib/auth-context', () => ({
+  useAuth: () => ({ role: 'cliente', user: { id: 'client-1', name: '', email: '' } }),
+}));
 vi.mock('../lib/wearable-client', () => ({
   getMetricas: vi.fn().mockResolvedValue({ total: 0, promedios: {}, data: [] }),
   getWearableEstado: vi.fn().mockResolvedValue([]),

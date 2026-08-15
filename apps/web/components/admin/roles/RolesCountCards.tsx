@@ -8,9 +8,10 @@ type RolesCountCardsProps = {
 };
 
 const cardBase: React.CSSProperties = {
-  borderRadius: "12px",
+  borderRadius: "var(--radius-card)",
+  border: "1px solid var(--border-hairline)",
   padding: "16px 18px",
-  background: "var(--page-bg)",
+  background: "var(--paper)",
   minWidth: 150,
   flex: "1 1 150px",
 };

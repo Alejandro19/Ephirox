@@ -1,11 +1,17 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import useSWR from 'swr';
 import { getNutrition, type NutritionPlan, type MenuMeal } from '../../lib/nutrition-client';
 import { listSupplements, type Supplement } from '../../lib/supplements-client';
+import { listActiveTips, type NutritionTip } from '../../lib/nutrition-tips-client';
+import { listActiveRecipes, type Recipe } from '../../lib/recipes-client';
+import { PermissionDeniedError } from '../../lib/api-client';
 import { pickMantra } from '../../lib/mantra-bank';
 import IdentityHeader from '../ui/IdentityHeader';
-import MantraCard from '../ui/MantraCard';
+import RingProgress from '../ui/RingProgress';
+import LockedBenefit from '../ui/LockedBenefit';
+import { IconFileDownload } from '../ui/icons';
 
 function MealIcon({ name }: { name: string }) {
   const isSnack = /snack|merienda|fruta|colaci[oó]n/i.test(name || '');
@@ -56,24 +62,23 @@ function MealBlock({ meal, isFirst }: { meal: MenuMeal; isFirst: boolean }) {
   );
 }
 
-function MacroRing({ value, label }: { value: number | null | undefined; label: string }) {
-  return (
-    <div
-      className="flex h-14 w-14 flex-shrink-0 flex-col items-center justify-center rounded-full border-2"
-      style={{ borderColor: 'var(--hero-piedra-accent)', background: 'rgba(46,38,24,.06)', color: 'var(--hero-piedra-text)' }}
-    >
-      <span className="text-[13px] font-bold leading-none">{value ?? '-'}g</span>
-      <span className="mt-0.5 text-[8px] uppercase tracking-wide" style={{ color: 'var(--hero-piedra-text-muted)' }}>{label}</span>
-    </div>
-  );
+// % de las kcal diarias que aporta cada macro (prot×4 / carb×4 / grasa×9),
+// no progreso consumido — registrar comidas del día no existe hoy en el
+// sistema. Si no hay dailyCals asignado, se usa la suma de kcal de las
+// macros como referencia para no mostrar 0% de forma engañosa.
+function macroKcalPct(grams: number | null | undefined, kcalPerGram: number, totalKcal: number): number {
+  if (!totalKcal || grams == null) return 0;
+  return Math.round(((grams * kcalPerGram) / totalKcal) * 100);
 }
 
-function MacroStat({ value, label }: { value: string | number | null | undefined; label: string }) {
+function MacroRing({ grams, pct, label }: { grams: number | null | undefined; pct: number; label: string }) {
   return (
-    <div className="rounded-xl bg-[var(--page-bg)] px-1.5 py-3 text-center">
-      <div className="font-serif text-xl font-bold text-[var(--ink)]">{value ?? '—'}</div>
-      <div className="mt-0.5 text-[9px] uppercase tracking-wide text-[var(--ink-secondary)]">{label}</div>
-    </div>
+    <RingProgress value={pct} size={68} strokeWidth={6} color="espresso" trackColor="rgba(255,255,255,.16)">
+      <div className="flex flex-col items-center justify-center">
+        <span className="text-[15px] font-bold leading-none" style={{ color: 'var(--hero-espresso-text)' }}>{grams ?? '-'}g</span>
+        <span className="mt-0.5 text-[9px] uppercase tracking-wide" style={{ color: 'var(--hero-espresso-text-muted)' }}>{label}</span>
+      </div>
+    </RingProgress>
   );
 }
 
@@ -131,7 +136,7 @@ function SupplementIcon({ category }: { category: string | null }) {
 const NUTRITION_PDF_CSS = `
 @page{margin:0;}
 *{box-sizing:border-box;}
-body{font-family:'Inter',Arial,sans-serif;color:#2B2621;padding:26mm 20mm 24mm;max-width:760px;margin:0 auto;}
+body{font-family:'Inter',Arial,sans-serif;color:#2B2621;padding:26mm 20mm 10mm;max-width:760px;margin:0 auto;}
 .pdf-meal,.pdf-supp-row,.pdf-closing,.pdf-section{break-inside:avoid;page-break-inside:avoid;}
 .pdf-meal,.pdf-section{padding-top:12mm;}
 .pdf-header{display:flex;flex-direction:column;align-items:flex-start;text-align:left;margin-top:0;}
@@ -160,10 +165,10 @@ body{font-family:'Inter',Arial,sans-serif;color:#2B2621;padding:26mm 20mm 24mm;m
 .pdf-supp-row{margin-bottom:10px;}
 .pdf-supp-name{font-weight:700;font-size:11pt;}
 .pdf-supp-detail{font-size:9.5pt;color:#8A8377;margin-top:2px;}
-.pdf-closing{text-align:center;margin:36px 0 4px;padding-top:12mm;}
+.pdf-closing{text-align:center;margin:20px 0 4px;padding-top:12mm;}
 .pdf-closing-rule{width:30%;margin:0 auto 16px;border:none;border-top:1px solid #E7DFC9;}
 .pdf-closing-quote{font-family:'Fraunces',serif;font-style:italic;font-weight:500;font-size:12pt;line-height:1.5;color:#2B2621;}
-.pdf-footer{text-align:center;margin-top:60px;}
+.pdf-footer{text-align:center;margin-top:24px;page-break-inside:avoid;break-inside:avoid;}
 .pdf-footer-word{font-family:'Fraunces',serif;font-weight:700;font-size:15pt;color:#5B7A4E;margin:0 0 6px;}
 .pdf-footer-tagline{font-size:8pt;color:#8A8377;margin:0;}
 `;
@@ -269,59 +274,33 @@ function downloadNutritionPdf(plan: NutritionPlan, supplements: Supplement[]) {
   }
 }
 
-// Puerto de printAsPdf + downloadSupplementsPdf (index.html:3548-3987): sin
-// dependencias, abre una ventana en blanco con una tabla simple y dispara el
-// diálogo de impresión del navegador — "Guardar como PDF" es una opción
-// nativa de ese diálogo en todos los navegadores modernos.
-function downloadSupplementsPdf(supplements: Supplement[]) {
-  const w = window.open('', '_blank');
-  if (!w) {
-    window.alert('Habilita las ventanas emergentes para descargar el PDF.');
-    return;
-  }
-  const rows = supplements
-    .map(
-      (s) =>
-        `<tr><td>${s.name}</td><td>${s.brand || '-'}</td><td>${s.dose || '-'}</td><td>${s.timing || '-'}</td><td>${s.category || '-'}</td><td>${s.benefit || '-'}</td></tr>`
-    )
-    .join('');
-  const table = supplements.length
-    ? `<table><tr><th>Nombre</th><th>Marca</th><th>Dosis</th><th>Momento</th><th>Categoría</th><th>Beneficio</th></tr>${rows}</table>`
-    : '<p>Sin suplementos asignados.</p>';
-  w.document.write(
-    `<html><head><title>Esquema de Suplementación</title><style>body{font-family:sans-serif;padding:24px;color:#222}h1{font-size:20px}table{width:100%;border-collapse:collapse;margin-top:12px}td,th{padding:8px;border:1px solid #ccc;text-align:left}</style></head><body><h1>Esquema de Suplementación</h1>${table}</body></html>`
-  );
-  w.document.close();
-  w.focus();
-  w.print();
+async function fetchNutritionBundle(clientId: string) {
+  const [{ plan }, supplements, tips, recipes] = await Promise.all([
+    getNutrition(clientId),
+    listSupplements(clientId).catch(() => []),
+    listActiveTips(clientId).catch(() => []),
+    listActiveRecipes(clientId).catch(() => []),
+  ]);
+  return { plan, supplements, tips, recipes };
 }
 
 export function ClientNutritionPanel({ clientId }: { clientId: string }) {
-  const [plan, setPlan] = useState<NutritionPlan>({});
-  const [supplements, setSupplements] = useState<Supplement[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
   const [showAllMeals, setShowAllMeals] = useState(false);
   const [mantra] = useState(() => pickMantra('nutrition'));
-
-  useEffect(() => {
-    Promise.all([getNutrition(clientId), listSupplements(clientId).catch(() => [])])
-      .then(([{ plan: fetchedPlan }, supplementList]) => {
-        setPlan(fetchedPlan);
-        setSupplements(supplementList);
-      })
-      .catch((e: Error) => setError(e.message))
-      .finally(() => setLoading(false));
-  }, [clientId]);
+  const { data, error, isLoading } = useSWR(['nutrition-bundle', clientId], () => fetchNutritionBundle(clientId));
 
   const header = (
     <>
       <IdentityHeader title="Nutrición" subtitle="Plan de alimentación y protocolos asignados por tu mentor." />
-      {mantra && <MantraCard mantra={mantra} />}
+      {mantra && (
+        <p className="mb-6 font-serif text-base italic leading-relaxed text-[var(--ink-secondary)]">
+          &ldquo;{mantra}&rdquo;
+        </p>
+      )}
     </>
   );
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div>
         {header}
@@ -329,15 +308,25 @@ export function ClientNutritionPanel({ clientId }: { clientId: string }) {
       </div>
     );
   }
+  if (error instanceof PermissionDeniedError) {
+    return (
+      <div>
+        {header}
+        <LockedBenefit variant="upgrade" benefit="tu plan de nutrición" />
+      </div>
+    );
+  }
   if (error) {
     return (
       <div>
         {header}
-        <p role="alert" className="text-[var(--danger)]">{error}</p>
+        <p role="alert" className="text-[var(--danger)]">{(error as Error).message}</p>
       </div>
     );
   }
+  if (!data) return null;
 
+  const { plan, supplements, tips, recipes } = data;
   const menu = Array.isArray(plan.menuPlan) ? plan.menuPlan : [];
   const recommendations = Array.isArray(plan.recommendations) ? plan.recommendations : [];
   const hasPlan = plan.dailyCals != null || menu.length > 0 || !!plan.pdfUrl;
@@ -351,44 +340,38 @@ export function ClientNutritionPanel({ clientId }: { clientId: string }) {
     );
   }
 
-  const nextMeal = menu[0];
-  const nextMealDish = nextMeal?.options?.[0]?.items?.[0];
+  const totalKcal = plan.dailyCals || (plan.proteinG ?? 0) * 4 + (plan.carbsG ?? 0) * 4 + (plan.fatG ?? 0) * 9;
+  const proteinPct = macroKcalPct(plan.proteinG, 4, totalKcal);
+  const carbsPct = macroKcalPct(plan.carbsG, 4, totalKcal);
+  const fatPct = macroKcalPct(plan.fatG, 9, totalKcal);
 
   return (
     <div>
       {header}
 
-      {menu.length > 0 && (
+      <div
+        className="relative mt-8 mb-6 overflow-hidden rounded-[var(--radius-hero)] p-7"
+        style={{ background: 'var(--hero-espresso)', color: 'var(--hero-espresso-text)' }}
+      >
         <div
-          className="relative mt-8 mb-6 overflow-hidden rounded-[var(--radius-hero)] p-7"
-          style={{ background: 'linear-gradient(135deg, var(--hero-piedra-start), var(--hero-piedra-end))', color: 'var(--hero-piedra-text)' }}
-        >
-          <div className="flex items-center justify-between gap-5">
-            <div>
-              <p className="mb-2.5 text-[11px] font-bold uppercase tracking-wider" style={{ color: 'var(--hero-piedra-accent)' }}>
-                {nextMeal ? `TU MENÚ · ${nextMeal.name.toUpperCase()}` : 'TU PLAN NUTRICIONAL'}
-              </p>
-              <p className="mb-1.5 font-serif text-xl font-semibold">{nextMealDish || nextMeal?.name || 'Aún sin menú registrado'}</p>
-              {plan.dailyCals ? <p className="text-[13px]" style={{ color: 'var(--hero-piedra-text-muted)' }}>Meta: {plan.dailyCals} kcal/día</p> : null}
-            </div>
-            <div className="flex flex-shrink-0 gap-3.5">
-              <MacroRing value={plan.proteinG} label="Prot" />
-              <MacroRing value={plan.carbsG} label="Carbs" />
-              <MacroRing value={plan.fatG} label="Grasa" />
-            </div>
-          </div>
+          className="pointer-events-none absolute -right-10 -top-10 h-[180px] w-[180px] rounded-full"
+          style={{ background: 'radial-gradient(circle, rgba(217,183,126,.18) 0%, transparent 70%)' }}
+        />
+        <div className="relative z-10 mb-5 flex items-center justify-between gap-3">
+          <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: 'var(--hero-espresso-accent)' }}>
+            Tu objetivo · hoy
+          </p>
+          {plan.dailyCals ? (
+            <p className="text-[13px] font-semibold" style={{ color: 'var(--hero-espresso-text-muted)' }}>{plan.dailyCals} kcal/día</p>
+          ) : null}
         </div>
-      )}
-
-      <section className="rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--paper)] p-6 mb-5">
-        <h2 className="mb-4 font-serif text-lg font-bold text-[var(--ink)]">Tu objetivo nutricional</h2>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <MacroStat value={plan.dailyCals} label="Kcal / día" />
-          <MacroStat value={plan.proteinG != null ? `${plan.proteinG}g` : undefined} label="Proteína" />
-          <MacroStat value={plan.carbsG != null ? `${plan.carbsG}g` : undefined} label="Carbohidratos" />
-          <MacroStat value={plan.fatG != null ? `${plan.fatG}g` : undefined} label="Grasas" />
+        <p className="relative z-10 mb-6 font-serif text-xl font-semibold">Meta nutricional diaria</p>
+        <div className="relative z-10 flex flex-wrap items-center justify-center gap-6 sm:justify-start">
+          <MacroRing grams={plan.proteinG} pct={proteinPct} label="Prot" />
+          <MacroRing grams={plan.carbsG} pct={carbsPct} label="Carbs" />
+          <MacroRing grams={plan.fatG} pct={fatPct} label="Grasa" />
         </div>
-      </section>
+      </div>
 
       <section className="rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--paper)] p-6 mb-5">
         <h2 className="mb-4 font-serif text-lg font-bold text-[var(--ink)]">Vista previa de tu plan</h2>
@@ -469,18 +452,59 @@ export function ClientNutritionPanel({ clientId }: { clientId: string }) {
                 </div>
               );
             })}
-            <button
-              type="button"
-              onClick={() => downloadSupplementsPdf(supplements)}
-              className="mt-3.5 rounded-full border border-[var(--border-input)] bg-transparent px-5 py-2.5 text-sm text-[var(--ink)]"
-            >
-              Descargar PDF
-            </button>
           </div>
         ) : (
           <p className="py-6 text-center text-[var(--ink-secondary)]">Aún no tienes suplementos asignados.</p>
         )}
       </section>
+
+      {recipes.length > 0 && (
+        <section className="mt-2 mb-6 border-t border-[var(--border-hairline)] pt-5">
+          <h2 className="mb-3 font-serif text-lg font-bold text-[var(--ink)]">Recetas saludables</h2>
+          <div>
+            {recipes.map((recipe: Recipe, i: number) => (
+              <div key={recipe.id} className={`flex items-center gap-3 py-3 ${i === 0 ? '' : 'border-t'}`} style={{ borderColor: 'var(--border-hairline)', borderTopWidth: i === 0 ? 0 : '0.5px' }}>
+                <span aria-hidden className="flex-shrink-0" style={{ color: 'var(--hero-piedra-accent)' }}>
+                  <IconFileDownload size={18} />
+                </span>
+                <p className="flex-1 truncate font-serif text-sm font-semibold text-[var(--ink)]">{recipe.name}</p>
+                <div className="flex flex-shrink-0 gap-2.5">
+                  <a
+                    href={recipe.pdfUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded-full border px-3.5 py-1.5 text-xs font-semibold text-[var(--ink)]"
+                    style={{ borderColor: 'var(--border-input)' }}
+                  >
+                    Ver
+                  </a>
+                  <a
+                    href={recipe.pdfUrl}
+                    download={recipe.pdfName}
+                    className="rounded-full border px-3.5 py-1.5 text-xs font-semibold text-[var(--ink)]"
+                    style={{ borderColor: 'var(--border-input)' }}
+                  >
+                    Descargar
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {tips.length > 0 && (
+        <section className="mt-2 mb-6 border-t border-[var(--border-hairline)] pt-5">
+          <h2 className="mb-3 font-serif text-lg font-bold text-[var(--ink)]">Tips and tricks</h2>
+          <ul className="space-y-2 text-sm leading-relaxed text-[var(--ink)]">
+            {tips.map((tip: NutritionTip) => (
+              <li key={tip.id} className="relative pl-3.5 before:absolute before:left-0 before:top-[8px] before:h-[5px] before:w-[5px] before:rounded-full before:bg-[var(--hero-piedra-accent)] before:content-['']">
+                {tip.content}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </div>
   );
 }

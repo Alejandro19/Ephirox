@@ -5,6 +5,9 @@ import CommunityPage from '../app/(app)/community/page';
 vi.mock('../lib/api-client', () => ({
   getSessionToken: () => 'header.eyJpZCI6ImNsaWVudC0xIn0.signature',
 }));
+vi.mock('../lib/auth-context', () => ({
+  useAuth: () => ({ role: 'cliente', user: { id: 'client-1', name: '', email: '' } }),
+}));
 vi.mock('../lib/events-client', () => ({
   listEvents: vi.fn().mockResolvedValue([]),
   reserveEvent: vi.fn(),

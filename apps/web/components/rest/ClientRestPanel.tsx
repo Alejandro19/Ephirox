@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import useSWR from 'swr';
 import { getMetricas, getWearableEstado, type WearableMetrica, type WearableEstado } from '../../lib/wearable-client';
 import { getProtocol, type SleepProtocol } from '../../lib/sleep-client';
 import { fetchClient } from '../../lib/clients-client';
 import { PermissionDeniedError } from '../../lib/api-client';
 import { pickMantra } from '../../lib/mantra-bank';
-import { COACH_WHATSAPP_NUMBER } from '../../lib/constants';
 import {
   isMentoringClient,
   formatMinutesDuration,
@@ -18,6 +18,7 @@ import {
 import IdentityHeader from '../ui/IdentityHeader';
 import MantraCard from '../ui/MantraCard';
 import LockedOverlay from '../ui/LockedOverlay';
+import LockedBenefit from '../ui/LockedBenefit';
 import EmptyState from '../ui/EmptyState';
 import { RestToolsClientPanel } from './RestToolsClientPanel';
 
@@ -224,10 +225,10 @@ function TrendChart({ points }: { points: WearableMetrica[] }) {
 function renderProtocolLine(line: string, key: number) {
   const parts = line.split(/(\*\*[^*]+\*\*)/g).filter(Boolean);
   return (
-    <p key={key} className="font-serif text-[13.5px] italic leading-relaxed text-[#7C5EA3]">
+    <p key={key} className="font-serif text-[13.5px] italic leading-relaxed text-[var(--ink)]">
       {parts.map((part, i) =>
         part.startsWith('**') && part.endsWith('**') ? (
-          <span key={i} className="font-semibold not-italic text-[#3F2A63]">
+          <span key={i} className="font-semibold not-italic text-[var(--ink)]">
             {part.slice(2, -2)}
           </span>
         ) : (
@@ -243,7 +244,7 @@ function ProtocolCard({ protocol }: { protocol: SleepProtocol }) {
 
   return (
     <section className="rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--paper)] p-6 mb-5">
-      <p className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.08em] text-[#8A5FA0]">Actualizado con tu data</p>
+      <p className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--ink)]">Actualizado con tu data</p>
       <h2 className="mb-3.5 font-serif text-lg font-bold text-[var(--ink)]">Tu protocolo de sueño personalizado</h2>
       {lines.length ? (
         <div className="space-y-2">{lines.map((line, i) => renderProtocolLine(line, i))}</div>
@@ -252,8 +253,8 @@ function ProtocolCard({ protocol }: { protocol: SleepProtocol }) {
       )}
       {protocol?.supplement && (
         <div className="mt-4 border-t border-[var(--border-hairline)] pt-4">
-          <p className="mb-0.5 text-[9px] font-bold uppercase tracking-[0.08em] text-[#8A5FA0]">Suplemento sugerido</p>
-          <p className="font-serif text-sm font-semibold text-[#3F2A63]">{protocol.supplement}</p>
+          <p className="mb-0.5 text-[9px] font-bold uppercase tracking-[0.08em] text-[var(--ink)]">Suplemento sugerido</p>
+          <p className="font-serif text-sm font-semibold text-[var(--ink)]">{protocol.supplement}</p>
         </div>
       )}
     </section>
@@ -262,42 +263,31 @@ function ProtocolCard({ protocol }: { protocol: SleepProtocol }) {
 
 // ─── Panel principal ────────────────────────────────────────────
 
-export function ClientRestPanel({ clientId }: { clientId: string }) {
-  const [metrics, setMetrics] = useState<WearableMetrica[]>([]);
-  const [ultimaSync, setUltimaSync] = useState<string | null>(null);
-  const [protocol, setProtocol] = useState<SleepProtocol>(null);
-  const [mentoring, setMentoring] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [permissionLocked, setPermissionLocked] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [mantra] = useState(() => pickMantra('rest'));
+async function fetchRestBundle(clientId: string) {
+  const [metricasRes, estados, sleepProtocol, client] = await Promise.all([
+    getMetricas(clientId, 7).catch(() => ({ total: 0, promedios: {}, data: [] as WearableMetrica[] })),
+    getWearableEstado(clientId).catch(() => [] as WearableEstado[]),
+    // Un 403 acá sí debe propagar (a diferencia del resto de estos
+    // fetches, que son "best effort") — es la señal de que este tipo de
+    // cliente ya no tiene acceso al módulo, ver requirePermission('rest').
+    getProtocol(clientId).catch((e) => {
+      if (e instanceof PermissionDeniedError) throw e;
+      return null;
+    }),
+    fetchClient(clientId).catch(() => null),
+  ]);
+  const oura = estados.find((w) => w.dispositivo === 'oura');
+  return {
+    metrics: metricasRes.data,
+    ultimaSync: oura?.ultimaSync ?? null,
+    protocol: sleepProtocol,
+    mentoring: isMentoringClient(client?.clientType),
+  };
+}
 
-  useEffect(() => {
-    Promise.all([
-      getMetricas(clientId, 7).catch(() => ({ total: 0, promedios: {}, data: [] as WearableMetrica[] })),
-      getWearableEstado(clientId).catch(() => [] as WearableEstado[]),
-      // Un 403 acá sí debe propagar (a diferencia del resto de estos
-      // fetches, que son "best effort") — es la señal de que este tipo de
-      // cliente ya no tiene acceso al módulo, ver requirePermission('rest').
-      getProtocol(clientId).catch((e) => {
-        if (e instanceof PermissionDeniedError) throw e;
-        return null;
-      }),
-      fetchClient(clientId).catch(() => null),
-    ])
-      .then(([metricasRes, estados, sleepProtocol, client]) => {
-        setMetrics(metricasRes.data);
-        const oura = estados.find((w) => w.dispositivo === 'oura');
-        setUltimaSync(oura?.ultimaSync ?? null);
-        setProtocol(sleepProtocol);
-        setMentoring(isMentoringClient(client?.clientType));
-      })
-      .catch((e: Error) => {
-        if (e instanceof PermissionDeniedError) setPermissionLocked(true);
-        else setError(e.message);
-      })
-      .finally(() => setLoading(false));
-  }, [clientId]);
+export function ClientRestPanel({ clientId }: { clientId: string }) {
+  const [mantra] = useState(() => pickMantra('rest'));
+  const { data, error, isLoading } = useSWR(['rest-bundle', clientId], () => fetchRestBundle(clientId));
 
   const header = (
     <>
@@ -306,7 +296,7 @@ export function ClientRestPanel({ clientId }: { clientId: string }) {
     </>
   );
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div>
         {header}
@@ -314,7 +304,7 @@ export function ClientRestPanel({ clientId }: { clientId: string }) {
       </div>
     );
   }
-  if (permissionLocked) {
+  if (error && error instanceof PermissionDeniedError) {
     return (
       <div>
         {header}
@@ -328,11 +318,13 @@ export function ClientRestPanel({ clientId }: { clientId: string }) {
     return (
       <div>
         {header}
-        <p role="alert" className="text-[var(--danger)]">{error}</p>
+        <p role="alert" className="text-[var(--danger)]">{(error as Error).message}</p>
       </div>
     );
   }
+  if (!data) return null;
 
+  const { metrics, ultimaSync, protocol, mentoring } = data;
   // data llega ordenada desc por fecha (ver wearable.service.ts) — el primer
   // elemento es la noche más reciente; el resto es la línea base de comparación.
   const latest = metrics[0] ?? null;
@@ -355,14 +347,9 @@ export function ClientRestPanel({ clientId }: { clientId: string }) {
       {mentoring ? (
         body
       ) : (
-        <LockedOverlay
-          title="Solo disponible para Mentoría"
-          subtitle="El seguimiento de sueño con wearable y tu protocolo personalizado son parte del plan Mentoring."
-          ctaLabel="Conocer planes"
-          onCta={() => window.open(`https://wa.me/${COACH_WHATSAPP_NUMBER}`, '_blank')}
-        >
+        <LockedBenefit variant="upgrade" requiredLevel="Club Elite" benefit="tu protocolo de sueño personalizado y el seguimiento con wearable">
           {body}
-        </LockedOverlay>
+        </LockedBenefit>
       )}
     </div>
   );

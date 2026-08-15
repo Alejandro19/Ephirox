@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import useSWR from 'swr';
 import {
   listTechniques,
   createTechnique,
@@ -76,8 +77,14 @@ function emotionLabel(key: string | null): string | null {
 }
 
 export function AdminCortisolPanel({ clientId }: { clientId: string }) {
-  const [techniques, setTechniques] = useState<CortisolTechnique[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: techniques = [] as CortisolTechnique[], error: loadError, isLoading: loading, mutate } = useSWR(
+    ['cortisol-techniques', clientId],
+    () => listTechniques(clientId),
+  );
+
+  useEffect(() => {
+    if (loadError) showToast((loadError as Error).message, 'error');
+  }, [loadError]);
 
   const [title, setTitle] = useState('');
   const [type, setType] = useState(TECHNIQUE_TYPES[0]);
@@ -93,15 +100,8 @@ export function AdminCortisolPanel({ clientId }: { clientId: string }) {
   const [editAudioFile, setEditAudioFile] = useState<File | null>(null);
 
   async function refetch() {
-    setTechniques(await listTechniques(clientId));
+    await mutate();
   }
-
-  useEffect(() => {
-    setLoading(true);
-    refetch()
-      .catch((e: Error) => showToast(e.message, 'error'))
-      .finally(() => setLoading(false));
-  }, [clientId]);
 
   async function handleCreate() {
     if (!title.trim()) return;

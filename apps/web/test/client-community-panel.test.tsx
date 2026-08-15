@@ -1,34 +1,45 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { renderWithSWR as render } from './swr-test-utils';
 import { ClientCommunityPanel } from '../components/community/ClientCommunityPanel';
 import * as eventsClient from '../lib/events-client';
 import * as therapiesClient from '../lib/therapies-client';
+import * as retreatsClient from '../lib/retreats-client';
 import * as clientsClient from '../lib/clients-client';
 
 vi.mock('../lib/events-client');
 vi.mock('../lib/therapies-client');
+vi.mock('../lib/retreats-client');
 vi.mock('../lib/clients-client');
 
 const sampleEvent: eventsClient.CommunityEvent = {
   id: 'e1', title: 'Ice Bath', description: 'Llevar ropa cómoda.', eventDate: '2026-07-21T16:30:00Z',
-  location: 'Nordico - Calle 93', capacity: null, active: true, confirmed_count: 2,
+  location: 'Nordico - Calle 93', capacity: null, imageUrl: null, active: true, confirmed_count: 2,
 };
 const sampleTherapy: therapiesClient.CommunityTherapy = {
-  id: 't1', title: 'Biodescodificación', description: null, discountPct: 20, provider: null, active: true, confirmed_count: 1,
+  id: 't1', title: 'Biodescodificación', description: null, discountPct: 20, provider: null, imageUrl: null, active: true, confirmed_count: 1,
+};
+const sampleRetreat: retreatsClient.CommunityRetreat = {
+  id: 'r1', title: 'Retiro de montaña', description: null, startDate: '2026-09-01T00:00:00Z', endDate: '2026-09-05T00:00:00Z',
+  location: 'Sierra Nevada', capacity: 12, priceCents: 250000, imageUrl: null, active: true, confirmed_count: 0,
 };
 
 function mockFetches({
   events = [sampleEvent],
   therapies = [sampleTherapy],
+  retreats = [sampleRetreat],
   myEventReservations = [] as Array<{ eventId: string; status: string }>,
   myTherapyReservations = [] as Array<{ therapyId: string; status: string }>,
+  myRetreatReservations = [] as Array<{ retreatId: string; status: string }>,
   clientType = 'coaching_1_1',
 } = {}) {
   vi.mocked(eventsClient.listEvents).mockResolvedValue(events);
   vi.mocked(therapiesClient.listTherapies).mockResolvedValue(therapies);
+  vi.mocked(retreatsClient.listRetreats).mockResolvedValue(retreats);
   vi.mocked(eventsClient.listMyEventReservations).mockResolvedValue(myEventReservations);
   vi.mocked(therapiesClient.listMyTherapyReservations).mockResolvedValue(myTherapyReservations);
+  vi.mocked(retreatsClient.listMyRetreatReservations).mockResolvedValue(myRetreatReservations);
   vi.mocked(clientsClient.fetchClient).mockResolvedValue({
     id: 'client-1', name: 'Ana', email: 'a@x.com', plan: '', status: 'active', clientType,
   });
@@ -61,7 +72,60 @@ describe('ClientCommunityPanel', () => {
     await screen.findByRole('button', { name: 'Terapias' });
 
     await user.click(screen.getByRole('button', { name: 'Terapias' }));
-    expect(await screen.findByText('Beneficios solo para clientes activos')).toBeInTheDocument();
+    expect(await screen.findByText('Beneficio exclusivo de una membresía superior')).toBeInTheDocument();
+  });
+
+  it('switches to the Retiros tab and shows retreat cards for an active client', async () => {
+    const user = userEvent.setup();
+    mockFetches();
+    render(<ClientCommunityPanel clientId="client-1" />);
+    await screen.findByRole('button', { name: 'Retiros' });
+
+    await user.click(screen.getByRole('button', { name: 'Retiros' }));
+    expect(await screen.findByText('Retiro de montaña')).toBeInTheDocument();
+  });
+
+  it('shows the uploaded photo on a retreat card when it has one', async () => {
+    const user = userEvent.setup();
+    mockFetches({ retreats: [{ ...sampleRetreat, imageUrl: 'https://x/retiro.jpg' }] });
+    render(<ClientCommunityPanel clientId="client-1" />);
+    await user.click(await screen.findByRole('button', { name: 'Retiros' }));
+    expect(await screen.findByRole('img', { name: 'Retiro de montaña' })).toBeInTheDocument();
+  });
+
+  it('shows no photo element (falls back to the placeholder) for a retreat without one', async () => {
+    const user = userEvent.setup();
+    mockFetches();
+    render(<ClientCommunityPanel clientId="client-1" />);
+    await user.click(await screen.findByRole('button', { name: 'Retiros' }));
+    await screen.findByText('Retiro de montaña');
+    expect(screen.queryByRole('img', { name: 'Retiro de montaña' })).not.toBeInTheDocument();
+  });
+
+  it('locks the Retiros tab behind an overlay for a lead_wellness client (premium experience, gated like Terapias)', async () => {
+    const user = userEvent.setup();
+    mockFetches({ clientType: 'lead_wellness' });
+    render(<ClientCommunityPanel clientId="client-1" />);
+    await screen.findByRole('button', { name: 'Retiros' });
+
+    await user.click(screen.getByRole('button', { name: 'Retiros' }));
+    expect(await screen.findByText('Beneficio exclusivo de una membresía superior')).toBeInTheDocument();
+  });
+
+  it('reserves a retreat and flips the button to cancel', async () => {
+    const user = userEvent.setup();
+    mockFetches();
+    vi.mocked(retreatsClient.reserveRetreat).mockResolvedValue(undefined);
+    vi.mocked(retreatsClient.listMyRetreatReservations)
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([{ retreatId: 'r1', status: 'confirmada' }]);
+
+    render(<ClientCommunityPanel clientId="client-1" />);
+    await user.click(await screen.findByRole('button', { name: 'Retiros' }));
+    await user.click(await screen.findByRole('button', { name: 'Reservar mi lugar' }));
+
+    await waitFor(() => expect(retreatsClient.reserveRetreat).toHaveBeenCalledWith('r1'));
+    expect(await screen.findByRole('button', { name: 'Cancelar reserva' })).toBeInTheDocument();
   });
 
   it('reserves an event and flips the button to cancel', async () => {

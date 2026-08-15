@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import { CommunityEventInput } from '@latribu/shared-types';
 import * as eventsService from '../services/events.service.js';
+import { uploadFile } from '../storage/index.js';
 
 function ok(res: Response, data: Record<string, unknown>, status = 200) {
   return res.status(status).json({ success: true, ...data });
@@ -28,6 +29,15 @@ export async function updateEvent(req: Request, res: Response) {
 export async function deleteEvent(req: Request, res: Response) {
   await eventsService.deleteEvent(req.params.eventId);
   return ok(res, { message: 'Evento eliminado.' });
+}
+
+export async function uploadEventImage(req: Request, res: Response) {
+  if (!req.file) return err(res, 'No se recibió ninguna imagen.');
+  if (req.file.mimetype !== 'image/jpeg' && req.file.mimetype !== 'image/png') return err(res, 'Formato inválido. Usa JPG o PNG.');
+  const imageUrl = await uploadFile('events', req.file.buffer, req.file.mimetype, req.file.originalname);
+  const event = await eventsService.setEventImage(req.params.eventId, imageUrl);
+  if (!event) return err(res, 'Evento no encontrado.', 404);
+  return ok(res, { event });
 }
 
 export async function reserveEvent(req: Request, res: Response) {

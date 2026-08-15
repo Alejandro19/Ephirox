@@ -35,3 +35,14 @@ export const MealUpdateInputSchema = z.object({
   tags: z.array(z.string()).optional(),
 });
 export type MealUpdateInput = z.infer<typeof MealUpdateInputSchema>;
+
+export const NutritionTipInputSchema = z.object({
+  content: z.string().min(1),
+});
+export type NutritionTipInput = z.infer<typeof NutritionTipInputSchema>;
+
+export const NutritionTipUpdateSchema = z.object({
+  content: z.string().min(1).optional(),
+  active: z.boolean().optional(),
+});
+export type NutritionTipUpdate = z.infer<typeof NutritionTipUpdateSchema>;

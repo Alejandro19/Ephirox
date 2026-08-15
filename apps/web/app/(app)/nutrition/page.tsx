@@ -1,47 +1,33 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { getSessionToken } from '@/lib/api-client';
+import { useState } from 'react';
+import Link from 'next/link';
+import { useAuth } from '@/lib/auth-context';
 import { ClientNutritionPanel } from '@/components/nutrition/ClientNutritionPanel';
 import { AdminNutritionPanel } from '@/components/nutrition/AdminNutritionPanel';
 import ClientSwitcher from '@/components/admin/ClientSwitcher';
 import IdentityHeader from '@/components/ui/IdentityHeader';
 
-function decodeClientIdFromToken(token: string): string | null {
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    return typeof payload.id === 'string' ? payload.id : null;
-  } catch {
-    return null;
-  }
-}
-
-function decodeRoleFromToken(token: string): string | null {
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    return typeof payload.role === 'string' ? payload.role : null;
-  } catch {
-    return null;
-  }
-}
-
 export default function NutritionPage() {
-  const [clientId, setClientId] = useState<string | null>(null);
-  const [role, setRole] = useState<string | null>(null);
+  // AppShell ya bloquea el render de esta página hasta que useAuth() termina
+  // de cargar (ver components/layout/AppShell.tsx) — leer directo de acá evita
+  // el doble-render que causaba decodificar el JWT de nuevo en cada page.tsx.
+  const { role, user } = useAuth();
+  const clientId = user?.id ?? null;
   const [adminClientId, setAdminClientId] = useState<string | null>(null);
-
-  useEffect(() => {
-    const token = getSessionToken();
-    if (token) {
-      setClientId(decodeClientIdFromToken(token));
-      setRole(decodeRoleFromToken(token));
-    }
-  }, []);
 
   if (role === 'admin') {
     return (
       <div>
         <IdentityHeader title="Nutrición" subtitle="Arma el plan de alimentación y suplementación de cada cliente." />
+        <div style={{ marginBottom: 18 }}>
+          <Link
+            href="/admin/nutrition-tips"
+            style={{ fontSize: 13, fontWeight: 600, color: 'var(--ring-accent)', textDecoration: 'none' }}
+          >
+            Gestionar tips de nutrición →
+          </Link>
+        </div>
         <div
           style={{
             background: 'var(--paper)', border: '1px solid var(--line)',

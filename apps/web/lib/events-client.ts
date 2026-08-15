@@ -4,10 +4,11 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3
 
 async function authorizedRequest<T>(path: string, method: string, body?: unknown): Promise<T> {
   const token = getSessionToken();
+  const isFormData = body instanceof FormData;
   const res = await fetch(`${API_BASE_URL}${path}`, {
     method,
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: body != null ? JSON.stringify(body) : undefined,
+    headers: { Authorization: `Bearer ${token}`, ...(isFormData ? {} : { 'Content-Type': 'application/json' }) },
+    body: isFormData ? body : body != null ? JSON.stringify(body) : undefined,
   });
   if (res.status === 403) {
     const errorBody = await res.json().catch(() => ({}));
@@ -23,6 +24,7 @@ export type CommunityEvent = {
   eventDate: string | null;
   location: string | null;
   capacity: number | null;
+  imageUrl: string | null;
   active: boolean;
   confirmed_count: number;
 };
@@ -42,6 +44,14 @@ export async function createEvent(input: { title: string; description?: string; 
 export async function updateEvent(eventId: string, input: Partial<{ title: string; description: string; event_date: string; location: string; capacity: number; active: boolean }>): Promise<CommunityEvent> {
   const body = await authorizedRequest<{ success: boolean; event: CommunityEvent; error?: string }>(`/api/community/events/${eventId}`, 'PUT', input);
   if (!body.success) throw new Error(body.error || 'Error al actualizar el evento.');
+  return body.event;
+}
+
+export async function uploadEventImage(eventId: string, file: File): Promise<CommunityEvent> {
+  const formData = new FormData();
+  formData.append('image', file);
+  const body = await authorizedRequest<{ success: boolean; event: CommunityEvent; error?: string }>(`/api/community/events/${eventId}/upload-image`, 'POST', formData);
+  if (!body.success) throw new Error(body.error || 'Error al subir la foto.');
   return body.event;
 }
 

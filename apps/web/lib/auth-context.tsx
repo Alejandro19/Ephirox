@@ -16,6 +16,7 @@ import {
   loginRequest,
   registerRequest,
   decodeTokenPayload,
+  AuthInvalidError,
   type LoginResult,
   type RegisterResult,
 } from "./api-client";
@@ -41,7 +42,7 @@ type AuthState = {
 
 type AuthContextValue = AuthState & {
   login: (email: string, password: string) => Promise<LoginResult>;
-  register: (name: string, email: string, password: string) => Promise<RegisterResult>;
+  register: (name: string, email: string) => Promise<RegisterResult>;
   googleLogin: (credential: string) => Promise<LoginResult>;
   logout: () => void;
   refreshAuth: () => Promise<void>;
@@ -92,30 +93,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setState((prev) => ({ ...prev, isLoading: false, isAuthLoading: false }));
       return;
     }
-    try {
-      const data = await fetchAuthMe();
-      setState({
-        token,
-        role: data.role ?? null,
-        user: data.user ?? decodeUserFromToken(token),
-        permissions: data.permissions ?? {},
-        clientType: data.clientType ?? null,
-        onboardingComplete: !!data.onboardingComplete,
-        planExpired: !!data.planExpired,
-        planEndDate: data.planEndDate ?? null,
-        isLoading: false,
-        isAuthLoading: false,
-      });
-    } catch (e: unknown) {
-      // Si el token es inválido (JWT_SECRET diferente entre APIs, token expirado,
-      // o cuenta inactiva), limpiar sesión y forzar redirect a login para que el
-      // middleware de Next.js redirija correctamente. Sin window.location.href,
-      // las páginas protegidas harían flash del contenido antes de redirigir.
-      clearSession();
-      if (typeof window !== 'undefined') {
-        window.location.href = '/login';
+    // Justo después de un login (ej. redirect de NFC a través de un túnel),
+    // esta primera llamada a /auth/me puede fallar por un motivo transitorio
+    // (red, cold-start del túnel) sin que el token en sí sea inválido —
+    // tratarlo igual que un 401 real cerraba una sesión recién iniciada y
+    // obligaba a loguearse dos veces. Solo un AuthInvalidError (401/403)
+    // cierra sesión de inmediato; cualquier otro fallo reintenta un par de
+    // veces antes de darse por vencido.
+    const MAX_ATTEMPTS = 5;
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      try {
+        const data = await fetchAuthMe();
+        setState({
+          token,
+          role: data.role ?? null,
+          user: data.user ?? decodeUserFromToken(token),
+          permissions: data.permissions ?? {},
+          clientType: data.clientType ?? null,
+          onboardingComplete: !!data.onboardingComplete,
+          planExpired: !!data.planExpired,
+          planEndDate: data.planEndDate ?? null,
+          isLoading: false,
+          isAuthLoading: false,
+        });
+        return;
+      } catch (e: unknown) {
+        const isAuthInvalid = e instanceof AuthInvalidError;
+        if (!isAuthInvalid && attempt < MAX_ATTEMPTS) {
+          await new Promise((resolve) => setTimeout(resolve, 500 * attempt));
+          continue;
+        }
+        // Token realmente inválido (JWT_SECRET diferente entre APIs, expirado,
+        // cuenta inactiva) o fallo transitorio persistente tras reintentar:
+        // limpiar sesión y forzar redirect a login para que el middleware de
+        // Next.js redirija correctamente. Sin window.location.href, las
+        // páginas protegidas harían flash del contenido antes de redirigir.
+        clearSession();
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login';
+        }
+        setState({ ...initialState, isLoading: false, isAuthLoading: false });
+        return;
       }
-      setState({ ...initialState, isLoading: false, isAuthLoading: false });
     }
   }, []);
 
@@ -139,24 +158,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return result;
   }, []);
 
-  const register = useCallback(async (name: string, email: string, password: string) => {
-    const result = await registerRequest(name, email, password);
-    if (result.success && result.token) {
-      saveSession(result.token);
-      setState({
-        token: result.token,
-        role: "cliente",
-        user: result.user ?? decodeUserFromToken(result.token),
-        permissions: {},
-        clientType: null,
-        onboardingComplete: false,
-        planExpired: false,
-        planEndDate: null,
-        isLoading: false,
-        isAuthLoading: false,
-      });
-    }
-    return result;
+  // La solicitud de membresía ("Solicita tu membresía") no crea sesión —
+  // el cliente queda "inactive" hasta que un admin lo active, así que acá
+  // no hay token/estado de auth que setear, solo se propaga el resultado.
+  const register = useCallback(async (name: string, email: string) => {
+    return registerRequest(name, email, 'membership_request');
   }, []);
 
   // Google login — conservado para cuando se reactive, pero no usado por la UI de Fase 0

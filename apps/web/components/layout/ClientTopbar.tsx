@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "../../lib/auth-context";
 import { CLIENT_NAV, VIEW_TO_PATH, type AppState } from "../../lib/constants";
 import NotificationBell from "./NotificationBell";
+import BrandRing from "../ui/BrandRing";
 import { IconLock } from "../ui/icons";
 
 type ClientTopbarProps = {
@@ -51,6 +52,15 @@ export default function ClientTopbar({ viewKey }: ClientTopbarProps) {
   const items = CLIENT_NAV.filter((item) => (item.visible ? item.visible(sn) : true));
   const initial = (user?.name ?? "U").charAt(0).toUpperCase();
 
+  // Precarga todas las rutas del topbar una vez montado: el set de módulos por
+  // rol es chico, así que el siguiente clic ya encuentra el chunk tibio.
+  useEffect(() => {
+    items.forEach((item) => {
+      router.prefetch(VIEW_TO_PATH[item.key] || `/${item.key}`);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const isLocked = (key: string) =>
     key === "rest" || key === "blindspot"
       ? clientType !== "mentoring"
@@ -71,17 +81,27 @@ export default function ClientTopbar({ viewKey }: ClientTopbarProps) {
           background: "linear-gradient(135deg, var(--hero-piedra-start), var(--hero-piedra-end))",
         }}
       >
-        <span
+        <button
+          onClick={() => router.push("/")}
+          aria-label="Ir al menú principal"
           style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
             fontFamily: "Fraunces, Georgia, serif",
             fontSize: 19,
             fontWeight: 700,
             color: "var(--hero-piedra-text)",
             flexShrink: 0,
+            background: "none",
+            border: "none",
+            padding: 0,
+            cursor: "pointer",
           }}
         >
+          <BrandRing size={24} background="var(--hero-piedra-start)" />
           La Tribu
-        </span>
+        </button>
 
         <nav className="client-nav-row" style={{ display: "flex", alignItems: "center", gap: 10, flex: 1, minWidth: 0 }}>
           {items.map((item) => {
@@ -111,14 +131,14 @@ export default function ClientTopbar({ viewKey }: ClientTopbarProps) {
           })}
         </nav>
 
-        <div className="client-topbar-actions" style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+        <div className="client-topbar-actions" style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0, marginLeft: "auto" }}>
           <span className="bell-circle">
             <NotificationBell />
           </span>
           <div ref={accountRef} style={{ position: "relative" }}>
             <button
               onClick={() => setAccountOpen((v) => !v)}
-              aria-label="Cuenta"
+              aria-label="Membresía"
               style={{
                 width: 32, height: 32, borderRadius: "50%",
                 border: "1px solid var(--hero-piedra-accent)",
@@ -138,7 +158,7 @@ export default function ClientTopbar({ viewKey }: ClientTopbarProps) {
                 borderRadius: "var(--radius-card)", padding: 10, zIndex: 90,
               }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: "var(--ink)", padding: "4px 6px" }}>
-                  {user?.name ?? "Usuario"}
+                  {user?.name ?? "Miembro"}
                 </div>
                 <button
                   onClick={logout}
@@ -182,7 +202,7 @@ export default function ClientTopbar({ viewKey }: ClientTopbarProps) {
         style={{
           position: "fixed", top: 0, right: 0, bottom: 0, width: "82vw", maxWidth: 300,
           background: "var(--page-bg)", zIndex: 110, padding: "24px 20px",
-          transform: "translateX(100%)", transition: "transform 0.28s ease",
+          transition: "transform 0.28s ease",
           display: "flex", flexDirection: "column", gap: 4,
         }}
       >
@@ -247,6 +267,9 @@ export default function ClientTopbar({ viewKey }: ClientTopbarProps) {
         }
         .bell-circle:hover {
           background: var(--hero-espresso);
+        }
+        .client-drawer {
+          transform: translateX(100%);
         }
         .client-drawer.open {
           transform: translateX(0);

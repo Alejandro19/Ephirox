@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { getSessionToken } from '@/lib/api-client';
+import { useAuth } from '@/lib/auth-context';
 import { confirmSession, type TrainingStreak } from '@/lib/training-client';
 import { captureIncomingDeepLink, getPendingAction, clearPendingAction, isTrainingConfirmAction } from '@/lib/deep-link';
 import { TrainingShell } from '@/components/training/TrainingShell';
@@ -10,28 +10,7 @@ import { SessionConfirmedScreen } from '@/components/training/SessionConfirmedSc
 import { AdminTrainingPanel } from '@/components/training/AdminTrainingPanel';
 import ClientSwitcher from '@/components/admin/ClientSwitcher';
 import IdentityHeader from '@/components/ui/IdentityHeader';
-
-// Mismo patrón que apps/web/app/onboarding/page.tsx: el JWT ya trae el id del
-// cliente en su payload — decodificarlo evita un round-trip solo para saber
-// "quién soy". La autorización real de cada llamada la sigue haciendo el
-// backend (ownerOrAdmin + requirePermission) sin importar este valor local.
-function decodeClientIdFromToken(token: string): string | null {
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    return typeof payload.id === 'string' ? payload.id : null;
-  } catch {
-    return null;
-  }
-}
-
-function decodeRoleFromToken(token: string): string | null {
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    return typeof payload.role === 'string' ? payload.role : null;
-  } catch {
-    return null;
-  }
-}
+import { showToast } from '@/components/layout/AppShell';
 
 function clientTz(): string {
   try {
@@ -43,33 +22,33 @@ function clientTz(): string {
 
 export default function TrainingPage() {
   const router = useRouter();
-  const [ready, setReady] = useState(false);
-  const [clientId, setClientId] = useState<string | null>(null);
-  const [role, setRole] = useState<string | null>(null);
+  // AppShell ya bloquea el render de esta página hasta que useAuth() termina
+  // de cargar (ver components/layout/AppShell.tsx) — leer directo de acá evita
+  // el doble-render que causaba decodificar el JWT de nuevo en cada page.tsx.
+  const { role, user } = useAuth();
+  const clientId = user?.id ?? null;
+  // Un admin no tiene ficha de cliente propia, así que para él no hace falta
+  // resolver el deep-link/NFC — solo aplica al flujo de auto-servicio de un
+  // cliente real, y por eso sigue siendo un paso async propio de esta página.
+  const [ready, setReady] = useState(role === 'admin');
   const [adminClientId, setAdminClientId] = useState<string | null>(null);
   const [nfcResult, setNfcResult] = useState<{ streak: TrainingStreak; phrase: string | null } | null>(null);
-  const [nfcAlreadyConfirmed, setNfcAlreadyConfirmed] = useState(false);
+  // React (Strict Mode, en dev) vuelve a correr este efecto una segunda vez
+  // al montar. `router.replace('/training')` es asíncrono, así que en esa
+  // segunda pasada `window.location.search` todavía tenía el `?m=...&a=...`
+  // — captureIncomingDeepLink lo volvía a escribir en localStorage y
+  // confirmSession se disparaba dos veces casi en simultáneo (la segunda
+  // llamada terminaba en un error no relacionado con el usuario). Este ref
+  // asegura que la acción NFC se procese una sola vez por instancia de página.
+  const nfcHandledRef = useRef(false);
 
   useEffect(() => {
-    const token = getSessionToken();
-
-    if (!token) {
-      router.push('/login');
-      return;
-    }
-
-    const id = decodeClientIdFromToken(token);
-    setClientId(id);
-
-    // Un admin no tiene ficha de cliente propia — este módulo se convierte en
-    // "elige un cliente y gestiona su entrenamiento" en vez del deep-link/NFC
-    // que solo aplica al flujo de auto-servicio de un cliente real.
-    if (decodeRoleFromToken(token) === 'admin') {
-      setRole('admin');
+    if (role === 'admin') {
       setReady(true);
       return;
     }
-    setRole('cliente');
+    if (role !== 'cliente') return;
+    if (nfcHandledRef.current) return;
 
     captureIncomingDeepLink(window.location.search);
     // Se lee una sola vez y se limpia de inmediato si existe (consumir-o-descartar):
@@ -80,11 +59,12 @@ export default function TrainingPage() {
     const hasNfcAction = isTrainingConfirmAction(pending);
 
     if (hasNfcAction) {
+      nfcHandledRef.current = true;
       router.replace('/training');
-      confirmSession(id ?? '', clientTz(), 'nfc')
+      confirmSession(clientId ?? '', clientTz(), 'nfc')
         .then((result) => {
           if (result.alreadyConfirmedToday) {
-            setNfcAlreadyConfirmed(true);
+            showToast('Ya confirmaste tu sesión de hoy — vuelve mañana para el siguiente día.', 'info');
           } else {
             setNfcResult({ streak: result.streak, phrase: result.phrase });
           }
@@ -100,7 +80,7 @@ export default function TrainingPage() {
     }
 
     setReady(true);
-  }, [router]);
+  }, [role, clientId, router]);
 
   if (!ready) return null;
 
@@ -125,9 +105,6 @@ export default function TrainingPage() {
     );
   }
 
-  if (nfcAlreadyConfirmed) {
-    return <p>Ya confirmaste tu sesión de hoy — vuelve mañana para el siguiente día.</p>;
-  }
   if (nfcResult) {
     return (
       <SessionConfirmedScreen

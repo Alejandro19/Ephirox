@@ -1,31 +1,15 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { getSessionToken } from '@/lib/api-client';
+import { useAuth } from '@/lib/auth-context';
 import { ClientBlindspotPanel } from '@/components/blindspot/ClientBlindspotPanel';
 import { AdminBlindspotPanel } from '@/components/blindspot/AdminBlindspotPanel';
 import IdentityHeader from '@/components/ui/IdentityHeader';
 
-function decodeTokenField<T = string>(token: string, field: string): T | null {
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    return (payload[field] as T) ?? null;
-  } catch {
-    return null;
-  }
-}
-
 export default function BlindspotPage() {
-  const [role, setRole] = useState<string | null>(null);
-  const [clientType, setClientType] = useState<string | null>(null);
-
-  useEffect(() => {
-    const token = getSessionToken();
-    if (token) {
-      setRole(decodeTokenField(token, 'role'));
-      setClientType(decodeTokenField(token, 'clientType'));
-    }
-  }, []);
+  // AppShell ya bloquea el render de esta página hasta que useAuth() termina
+  // de cargar (ver components/layout/AppShell.tsx) — leer directo de acá evita
+  // el doble-render que causaba decodificar el JWT de nuevo en cada page.tsx.
+  const { role, clientType } = useAuth();
 
   if (role === 'admin') {
     return (

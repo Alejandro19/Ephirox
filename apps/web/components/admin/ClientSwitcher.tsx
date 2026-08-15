@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { getSessionToken } from "../../lib/api-client";
+import useSWR from "swr";
+import { fetchClients } from "../../lib/clients-client";
 
 type ClientOption = { id: string; name: string };
 
@@ -11,32 +12,21 @@ type ClientSwitcherProps = {
   onSelect: (clientId: string) => void;
 };
 
-const API_BASE = "http://localhost:3003/api";
-
 export default function ClientSwitcher({
   moduleKey,
   selectedClientId,
   onSelect,
 }: ClientSwitcherProps) {
-  const [clients, setClients] = useState<ClientOption[]>([]);
+  // Clave de caché compartida entre todos los módulos admin (Entrenamiento,
+  // Nutrición, Cortisol, etc.) — cambiar de módulo ya no vuelve a pedir la
+  // lista completa de clientes, SWR la sirve desde caché al instante y
+  // revalida en segundo plano. Usa el mismo helper (lib/clients-client.ts,
+  // NEXT_PUBLIC_API_BASE_URL) que el resto de la app en vez de un fetch
+  // propio con "localhost:3003" hardcodeado, que fallaba fuera de dev local.
+  const { data: clients = [] } = useSWR<ClientOption[]>("admin-clients-list", fetchClients, {
+    revalidateOnFocus: false,
+  });
   const [search, setSearch] = useState("");
-  const [loaded, setLoaded] = useState(false);
-
-  // Fetch clients list once
-  useEffect(() => {
-    if (loaded) return;
-    const token = getSessionToken();
-    if (!token) return;
-    fetch(`${API_BASE}/clients`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.clients) setClients(data.clients);
-      })
-      .catch(() => {})
-      .finally(() => setLoaded(true));
-  }, [loaded]);
 
   // Set initial search value from selected client
   useEffect(() => {

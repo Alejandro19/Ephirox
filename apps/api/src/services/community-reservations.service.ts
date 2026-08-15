@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm';
 import { db } from '../db/index.js';
-import { eventReservations, communityEvents, therapyReservations, communityTherapies, clients, personalInfo } from '../models/schema.js';
+import { eventReservations, communityEvents, therapyReservations, communityTherapies, retreatReservations, communityRetreats, clients, personalInfo } from '../models/schema.js';
 
 function formatPhone(phoneCode: string | null, phoneNumber: string | null): string | null {
   const number = (phoneNumber || '').trim();
@@ -42,7 +42,24 @@ export async function getConfirmedReservations() {
     .leftJoin(communityTherapies, eq(therapyReservations.therapyId, communityTherapies.id))
     .where(eq(therapyReservations.status, 'confirmada'));
 
-  const clientIds = Array.from(new Set([...eventRows.map((r) => r.clientId), ...therapyRows.map((r) => r.clientId)]));
+  const retreatRows = await db
+    .select({
+      id: retreatReservations.id,
+      createdAt: retreatReservations.createdAt,
+      clientId: retreatReservations.clientId,
+      retreatId: retreatReservations.retreatId,
+      clientName: clients.name,
+      retreatTitle: communityRetreats.title,
+      retreatStartDate: communityRetreats.startDate,
+      retreatEndDate: communityRetreats.endDate,
+      retreatLocation: communityRetreats.location,
+    })
+    .from(retreatReservations)
+    .leftJoin(clients, eq(retreatReservations.clientId, clients.id))
+    .leftJoin(communityRetreats, eq(retreatReservations.retreatId, communityRetreats.id))
+    .where(eq(retreatReservations.status, 'confirmada'));
+
+  const clientIds = Array.from(new Set([...eventRows.map((r) => r.clientId), ...therapyRows.map((r) => r.clientId), ...retreatRows.map((r) => r.clientId)]));
   const phoneByClientId = new Map<string, string | null>();
   if (clientIds.length > 0) {
     const infoRows = await db.select().from(personalInfo);
@@ -73,6 +90,17 @@ export async function getConfirmedReservations() {
       therapyTitle: r.therapyTitle || 'Terapia eliminada',
       therapyProvider: r.therapyProvider,
       therapyDiscountPct: r.therapyDiscountPct,
+    })),
+    retreatReservations: retreatRows.map((r) => ({
+      id: r.id,
+      createdAt: r.createdAt,
+      clientName: r.clientName || 'Cliente eliminado',
+      clientPhone: phoneByClientId.get(r.clientId) ?? null,
+      retreatId: r.retreatId,
+      retreatTitle: r.retreatTitle || 'Retiro eliminado',
+      retreatStartDate: r.retreatStartDate,
+      retreatEndDate: r.retreatEndDate,
+      retreatLocation: r.retreatLocation,
     })),
   };
 }

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { renderWithSWR as render } from './swr-test-utils';
 import { ClientBlindspotPanel } from '@/components/blindspot/ClientBlindspotPanel';
 import * as blindspotClient from '@/lib/blindspot-client';
 
@@ -13,7 +14,7 @@ describe('ClientBlindspotPanel', () => {
 
   it('shows a locked state for a non-mentoring client, never calling the API', () => {
     render(<ClientBlindspotPanel clientType="coaching_online" />);
-    expect(screen.getByText('Solo disponible para Mentoría')).toBeInTheDocument();
+    expect(screen.getByText('Solo disponible para Club Elite')).toBeInTheDocument();
   });
 
   it('shows an empty state for a mentoring client with no case yet', async () => {

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { renderWithSWR as render } from './swr-test-utils';
 import { ClientCortisolPanel } from '../components/cortisol/ClientCortisolPanel';
 import * as cortisolClient from '../lib/cortisol-client';
 

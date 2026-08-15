@@ -67,9 +67,28 @@ export async function adminCreateTherapist(req: Request, res: Response) {
 }
 
 export async function adminUpdateTherapist(req: Request, res: Response) {
-  const { active } = req.body as TherapistUpdateInput;
-  await therapistsService.setTherapistActive(req.params.id, active);
-  return ok(res, { message: 'Terapeuta actualizado.' });
+  const input = req.body as TherapistUpdateInput;
+  if (input.email) {
+    const existing = await therapistsService.findTherapistByEmail(input.email.toLowerCase().trim());
+    if (existing && existing.id !== req.params.id) return err(res, 'Ese email ya está registrado como terapeuta.', 409);
+  }
+  const therapist = await therapistsService.updateTherapist(req.params.id, {
+    ...input,
+    email: input.email ? input.email.toLowerCase().trim() : undefined,
+  });
+  if (!therapist) return err(res, 'Terapeuta no encontrado.', 404);
+  return ok(res, { therapist: { id: therapist.id, name: therapist.name, email: therapist.email, specialty: therapist.specialty, phone: therapist.phone, active: therapist.active } });
+}
+
+export async function adminDeleteTherapist(req: Request, res: Response) {
+  try {
+    const deleted = await therapistsService.deleteTherapist(req.params.id);
+    if (!deleted) return err(res, 'Terapeuta no encontrado.', 404);
+    return ok(res, { message: 'Terapeuta eliminado.' });
+  } catch (e) {
+    if (e instanceof therapistsService.TherapistHasCasesError) return err(res, e.message, 409);
+    throw e;
+  }
 }
 
 // ==== TERAPEUTA ====

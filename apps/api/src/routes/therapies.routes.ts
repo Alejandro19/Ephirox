@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import multer from 'multer';
 import { CommunityTherapyInputSchema } from '@latribu/shared-types';
 import { validateBody } from '../middleware/validate.js';
 import { asyncHandler } from '../middleware/async-handler.js';
@@ -6,6 +7,8 @@ import { authMiddleware, adminOnly, ownerOrAdmin } from '../middleware/auth.midd
 import { requireEventsAccess, requireCommunityAccess } from '../middleware/community-access.middleware.js';
 import { requirePermission } from '../middleware/require-permission.middleware.js';
 import * as therapiesController from '../controllers/therapies.controller.js';
+
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 
 export const therapiesRouter = Router();
 
@@ -22,6 +25,14 @@ therapiesRouter.post(
 therapiesRouter.put('/community/therapies/:therapyId', authMiddleware, adminOnly, asyncHandler(therapiesController.updateTherapy));
 
 therapiesRouter.delete('/community/therapies/:therapyId', authMiddleware, adminOnly, asyncHandler(therapiesController.deleteTherapy));
+
+therapiesRouter.post(
+  '/community/therapies/:therapyId/upload-image',
+  authMiddleware,
+  adminOnly,
+  upload.single('image'),
+  asyncHandler(therapiesController.uploadTherapyImage)
+);
 
 therapiesRouter.post(
   '/community/therapies/:therapyId/reserve',

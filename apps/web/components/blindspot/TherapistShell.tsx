@@ -23,7 +23,7 @@ const PLACEHOLDER_COPY: Record<Exclude<TherapistModuleKey, 'casos'>, { title: st
     description: 'Material y guías de apoyo para tu práctica dentro de La Tribu.',
   },
   comunidad: {
-    title: 'Comunidad de terapeutas',
+    title: 'Cuerpo terapéutico del Club',
     description: 'Un espacio para conectar con otros terapeutas de la red de La Tribu.',
   },
   dashboards: {
@@ -57,13 +57,23 @@ export function TherapistShell() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <TherapistTopbar activeModule={activeModule} onNavigate={setActiveModule} />
-      <div style={{ flex: 1, minWidth: 0, padding: '36px 44px', background: 'var(--page-bg)', overflowY: 'auto' }}>
+      <div className="therapist-main-content" style={{ flex: 1, minWidth: 0, background: 'var(--page-bg)', overflowY: 'auto' }}>
         {activeModule === 'casos' ? (
           <TherapistCasesModule />
         ) : (
           <ComingSoon {...PLACEHOLDER_COPY[activeModule]} />
         )}
       </div>
+      <style jsx>{`
+        .therapist-main-content {
+          padding: 36px 44px;
+        }
+        @media (max-width: 640px) {
+          .therapist-main-content {
+            padding: 20px 16px;
+          }
+        }
+      `}</style>
     </div>
   );
 }

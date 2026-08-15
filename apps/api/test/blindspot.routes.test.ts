@@ -223,4 +223,71 @@ describe('blindspot (Punto Ciego) routes', () => {
     expect(res.status).toBe(403);
     await db.delete(therapists).where(eq(therapists.id, inactive.id));
   });
+
+  it('admin edits a therapist\'s name, email, specialty and phone (panel de administración de terapeutas)', async () => {
+    const passwordHash = await hashPassword('editable123');
+    const [editable] = await db
+      .insert(therapists)
+      .values({ name: 'Terapeuta Editable', email: `editable-${Date.now()}@example.com`, passwordHash })
+      .returning();
+
+    const newEmail = `editado-${Date.now()}@example.com`;
+    const res = await request(app)
+      .patch(`/api/blindspot/therapists/${editable.id}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ name: 'Terapeuta Editado', email: newEmail, specialty: 'Coaching Integral', phone: '3009998877' });
+    expect(res.status).toBe(200);
+    expect(res.body.therapist).toMatchObject({ name: 'Terapeuta Editado', email: newEmail, specialty: 'Coaching Integral', phone: '3009998877' });
+
+    await db.delete(therapists).where(eq(therapists.id, editable.id));
+  });
+
+  it('rejects editing a therapist to an email already used by another therapist', async () => {
+    const res = await request(app)
+      .patch(`/api/blindspot/therapists/${therapistBId}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ email: (await db.select().from(therapists).where(eq(therapists.id, therapistAId)))[0].email });
+    expect(res.status).toBe(409);
+  });
+
+  it('admin deletes a therapist with no cases assigned', async () => {
+    const passwordHash = await hashPassword('deleteme123');
+    const [deletable] = await db
+      .insert(therapists)
+      .values({ name: 'Terapeuta Eliminable', email: `eliminable-${Date.now()}@example.com`, passwordHash })
+      .returning();
+
+    const res = await request(app).delete(`/api/blindspot/therapists/${deletable.id}`).set('Authorization', `Bearer ${adminToken}`);
+    expect(res.status).toBe(200);
+
+    const stillThere = await db.select().from(therapists).where(eq(therapists.id, deletable.id));
+    expect(stillThere).toHaveLength(0);
+  });
+
+  it('blocks deleting a therapist who has a Punto Ciego case assigned, with a friendly message', async () => {
+    const caseId = await createAssignedCase();
+    const res = await request(app).delete(`/api/blindspot/therapists/${therapistAId}`).set('Authorization', `Bearer ${adminToken}`);
+    expect(res.status).toBe(409);
+    expect(res.body.error).toMatch(/casos de Punto Ciego asignados/);
+
+    // El terapeuta debe seguir existiendo — el intento de borrado no debe dejarlo a medias.
+    const stillThere = await db.select().from(therapists).where(eq(therapists.id, therapistAId));
+    expect(stillThere).toHaveLength(1);
+
+    await request(app)
+      .patch(`/api/blindspot/cases/${caseId}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ therapistId: null });
+  });
+
+  it('a non-admin cannot edit or delete a therapist', async () => {
+    const patchRes = await request(app)
+      .patch(`/api/blindspot/therapists/${therapistAId}`)
+      .set('Authorization', `Bearer ${mentoringClientToken}`)
+      .send({ name: 'Hackeado' });
+    expect(patchRes.status).toBe(403);
+
+    const deleteRes = await request(app).delete(`/api/blindspot/therapists/${therapistAId}`).set('Authorization', `Bearer ${mentoringClientToken}`);
+    expect(deleteRes.status).toBe(403);
+  });
 });

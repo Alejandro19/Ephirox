@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
+import { screen, fireEvent, waitFor, within } from '@testing-library/react';
+import { renderWithSWR as render } from './swr-test-utils';
 import { AdminTrainingPanel } from '../components/training/AdminTrainingPanel';
 import type { Exercise } from '../lib/training-client';
 import * as trainingClient from '../lib/training-client';

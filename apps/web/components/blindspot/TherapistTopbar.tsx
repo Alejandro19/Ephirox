@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { getSessionToken, decodeTokenPayload, clearSession } from '@/lib/api-client';
+import BrandRing from '../ui/BrandRing';
 import { THERAPIST_NAV, type TherapistModuleKey } from './therapist-nav';
 
 const COLLAPSE_BREAKPOINT = 1280;
@@ -58,17 +59,27 @@ export default function TherapistTopbar({
           background: 'linear-gradient(135deg, var(--hero-piedra-start), var(--hero-piedra-end))',
         }}
       >
-        <span
+        <button
+          onClick={() => navigate('casos')}
+          aria-label="Ir al menú principal"
           style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
             fontFamily: 'Fraunces, Georgia, serif',
             fontSize: 19,
             fontWeight: 700,
             color: 'var(--hero-piedra-text)',
             flexShrink: 0,
+            background: 'none',
+            border: 'none',
+            padding: 0,
+            cursor: 'pointer',
           }}
         >
+          <BrandRing size={24} background="var(--hero-piedra-start)" />
           La Tribu
-        </span>
+        </button>
 
         <nav className="therapist-nav-row" style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
           {THERAPIST_NAV.map((item) => {
@@ -96,7 +107,7 @@ export default function TherapistTopbar({
           })}
         </nav>
 
-        <div className="therapist-topbar-actions" style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+        <div className="therapist-topbar-actions" style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, marginLeft: 'auto' }}>
           <div ref={accountRef} style={{ position: 'relative' }}>
             <button
               onClick={() => setAccountOpen((v) => !v)}
@@ -162,7 +173,7 @@ export default function TherapistTopbar({
         style={{
           position: 'fixed', top: 0, right: 0, bottom: 0, width: '82vw', maxWidth: 300,
           background: 'var(--page-bg)', zIndex: 110, padding: '24px 20px',
-          transform: 'translateX(100%)', transition: 'transform 0.28s ease',
+          transition: 'transform 0.28s ease',
           display: 'flex', flexDirection: 'column', gap: 4,
         }}
       >
@@ -216,6 +227,9 @@ export default function TherapistTopbar({
         }
         .therapist-nav-tab.active::after {
           width: calc(100% - 24px);
+        }
+        .therapist-drawer {
+          transform: translateX(100%);
         }
         .therapist-drawer.open {
           transform: translateX(0);

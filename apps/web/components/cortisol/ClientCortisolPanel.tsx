@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import useSWR from 'swr';
 import {
   listTechniques,
   listCompletions,
@@ -9,8 +10,6 @@ import {
   postCheckin,
   getTipOfTheDay,
   type CortisolTechnique,
-  type CortisolTip,
-  type CortisolCheckin,
   type CortisolCompletion,
 } from '../../lib/cortisol-client';
 import { youtubeEmbedUrl } from '../../lib/training-timer-logic';
@@ -121,58 +120,47 @@ function CortisolPlayer({
   );
 }
 
+async function fetchCortisolBundle(clientId: string) {
+  const [techniques, completions, tip, checkin] = await Promise.all([
+    listTechniques(clientId),
+    listCompletions(clientId).catch(() => [] as CortisolCompletion[]),
+    getTipOfTheDay(clientId),
+    getTodayCheckin(clientId),
+  ]);
+  return { techniques, completions, tip, checkin };
+}
+
 export function ClientCortisolPanel({ clientId }: { clientId: string }) {
-  const [techniques, setTechniques] = useState<CortisolTechnique[]>([]);
-  const [completions, setCompletions] = useState<CortisolCompletion[]>([]);
-  const [tip, setTip] = useState<CortisolTip>(null);
-  const [checkin, setCheckin] = useState<CortisolCheckin>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data, error, isLoading, mutate } = useSWR(['cortisol-bundle', clientId], () =>
+    fetchCortisolBundle(clientId),
+  );
+  const [actionError, setActionError] = useState<string | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
-
-  async function refetch() {
-    const [techniqueList, completionList, tipOfDay, todayCheckin] = await Promise.all([
-      listTechniques(clientId),
-      listCompletions(clientId).catch(() => []),
-      getTipOfTheDay(clientId),
-      getTodayCheckin(clientId),
-    ]);
-    setTechniques(techniqueList);
-    setCompletions(completionList);
-    setTip(tipOfDay);
-    setCheckin(todayCheckin);
-  }
-
-  useEffect(() => {
-    refetch()
-      .catch((e: Error) => setError(e.message))
-      .finally(() => setLoading(false));
-  }, [clientId]);
 
   async function handleSelectEmotion(key: string) {
     try {
       const saved = await postCheckin(clientId, key);
-      setCheckin(saved);
+      await mutate((current) => (current ? { ...current, checkin: saved } : current), { revalidate: false });
     } catch (e) {
-      setError((e as Error).message);
+      setActionError((e as Error).message);
     }
   }
 
   async function handleComplete(techniqueId: string) {
     try {
       await markCompletion(clientId);
-      const completionList = await listCompletions(clientId).catch(() => completions);
-      setCompletions(completionList);
+      const completionList = await listCompletions(clientId).catch(() => data?.completions ?? []);
+      await mutate((current) => (current ? { ...current, completions: completionList } : current), { revalidate: false });
     } catch (e) {
-      setError((e as Error).message);
+      setActionError((e as Error).message);
     }
     void techniqueId;
   }
 
   const header = <IdentityHeader title="Gestión de Cortisol" subtitle="Es momento de bajar el ritmo." />;
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div>
         {header}
@@ -180,15 +168,18 @@ export function ClientCortisolPanel({ clientId }: { clientId: string }) {
       </div>
     );
   }
-  if (error) {
+  const errorMessage = actionError || (error ? (error as Error).message : null);
+  if (errorMessage) {
     return (
       <div>
         {header}
-        <p role="alert" className="text-[var(--danger)]">{error}</p>
+        <p role="alert" className="text-[var(--danger)]">{errorMessage}</p>
       </div>
     );
   }
+  if (!data) return null;
 
+  const { techniques, completions, tip, checkin } = data;
   const active = activeId ? techniques.find((t) => t.id === activeId) : null;
   if (active) {
     const todayStr = new Date().toISOString().slice(0, 10);

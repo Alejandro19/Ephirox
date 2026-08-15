@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { renderWithSWR as render } from './swr-test-utils';
 import { AdminRestPanel } from '../components/rest/AdminRestPanel';
 import * as sleepClient from '../lib/sleep-client';
 import * as clientsClient from '../lib/clients-client';

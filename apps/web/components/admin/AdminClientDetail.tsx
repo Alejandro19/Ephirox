@@ -105,7 +105,7 @@ export default function AdminClientDetail({ clientId }: { clientId: string }) {
       {/* Cuenta card */}
       <div style={cardStyle}>
         <h3 style={cardTitleStyle}>Cuenta</h3>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 20 }}>
           <div>
             <span style={labelStyle}>Estado</span>
             <span style={{ display: "inline-block", padding: "4px 12px",
@@ -174,31 +174,6 @@ export default function AdminClientDetail({ clientId }: { clientId: string }) {
           </div>
         </div>
       )}
-      {/* Módulos asignados card */}
-      <div style={cardStyle}>
-        <h3 style={cardTitleStyle}>Módulos asignados</h3>
-        {[
-          { key: "personal-info", label: "Información Personal", desc: "Respuestas del formulario inicial" },
-          { key: "training", label: "Entrenamiento", desc: client.training_days ? `${client.training_days} día(s)/semana` : "Sin configurar" },
-          { key: "nutrition", label: "Nutrición", desc: "Plan y suplementación" },
-          { key: "cortisol", label: "Gestión de Cortisol", desc: "Técnicas y constancia" },
-          { key: "rest", label: "Hackeando el sueño", desc: "Protocolo de sueño" },
-          { key: "evolution", label: "Mi Evolución", desc: "Progreso y check-ins" },
-        ].map((mod) => (
-          <div key={mod.key} style={{ display: "flex", alignItems: "center",
-            justifyContent: "space-between", padding: "12px 0",
-            borderBottom: "1px solid var(--border-hairline)" }}>
-            <div>
-              <strong style={{ fontSize: 13, color: "var(--ink)" }}>{mod.label}</strong>
-              <div style={{ fontSize: 12, color: "var(--ink-secondary)", marginTop: 2 }}>{mod.desc}</div>
-            </div>
-            <span style={{ display: "inline-flex", padding: "4px 12px",
-              borderRadius: "9999px", fontSize: 11, fontWeight: 600,
-              background: "rgba(201,166,107,.14)", color: "var(--ring-accent)" }}>Ver</span>
-          </div>
-        ))}
-      </div>
-
       {/* Resumen onboarding */}
       <div style={cardStyle}>
         <h3 style={cardTitleStyle}>Resumen de onboarding</h3>

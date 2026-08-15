@@ -5,7 +5,6 @@ import {
   monthlyAverages,
   getKpiStatus,
   getWellnessTrendStatus,
-  computeWellnessIndex,
 } from '../lib/evolution-logic';
 import type { EvolutionCheckin } from '../lib/evolution-client';
 
@@ -78,21 +77,5 @@ describe('getWellnessTrendStatus', () => {
     expect(getWellnessTrendStatus(1)).toBe('good');
     expect(getWellnessTrendStatus(-1)).toBe('watch');
     expect(getWellnessTrendStatus(0)).toBe('neutral');
-  });
-});
-
-describe('computeWellnessIndex', () => {
-  it('weighs training 40%, sleep 30% and cortisol 30% when all three are present', () => {
-    // trainingPct=100 -> 100, sleepAvg=5 -> 100, cortisolAvg=5 -> 100
-    expect(computeWellnessIndex({ trainingPct: 100, sleepAvg: 5, cortisolAvg: 5 })).toBe(100);
-  });
-
-  it('redistributes weight and excludes components with no data instead of counting them as zero', () => {
-    // Only sleepAvg present, scored 100 -> full weight, index should be 100 not 30.
-    expect(computeWellnessIndex({ trainingPct: null, sleepAvg: 5, cortisolAvg: null })).toBe(100);
-  });
-
-  it('returns null when no component has data', () => {
-    expect(computeWellnessIndex({ trainingPct: null, sleepAvg: null, cortisolAvg: null })).toBeNull();
   });
 });

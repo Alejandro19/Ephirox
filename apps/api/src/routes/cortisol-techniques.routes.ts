@@ -5,6 +5,7 @@ import { validateBody } from '../middleware/validate.js';
 import { asyncHandler } from '../middleware/async-handler.js';
 import { authMiddleware, adminOnly, ownerOrAdmin } from '../middleware/auth.middleware.js';
 import { requirePermission } from '../middleware/require-permission.middleware.js';
+import { revalidateCache } from '../middleware/cache-control.middleware.js';
 import * as techniquesController from '../controllers/cortisol-techniques.controller.js';
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 100 * 1024 * 1024 } });
@@ -16,6 +17,7 @@ cortisolTechniquesRouter.get(
   authMiddleware,
   ownerOrAdmin,
   requirePermission('cortisol'),
+  revalidateCache,
   asyncHandler(techniquesController.listTechniques)
 );
 

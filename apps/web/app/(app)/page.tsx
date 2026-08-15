@@ -2,6 +2,8 @@
 
 import { useAuth } from "@/lib/auth-context";
 import { VIEW_TO_PATH } from "@/lib/constants";
+import { MemberCard } from "@/components/member/MemberCard";
+import { WellnessIndexCard } from "@/components/home/WellnessIndexCard";
 import Link from "next/link";
 
 export default function InicioPage() {
@@ -14,12 +16,12 @@ export default function InicioPage() {
     ? [
         { key: "admin-clients", label: "Clientes", desc: "Gestionar clientes y permisos" },
         { key: "admin-quotes", label: "Frases", desc: "Administrar frases motivacionales" },
-        { key: "community", label: "Comunidad Wellness", desc: "Gestionar eventos y terapias" },
+        { key: "community", label: "Club Wellness", desc: "Gestionar eventos y terapias" },
       ]
     : [
         { key: "training", label: "Entrenamiento", desc: "Tu plan de entrenamiento diario" },
         { key: "nutrition", label: "Nutrición", desc: "Plan alimenticio y comidas" },
-        { key: "community", label: "Comunidad Wellness", desc: "Eventos y terapias grupales" },
+        { key: "community", label: "Club Wellness", desc: "Eventos y terapias grupales" },
       ];
 
   return (
@@ -43,6 +45,9 @@ export default function InicioPage() {
             : "Tu espacio de bienestar y alto rendimiento"}
         </p>
       </div>
+
+      {!isAdmin && user?.id && clientType !== "lead_wellness" && <WellnessIndexCard clientId={user.id} />}
+      {!isAdmin && user?.id && <MemberCard clientId={user.id} />}
 
       {/* Quick-access cards grid — Oura style: no shadow, subtle border, pill-radius */}
       <div

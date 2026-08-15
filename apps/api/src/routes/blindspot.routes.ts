@@ -27,6 +27,7 @@ blindspotRouter.patch('/cases/:id/crisis/acknowledge', authMiddleware, adminOnly
 blindspotRouter.get('/therapists', authMiddleware, adminOnly, asyncHandler(blindspotController.adminListTherapists));
 blindspotRouter.post('/therapists', authMiddleware, adminOnly, validateBody(TherapistCreateSchema), asyncHandler(blindspotController.adminCreateTherapist));
 blindspotRouter.patch('/therapists/:id', authMiddleware, adminOnly, validateBody(TherapistUpdateSchema), asyncHandler(blindspotController.adminUpdateTherapist));
+blindspotRouter.delete('/therapists/:id', authMiddleware, adminOnly, asyncHandler(blindspotController.adminDeleteTherapist));
 
 // ==== TERAPEUTA ====
 blindspotRouter.get('/therapist/cases', authMiddleware, therapistOnly, asyncHandler(blindspotController.therapistListCases));

@@ -5,6 +5,9 @@ import CortisolPage from '../app/(app)/cortisol/page';
 vi.mock('../lib/api-client', () => ({
   getSessionToken: () => 'header.eyJpZCI6ImNsaWVudC0xIn0.signature',
 }));
+vi.mock('../lib/auth-context', () => ({
+  useAuth: () => ({ role: 'cliente', user: { id: 'client-1', name: '', email: '' } }),
+}));
 vi.mock('../lib/cortisol-client', () => ({
   listTechniques: vi.fn().mockResolvedValue([]),
   listCompletions: vi.fn().mockResolvedValue([]),

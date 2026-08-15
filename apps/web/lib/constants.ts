@@ -20,7 +20,7 @@ export const CLIENT_NAV: NavItem[] = [
   { key: "cortisol", label: "Gestión de Cortisol", visible: (s) => s.clientType === "lead_wellness" ? true : s.onboardingComplete === true },
   { key: "rest", label: "Hackeando el sueño", visible: (s) => s.clientType === "lead_wellness" ? true : s.onboardingComplete === true },
   { key: "blindspot", label: "Punto Ciego", visible: (s) => s.clientType === "lead_wellness" ? true : s.onboardingComplete === true },
-  { key: "community", label: "Comunidad Wellness", visible: (s) => s.clientType === "lead_wellness" ? true : s.onboardingComplete === true },
+  { key: "community", label: "Club Wellness", visible: (s) => s.clientType === "lead_wellness" ? true : s.onboardingComplete === true },
   { key: "evolution", label: "Mi Evolución", visible: (s) => s.clientType === "lead_wellness" ? true : s.onboardingComplete === true },
 ];
 
@@ -32,11 +32,11 @@ export const ADMIN_NAV: NavItem[] = [
   { key: "rest", label: "Hackeando el sueño" },
   { key: "blindspot", label: "Punto Ciego" },
   { key: "evolution", label: "Mi Evolución" },
-  { key: "community", label: "Comunidad Wellness" },
+  { key: "community", label: "Club Wellness" },
 ];
 
 export const ADMIN_HUB_SUBITEMS: NavItem[] = [
-  { key: "admin-clients", label: "Clientes" },
+  { key: "admin-clients", label: "Crear Usuario" },
   { key: "admin-quotes", label: "Frases" },
   { key: "admin-roles", label: "Roles y Perfiles" },
 ];
@@ -46,6 +46,16 @@ export const CLIENT_TYPE_LABELS: Record<string, string> = {
   coaching_online: "Coaching Online",
   lead_wellness: "Leads Wellness",
   mentoring: "Mentoring",
+};
+
+// Nombres cara-al-cliente (member card, candados de nivel, copy de
+// membresía) — nunca en pantallas de admin, que siguen usando
+// CLIENT_TYPE_LABELS (las categorías internas de Roles y Perfiles).
+export const MEMBERSHIP_LABELS: Record<string, string> = {
+  lead_wellness: "Club Explorador",
+  coaching_online: "Club Online",
+  coaching_1_1: "Club Presencial",
+  mentoring: "Club Elite",
 };
 
 

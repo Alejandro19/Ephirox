@@ -20,8 +20,8 @@ export default function ChevronStepper({
   return (
     <div>
       {label && (
-        <div style={{ display: "flex", alignItems: "center", fontSize: 12, fontWeight: 400,
-          color: "var(--ink-secondary)", marginBottom: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", fontSize: 12, lineHeight: "16px", fontWeight: 400,
+          color: "var(--ink-secondary)", marginBottom: 4 }}>
           <label htmlFor={outputId}>{label}</label>
         </div>
       )}

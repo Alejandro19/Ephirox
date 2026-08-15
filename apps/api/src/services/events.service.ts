@@ -30,7 +30,12 @@ export async function updateEvent(eventId: string, input: Partial<CommunityEvent
   const [event] = await db.update(communityEvents).set({
     title: input.title ?? undefined,
     description: input.description ?? undefined,
-    eventDate: input.event_date ? new Date(input.event_date) : null,
+    // `event_date` ausente (undefined) = no tocar; string vacío = borrar
+    // intencionalmente a NULL; string con valor = actualizar. Antes esto
+    // era un ternario sin rama `undefined`, así que CUALQUIER update
+    // parcial que no repitiera event_date (ej. el toggle de "Desactivar")
+    // borraba la fecha del evento sin querer.
+    eventDate: input.event_date !== undefined ? (input.event_date ? new Date(input.event_date) : null) : undefined,
     location: input.location ?? undefined,
     capacity: input.capacity ?? undefined,
     imageUrl: input.image_url ?? undefined,
@@ -42,6 +47,14 @@ export async function updateEvent(eventId: string, input: Partial<CommunityEvent
 
 export async function deleteEvent(eventId: string): Promise<void> {
   await db.delete(communityEvents).where(eq(communityEvents.id, eventId));
+}
+
+// Update dedicado a solo `imageUrl` — updateEvent() de arriba pisa eventDate
+// a NULL en cualquier update parcial que no repita event_date (ternario sin
+// rama `undefined`), así que no sirve para un patch de un solo campo.
+export async function setEventImage(eventId: string, imageUrl: string): Promise<CommunityEvent | null> {
+  const [event] = await db.update(communityEvents).set({ imageUrl }).where(eq(communityEvents.id, eventId)).returning();
+  return event ?? null;
 }
 
 export async function reserveEvent(eventId: string, clientId: string): Promise<{ reservation: EventReservation | null; conflict: boolean }> {

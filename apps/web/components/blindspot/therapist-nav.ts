@@ -13,6 +13,6 @@ export const THERAPIST_NAV: { key: TherapistModuleKey; label: string }[] = [
   { key: 'clientes', label: 'Mis clientes' },
   { key: 'agenda', label: 'Mi agenda' },
   { key: 'recursos', label: 'Recursos clínicos' },
-  { key: 'comunidad', label: 'Comunidad de terapeutas' },
+  { key: 'comunidad', label: 'Cuerpo terapéutico del Club' },
   { key: 'dashboards', label: 'Dashboards' },
 ];

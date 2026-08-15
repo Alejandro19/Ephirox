@@ -131,7 +131,7 @@ export default function TherapistLoginPage(): React.ReactElement {
             />
             <BrandRing size={64} />
             <h1 className="relative z-[1] font-serif text-2xl font-bold mt-[18px] mb-1.5" style={{ color: '#F5EFE2' }}>La Tribu</h1>
-            <p className="relative z-[1] font-serif italic text-[12.5px]" style={{ color: '#B0A296' }}>Comunidad de bienestar y alto rendimiento.</p>
+            <p className="relative z-[1] font-serif italic text-[12.5px]" style={{ color: '#B0A296' }}>Club de bienestar y alto rendimiento.</p>
           </div>
 
           {/* ========== LADO DERECHO — FORMULARIO ========== */}

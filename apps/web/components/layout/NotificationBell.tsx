@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "../../lib/auth-context";
 import { getSessionToken } from "../../lib/api-client";
 import { IconBell } from "../ui/icons";
@@ -13,9 +14,10 @@ type NotificationItem = {
   clientId?: string;
 };
 
-const API_BASE = "http://localhost:3003/api";
+const API_BASE = `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3003"}/api`;
 
 export default function NotificationBell() {
+  const router = useRouter();
   const { role, user } = useAuth();
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
@@ -126,14 +128,13 @@ export default function NotificationBell() {
         )}
       </button>
 
-      {/* Dropdown panel — Oura card style: no shadow, subtle border, pill-radius */}
+      {/* Dropdown panel — Oura card style: no shadow, subtle border, pill-radius.
+          Fixed + inset en mobile (en vez de absolute/right:0 anclado al ícono)
+          para que nunca se salga de la pantalla en viewports angostos. */}
       {open && (
         <div
+          className="notif-dropdown"
           style={{
-            position: "absolute",
-            top: 36,
-            right: 0,
-            width: 320,
             background: "var(--paper)",
             border: "1px solid var(--border-hairline)",
             borderRadius: "var(--radius-card)",
@@ -180,12 +181,16 @@ export default function NotificationBell() {
                   </span>
                   <span style={{ display: "flex", gap: 8 }}>
                     {role === "admin" && n.clientId && (
-                      <a
-                        href={`/admin/clients/${n.clientId}`}
-                        style={{ fontSize: 10, fontWeight: 600, color: "var(--ring-accent)", textDecoration: "none" }}
+                      <button
+                        type="button"
+                        onClick={() => { setOpen(false); router.push(`/admin/clients/${n.clientId}`); }}
+                        style={{
+                          background: "none", border: "none", padding: 0, cursor: "pointer",
+                          fontSize: 10, fontWeight: 600, color: "var(--ring-accent)", textDecoration: "none",
+                        }}
                       >
                         Ver cliente
-                      </a>
+                      </button>
                     )}
                     {!n.read && (
                       <button
@@ -205,6 +210,24 @@ export default function NotificationBell() {
           )}
         </div>
       )}
+
+      <style jsx>{`
+        .notif-dropdown {
+          position: absolute;
+          top: 36px;
+          right: 0;
+          width: 320px;
+        }
+        @media (max-width: 480px) {
+          .notif-dropdown {
+            position: fixed;
+            top: 72px;
+            left: 12px;
+            right: 12px;
+            width: auto;
+          }
+        }
+      `}</style>
     </div>
   );
 }

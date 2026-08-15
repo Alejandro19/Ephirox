@@ -1,12 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
+import { renderWithSWR as render } from './swr-test-utils';
 import TrainingPage from '../app/(app)/training/page';
-import * as apiClient from '../lib/api-client';
+import { showToast } from '../components/layout/AppShell';
 import * as trainingClient from '../lib/training-client';
-import { confirmSession } from '../lib/training-client';
 import { clearPendingAction } from '../lib/deep-link';
 
 vi.mock('../lib/training-client');
+vi.mock('../lib/auth-context', () => ({
+  useAuth: () => ({ role: 'cliente', user: { id: 'client-1', name: '', email: '' } }),
+}));
+vi.mock('../components/layout/AppShell', () => ({ showToast: vi.fn() }));
 
 const pushMock = vi.fn();
 const replaceMock = vi.fn();
@@ -16,6 +20,7 @@ vi.mock('next/navigation', () => ({
 
 describe('TrainingPage', () => {
   beforeEach(() => {
+    vi.clearAllMocks();
     pushMock.mockClear();
     clearPendingAction();
     vi.mocked(trainingClient.getClientTrainingDays).mockResolvedValue(0);
@@ -31,20 +36,12 @@ describe('TrainingPage', () => {
     });
   });
 
-  it('redirects to /login when there is no session token', () => {
-    vi.spyOn(apiClient, 'getSessionToken').mockReturnValue(null);
-    render(<TrainingPage />);
-    expect(pushMock).toHaveBeenCalledWith('/login');
-  });
-
-  it('renders the training home once a session token is present', async () => {
-    vi.spyOn(apiClient, 'getSessionToken').mockReturnValue('fake-token');
+  it('renders the training home once the session is resolved', async () => {
     render(<TrainingPage />);
     await screen.findByText('Entrenamiento');
   });
 
   it('executes the NFC confirmation immediately when m/a query params are present and a session exists', async () => {
-    vi.spyOn(apiClient, 'getSessionToken').mockReturnValue('fake-token');
     vi.mocked(trainingClient.confirmSession).mockResolvedValue({
       alreadyConfirmedToday: false,
       dayNumber: 1,
@@ -60,7 +57,6 @@ describe('TrainingPage', () => {
   });
 
   it('consumes a pending action from localStorage (no query params) when a session exists', async () => {
-    vi.spyOn(apiClient, 'getSessionToken').mockReturnValue('fake-token');
     vi.mocked(trainingClient.confirmSession).mockResolvedValue({
       alreadyConfirmedToday: false,
       dayNumber: 1,
@@ -76,8 +72,7 @@ describe('TrainingPage', () => {
     expect(window.localStorage.getItem('lt_pending_action')).toBeNull();
   });
 
-  it('shows "Ya confirmaste tu sesión de hoy" (not the celebration screen) when the NFC confirm reports alreadyConfirmedToday', async () => {
-    vi.spyOn(apiClient, 'getSessionToken').mockReturnValue('fake-token');
+  it('shows a toast (not the celebration screen) when the NFC confirm reports alreadyConfirmedToday', async () => {
     vi.mocked(trainingClient.confirmSession).mockResolvedValue({
       alreadyConfirmedToday: true,
       dayNumber: null,
@@ -88,12 +83,15 @@ describe('TrainingPage', () => {
 
     render(<TrainingPage />);
 
-    expect(await screen.findByText('Ya confirmaste tu sesión de hoy — vuelve mañana para el siguiente día.')).toBeInTheDocument();
+    await waitFor(() =>
+      expect(showToast).toHaveBeenCalledWith('Ya confirmaste tu sesión de hoy — vuelve mañana para el siguiente día.', 'info'),
+    );
     expect(screen.queryByText('¡Sesión confirmada!')).not.toBeInTheDocument();
+    // Cae al home normal (TrainingShell) en vez de reemplazar toda la página por el aviso.
+    expect(await screen.findByText('Entrenamiento')).toBeInTheDocument();
   });
 
   it('falls through to TrainingShell (never a dead-end alert) when the NFC confirm-session call fails', async () => {
-    vi.spyOn(apiClient, 'getSessionToken').mockReturnValue('fake-token');
     vi.mocked(trainingClient.confirmSession).mockRejectedValue(new Error('403'));
     window.history.pushState({}, '', '/training?m=entrenamiento&a=confirmar');
 

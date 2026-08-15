@@ -21,21 +21,23 @@ export default function SliderField({
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between",
-        alignItems: "center", marginBottom: 8 }}>
+        alignItems: "center", lineHeight: "16px", marginBottom: 4 }}>
         {label && (
-          <div style={{ display: "inline-flex", alignItems: "center", fontSize: 12, fontWeight: 400, color: "var(--ink-secondary)" }}>
+          <div style={{ display: "inline-flex", alignItems: "center", fontSize: 12, lineHeight: "16px", fontWeight: 400, color: "var(--ink-secondary)" }}>
             <label htmlFor={sliderId} style={{ cursor: "pointer" }}>{label}</label>
           </div>
         )}
-        <span style={{ fontSize: 14.5, fontWeight: 600, color: "var(--ink)" }}>{value}</span>
+        <span style={{ fontSize: 14.5, lineHeight: "16px", fontWeight: 600, color: "var(--ink)" }}>{value}</span>
       </div>
-      <input
-        type="range"
-        id={sliderId}
-        min={min} max={max} value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
-        style={{ width: "100%", accentColor: "var(--ring-accent)" }}
-      />
+      <div style={{ height: 36, display: "flex", alignItems: "center", boxSizing: "border-box" }}>
+        <input
+          type="range"
+          id={sliderId}
+          min={min} max={max} value={value}
+          onChange={(e) => onChange(Number(e.target.value))}
+          style={{ width: "100%", accentColor: "var(--ring-accent)" }}
+        />
+      </div>
       {(minLabel || maxLabel) && (
         <div style={{ display: "flex", justifyContent: "space-between",
           fontSize: 9, color: "var(--ink-secondary)", marginTop: 4 }}>

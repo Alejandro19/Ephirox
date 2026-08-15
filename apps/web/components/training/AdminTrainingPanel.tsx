@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import useSWR from 'swr';
 import {
   type Exercise,
   type ExerciseInput,
@@ -12,7 +13,7 @@ import {
   deleteExercise,
   updateTrainingDays,
 } from '../../lib/training-client';
-import { type MindsetQuote, listQuotes, getClientAssignedQuoteId, assignQuote } from '../../lib/quotes-client';
+import { listQuotes, getClientAssignedQuoteId, assignQuote } from '../../lib/quotes-client';
 import { CATEGORY_LABELS } from './TrainingVisuals';
 import { AdminAchievementsPanel } from './AdminAchievementsPanel';
 import { showToast } from '../layout/AppShell';
@@ -233,15 +234,23 @@ function RowView({ row, onChange, onEdit, onConfirm, onCancel, onDelete }: RowVi
   );
 }
 
+async function fetchTrainingAdminBundle(clientId: string) {
+  const [trainingDays, exercises, quotes, assignedQuoteId] = await Promise.all([
+    getClientTrainingDays(clientId),
+    listExercises(clientId),
+    listQuotes(),
+    getClientAssignedQuoteId(clientId),
+  ]);
+  return { trainingDays, exercises, quotes, assignedQuoteId };
+}
+
 export function AdminTrainingPanel({ clientId }: AdminTrainingPanelProps) {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data, error, isLoading: loading, mutate } = useSWR(['training-admin-bundle', clientId], () =>
+    fetchTrainingAdminBundle(clientId),
+  );
   const [saving, setSaving] = useState(false);
 
-  const [trainingDaysServer, setTrainingDaysServer] = useState(0);
   const [trainingDaysDraft, setTrainingDaysDraft] = useState(0);
-  const [quotes, setQuotes] = useState<MindsetQuote[]>([]);
-  const [assignedQuoteServer, setAssignedQuoteServer] = useState<string | null>(null);
   const [assignedQuoteDraft, setAssignedQuoteDraft] = useState('');
 
   const [rows, setRows] = useState<RowDraft[]>([]);
@@ -249,29 +258,22 @@ export function AdminTrainingPanel({ clientId }: AdminTrainingPanelProps) {
   const rowBeforeEdit = useRef<Record<string, RowDraft>>({});
   const draftCounter = useRef(0);
 
-  const refetch = useCallback(async () => {
-    const [days, list, quoteList, assignedId] = await Promise.all([
-      getClientTrainingDays(clientId),
-      listExercises(clientId),
-      listQuotes(),
-      getClientAssignedQuoteId(clientId),
-    ]);
-    setTrainingDaysServer(days);
-    setTrainingDaysDraft(days);
-    setQuotes(quoteList);
-    setAssignedQuoteServer(assignedId);
-    setAssignedQuoteDraft(assignedId ?? '');
-    setRows(list.map(toRowDraft));
+  useEffect(() => {
+    if (!data) return;
+    setTrainingDaysDraft(data.trainingDays);
+    setAssignedQuoteDraft(data.assignedQuoteId ?? '');
+    setRows(data.exercises.map(toRowDraft));
     setPendingDeleteIds([]);
     rowBeforeEdit.current = {};
-  }, [clientId]);
+  }, [data]);
 
-  useEffect(() => {
-    setLoading(true);
-    refetch()
-      .catch((e: Error) => setError(e.message))
-      .finally(() => setLoading(false));
-  }, [refetch]);
+  const trainingDaysServer = data?.trainingDays ?? 0;
+  const assignedQuoteServer = data?.assignedQuoteId ?? null;
+  const quotes = data?.quotes ?? [];
+
+  async function refetch() {
+    await mutate();
+  }
 
   function handleAddRow() {
     draftCounter.current += 1;
@@ -365,7 +367,7 @@ export function AdminTrainingPanel({ clientId }: AdminTrainingPanelProps) {
   }
 
   if (loading) return <p style={{ color: 'var(--ink-secondary)' }}>Cargando…</p>;
-  if (error) return <p style={{ color: 'var(--danger)' }}>{error}</p>;
+  if (error) return <p style={{ color: 'var(--danger)' }}>{(error as Error).message}</p>;
 
   return (
     <div>

@@ -9,6 +9,7 @@ type RingProgressProps = {
   size?: number;
   strokeWidth?: number;
   color?: RingProgressColor;
+  trackColor?: string;
   children?: ReactNode;
 };
 
@@ -24,6 +25,7 @@ export default function RingProgress({
   size = 64,
   strokeWidth = 5,
   color = "piedra",
+  trackColor = "var(--border-hairline)",
   children,
 }: RingProgressProps) {
   const pct = Math.max(0, Math.min(100, value));
@@ -52,7 +54,7 @@ export default function RingProgress({
         )}
         <circle
           cx={size / 2} cy={size / 2} r={r}
-          fill="none" stroke="var(--border-hairline)" strokeWidth={strokeWidth}
+          fill="none" stroke={trackColor} strokeWidth={strokeWidth}
         />
         <circle
           cx={size / 2} cy={size / 2} r={r}
