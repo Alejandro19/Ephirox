@@ -1,6 +1,6 @@
 # session-memory.md
 
-> **Última actualización:** 2026-08-15
+> **Última actualización:** 2026-08-18
 > **Propósito:** Resumen ejecutivo por sesión (orden cronológico) y plan de continuidad inmediato para la siguiente sesión.
 
 ---
@@ -424,6 +424,65 @@ Todo lo de esta sesión (167 archivos) se commiteó en un solo commit sobre `bac
 
 ---
 
+## Resumen Ejecutivo — Sesión 2026-08-18 — Módulo de cuenta (perfil/membresía/privacidad) y pago digital con Stripe
+
+### 1. Integración de `AceptacionRegistro` + `PanelConfiguracion` en un módulo de cuenta real
+
+`PanelConfiguracion.jsx` (creado en otra sesión como mock 100% estático) se movió a `components/account/` y se conectó de punta a punta:
+- **Perfil**: `PUT /api/clients/:id` (ya existía) ganó validación de email duplicado, que no tenía — un cliente podía pisar el email de otro sin aviso, solo fallaba con un error crudo de Postgres.
+- **Membresía**: reusa la misma key SWR de `MemberCard.tsx` (`['client-detail-for-member-card', clientId]`) — cero fetch nuevo.
+- **Privacidad y datos**: lectura nueva de `legal_acceptances` (antes solo se podía insertar, nunca leer) vía `apps/api/src/services/account.service.ts`; "Actualizar mi autorización" reabre el `AceptacionRegistro.jsx` real en vez de duplicar el formulario de consentimiento. "Descargar mis datos" es un export mínimo (perfil + membresía + historial legal) a propósito — mediciones/Oura/nutrición quedaron fuera de alcance por decisión explícita.
+- **Dispositivos**: reusa `wearable-client.ts` ya existente (conectar/desconectar Oura).
+- **Notificaciones**: columna nueva `notification_preferences` (jsonb) en `clients` — lo único genuinamente nuevo del módulo, según lo esperado.
+- **Solicitud de eliminación de cuenta**: columna nueva `deletion_requested_at`, idempotente, visible en `admin/clientes` (lista y detalle) con botón "Marcar como resuelta". No dispara ningún borrado real — es evidencia para que un humano contacte al cliente.
+- Nuevo módulo backend `account.{service,controller,routes}.ts`, montado en `/api/account`, siempre `req.user.id` (nunca `:id` de otro cliente).
+- **Hallazgo real**: cambiar el correo desde el panel rompía el re-login por Google/Apple, porque ambos flujos buscan al cliente por email primero — se agregó respaldo por `googleId`/`appleId` en `googleLogin`/`appleLogin` (`auth.controller.ts`).
+- Dropdown del avatar en `ClientTopbar.tsx` rediseñado a pedido explícito posterior: de botones-píldora con borde propio a filas ícono+texto sin borde, con hairline separando "cabecera" de "navegación" de "sesión" — nuevo componente `AccountMenuRow` pensado para escalar sin rediseñar. 2 íconos nuevos en `ui/icons.tsx` (`IconSettings`, `IconLogout`).
+
+### 2. Pago digital con Stripe para membresías (pago único, no suscripción)
+
+Coexiste con el pago en efectivo (aprobación manual del admin, sin tocar). Alejandro confirmó explícitamente: el webhook de Stripe activa la membresía solo con la confirmación del pago, sin pasar por esa cola de aprobación.
+
+- **Hallazgo real importante**: el campo de vencimiento (`clients.plan_end_date`) y la función que lo calcula (`clientsService.renewPlan`) ya existían desde antes — pero estaban huérfanos, sin ningún botón real en producción que los llamara (el flujo de aprobación en efectivo nunca los toca). El webhook de Stripe es el primer consumidor real de esa función en toda la app.
+- **Hallazgo real**: `mentoring` no estaba en `ACTIVE_PLAN_TYPES` (`auth.service.ts`) — un cliente Elite nunca se marcaba como vencido sin importar la fecha. Se agregó a pedido explícito de Alejandro.
+- **Blocker real resuelto**: `PlanExpiredScreen` bloquea TODA la app sin ninguna salida — sin ajustar esto, un cliente ya vencido nunca podría llegar a la pantalla de pago para volver a pagar. Se agregó una excepción de ruta en `AppShell.tsx` (`pathname !== "/configuracion/membresias"`) + un botón "Renovar membresía" nuevo en esa pantalla.
+- 2 tablas nuevas: `membership_prices` (5 filas fijas — Presencial/Online 1 y 3 meses, Elite 3 meses —, editables desde un panel admin nuevo en `/admin/membership-prices`, mismo patrón que "Roles y Perfiles") y `membership_payments` (ledger + mecanismo de idempotencia: Stripe puede reenviar el mismo evento de webhook más de una vez). Precios en tabla de DB, no env vars, porque Alejandro espera que cambien y no quiere depender de un redeploy.
+- **Detalle técnico crítico**: el webhook (`/api/stripe/webhook`) se monta en `app.ts` ANTES del `express.json()` global, con su propio `express.raw()` — Stripe exige el body sin parsear para verificar la firma. Es el primer middleware `raw` del proyecto.
+- El endpoint que crea el `PaymentIntent` (`POST /api/account/membership/checkout`) NUNCA activa nada — valida server-side la combinación tier/duración (nunca confía en lo que manda el cliente; ej. Elite solo se puede pagar a 3 meses) y solo arma el pago. Únicamente el webhook, tras verificar la firma, activa la membresía reusando en secuencia `updateStatus`/`updateClientType`/`renewPlan` ya existentes.
+- Frontend nuevo: `/configuracion/membresias` (`PanelMembresias.tsx`) con Stripe Elements (`PaymentElement`). Estados explícitos por card: seleccionando → pagando → confirmando → activo — **nunca marca "activo" solo porque `stripe.confirmPayment()` no tiró error**; hace polling contra `GET /api/account/membership/payments/:id` (nuestro backend, que solo lo sabe con certeza tras el webhook) hasta ver `succeeded`.
+- `MemberCard.tsx` y la sección Membresía del panel de cuenta ya muestran el vencimiento (mismo dato/hook, sin fetch nuevo) — acento dorado (no rojo, la card no tenía ningún color de alerta) si venció.
+
+### 3. Commit
+
+Todo lo de esta sesión, más trabajo de sesiones anteriores que seguía sin commitear (candados de topbar/`moduleAccess` resuelto contra la matriz real, accesos rápidos del inicio condicionados a datos reales cargados), se commiteó en 2 commits sobre `backup-migracion-2026-08-05`, **sin pushear** (no pedido explícitamente). Quedaron fuera del commit, sin investigar su origen: `Documentos/` e `index.html` (raíz) — no tienen relación con este trabajo.
+
+### 4. Verificación
+
+`tsc --noEmit` limpio en `apps/api`/`apps/web`/`packages/shared-types`. Suites completos corridos varias veces: la única baseline de fallas es la ya documentada (`login-page.test.tsx` determinístico, `wizard-shell-finalize.test.tsx` flaky por CPU, ~15 tests de Supabase Storage con credenciales inválidas en este entorno) — cero regresiones nuevas atribuibles a esta sesión. Verificación visual en navegador real: pendiente de Alejandro (todo el desarrollo se hizo por tests/tsc, sin acceso a browser en este entorno).
+
+---
+
+## Próximas actividades — Siguiente sesión (actualizada 2026-08-18)
+
+### Actividad 1 — Activar el cobro real de Stripe (bloqueante para probar el flujo)
+
+- Alejandro debe dar: `STRIPE_SECRET_KEY` y `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` (modo test), y configurar el endpoint del webhook (`/api/stripe/webhook`) en el dashboard de Stripe para obtener `STRIPE_WEBHOOK_SECRET`. Además, cargar los 5 montos reales desde `/admin/membership-prices` — hoy arrancan en $0 y el checkout rechaza pagar un plan en $0 (`PriceNotConfiguredError`, 409).
+- Con eso, probar un pago end-to-end con la tarjeta de test `4242 4242 4242 4242`: confirmar que el webhook llega, el PaymentIntent queda `succeeded` en el dashboard de Stripe, y que `clients.status`/`client_type`/`plan_end_date` se actualizan correctamente.
+
+### Actividad 2 — Verificación visual pendiente (todo esta sesión se hizo por tests/tsc, sin browser)
+
+- Panel de Configuración completo (perfil, avatar, notificaciones, privacidad, dispositivos, seguridad, eliminar cuenta), el dropdown rediseñado del avatar en el topbar, `/configuracion/membresias`, y `PlanExpiredScreen` con el botón "Renovar membresía" nuevo.
+
+### Actividad 3 — Decidir sobre `login-page.test.tsx` / `LoginForm.tsx`
+
+- (Sigue sin resolver desde 2026-08-09 tarde.) Confirmar si se quiere restaurar el ruteo inteligente post-login conectando `components/auth/LoginForm.tsx` de verdad en `app/(auth)/login/page.tsx`, o si se prefiere borrar `LoginForm.tsx` como código muerto y simplificar/eliminar esos 5 tests.
+
+### Actividad 4 — Construir los 6 módulos placeholder del panel de terapeuta
+
+- (Sigue pendiente de varias sesiones atrás, sin tocar.) Mi perfil, Mis clientes, Mi agenda, Recursos clínicos, Comunidad de terapeutas, Dashboards.
+
+---
+
 ## Notas adicionales
 
 - **No modificar `server.js` ni `index.html` (raíz):** son el monolito legacy que Vercel sigue deployando en producción desde `origin/main`. Todo desarrollo nuevo va en `apps/api` / `apps/web`, commiteado en `backup-migracion-2026-08-05`.
@@ -437,3 +496,5 @@ Todo lo de esta sesión (167 archivos) se commiteó en un solo commit sobre `bac
 - **Panel admin usa topbar horizontal (`AdminTopbar.tsx`), no sidebar** desde la sesión 2026-08-10 — `Sidebar.tsx`/`AdminNavItems.tsx`/`SidebarRing.tsx`/`UserChip.tsx`/`MobileTopbar.tsx` fueron borrados por quedar sin uso. Los tres roles (cliente, terapeuta, admin) usan topbar horizontal ahora, ninguno usa sidebar vertical.
 - **API camelCase, no snake_case:** las respuestas del backend (Drizzle) usan las mismas keys camelCase que las columnas TS del schema (`createdAt`, `clientId`, etc.), nunca snake_case — si un componente nuevo espera `created_at`/`client_id` lo más probable es que esté copiado de un patrón legacy y haya que corregirlo, no que el backend esté mal.
 - **Cuidado con `campo ? new Date(campo) : null` en updates parciales de servicios `updateX()`:** si el campo no viene en el `input` (undefined), ese ternario igual evalúa a `null` y borra el valor existente en la base — a diferencia de `campo ?? undefined` (que sí deja el valor intacto cuando falta). Encontrado y corregido en `events.service.ts`/`retreats.service.ts` (2026-08-15): togglear "Desactivar" borraba silenciosamente la fecha del evento. Antes de escribir un `updateX()` nuevo con campos de fecha, usar el patrón correcto: `campo !== undefined ? (campo ? new Date(campo) : null) : undefined`. Vale la pena revisar si el mismo patrón roto existe en otros `updateX()` no tocados todavía.
+- **Webhooks de terceros (Stripe y cualquier futuro) necesitan el body crudo:** montar esa ruta específica en `app.ts` ANTES del `express.json()` global, con su propio `express.raw({ type: 'application/json' })` — si se monta después, la firma nunca verifica porque el body ya llegó parseado a objeto. Ver `apps/api/src/routes/stripe-webhook.routes.ts` (sesión 2026-08-18) como referencia del patrón.
+- **`membership_prices` arranca en $0 para los 5 planes** (Presencial/Online/Elite) hasta que Alejandro los cargue desde `/admin/membership-prices` — el checkout de Stripe rechaza pagar un plan en $0 a propósito (`PriceNotConfiguredError`, 409). Cualquier prueba end-to-end del pago necesita esto cargado primero.
