@@ -60,6 +60,11 @@ export function therapistOnly(req: Request, res: Response, next: NextFunction) {
   next();
 }
 
+export function clientOnly(req: Request, res: Response, next: NextFunction) {
+  if (req.user?.role !== 'cliente') return unauthorized(res, 'Acceso restringido a clientes.', 403);
+  next();
+}
+
 export function ownerOrAdmin(req: Request, res: Response, next: NextFunction) {
   if (req.user?.role === 'admin') return next();
   if (req.user?.id === req.params.id) {

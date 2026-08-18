@@ -6,9 +6,11 @@ import {
   fetchGoogleClientId, googleLoginRequest,
   fetchAppleClientId, appleLoginRequest,
   forgotPasswordRequest, registerRequest,
+  completeSsoRegistrationRequest, type LegalAcceptancePayload,
 } from '@/lib/api-client';
 import { getSafeRedirectTarget, getSetPasswordUrl } from '@/lib/login-redirect';
 import BrandRing from '@/components/ui/BrandRing';
+import AceptacionRegistro from '@/components/auth/AceptacionRegistro';
 
 // "Recuérdame" solo guarda el email localmente (nunca la contraseña — un
 // checkbox de la app no debe controlar si se persiste texto plano de una
@@ -69,6 +71,14 @@ const LOGIN_PANEL_BG = '#2A2015';
 
 type LoginView = 'login' | 'register-explorer' | 'register-premium' | 'forgot';
 
+// Qué cuenta crear una vez completado el paso de aceptación legal —
+// AceptacionRegistro no sabe nada de registro/SSO, solo produce el
+// payload de consentimiento; esta página combina ambos para hacer la
+// llamada real que crea la cuenta (ver handleConsentComplete más abajo).
+type PendingConsent =
+  | { kind: 'register'; name: string; email: string; intent: 'explorer' | 'membership_request' }
+  | { kind: 'sso'; provider: 'google' | 'apple'; draftToken: string };
+
 export default function LoginPage(): React.ReactElement {
   const [view, setView] = useState<LoginView>('login');
 
@@ -102,12 +112,15 @@ export default function LoginPage(): React.ReactElement {
     }
   }, []);
 
-  // --- Register state (solicitud de membresía) ---
+  // --- Register state (Explorador / solicitud de membresía) ---
   const [regName, setRegName] = useState('');
   const [regEmail, setRegEmail] = useState('');
   const [regError, setRegError] = useState<string | null>(null);
-  const [regLoading, setRegLoading] = useState(false);
   const [regSent, setRegSent] = useState(false);
+
+  // Distinto de null mientras se muestra AceptacionRegistro — ver
+  // PendingConsent arriba y el return temprano más abajo.
+  const [pendingConsent, setPendingConsent] = useState<PendingConsent | null>(null);
 
   // --- Pantalla transitoria de entrada (login normal y Google comparten esto) ---
   const [enteringLabel, setEnteringLabel] = useState<string | null>(null);
@@ -185,6 +198,12 @@ export default function LoginPage(): React.ReactElement {
       let navigating = false;
       try {
         const result = await googleLoginRequest(response.credential);
+        if (result.needsConsent && result.draftToken) {
+          // Identidad nueva ya verificada por Google — falta el paso legal
+          // antes de que la cuenta exista. Ver PendingConsent arriba.
+          setPendingConsent({ kind: 'sso', provider: result.provider === 'apple' ? 'apple' : 'google', draftToken: result.draftToken });
+          return;
+        }
         if (result.pending) {
           setAuthMessage(result.message || 'Tu cuenta fue creada y quedará activa cuando el administrador la confirme.');
           return;
@@ -287,6 +306,10 @@ export default function LoginPage(): React.ReactElement {
       let navigating = false;
       try {
         const result = await appleLoginRequest(response.authorization.id_token, fullName);
+        if (result.needsConsent && result.draftToken) {
+          setPendingConsent({ kind: 'sso', provider: result.provider === 'google' ? 'google' : 'apple', draftToken: result.draftToken });
+          return;
+        }
         if (result.pending) {
           setAuthMessage(result.message || 'Tu cuenta fue creada y quedará activa cuando el administrador la confirme.');
           return;
@@ -358,41 +381,62 @@ export default function LoginPage(): React.ReactElement {
     }
   }
 
-  async function handleRegister(e: FormEvent): Promise<void> {
+  // Ya no llama a la red directo: el paso de aceptación legal es obligatorio
+  // antes de crear cualquier cuenta (Explorador o Premium), así que esto solo
+  // guarda qué se va a registrar y muestra AceptacionRegistro — la llamada
+  // real ocurre en handleConsentComplete, una vez aceptados los documentos.
+  function handleRegister(e: FormEvent): void {
     e.preventDefault();
     setRegError(null);
-    setRegLoading(true);
-    let navigating = false;
-    try {
-      if (view === 'register-explorer') {
-        // Alta instantánea: el backend devuelve token de una (mismo shape que
-        // un login normal) — se guarda la sesión y se entra directo, sin
-        // pasar por ninguna cola de aprobación.
-        const data = await registerRequest(regName, regEmail, 'explorer');
+    setPendingConsent({
+      kind: 'register',
+      name: regName,
+      email: regEmail,
+      intent: view === 'register-explorer' ? 'explorer' : 'membership_request',
+    });
+  }
+
+  // Combina el registro/SSO diferido en pendingConsent con el consentimiento
+  // legal para hacer la llamada que crea la cuenta. Lanza en caso de error —
+  // AceptacionRegistro espera esta promesa y muestra el error inline sin
+  // pasar a su pantalla de éxito, dejando pendingConsent intacto para
+  // reintentar sin perder las casillas ya marcadas.
+  async function handleConsentComplete(payload: LegalAcceptancePayload): Promise<void> {
+    if (!pendingConsent) return;
+
+    if (pendingConsent.kind === 'register') {
+      const { name, email, intent } = pendingConsent;
+      const data = await registerRequest(name, email, intent, payload);
+      if (intent === 'explorer') {
         if (!data.success || !data.token) {
-          setRegError(data.error || 'No se pudo completar el registro.');
-          return;
+          throw new Error(data.error || 'No se pudo completar el registro.');
         }
+        setPendingConsent(null);
         saveSession(data.token);
         setEnteringLabel(data.message || 'Bienvenido al Club como Explorador.');
-        navigating = true;
         window.location.href = getSafeRedirectTarget();
         return;
       }
       // Membresía Premium: no crea sesión — el backend responde
       // { success: true, pending: true } y el cliente queda "inactive" hasta
       // que un admin lo active.
-      const data = await registerRequest(regName, regEmail, 'membership_request');
       if (!data.success) {
-        setRegError(data.error || 'No se pudo enviar la solicitud.');
-        return;
+        throw new Error(data.error || 'No se pudo enviar la solicitud.');
       }
+      setPendingConsent(null);
       setRegSent(true);
-    } catch {
-      setRegError('Error de conexión. Intenta de nuevo.');
-    } finally {
-      if (!navigating) setRegLoading(false);
+      return;
     }
+
+    // kind === 'sso'
+    const data = await completeSsoRegistrationRequest(pendingConsent.draftToken, payload);
+    if (!data.success || !data.token) {
+      throw new Error(data.error || 'No se pudo completar el registro.');
+    }
+    setPendingConsent(null);
+    saveSession(data.token);
+    setEnteringLabel('Cargando sesión…');
+    window.location.href = getSafeRedirectTarget();
   }
 
   const inputClasses: string =
@@ -452,6 +496,20 @@ export default function LoginPage(): React.ReactElement {
       </div>
     </>
   );
+
+  // Último paso antes de crear cualquier cuenta nueva (Explorador, Premium,
+  // o SSO con identidad nueva) — reemplaza toda la pantalla en vez de vivir
+  // dentro de la tarjeta de login: el componente ya trae su propio layout
+  // centrado, no es un fragmento de formulario. No hay nada que saltarse:
+  // mientras pendingConsent exista, ninguna cuenta ni sesión existe todavía.
+  if (pendingConsent) {
+    // AceptacionRegistro.jsx es JS sin tipos — TS infiere onComplete como
+    // () => void a partir de su valor por defecto, aunque en tiempo de
+    // ejecución sí lo llama con el payload (ver su propio onComplete(payload)
+    // dentro del componente). El cast es solo para el chequeo de tipos, no
+    // cambia el comportamiento real.
+    return <AceptacionRegistro onComplete={handleConsentComplete as unknown as () => void} />;
+  }
 
   return (
     <>
@@ -634,10 +692,8 @@ export default function LoginPage(): React.ReactElement {
                         Tu solicitud será revisada antes de activarse.
                       </p>
                     )}
-                    <button type="submit" disabled={regLoading} className={primaryButtonClasses} style={primaryButtonStyle}>
-                      {regLoading
-                        ? (<span className="flex items-center gap-2"><svg className="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>{view === 'register-explorer' ? 'Uniéndote…' : 'Enviando…'}</span>)
-                        : view === 'register-explorer' ? 'Unirme al Club' : 'Enviar solicitud'}
+                    <button type="submit" className={primaryButtonClasses} style={primaryButtonStyle}>
+                      {view === 'register-explorer' ? 'Unirme al Club' : 'Enviar solicitud'}
                     </button>
                     {view === 'register-explorer' && socialButtons}
                   </>

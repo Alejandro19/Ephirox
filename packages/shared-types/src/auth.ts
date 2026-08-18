@@ -6,6 +6,21 @@ export const LoginInputSchema = z.object({
 });
 export type LoginInput = z.infer<typeof LoginInputSchema>;
 
+// Evidencia de aceptación de la Política de Tratamiento de Datos y los
+// Términos de Uso (ver AceptacionRegistro.jsx en apps/web) — obligatoria en
+// los tres caminos que crean una cuenta nueva (registro explorer/membership_
+// request, y SSO vía /auth/sso/complete-registration). `sensitiveDataConsent`
+// se valida como boolean, no z.literal(true): el componente de UI solo llama
+// a onComplete cuando las 3 casillas quedaron marcadas, pero este endpoint no
+// debe acoplarse a ese detalle de una versión futura del componente.
+export const LegalAcceptanceInputSchema = z.object({
+  dataPolicyVersion: z.string().min(1),
+  termsVersion: z.string().min(1),
+  sensitiveDataConsent: z.boolean(),
+  acceptedAt: z.string().datetime(),
+});
+export type LegalAcceptanceInput = z.infer<typeof LegalAcceptanceInputSchema>;
+
 export const RegisterInputSchema = z.object({
   name: z.string().min(1),
   email: z.string().email(),
@@ -14,8 +29,19 @@ export const RegisterInputSchema = z.object({
   // un admin lo active y le asigne una contraseña temporal.
   password: z.string().min(1).optional(),
   intent: z.enum(['explorer', 'membership_request']),
+  legalAcceptance: LegalAcceptanceInputSchema,
 });
 export type RegisterInput = z.infer<typeof RegisterInputSchema>;
+
+// Completa el registro de una identidad SSO (Google/Apple) nueva, una vez
+// aceptados los documentos legales — ver sso-registration-draft.service.ts.
+// `draftToken` es el token opaco de un solo uso emitido por /auth/google o
+// /auth/apple cuando detectan una identidad sin cuenta previa.
+export const SsoCompleteRegistrationInputSchema = z.object({
+  draftToken: z.string().min(1),
+  legalAcceptance: LegalAcceptanceInputSchema,
+});
+export type SsoCompleteRegistrationInput = z.infer<typeof SsoCompleteRegistrationInputSchema>;
 
 export const ChangePasswordInputSchema = z.object({
   currentPassword: z.string().min(1),

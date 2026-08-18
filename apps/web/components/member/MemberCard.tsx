@@ -13,6 +13,10 @@ function formatJoinDate(iso: string): string {
   return new Date(iso).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
+function formatPlanDate(isoDate: string): string {
+  return new Date(isoDate + 'T00:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
 export function MemberCard({ clientId }: { clientId: string }) {
   const { data: client } = useSWR(['client-detail-for-member-card', clientId], () => fetchClient(clientId));
 
@@ -46,6 +50,27 @@ export function MemberCard({ clientId }: { clientId: string }) {
             <p className="text-[13px] font-semibold">{formatJoinDate(client.activatedAt)}</p>
           </div>
         )}
+        {client.plan_end_date && (() => {
+          // Pago único por periodo, no suscripción — al vencer, vuelve a
+          // pagar en /configuracion/membresias. Mismo acento dorado que ya
+          // usa esta card (Miembro N.°) para la fecha vencida — la card no
+          // tiene ningún color de alerta hoy, y el dorado ya es el acento
+          // de atención en el resto de la app.
+          const expired = new Date().toISOString().slice(0, 10) > client.plan_end_date;
+          return (
+            <div>
+              <p className="text-[10px] uppercase tracking-wide" style={{ color: 'var(--hero-espresso-text-muted)' }}>
+                {expired ? 'Venció' : 'Vence'}
+              </p>
+              <p
+                className="text-[13px] font-semibold"
+                style={expired ? { color: 'var(--hero-espresso-accent)' } : undefined}
+              >
+                {formatPlanDate(client.plan_end_date)}
+              </p>
+            </div>
+          );
+        })()}
       </div>
     </div>
   );

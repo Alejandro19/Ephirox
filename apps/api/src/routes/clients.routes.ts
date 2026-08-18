@@ -18,9 +18,12 @@ clientsRouter.get('/', authMiddleware, adminOnly, asyncHandler(clientsController
 clientsRouter.post('/', authMiddleware, adminOnly, validateBody(ClientCreateInputSchema), asyncHandler(clientsController.createClient));
 clientsRouter.get('/:id', authMiddleware, ownerOrAdmin, asyncHandler(clientsController.getClient));
 clientsRouter.put('/:id', authMiddleware, ownerOrAdmin, validateBody(ClientUpdateInputSchema), asyncHandler(clientsController.updateClient));
-clientsRouter.delete('/:id', authMiddleware, adminOnly, asyncHandler(clientsController.deleteClient));
+// No hay endpoint de borrado: un cliente con evidencia legal de aceptación
+// (legal_acceptances, sin ON DELETE CASCADE) no se puede borrar — usar
+// "Desactivar cliente" (PATCH /:id/status) en su lugar.
 
 clientsRouter.patch('/:id/permissions', authMiddleware, adminOnly, validateBody(PermissionsPatchSchema), asyncHandler(clientsController.updatePermissions));
 clientsRouter.patch('/:id/status', authMiddleware, adminOnly, validateBody(StatusPatchSchema), asyncHandler(clientsController.updateStatus));
 clientsRouter.patch('/:id/client-type', authMiddleware, adminOnly, validateBody(ClientTypePatchSchema), asyncHandler(clientsController.updateClientType));
 clientsRouter.patch('/:id/renew-plan', authMiddleware, adminOnly, validateBody(RenewPlanPatchSchema), asyncHandler(clientsController.renewPlan));
+clientsRouter.patch('/:id/deletion-request/resolve', authMiddleware, adminOnly, asyncHandler(clientsController.resolveDeletionRequest));

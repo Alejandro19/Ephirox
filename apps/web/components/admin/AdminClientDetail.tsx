@@ -7,6 +7,7 @@ import {
   activateClient,
   deactivateClient,
   saveClientType,
+  resolveDeletionRequest,
   type ClientDetail,
 } from "../../lib/clients-client";
 import {
@@ -82,6 +83,13 @@ export default function AdminClientDetail({ clientId }: { clientId: string }) {
   const handleSaveType = async () => {
     setActing(true);
     try { setClient(await saveClientType(clientId, selectedType)); showToast("Tipo guardado.", "success"); }
+    catch (e: unknown) { showToast(e instanceof Error ? e.message : "Error.", "error"); }
+    finally { setActing(false); }
+  };
+
+  const handleResolveDeletionRequest = async () => {
+    setActing(true);
+    try { setClient(await resolveDeletionRequest(clientId)); showToast("Solicitud marcada como resuelta.", "success"); }
     catch (e: unknown) { showToast(e instanceof Error ? e.message : "Error.", "error"); }
     finally { setActing(false); }
   };
@@ -174,6 +182,22 @@ export default function AdminClientDetail({ clientId }: { clientId: string }) {
           </div>
         </div>
       )}
+      {/* Solicitud de eliminación de cuenta */}
+      {client.deletionRequestedAt && (
+        <div style={{ ...cardStyle, border: "1px solid #E8CFC2", background: "#FBEFEA" }}>
+          <h3 style={{ ...cardTitleStyle, color: "#7A3B26" }}>Solicitud de eliminación pendiente</h3>
+          <p style={{ fontSize: 13, color: "#7A3B26", margin: "0 0 14px" }}>
+            {client.name} solicitó eliminar su cuenta el {new Date(client.deletionRequestedAt).toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" })}.
+            Contáctalo antes de procesar cualquier cambio.
+          </p>
+          <button onClick={handleResolveDeletionRequest} disabled={acting}
+            style={{ padding: "6px 16px", borderRadius: "9999px", border: "1px solid #A6533F",
+              background: "transparent", color: "#A6533F", fontSize: 12, fontWeight: 600,
+              cursor: acting ? "not-allowed" : "pointer", opacity: acting ? 0.6 : 1 }}>
+            Marcar como resuelta</button>
+        </div>
+      )}
+
       {/* Resumen onboarding */}
       <div style={cardStyle}>
         <h3 style={cardTitleStyle}>Resumen de onboarding</h3>

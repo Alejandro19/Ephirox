@@ -86,6 +86,29 @@ describe('clients patch routes', () => {
     expect(res.body.client.planEndDate).toBe('2026-02-01');
   });
 
+  it('rejects updating a client to an email already taken by another client', async () => {
+    const [other] = await db
+      .insert(clients)
+      .values({ name: 'Other Patch Client', email: `patch-client-other-${Date.now()}@example.com`, passwordHash: 'x' })
+      .returning();
+
+    const res = await request(app)
+      .put(`/api/clients/${clientId}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ email: other.email });
+    expect(res.status).toBe(409);
+
+    await db.delete(clients).where(eq(clients.id, other.id));
+  });
+
+  it('allows a PUT that resends the same email the client already has', async () => {
+    const res = await request(app)
+      .put(`/api/clients/${clientId}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ name: 'Patch Client', email: (await db.select().from(clients).where(eq(clients.id, clientId)))[0].email });
+    expect(res.status).toBe(200);
+  });
+
   it('rejects a renew-plan with an end date before the start date', async () => {
     const res = await request(app)
       .patch(`/api/clients/${clientId}/renew-plan`)

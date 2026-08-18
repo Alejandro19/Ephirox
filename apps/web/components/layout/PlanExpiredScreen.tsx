@@ -1,9 +1,11 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useAuth } from "../../lib/auth-context";
 import { IconLock } from "../ui/icons";
 
 export default function PlanExpiredScreen() {
+  const router = useRouter();
   const { planEndDate } = useAuth();
 
   const endDateStr = planEndDate
@@ -79,9 +81,28 @@ export default function PlanExpiredScreen() {
           {endDateStr
             ? `Tu membresía venció el ${endDateStr}. `
             : ""}
-          Contacta a tu coach para renovar tu plan y recuperar el acceso a la
-          plataforma.
+          Renová tu plan para recuperar el acceso a la plataforma, o contacta
+          a tu coach.
         </p>
+
+        <button
+          type="button"
+          onClick={() => router.push("/configuracion/membresias")}
+          style={{
+            marginTop: 24,
+            width: "100%",
+            height: 46,
+            borderRadius: "9999px",
+            border: "none",
+            background: "var(--ink)",
+            color: "var(--page-bg)",
+            fontSize: 13.5,
+            fontWeight: 600,
+            cursor: "pointer",
+          }}
+        >
+          Renovar membresía
+        </button>
       </div>
     </div>
   );

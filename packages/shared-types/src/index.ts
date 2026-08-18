@@ -12,3 +12,4 @@ export * from './evolution.js';
 export * from './lab-panels.js';
 export * from './blindspot.js';
 export * from './roles.js';
+export * from './membership.js';

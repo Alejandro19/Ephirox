@@ -24,12 +24,30 @@ export type LoginResult = {
   mustChangePassword?: boolean;
   clientType?: string;
   permissions?: Record<string, boolean>;
+  // "Puedo acceder a este módulo" ya resuelto por el backend contra la
+  // matriz de Roles y Perfiles (client_type_module_permissions) + los
+  // permisos finos del cliente — ver ClientTopbar.tsx, que lo usa para
+  // decidir el ícono de candado sin mantener su propia lista aparte.
+  moduleAccess?: Record<string, boolean>;
   planExpired?: boolean;
   planEndDate?: string;
   error?: string;
   // Cuenta nueva creada por Google, queda inactiva hasta que un admin la confirme.
   pending?: boolean;
   message?: string;
+  // Identidad SSO nueva ya verificada, sin cuenta todavía — falta el paso de
+  // aceptación legal antes de crearla. Ver completeSsoRegistrationRequest.
+  needsConsent?: boolean;
+  provider?: 'google' | 'apple';
+  draftToken?: string;
+};
+
+// Payload que produce AceptacionRegistro.jsx al completar el paso legal.
+export type LegalAcceptancePayload = {
+  dataPolicyVersion: string;
+  termsVersion: string;
+  acceptedAt: string;
+  sensitiveDataConsent: boolean;
 };
 
 export type RegisterResult = {
@@ -65,6 +83,7 @@ export type MeResult = {
   onboardingComplete?: boolean;
   clientType?: string | null;
   permissions?: Record<string, boolean>;
+  moduleAccess?: Record<string, boolean>;
   planExpired?: boolean;
   planEndDate?: string | null;
   error?: string;
@@ -83,12 +102,33 @@ export async function loginRequest(email: string, password: string): Promise<Log
   }
 }
 
-export async function registerRequest(name: string, email: string, intent: 'explorer' | 'membership_request'): Promise<RegisterResult> {
+export async function registerRequest(
+  name: string,
+  email: string,
+  intent: 'explorer' | 'membership_request',
+  legalAcceptance: LegalAcceptancePayload
+): Promise<RegisterResult> {
   try {
     const res = await fetch(`${API_BASE}/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, intent }),
+      body: JSON.stringify({ name, email, intent, legalAcceptance }),
+    });
+    return res.json();
+  } catch {
+    return { success: false, error: 'Error de conexión. Intenta de nuevo.' };
+  }
+}
+
+// Completa el registro de una identidad SSO (Google/Apple) nueva, una vez
+// aceptados los documentos legales — ver el flujo de needsConsent/draftToken
+// en LoginResult.
+export async function completeSsoRegistrationRequest(draftToken: string, legalAcceptance: LegalAcceptancePayload): Promise<LoginResult> {
+  try {
+    const res = await fetch(`${API_BASE}/auth/sso/complete-registration`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ draftToken, legalAcceptance }),
     });
     return res.json();
   } catch {

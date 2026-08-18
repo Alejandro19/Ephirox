@@ -32,6 +32,24 @@ export function IconLock({ size = 14, className, style }: IconProps) {
   );
 }
 
+export function IconSettings({ size = 14, className, style }: IconProps) {
+  return (
+    <svg {...base(size)} className={className} style={style} stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1" />
+    </svg>
+  );
+}
+
+export function IconLogout({ size = 14, className, style }: IconProps) {
+  return (
+    <svg {...base(size)} className={className} style={style} stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M15 4H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8" />
+      <path d="M10 12h10M17 8l4 4-4 4" />
+    </svg>
+  );
+}
+
 export function IconShield({ size = 14, className, style }: IconProps) {
   return (
     <svg {...base(size)} className={className} style={style} stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">

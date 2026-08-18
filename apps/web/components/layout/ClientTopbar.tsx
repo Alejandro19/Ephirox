@@ -6,7 +6,7 @@ import { useAuth } from "../../lib/auth-context";
 import { CLIENT_NAV, VIEW_TO_PATH, type AppState } from "../../lib/constants";
 import NotificationBell from "./NotificationBell";
 import BrandRing from "../ui/BrandRing";
-import { IconLock } from "../ui/icons";
+import { IconLock, IconSettings, IconLogout } from "../ui/icons";
 
 type ClientTopbarProps = {
   viewKey: string;
@@ -14,9 +14,32 @@ type ClientTopbarProps = {
 
 const COLLAPSE_BREAKPOINT = 1280;
 
+// Fila simple de ícono + texto para el dropdown de la cuenta — pensada para
+// que agregar una opción nueva sea sumar una fila más, no rediseñar el
+// dropdown (antes eran botones-píldora con borde propio, no escalaba bien).
+function AccountMenuRow({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick: () => void }) {
+  const [hover, setHover] = useState(false);
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{
+        width: "100%", display: "flex", alignItems: "center", gap: 9,
+        background: hover ? "var(--page-bg)" : "transparent", border: "none",
+        padding: "9px 14px", fontSize: 12.5, fontWeight: 500,
+        color: "var(--ink-secondary)", cursor: "pointer", textAlign: "left",
+      }}
+    >
+      <span style={{ display: "flex", alignItems: "center", color: "var(--ink-secondary)" }}>{icon}</span>
+      {label}
+    </button>
+  );
+}
+
 export default function ClientTopbar({ viewKey }: ClientTopbarProps) {
   const router = useRouter();
-  const { user, clientType, onboardingComplete, logout } = useAuth();
+  const { user, clientType, onboardingComplete, moduleAccess, logout } = useAuth();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const accountRef = useRef<HTMLDivElement>(null);
@@ -61,10 +84,12 @@ export default function ClientTopbar({ viewKey }: ClientTopbarProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const isLocked = (key: string) =>
-    key === "rest" || key === "blindspot"
-      ? clientType !== "mentoring"
-      : clientType === "lead_wellness" && (key === "training" || key === "nutrition");
+  // moduleAccess llega resuelto del backend contra la matriz real de Roles y
+  // Perfiles (ver getResolvedModuleAccess en type-module-access.service.ts)
+  // — nunca una lista hardcodeada acá, para que el candado no se
+  // desincronice cada vez que un admin edita la matriz. Una clave ausente
+  // (ej. "personal-info", que no es un módulo gateado) nunca bloquea.
+  const isLocked = (key: string) => moduleAccess[key] === false;
 
   return (
     <>
@@ -124,8 +149,10 @@ export default function ClientTopbar({ viewKey }: ClientTopbarProps) {
                   position: "relative",
                 }}
               >
-                {item.label}
-                {locked && <IconLock size={10} style={{ marginLeft: 4, verticalAlign: -1 }} />}
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                  {item.label}
+                  {locked && <IconLock size={10} />}
+                </span>
               </button>
             );
           })}
@@ -155,22 +182,30 @@ export default function ClientTopbar({ viewKey }: ClientTopbarProps) {
               <div style={{
                 position: "absolute", top: 40, right: 0, width: 200,
                 background: "var(--paper)", border: "1px solid var(--border-hairline)",
-                borderRadius: "var(--radius-card)", padding: 10, zIndex: 90,
+                borderRadius: "var(--radius-card)", padding: "6px 0", zIndex: 90,
+                overflow: "hidden",
               }}>
-                <div style={{ fontSize: 13, fontWeight: 600, color: "var(--ink)", padding: "4px 6px" }}>
+                <div style={{
+                  fontSize: 13, fontWeight: 600, color: "var(--ink)",
+                  padding: "8px 14px 10px", borderBottom: "1px solid var(--border-hairline)",
+                }}>
                   {user?.name ?? "Miembro"}
                 </div>
-                <button
-                  onClick={logout}
-                  style={{
-                    width: "100%", marginTop: 6, background: "none",
-                    border: "1px solid var(--border-input)", borderRadius: "9999px",
-                    padding: "8px 14px", fontSize: 12, fontWeight: 500,
-                    color: "var(--ink-secondary)", cursor: "pointer",
-                  }}
-                >
-                  Cerrar sesión
-                </button>
+                {/* Navegación — agregar futuras filas acá (mismo AccountMenuRow) */}
+                <div style={{ padding: "4px 0", borderBottom: "1px solid var(--border-hairline)" }}>
+                  <AccountMenuRow
+                    icon={<IconSettings size={14} />}
+                    label="Configuración"
+                    onClick={() => {
+                      setAccountOpen(false);
+                      router.push("/configuracion");
+                    }}
+                  />
+                </div>
+                {/* Sesión */}
+                <div style={{ padding: "4px 0" }}>
+                  <AccountMenuRow icon={<IconLogout size={14} />} label="Cerrar sesión" onClick={logout} />
+                </div>
               </div>
             )}
           </div>
@@ -224,15 +259,30 @@ export default function ClientTopbar({ viewKey }: ClientTopbarProps) {
                 borderBottom: "1px solid var(--border-hairline)",
               }}
             >
-              {item.label}
-              {locked && <IconLock size={11} style={{ marginLeft: 6, verticalAlign: -1 }} />}
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                {item.label}
+                {locked && <IconLock size={11} />}
+              </span>
             </button>
           );
         })}
         <button
-          onClick={logout}
+          onClick={() => {
+            setDrawerOpen(false);
+            router.push("/configuracion");
+          }}
           style={{
             marginTop: "auto", background: "none", border: "1px solid var(--border-input)",
+            borderRadius: "9999px", padding: "10px 16px", fontSize: 13, fontWeight: 500,
+            color: "var(--ink-secondary)", cursor: "pointer",
+          }}
+        >
+          Configuración
+        </button>
+        <button
+          onClick={logout}
+          style={{
+            marginTop: 8, background: "none", border: "1px solid var(--border-input)",
             borderRadius: "9999px", padding: "10px 16px", fontSize: 13, fontWeight: 500,
             color: "var(--ink-secondary)", cursor: "pointer",
           }}

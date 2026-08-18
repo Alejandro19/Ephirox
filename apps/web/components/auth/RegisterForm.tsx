@@ -1,16 +1,21 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { registerRequest } from "../../lib/api-client";
+import { registerRequest, type LegalAcceptancePayload } from "../../lib/api-client";
 
 type RegisterFormProps = {
   isNight: boolean;
+  // El registro exige el paso de aceptación legal (ver AceptacionRegistro.jsx
+  // en este mismo directorio) — este componente no lo colecta, así que quien
+  // lo use debe conseguir el consentimiento primero y pasarlo acá.
+  legalAcceptance: LegalAcceptancePayload;
   onSuccess?: (result: Awaited<ReturnType<typeof registerRequest>>) => void;
   onError?: (message: string) => void;
 };
 
 export default function RegisterForm({
   isNight,
+  legalAcceptance,
   onSuccess,
   onError,
 }: RegisterFormProps) {
@@ -42,7 +47,7 @@ export default function RegisterForm({
     setIsLoading(true);
 
     try {
-      const result = await registerRequest(name, email, "membership_request");
+      const result = await registerRequest(name, email, "membership_request", legalAcceptance);
       if (!result.success) {
         const msg = result.error || "Error al registrarse.";
         setError(msg);

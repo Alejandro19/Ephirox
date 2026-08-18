@@ -84,11 +84,8 @@ describe('clients routes (CRUD)', () => {
     expect(res.status).toBe(409);
   });
 
-  it('deletes a client', async () => {
-    const res = await request(app).delete(`/api/clients/${createdClientId}`).set('Authorization', `Bearer ${adminToken}`);
-    expect(res.status).toBe(200);
-    const remaining = await db.select().from(clients).where(eq(clients.id, createdClientId));
-    expect(remaining).toHaveLength(0);
-    createdClientId = '';
-  });
+  // No hay endpoint de borrado: un cliente con evidencia legal de aceptación
+  // (legal_acceptances, sin ON DELETE CASCADE) no se puede borrar — la vía
+  // real para dar de baja a un cliente es "Desactivar" (PATCH /:id/status,
+  // ver auth.routes.test.ts / clients.service.ts updateStatus).
 });

@@ -18,7 +18,7 @@ export const CLIENT_NAV: NavItem[] = [
   { key: "training", label: "Entrenamiento", visible: (s) => s.clientType === "lead_wellness" ? true : s.onboardingComplete === true },
   { key: "nutrition", label: "Nutrición", visible: (s) => s.clientType === "lead_wellness" ? true : s.onboardingComplete === true },
   { key: "cortisol", label: "Gestión de Cortisol", visible: (s) => s.clientType === "lead_wellness" ? true : s.onboardingComplete === true },
-  { key: "rest", label: "Hackeando el sueño", visible: (s) => s.clientType === "lead_wellness" ? true : s.onboardingComplete === true },
+  { key: "rest", label: "Hackea tu Sueño", visible: (s) => s.clientType === "lead_wellness" ? true : s.onboardingComplete === true },
   { key: "blindspot", label: "Punto Ciego", visible: (s) => s.clientType === "lead_wellness" ? true : s.onboardingComplete === true },
   { key: "community", label: "Club Wellness", visible: (s) => s.clientType === "lead_wellness" ? true : s.onboardingComplete === true },
   { key: "evolution", label: "Mi Evolución", visible: (s) => s.clientType === "lead_wellness" ? true : s.onboardingComplete === true },
@@ -29,7 +29,7 @@ export const ADMIN_NAV: NavItem[] = [
   { key: "training", label: "Entrenamiento" },
   { key: "nutrition", label: "Nutrición" },
   { key: "cortisol", label: "Gestión de Cortisol" },
-  { key: "rest", label: "Hackeando el sueño" },
+  { key: "rest", label: "Hackea tu Sueño" },
   { key: "blindspot", label: "Punto Ciego" },
   { key: "evolution", label: "Mi Evolución" },
   { key: "community", label: "Club Wellness" },
@@ -39,6 +39,7 @@ export const ADMIN_HUB_SUBITEMS: NavItem[] = [
   { key: "admin-clients", label: "Crear Usuario" },
   { key: "admin-quotes", label: "Frases" },
   { key: "admin-roles", label: "Roles y Perfiles" },
+  { key: "admin-membership-prices", label: "Precios de Membresía" },
 ];
 
 export const CLIENT_TYPE_LABELS: Record<string, string> = {
@@ -115,6 +116,7 @@ export const VIEW_TO_PATH: Record<string, string> = {
   "admin-clients": "/admin/clients",
   "admin-quotes": "/admin/phrases",
   "admin-roles": "/admin/roles",
+  "admin-membership-prices": "/admin/membership-prices",
 };
 
 export const PATH_TO_VIEW: Record<string, string> = {
@@ -130,4 +132,5 @@ export const PATH_TO_VIEW: Record<string, string> = {
   "/admin/clients": "admin-clients",
   "/admin/phrases": "admin-quotes",
   "/admin/roles": "admin-roles",
+  "/admin/membership-prices": "admin-membership-prices",
 };

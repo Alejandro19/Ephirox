@@ -4,9 +4,16 @@ import jwt from 'jsonwebtoken';
 import { eq } from 'drizzle-orm';
 import { createApp } from '../src/app.js';
 import { db } from '../src/db/index.js';
-import { admins, clients, therapists, adminNotifications, personalInfo } from '../src/models/schema.js';
+import { admins, clients, therapists, adminNotifications, personalInfo, legalAcceptances } from '../src/models/schema.js';
 import { hashPassword, signToken, type TokenPayload } from '../src/services/auth.service.js';
 import { createResetToken, consumeResetToken } from '../src/services/password-reset.service.js';
+
+const legalAcceptanceFixture = {
+  dataPolicyVersion: 'v0.1-borrador',
+  termsVersion: 'v0.1-borrador',
+  sensitiveDataConsent: true,
+  acceptedAt: new Date().toISOString(),
+};
 
 describe('auth routes', () => {
   const app = createApp();
@@ -36,6 +43,13 @@ describe('auth routes', () => {
   });
 
   afterEach(async () => {
+    // legal_acceptances no tiene ON DELETE CASCADE a propósito (la evidencia
+    // no debe desaparecer aunque el cliente se elimine) — hay que borrarla
+    // a mano antes de poder borrar el cliente de prueba.
+    const created = await db.select({ id: clients.id }).from(clients).where(eq(clients.email, 'new-register@example.com'));
+    for (const { id } of created) {
+      await db.delete(legalAcceptances).where(eq(legalAcceptances.clientId, id));
+    }
     await db.delete(clients).where(eq(clients.email, 'new-register@example.com'));
   });
 
@@ -56,6 +70,10 @@ describe('auth routes', () => {
     expect(res.status).toBe(200);
     expect(res.body.role).toBe('cliente');
     expect(res.body.permissions).toBeDefined();
+    // clientType por defecto es lead_wellness — sembrado en false en la
+    // matriz para training (ver type-module-access.service.test.ts).
+    expect(res.body.moduleAccess).toBeDefined();
+    expect(res.body.moduleAccess.training).toBe(false);
   });
 
   it('reports onboardingComplete as false for a client with no personal-info row', async () => {
@@ -83,7 +101,7 @@ describe('auth routes', () => {
   it('registers a new client as inactive and pending (membership_request)', async () => {
     const res = await request(app)
       .post('/api/auth/register')
-      .send({ name: 'New Register', email: 'new-register@example.com', password: 'secret', intent: 'membership_request' });
+      .send({ name: 'New Register', email: 'new-register@example.com', password: 'secret', intent: 'membership_request', legalAcceptance: legalAcceptanceFixture });
     expect(res.status).toBe(201);
     expect(res.body.pending).toBe(true);
   });
@@ -91,7 +109,7 @@ describe('auth routes', () => {
   it('accepts a membership request with no password ("Solicita tu membresía") and never returns a token', async () => {
     const res = await request(app)
       .post('/api/auth/register')
-      .send({ name: 'New Register', email: 'new-register@example.com', intent: 'membership_request' });
+      .send({ name: 'New Register', email: 'new-register@example.com', intent: 'membership_request', legalAcceptance: legalAcceptanceFixture });
     expect(res.status).toBe(201);
     expect(res.body.pending).toBe(true);
     expect(res.body.token).toBeUndefined();
@@ -99,28 +117,47 @@ describe('auth routes', () => {
     const [created] = await db.select().from(clients).where(eq(clients.email, 'new-register@example.com'));
     expect(created.status).toBe('inactive');
     expect(created.passwordHash).toBeNull();
+
+    const [acceptance] = await db.select().from(legalAcceptances).where(eq(legalAcceptances.clientId, created.id));
+    expect(acceptance.dataPolicyVersion).toBe(legalAcceptanceFixture.dataPolicyVersion);
+    expect(acceptance.sensitiveDataConsent).toBe(true);
+  });
+
+  it('rejects registering without accepting the legal terms (legalAcceptance missing)', async () => {
+    const res = await request(app)
+      .post('/api/auth/register')
+      .send({ name: 'No Consent', email: 'new-register@example.com', intent: 'membership_request' });
+    expect(res.status).toBe(400);
+
+    const created = await db.select().from(clients).where(eq(clients.email, 'new-register@example.com'));
+    expect(created).toHaveLength(0);
   });
 
   it('registers a new client as an instantly-active Club Explorador and auto-logs in (intent="explorer")', async () => {
     const res = await request(app)
       .post('/api/auth/register')
-      .send({ name: 'New Explorer', email: 'new-register@example.com', intent: 'explorer' });
+      .send({ name: 'New Explorer', email: 'new-register@example.com', intent: 'explorer', legalAcceptance: legalAcceptanceFixture });
     expect(res.status).toBe(201);
     expect(res.body.token).toEqual(expect.any(String));
     expect(res.body.pending).toBeUndefined();
     expect(res.body.clientType).toBe('lead_wellness');
+    expect(res.body.moduleAccess.training).toBe(false);
 
     const [created] = await db.select().from(clients).where(eq(clients.email, 'new-register@example.com'));
     expect(created.status).toBe('active');
     expect(created.clientType).toBe('lead_wellness');
     expect(created.passwordHash).toBeNull();
     expect(created.memberNumber).not.toBeNull();
+
+    const [acceptance] = await db.select().from(legalAcceptances).where(eq(legalAcceptances.clientId, created.id));
+    expect(acceptance).toBeDefined();
+    expect(acceptance.termsVersion).toBe(legalAcceptanceFixture.termsVersion);
   });
 
   it('rejects registering an email that already exists', async () => {
     const res = await request(app)
       .post('/api/auth/register')
-      .send({ name: 'Dup', email: adminEmail, password: 'secret', intent: 'membership_request' });
+      .send({ name: 'Dup', email: adminEmail, password: 'secret', intent: 'membership_request', legalAcceptance: legalAcceptanceFixture });
     expect(res.status).toBe(409);
   });
 

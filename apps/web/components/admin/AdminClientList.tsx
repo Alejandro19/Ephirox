@@ -209,7 +209,14 @@ export default function AdminClientList() {
               const ct = c.client_type || c.clientType;
               return (
                 <tr key={c.id} style={{ borderBottom: "1px solid var(--border-hairline)" }}>
-                  <td style={tdStyle}><span style={{ fontWeight: 600 }}>{c.name}</span></td>
+                  <td style={tdStyle}>
+                    <span style={{ fontWeight: 600 }}>{c.name}</span>
+                    {c.deletionRequestedAt && (
+                      <span style={{ display: "block", fontSize: 10.5, fontWeight: 600, color: "#A6533F", marginTop: 2 }}>
+                        Solicitó eliminar su cuenta
+                      </span>
+                    )}
+                  </td>
                   <td style={tdStyle}><span style={{ color: "var(--ink-secondary)", fontSize: 13 }}>{c.email}</span></td>
                   <td style={tdStyle}><span style={statusBadgeStyle(c.status)}>{c.status}</span></td>
                   <td style={tdStyle}>{CLIENT_TYPE_LABELS[ct] || "-"}</td>

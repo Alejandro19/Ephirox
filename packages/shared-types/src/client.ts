@@ -39,6 +39,16 @@ export const ClientTypePatchSchema = z.object({
 });
 export type ClientTypePatch = z.infer<typeof ClientTypePatchSchema>;
 
+// Preferencias de notificación del cliente (panel de cuenta) — separado de
+// ClientUpdateInputSchema porque, igual que permissions/status, tiene su
+// propia ruta PATCH dedicada.
+export const NotificationPreferencesPatchSchema = z.object({
+  streakReminders: z.boolean().optional(),
+  events: z.boolean().optional(),
+  news: z.boolean().optional(),
+}).strict();
+export type NotificationPreferencesPatch = z.infer<typeof NotificationPreferencesPatchSchema>;
+
 export const RenewPlanPatchSchema = z.union([
   z.object({
     plan_start_date: z.string().date(),

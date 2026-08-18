@@ -30,6 +30,9 @@ import { wearableRouter, wearableOAuthRouter } from './routes/wearable.routes.js
 import { blindspotRouter } from './routes/blindspot.routes.js';
 import { rolesRouter } from './routes/roles.routes.js';
 import { adminNotificationsRouter, clientNotificationsRouter } from './routes/notifications.routes.js';
+import { accountRouter } from './routes/account.routes.js';
+import { membershipPricesRouter } from './routes/membership-prices.routes.js';
+import { stripeWebhookRouter } from './routes/stripe-webhook.routes.js';
 
 export function createApp() {
   const app = express();
@@ -41,6 +44,11 @@ export function createApp() {
   // gzip/brotli en todas las respuestas — las de listados (evolution,
   // achievements, etc.) son JSON repetitivo, comprimen muy bien.
   app.use(compression());
+
+  // Webhook de Stripe — DEBE montarse antes del express.json() global de
+  // abajo: Stripe exige el body crudo (sin parsear) para verificar la firma
+  // (ver stripe-webhook.routes.ts, que trae su propio express.raw()).
+  app.use('/api/stripe', stripeWebhookRouter);
 
   app.use(express.json({ limit: '10mb' }));
 
@@ -79,6 +87,8 @@ export function createApp() {
   app.use('/api', rolesRouter);
   app.use('/api', adminNotificationsRouter);
   app.use('/api/clients', clientNotificationsRouter);
+  app.use('/api/account', accountRouter);
+  app.use('/api', membershipPricesRouter);
 
   // Error handler
   app.use((error: unknown, req: Request, res: Response, _next: NextFunction) => {

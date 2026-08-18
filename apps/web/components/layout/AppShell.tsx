@@ -103,7 +103,10 @@ export default function AppShell({ children }: { children: ReactNode }) {
   if (!isLoading && !token) return null;
 
   // ── Plan expired takeover ──
-  if (planExpired && role === "cliente") return <PlanExpiredScreen />;
+  // /configuracion/membresias es la única puerta de salida de este bloqueo
+  // total — sin esta excepción, un cliente vencido nunca podría llegar a la
+  // pantalla de pago que justamente necesita para volver a pagar.
+  if (planExpired && role === "cliente" && pathname !== "/configuracion/membresias") return <PlanExpiredScreen />;
 
   // ── Error boundary ──
   if (boundaryError) {

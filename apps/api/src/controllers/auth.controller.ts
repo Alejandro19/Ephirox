@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import type { LoginInput, RegisterInput, ChangePasswordInput, GoogleAuthInput, AppleAuthInput, ForgotPasswordInput, ResetPasswordInput } from '@latribu/shared-types';
+import type { LoginInput, RegisterInput, ChangePasswordInput, GoogleAuthInput, AppleAuthInput, ForgotPasswordInput, ResetPasswordInput, SsoCompleteRegistrationInput } from '@latribu/shared-types';
 import * as authService from '../services/auth.service.js';
 import * as clientsService from '../services/clients.service.js';
 import * as adminsService from '../services/admins.service.js';
@@ -7,7 +7,9 @@ import * as therapistsService from '../services/therapists.service.js';
 import * as googleAuthService from '../services/google-auth.service.js';
 import * as appleAuthService from '../services/apple-auth.service.js';
 import * as passwordResetService from '../services/password-reset.service.js';
+import * as ssoDraftService from '../services/sso-registration-draft.service.js';
 import { getPersonalInfoByClientId } from '../services/personal-info.service.js';
+import { getResolvedModuleAccess } from '../services/type-module-access.service.js';
 
 function ok(res: Response, data: Record<string, unknown>, status = 200) {
   return res.status(status).json({ success: true, ...data });
@@ -22,12 +24,14 @@ function err(res: Response, message: string, status = 400) {
 // `pending`, con `token` de una.
 async function explorerCreatedResponse(res: Response, client: Awaited<ReturnType<typeof clientsService.createActiveExplorerClient>>) {
   const token = authService.signToken({ id: client.id, role: 'cliente', name: client.name, email: client.email, plan: client.plan, clientType: client.clientType });
+  const moduleAccess = await getResolvedModuleAccess(client.clientType, client.permissions);
   return ok(res, {
     token,
     role: 'cliente',
     user: { id: client.id, name: client.name, email: client.email, plan: client.plan },
     permissions: client.permissions,
     clientType: client.clientType,
+    moduleAccess,
     planExpired: false,
     planEndDate: client.planEndDate,
     onboardingComplete: false,
@@ -55,6 +59,7 @@ export async function login(req: Request, res: Response) {
 
   const token = authService.signToken({ id: client.id, role: 'cliente', name: client.name, email: client.email, plan: client.plan, clientType: client.clientType });
   const clientInfo = await getPersonalInfoByClientId(client.id);
+  const moduleAccess = await getResolvedModuleAccess(client.clientType, client.permissions);
   return ok(res, {
     token,
     role: 'cliente',
@@ -62,6 +67,7 @@ export async function login(req: Request, res: Response) {
     user: { id: client.id, name: client.name, email: client.email, plan: client.plan },
     permissions: client.permissions,
     clientType: client.clientType,
+    moduleAccess,
     planExpired: authService.isPlanExpired(client),
     planEndDate: client.planEndDate,
     onboardingComplete: Boolean(clientInfo?.completedAt),
@@ -94,7 +100,7 @@ export async function therapistLogin(req: Request, res: Response) {
 }
 
 export async function register(req: Request, res: Response) {
-  const { name, email, password, intent } = req.body as RegisterInput;
+  const { name, email, password, intent, legalAcceptance } = req.body as RegisterInput;
   const emailLower = email.toLowerCase().trim();
   const [existingAdmin, existingClient] = await Promise.all([
     adminsService.findAdminByEmail(emailLower),
@@ -103,12 +109,36 @@ export async function register(req: Request, res: Response) {
   if (existingAdmin || existingClient) return err(res, 'Ese email ya está registrado.', 409);
 
   if (intent === 'explorer') {
-    const client = await clientsService.createActiveExplorerClient({ name, email: emailLower });
+    const client = await clientsService.createActiveExplorerClient({ name, email: emailLower, legalAcceptance });
     return explorerCreatedResponse(res, client);
   }
 
-  await clientsService.createInactiveClient({ name, email: emailLower, password });
+  await clientsService.createInactiveClient({ name, email: emailLower, password, legalAcceptance });
   return ok(res, { pending: true, message: 'Tu cuenta fue creada y quedará activa cuando el administrador la confirme.' }, 201);
+}
+
+// Completa el registro de una identidad SSO (Google/Apple) nueva una vez
+// aceptados los documentos legales — ver googleLogin/appleLogin más abajo,
+// que ya no crean la cuenta directamente para una identidad sin cuenta
+// previa, sino que emiten un draftToken (sso-registration-draft.service.ts)
+// que esta ruta consume.
+export async function completeSsoRegistration(req: Request, res: Response) {
+  const { draftToken, legalAcceptance } = req.body as SsoCompleteRegistrationInput;
+  const draft = await ssoDraftService.consumeSsoDraft(draftToken);
+  if (!draft) return err(res, 'Tu sesión de registro expiró. Intenta de nuevo con Google o Apple.', 401);
+
+  // Guarda de carrera: el draft vive hasta 10 min y en ese tiempo el email
+  // pudo haberse registrado por otra vía (ej. la solicitud de Membresía
+  // Premium, o dos pestañas).
+  const [existingAdmin, existingClient] = await Promise.all([
+    adminsService.findAdminByEmail(draft.email),
+    clientsService.findClientByEmail(draft.email),
+  ]);
+  if (existingAdmin || existingClient) return err(res, 'Ese email ya está registrado.', 409);
+
+  const providerIdField = draft.provider === 'google' ? { googleId: draft.providerSub } : { appleId: draft.providerSub };
+  const client = await clientsService.createActiveExplorerClient({ name: draft.name, email: draft.email, ...providerIdField, legalAcceptance });
+  return explorerCreatedResponse(res, client);
 }
 
 export async function me(req: Request, res: Response) {
@@ -128,11 +158,13 @@ export async function me(req: Request, res: Response) {
   const client = await clientsService.findClientById(req.user!.id);
   if (!client) return err(res, 'No encontrado.', 404);
   const clientInfo = await getPersonalInfoByClientId(client.id);
+  const moduleAccess = await getResolvedModuleAccess(client.clientType, client.permissions);
   return ok(res, {
     role: 'cliente',
     user: { id: client.id, name: client.name, email: client.email, plan: client.plan },
     permissions: client.permissions,
     clientType: client.clientType,
+    moduleAccess,
     planExpired: authService.isPlanExpired(client),
     planEndDate: client.planEndDate,
     onboardingComplete: Boolean(clientInfo?.completedAt),
@@ -241,27 +273,37 @@ export async function googleLogin(req: Request, res: Response) {
     return ok(res, { token, role: 'admin', user: { id: admin.id, name: admin.name, email: admin.email } });
   }
 
-  const client = await clientsService.findClientByEmail(emailLower);
+  // Busca primero por email; si no coincide, respalda con el googleId ya
+  // vinculado — cubre el caso de un cliente que cambió su correo desde el
+  // panel de cuenta después de haber iniciado sesión con Google alguna vez
+  // (el email real que entrega Google ya no es el que quedó guardado).
+  const client = (await clientsService.findClientByEmail(emailLower)) ?? (await clientsService.findClientByGoogleId(googleId));
   if (client) {
     if (client.status === 'inactive') return err(res, 'Tu cuenta está inactiva. Contacta al administrador.', 403);
     if (!client.googleId) await clientsService.updateClientGoogleId(client.id, googleId);
     const token = authService.signToken({ id: client.id, role: 'cliente', name: client.name, email: client.email, plan: client.plan, clientType: client.clientType });
+    const moduleAccess = await getResolvedModuleAccess(client.clientType, client.permissions);
     return ok(res, {
       token,
       role: 'cliente',
       user: { id: client.id, name: client.name, email: client.email, plan: client.plan },
       permissions: client.permissions,
       clientType: client.clientType,
+      moduleAccess,
       planExpired: authService.isPlanExpired(client),
       planEndDate: client.planEndDate,
     });
   }
 
   // Regla unificada: cualquier identidad nueva por SSO se vuelve Club
-  // Explorador al instante — el SSO nunca es una vía directa a un tier
-  // pago ni pasa por la cola de aprobación de la solicitud Premium.
-  const newClient = await clientsService.createActiveExplorerClient({ name: displayName, email: emailLower, googleId });
-  return explorerCreatedResponse(res, newClient);
+  // Explorador — el SSO nunca es una vía directa a un tier pago ni pasa por
+  // la cola de aprobación de la solicitud Premium. Pero antes de crear la
+  // cuenta, exige el paso de aceptación legal: se emite un borrador de un
+  // solo uso (sso-registration-draft.service.ts) y el frontend debe
+  // completar POST /auth/sso/complete-registration con el consentimiento
+  // antes de que la cuenta llegue a existir.
+  const draftToken = await ssoDraftService.createSsoDraft({ provider: 'google', providerSub: googleId, email: emailLower, name: displayName });
+  return ok(res, { needsConsent: true, provider: 'google', draftToken });
 }
 
 export async function appleLogin(req: Request, res: Response) {
@@ -285,24 +327,26 @@ export async function appleLogin(req: Request, res: Response) {
     return ok(res, { token, role: 'admin', user: { id: admin.id, name: admin.name, email: admin.email } });
   }
 
-  const client = await clientsService.findClientByEmail(emailLower);
+  // Mismo respaldo por appleId que googleLogin — ver comentario ahí.
+  const client = (await clientsService.findClientByEmail(emailLower)) ?? (await clientsService.findClientByAppleId(appleId));
   if (client) {
     if (client.status === 'inactive') return err(res, 'Tu cuenta está inactiva. Contacta al administrador.', 403);
     if (!client.appleId) await clientsService.updateClientAppleId(client.id, appleId);
     const token = authService.signToken({ id: client.id, role: 'cliente', name: client.name, email: client.email, plan: client.plan, clientType: client.clientType });
+    const moduleAccess = await getResolvedModuleAccess(client.clientType, client.permissions);
     return ok(res, {
       token,
       role: 'cliente',
       user: { id: client.id, name: client.name, email: client.email, plan: client.plan },
       permissions: client.permissions,
       clientType: client.clientType,
+      moduleAccess,
       planExpired: authService.isPlanExpired(client),
       planEndDate: client.planEndDate,
     });
   }
 
-  // Misma regla unificada que Google: identidad nueva por SSO = Club
-  // Explorador al instante, nunca un tier pago ni una solicitud pendiente.
-  const newClient = await clientsService.createActiveExplorerClient({ name: displayName, email: emailLower, appleId });
-  return explorerCreatedResponse(res, newClient);
+  // Misma regla en dos fases que Google — ver comentario arriba.
+  const draftToken = await ssoDraftService.createSsoDraft({ provider: 'apple', providerSub: appleId, email: emailLower, name: displayName });
+  return ok(res, { needsConsent: true, provider: 'apple', draftToken });
 }

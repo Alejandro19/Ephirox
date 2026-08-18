@@ -13,6 +13,13 @@ export type ClientSummary = {
   plan_end_date?: string;
   plan_start_date?: string;
   plan_duration_days?: number;
+  deletionRequestedAt?: string | null;
+};
+
+export type NotificationPreferences = {
+  streakReminders: boolean;
+  events: boolean;
+  news: boolean;
 };
 
 export type ClientDetail = ClientSummary & {
@@ -24,6 +31,11 @@ export type ClientDetail = ClientSummary & {
   // Autoasignado al activar el cliente (ver updateStatus en clients.service.ts) — null hasta entonces.
   memberNumber?: number | null;
   activatedAt?: string | null;
+  googleId?: string | null;
+  appleId?: string | null;
+  avatarUrl?: string | null;
+  notificationPreferences?: NotificationPreferences;
+  deletionRequestedAt?: string | null;
 };
 
 export async function fetchClients(): Promise<ClientSummary[]> {
@@ -101,6 +113,32 @@ export async function deactivateClient(id: string): Promise<ClientDetail> {
   });
   const body = await res.json();
   if (!body.success) throw new Error(body.error || 'Error al desactivar cliente.');
+  return body.client;
+}
+
+export async function updateClientProfile(id: string, patch: { name?: string; email?: string }): Promise<ClientDetail> {
+  const token = getSessionToken();
+  const res = await fetch(`${API_BASE_URL}/api/clients/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(patch),
+  });
+  const body = await res.json();
+  if (!body.success) throw new Error(body.error || 'Error al actualizar tu perfil.');
+  return body.client;
+}
+
+export async function resolveDeletionRequest(id: string): Promise<ClientDetail> {
+  const token = getSessionToken();
+  const res = await fetch(`${API_BASE_URL}/api/clients/${id}/deletion-request/resolve`, {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const body = await res.json();
+  if (!body.success) throw new Error(body.error || 'Error al resolver la solicitud.');
   return body.client;
 }
 

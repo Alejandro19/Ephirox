@@ -19,6 +19,7 @@ import {
   AuthInvalidError,
   type LoginResult,
   type RegisterResult,
+  type LegalAcceptancePayload,
 } from "./api-client";
 
 type AuthUser = {
@@ -32,6 +33,7 @@ type AuthState = {
   role: "admin" | "cliente" | "terapeuta" | null;
   user: AuthUser | null;
   permissions: Record<string, boolean>;
+  moduleAccess: Record<string, boolean>;
   clientType: string | null;
   onboardingComplete: boolean;
   planExpired: boolean;
@@ -42,7 +44,7 @@ type AuthState = {
 
 type AuthContextValue = AuthState & {
   login: (email: string, password: string) => Promise<LoginResult>;
-  register: (name: string, email: string) => Promise<RegisterResult>;
+  register: (name: string, email: string, legalAcceptance: LegalAcceptancePayload) => Promise<RegisterResult>;
   googleLogin: (credential: string) => Promise<LoginResult>;
   logout: () => void;
   refreshAuth: () => Promise<void>;
@@ -57,6 +59,7 @@ const initialState: AuthState = {
   role: null,
   user: null,
   permissions: {},
+  moduleAccess: {},
   clientType: null,
   onboardingComplete: false,
   planExpired: false,
@@ -109,6 +112,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           role: data.role ?? null,
           user: data.user ?? decodeUserFromToken(token),
           permissions: data.permissions ?? {},
+          moduleAccess: data.moduleAccess ?? {},
           clientType: data.clientType ?? null,
           onboardingComplete: !!data.onboardingComplete,
           planExpired: !!data.planExpired,
@@ -147,6 +151,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         role: result.role ?? null,
         user: result.user ?? decodeUserFromToken(result.token),
         permissions: result.permissions ?? {},
+        moduleAccess: result.moduleAccess ?? {},
         clientType: result.clientType ?? null,
         onboardingComplete: !!result.onboardingComplete,
         planExpired: !!result.planExpired,
@@ -161,8 +166,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // La solicitud de membresía ("Solicita tu membresía") no crea sesión —
   // el cliente queda "inactive" hasta que un admin lo active, así que acá
   // no hay token/estado de auth que setear, solo se propaga el resultado.
-  const register = useCallback(async (name: string, email: string) => {
-    return registerRequest(name, email, 'membership_request');
+  const register = useCallback(async (name: string, email: string, legalAcceptance: LegalAcceptancePayload) => {
+    return registerRequest(name, email, 'membership_request', legalAcceptance);
   }, []);
 
   // Google login — conservado para cuando se reactive, pero no usado por la UI de Fase 0
@@ -181,6 +186,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         role: result.role ?? null,
         user: result.user ?? decodeUserFromToken(result.token),
         permissions: result.permissions ?? {},
+        moduleAccess: result.moduleAccess ?? {},
         clientType: result.clientType ?? null,
         onboardingComplete: !!result.onboardingComplete,
         planExpired: !!result.planExpired,

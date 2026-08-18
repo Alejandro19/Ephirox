@@ -46,6 +46,16 @@ export const clients = pgTable('clients', {
   // ingresa a mano. Null hasta la primera activación.
   memberNumber: integer('member_number').unique(),
   activatedAt: timestamp('activated_at', { withTimezone: true }),
+  avatarUrl: text('avatar_url'),
+  notificationPreferences: jsonb('notification_preferences').notNull().default({
+    streakReminders: true,
+    events: true,
+    news: false,
+  }),
+  // No-nulo = solicitud de eliminación pendiente de revisión humana (ver
+  // account.service.ts / panel admin de clientes). Nunca dispara un borrado
+  // automático — solo lo hace visible para que un admin contacte al cliente.
+  deletionRequestedAt: timestamp('deletion_requested_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 });
@@ -628,6 +638,79 @@ export const passwordResetTokens = pgTable('password_reset_tokens', {
   usedAt: timestamp('used_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 });
+
+// Evidencia legal de aceptación de la Política de Datos y los Términos de
+// Uso — paso final antes de activar cualquier cuenta nueva (ver
+// legal-acceptance.service.ts). Tabla de solo-inserción: ningún código de
+// este proyecto debe exponer un UPDATE ni un DELETE sobre ella; una futura
+// re-aceptación de una versión más nueva de los documentos agrega una fila
+// nueva, nunca pisa la anterior. `client_id` NO tiene ON DELETE CASCADE a
+// propósito: la evidencia no debe desaparecer aunque el cliente se elimine.
+export const legalAcceptances = pgTable('legal_acceptances', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  clientId: uuid('client_id').notNull().references(() => clients.id),
+  dataPolicyVersion: text('data_policy_version').notNull(),
+  termsVersion: text('terms_version').notNull(),
+  sensitiveDataConsent: boolean('sensitive_data_consent').notNull(),
+  acceptedAt: timestamp('accepted_at', { withTimezone: true }).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (table) => ({
+  clientIdIdx: index('legal_acceptances_client_id_idx').on(table.clientId),
+}));
+export type LegalAcceptance = typeof legalAcceptances.$inferSelect;
+
+// Borrador de una identidad SSO (Google/Apple) nueva ya verificada contra el
+// proveedor, pero que todavía no completó el paso de aceptación legal — ver
+// sso-registration-draft.service.ts. Token de un solo uso, vida corta
+// (10 min), guardado solo como hash, igual que password_reset_tokens.
+// Deliberadamente NO es un JWT: nunca debe poder confundirse con una sesión
+// real ni pasar por authMiddleware.
+export const ssoRegistrationDrafts = pgTable('sso_registration_drafts', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tokenHash: text('token_hash').notNull().unique(),
+  provider: text('provider').notNull(), // 'google' | 'apple'
+  providerSub: text('provider_sub').notNull(),
+  email: text('email').notNull(),
+  name: text('name').notNull(),
+  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  usedAt: timestamp('used_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+export type SsoRegistrationDraft = typeof ssoRegistrationDrafts.$inferSelect;
+
+// Montos editables desde el panel admin ("Precios de Membresía") — no se
+// usan Price objects de Stripe (esos son para Checkout/Subscriptions);
+// PaymentIntent.create() recibe el amount directo desde esta tabla.
+export const membershipPrices = pgTable('membership_prices', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  clientType: text('client_type').notNull(),
+  durationMonths: integer('duration_months').notNull(),
+  amountCents: integer('amount_cents').notNull().default(0),
+  currency: text('currency').notNull().default('usd'),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => ({
+  clientTypeDurationUnique: unique().on(table.clientType, table.durationMonths),
+}));
+export type MembershipPrice = typeof membershipPrices.$inferSelect;
+
+// Ledger de pagos + mecanismo de idempotencia: Stripe puede reenviar el
+// mismo evento de webhook más de una vez — la membresía solo se activa la
+// primera vez que esta fila pasa a 'succeeded' (ver stripe-webhook.controller.ts).
+export const membershipPayments = pgTable('membership_payments', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  clientId: uuid('client_id').notNull().references(() => clients.id),
+  clientType: text('client_type').notNull(),
+  durationMonths: integer('duration_months').notNull(),
+  amountCents: integer('amount_cents').notNull(),
+  currency: text('currency').notNull(),
+  stripePaymentIntentId: text('stripe_payment_intent_id').notNull().unique(),
+  status: text('status').notNull().default('pending'), // 'pending' | 'succeeded' | 'failed'
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  succeededAt: timestamp('succeeded_at', { withTimezone: true }),
+}, (table) => ({
+  clientIdIdx: index('membership_payments_client_id_idx').on(table.clientId),
+}));
+export type MembershipPayment = typeof membershipPayments.$inferSelect;
 
 export const blindspotCases = pgTable('blindspot_cases', {
   id: uuid('id').primaryKey().defaultRandom(),

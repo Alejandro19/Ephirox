@@ -40,14 +40,14 @@ export async function getClient(req: Request, res: Response) {
 
 export async function updateClient(req: Request, res: Response) {
   const patch = req.body as ClientUpdateInput;
-  const client = await clientsService.updateClient(req.params.id, patch);
-  if (!client) return err(res, 'Cliente no encontrado.', 404);
-  return ok(res, { client });
-}
-
-export async function deleteClient(req: Request, res: Response) {
-  await clientsService.deleteClient(req.params.id);
-  return ok(res, { message: 'Cliente eliminado.' });
+  try {
+    const client = await clientsService.updateClient(req.params.id, patch);
+    if (!client) return err(res, 'Cliente no encontrado.', 404);
+    return ok(res, { client });
+  } catch (e) {
+    if (e instanceof clientsService.ClientEmailTakenError) return err(res, e.message, 409);
+    throw e;
+  }
 }
 
 export async function updatePermissions(req: Request, res: Response) {
@@ -67,6 +67,12 @@ export async function updateStatus(req: Request, res: Response) {
 export async function updateClientType(req: Request, res: Response) {
   const { client_type } = req.body as ClientTypePatch;
   const client = await clientsService.updateClientType(req.params.id, client_type);
+  if (!client) return err(res, 'Cliente no encontrado.', 404);
+  return ok(res, { client });
+}
+
+export async function resolveDeletionRequest(req: Request, res: Response) {
+  const client = await clientsService.resolveDeletionRequest(req.params.id);
   if (!client) return err(res, 'Cliente no encontrado.', 404);
   return ok(res, { client });
 }
