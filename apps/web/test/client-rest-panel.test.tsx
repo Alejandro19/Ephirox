@@ -7,6 +7,7 @@ import * as wearableClient from '../lib/wearable-client';
 import * as sleepClient from '../lib/sleep-client';
 import * as clientsClient from '../lib/clients-client';
 import * as restToolsClient from '../lib/rest-tools-client';
+import { PermissionDeniedError } from '../lib/api-client';
 
 vi.mock('../lib/wearable-client');
 vi.mock('../lib/sleep-client');
@@ -100,5 +101,13 @@ describe('ClientRestPanel', () => {
     expect(await screen.findByText('Beneficio exclusivo de Club Elite')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Sube de categoría' }));
     expect(openSpy).toHaveBeenCalledWith(expect.stringContaining('wa.me'), '_blank');
+  });
+
+  it('shows the generic upgrade card (not "Módulo no disponible") when the module itself is not allowed for this client type', async () => {
+    mockFetches();
+    vi.mocked(sleepClient.getProtocol).mockRejectedValue(new PermissionDeniedError('Este módulo no está disponible para tu tipo de cuenta.'));
+    render(<ClientRestPanel clientId="client-1" />);
+
+    expect(await screen.findByText('Beneficio exclusivo de una membresía superior')).toBeInTheDocument();
   });
 });

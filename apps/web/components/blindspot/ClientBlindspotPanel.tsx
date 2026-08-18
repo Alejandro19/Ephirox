@@ -11,7 +11,7 @@ import {
 } from '@/lib/blindspot-client';
 import { PermissionDeniedError } from '@/lib/api-client';
 import LockedOverlay from '@/components/ui/LockedOverlay';
-import { COACH_WHATSAPP_NUMBER } from '@/lib/constants';
+import LockedBenefit from '@/components/ui/LockedBenefit';
 
 const STATUS_LABEL: Record<BlindspotCaseStatus, string> = {
   evaluando: 'En evaluación con Alejandro',
@@ -29,15 +29,16 @@ const PROGRESS_LABEL: Record<BlindspotSessionLog['progressMarker'], string> = {
 
 export function ClientBlindspotPanel({ clientType }: { clientType: string | null }) {
   if (clientType !== 'mentoring') {
+    // Nunca montar <BlindspotBody/> acá: es un componente vivo que hace su
+    // propio fetch, recibiría su propio 403, y renderizaría su propio
+    // candado por debajo del de acá — un candado fantasma duplicado. Sin
+    // `children`, LockedBenefit usa su placeholder estático por defecto.
     return (
-      <LockedOverlay
-        title="Solo disponible para Club Elite"
-        subtitle="Punto Ciego — la auditoría de tu punto ciego con referido a terapeuta especializado — es parte del Club Elite."
-        ctaLabel="Conocer planes"
-        onCta={() => window.open(`https://wa.me/${COACH_WHATSAPP_NUMBER}`, '_blank')}
-      >
-        <BlindspotBody />
-      </LockedOverlay>
+      <LockedBenefit
+        variant="upgrade"
+        requiredLevel="Club Elite"
+        benefit="tu auditoría de punto ciego con un terapeuta especializado"
+      />
     );
   }
   return <BlindspotBody />;

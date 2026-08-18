@@ -11,7 +11,6 @@ import { pickMantra } from '../../lib/mantra-bank';
 import { formatEventDateTime } from '../../lib/community-logic';
 import IdentityHeader from '../ui/IdentityHeader';
 import MantraCard from '../ui/MantraCard';
-import LockedOverlay from '../ui/LockedOverlay';
 import LockedBenefit from '../ui/LockedBenefit';
 import EmptyState from '../ui/EmptyState';
 import { IconFlame } from '../ui/icons';
@@ -134,9 +133,7 @@ export function ClientCommunityPanel({ clientId }: { clientId: string }) {
     return (
       <div>
         {header}
-        <LockedOverlay title="Módulo no disponible" subtitle="Este módulo ya no está disponible para tu tipo de cuenta.">
-          <div style={{ minHeight: 200 }} />
-        </LockedOverlay>
+        <LockedBenefit variant="upgrade" benefit="la comunidad y sus beneficios" />
       </div>
     );
   }

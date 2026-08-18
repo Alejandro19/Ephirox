@@ -27,7 +27,7 @@ import {
 } from '../../lib/evolution-logic';
 import IdentityHeader from '../ui/IdentityHeader';
 import MantraCard from '../ui/MantraCard';
-import LockedOverlay from '../ui/LockedOverlay';
+import LockedBenefit from '../ui/LockedBenefit';
 import { WellnessIndexHero, BienestarGeneral, EvolucionFisicaSection, EvolucionFisicaLocked } from './EvolutionVisuals';
 import { CheckinAccordion } from './CheckinAccordion';
 
@@ -78,9 +78,7 @@ export function ClientEvolutionPanel({ clientId }: { clientId: string }) {
     return (
       <div>
         {header}
-        <LockedOverlay title="Módulo no disponible" subtitle="Este módulo ya no está disponible para tu tipo de cuenta.">
-          <div style={{ minHeight: 200 }} />
-        </LockedOverlay>
+        <LockedBenefit variant="upgrade" benefit="tu Índice de Bienestar y tu evolución" />
       </div>
     );
   }

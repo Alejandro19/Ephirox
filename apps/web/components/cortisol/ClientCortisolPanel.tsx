@@ -14,11 +14,13 @@ import {
 } from '../../lib/cortisol-client';
 import { youtubeEmbedUrl } from '../../lib/training-timer-logic';
 import { CORTISOL_EMOTIONS, CORTISOL_RECOMMENDATIONS, calculateCortisolWeeklyStats } from '../../lib/cortisol-logic';
+import { PermissionDeniedError } from '../../lib/api-client';
 import IdentityHeader from '../ui/IdentityHeader';
 import Badge from '../ui/Badge';
 import EmptyState from '../ui/EmptyState';
 import RingProgress from '../ui/RingProgress';
 import ProgressBar from '../ui/ProgressBar';
+import LockedBenefit from '../ui/LockedBenefit';
 
 const TECHNIQUE_ICON_PATHS: Record<string, React.ReactNode> = {
   respiración: <path d="M3 10c2.5-3 4.5-3 7 0s4.5 3 7 0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" fill="none" />,
@@ -165,6 +167,14 @@ export function ClientCortisolPanel({ clientId }: { clientId: string }) {
       <div>
         {header}
         <p className="text-sm text-[var(--ink-secondary)]">Cargando técnicas de cortisol…</p>
+      </div>
+    );
+  }
+  if (error && error instanceof PermissionDeniedError) {
+    return (
+      <div>
+        {header}
+        <LockedBenefit variant="upgrade" benefit="tu gestión de cortisol" />
       </div>
     );
   }

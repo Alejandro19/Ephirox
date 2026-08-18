@@ -7,6 +7,7 @@ import * as eventsClient from '../lib/events-client';
 import * as therapiesClient from '../lib/therapies-client';
 import * as retreatsClient from '../lib/retreats-client';
 import * as clientsClient from '../lib/clients-client';
+import { PermissionDeniedError } from '../lib/api-client';
 
 vi.mock('../lib/events-client');
 vi.mock('../lib/therapies-client');
@@ -148,5 +149,12 @@ describe('ClientCommunityPanel', () => {
     render(<ClientCommunityPanel clientId="client-1" />);
     expect(await screen.findByText('No hay eventos disponibles por ahora.')).toBeInTheDocument();
     expect(screen.getByText('Aún no hay eventos programados')).toBeInTheDocument();
+  });
+
+  it('shows the generic upgrade card when the whole module is not allowed for this client type', async () => {
+    mockFetches();
+    vi.mocked(eventsClient.listEvents).mockRejectedValue(new PermissionDeniedError('Este módulo no está disponible para tu tipo de cuenta.'));
+    render(<ClientCommunityPanel clientId="client-1" />);
+    expect(await screen.findByText('Beneficio exclusivo de una membresía superior')).toBeInTheDocument();
   });
 });

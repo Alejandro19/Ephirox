@@ -14,7 +14,11 @@ describe('ClientBlindspotPanel', () => {
 
   it('shows a locked state for a non-mentoring client, never calling the API', () => {
     render(<ClientBlindspotPanel clientType="coaching_online" />);
-    expect(screen.getByText('Solo disponible para Club Elite')).toBeInTheDocument();
+    expect(screen.getByText('Beneficio exclusivo de Club Elite')).toBeInTheDocument();
+    // Regression: la versión anterior pasaba <BlindspotBody/> vivo como fondo
+    // desenfocado del candado, que hacía su propio fetch y mostraba su
+    // propio candado fantasma por debajo — ver ClientBlindspotPanel.tsx.
+    expect(blindspotClient.clientGetMyCase).not.toHaveBeenCalled();
   });
 
   it('shows an empty state for a mentoring client with no case yet', async () => {

@@ -9,6 +9,7 @@ import * as sleepClient from '../lib/sleep-client';
 import * as trainingClient from '../lib/training-client';
 import * as clientsClient from '../lib/clients-client';
 import * as wellnessIndexClient from '../lib/wellness-index-client';
+import { PermissionDeniedError } from '../lib/api-client';
 
 vi.mock('../lib/evolution-client');
 vi.mock('../lib/cortisol-client');
@@ -103,5 +104,12 @@ describe('ClientEvolutionPanel', () => {
         expect.objectContaining({ sleep_hours: 7, adherence_pct: 80 })
       )
     );
+  });
+
+  it('shows the generic upgrade card when this client type has no access to Mi Evolución', async () => {
+    mockFetches();
+    vi.mocked(evolutionClient.getEvolutionData).mockRejectedValue(new PermissionDeniedError('Este módulo no está disponible para tu tipo de cuenta.'));
+    render(<ClientEvolutionPanel clientId="client-1" />);
+    expect(await screen.findByText('Beneficio exclusivo de una membresía superior')).toBeInTheDocument();
   });
 });

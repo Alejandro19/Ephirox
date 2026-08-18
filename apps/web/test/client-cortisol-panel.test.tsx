@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { renderWithSWR as render } from './swr-test-utils';
 import { ClientCortisolPanel } from '../components/cortisol/ClientCortisolPanel';
 import * as cortisolClient from '../lib/cortisol-client';
+import { PermissionDeniedError } from '../lib/api-client';
 
 vi.mock('../lib/cortisol-client');
 
@@ -89,5 +90,15 @@ describe('ClientCortisolPanel', () => {
 
     await user.click(screen.getByRole('button', { name: 'Empezar técnica' }));
     expect(await screen.findByRole('heading', { name: 'Respiración de caja' })).toBeInTheDocument();
+  });
+
+  it('shows the generic upgrade card when this client type has no access to Cortisol', async () => {
+    vi.mocked(cortisolClient.listTechniques).mockRejectedValue(new PermissionDeniedError('Este módulo no está disponible para tu tipo de cuenta.'));
+    vi.mocked(cortisolClient.listCompletions).mockResolvedValue([]);
+    vi.mocked(cortisolClient.getTipOfTheDay).mockResolvedValue(null);
+    vi.mocked(cortisolClient.getTodayCheckin).mockResolvedValue(null);
+
+    render(<ClientCortisolPanel clientId="client-1" />);
+    expect(await screen.findByText('Beneficio exclusivo de una membresía superior')).toBeInTheDocument();
   });
 });

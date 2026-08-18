@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { eq, and } from 'drizzle-orm';
 import { db } from '../src/db/index.js';
 import { clientTypeModulePermissions } from '../src/models/schema.js';
-import { isModuleAllowedForType, invalidateModuleAccessCache } from '../src/services/type-module-access.service.js';
+import { isModuleAllowedForType, invalidateModuleAccessCache, getResolvedModuleAccess } from '../src/services/type-module-access.service.js';
 
 describe('type-module-access.service', () => {
   it('reads the seeded matrix correctly', async () => {
@@ -40,5 +40,56 @@ describe('type-module-access.service', () => {
       .set({ allowed: true })
       .where(and(eq(clientTypeModulePermissions.clientType, 'coaching_1_1'), eq(clientTypeModulePermissions.moduleKey, 'community')));
     invalidateModuleAccessCache();
+  });
+});
+
+describe('getResolvedModuleAccess', () => {
+  it('resuelve un módulo bloqueado por la matriz (lead_wellness/training, sembrado en false)', async () => {
+    const access = await getResolvedModuleAccess('lead_wellness', {});
+    expect(access.training).toBe(false);
+  });
+
+  it('resuelve un módulo bloqueado por el permiso fino del cliente, aunque la matriz lo permita', async () => {
+    // coaching_1_1/training está sembrado en true en la matriz — el AND con
+    // permissions.training===false debe seguir bloqueándolo, igual que
+    // requirePermission.
+    const access = await getResolvedModuleAccess('coaching_1_1', { training: false });
+    expect(access.training).toBe(false);
+  });
+
+  it('no bloquea un módulo ausente de `permissions` (undefined !== false)', async () => {
+    // coaching_1_1/training está sembrado en true en la matriz — una clave
+    // ausente en `permissions` (ej. "rest"/"blindspot", que nunca están en
+    // el default de clients.permissions) no debe tratarse como bloqueada
+    // por esa capa fina.
+    const access = await getResolvedModuleAccess('coaching_1_1', {});
+    expect(access.training).toBe(true);
+  });
+
+  it('blindspot nunca queda accesible para un tipo no-mentoring, ni si la matriz lo marcara true por error de admin', async () => {
+    // Simula que un admin marcó blindspot:true para coaching_1_1 desde Roles
+    // y Perfiles — el guard mentoringOnly (blindspot-access.middleware.ts)
+    // igual bloquearía la ruta real; este AND explícito asegura que el valor
+    // client-facing nunca sea más permisivo que eso.
+    await db
+      .update(clientTypeModulePermissions)
+      .set({ allowed: true })
+      .where(and(eq(clientTypeModulePermissions.clientType, 'coaching_1_1'), eq(clientTypeModulePermissions.moduleKey, 'blindspot')));
+    invalidateModuleAccessCache();
+
+    const access = await getResolvedModuleAccess('coaching_1_1', {});
+    expect(access.blindspot).toBe(false);
+
+    // Restaura el seed original.
+    await db
+      .update(clientTypeModulePermissions)
+      .set({ allowed: false })
+      .where(and(eq(clientTypeModulePermissions.clientType, 'coaching_1_1'), eq(clientTypeModulePermissions.moduleKey, 'blindspot')));
+    invalidateModuleAccessCache();
+  });
+
+  it('mentoring sí puede acceder a blindspot cuando la matriz lo permite (sembrado true)', async () => {
+    const access = await getResolvedModuleAccess('mentoring', {});
+    expect(access.blindspot).toBe(true);
   });
 });
