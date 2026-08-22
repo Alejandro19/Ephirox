@@ -24,6 +24,41 @@ describe('MemberCard', () => {
     expect(screen.getByText('Club Elite')).toBeInTheDocument();
   });
 
+  it('shows "Quedan X de Y clases" for a Presencial client with an active package, alongside the expiration date', async () => {
+    vi.mocked(clientsClient.fetchClient).mockResolvedValue({
+      id: 'client-3',
+      name: 'Presencial Client',
+      email: 'presencial@example.com',
+      plan: 'Miembro',
+      status: 'active',
+      clientType: 'coaching_1_1',
+      memberNumber: 7,
+      activatedAt: '2026-01-01T00:00:00.000Z',
+      planEndDate: '2099-01-01',
+      sessionsTotal: 8,
+      sessionsRemaining: 5,
+    });
+    render(<MemberCard clientId="client-3" />);
+    expect(await screen.findByText('Quedan 5 de 8')).toBeInTheDocument();
+  });
+
+  it('does not show a sessions line for a non-Presencial client', async () => {
+    vi.mocked(clientsClient.fetchClient).mockResolvedValue({
+      id: 'client-4',
+      name: 'Online Client',
+      email: 'online@example.com',
+      plan: 'Miembro',
+      status: 'active',
+      clientType: 'coaching_online',
+      memberNumber: 8,
+      activatedAt: '2026-01-01T00:00:00.000Z',
+      planEndDate: '2099-01-01',
+    });
+    render(<MemberCard clientId="client-4" />);
+    await screen.findByText('Miembro N.° 00008');
+    expect(screen.queryByText('Clases')).not.toBeInTheDocument();
+  });
+
   it('renders nothing for a client that is not active yet', async () => {
     vi.mocked(clientsClient.fetchClient).mockResolvedValue({
       id: 'client-2',

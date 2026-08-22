@@ -32,6 +32,20 @@ export function IconLock({ size = 14, className, style }: IconProps) {
   );
 }
 
+// Réplica del ti-crown-filled de Tabler (el proyecto no tiene
+// @tabler/icons-react instalado — todos los íconos son SVGs propios "estilo
+// Tabler", ver comentario al inicio del archivo). Señala un módulo incluido
+// en la membresía pero temporalmente inaccesible por vencimiento (vs.
+// IconLock, que señala un módulo nunca incluido en el plan). Variante
+// rellena (fill, no stroke) — versión definitiva del badge de corona.
+export function IconCrown({ size = 14, className, style }: IconProps) {
+  return (
+    <svg {...base(size)} className={className} style={style} fill="currentColor">
+      <path d="M4 6 9 10 12 5 15 10 20 6 18 18 6 18Z" />
+    </svg>
+  );
+}
+
 export function IconSettings({ size = 14, className, style }: IconProps) {
   return (
     <svg {...base(size)} className={className} style={style} stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
@@ -118,6 +132,18 @@ export function IconAlertTriangle({ size = 20, className, style }: IconProps) {
       <path d="M12 3.5 21 19H3L12 3.5Z" />
       <line x1="12" y1="10" x2="12" y2="14" />
       <line x1="12" y1="16.8" x2="12" y2="16.9" />
+    </svg>
+  );
+}
+
+// Réplica del ti-alert-triangle-filled de Tabler — el "agujero" de la
+// exclamación se logra con fill-rule="evenodd" (dos subformas cerradas
+// dentro del triángulo), así que funciona sobre cualquier color de fondo
+// sin depender de conocerlo de antemano.
+export function IconAlertTriangleFilled({ size = 20, className, style }: IconProps) {
+  return (
+    <svg {...base(size)} className={className} style={style} fill="currentColor" fillRule="evenodd">
+      <path d="M12 3.2 21.8 19.2H2.2Z M11.4 9.5h1.2v5h-1.2Z M11.3 16.3h1.4v1.4h-1.4Z" />
     </svg>
   );
 }

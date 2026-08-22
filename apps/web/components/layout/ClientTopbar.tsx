@@ -4,8 +4,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../lib/auth-context";
 import { CLIENT_NAV, VIEW_TO_PATH, type AppState } from "../../lib/constants";
+import { getModuleAccessState } from "../../lib/module-access";
 import NotificationBell from "./NotificationBell";
 import BrandRing from "../ui/BrandRing";
+import { CrownBadge } from "../ui/CrownBadge";
+import { ModuleExpiredModal } from "./ModuleExpiredModal";
 import { IconLock, IconSettings, IconLogout } from "../ui/icons";
 
 type ClientTopbarProps = {
@@ -39,9 +42,10 @@ function AccountMenuRow({ icon, label, onClick }: { icon: React.ReactNode; label
 
 export default function ClientTopbar({ viewKey }: ClientTopbarProps) {
   const router = useRouter();
-  const { user, clientType, onboardingComplete, moduleAccess, logout } = useAuth();
+  const { user, clientType, onboardingComplete, moduleAccess, planExpired, logout } = useAuth();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
+  const [expiredModalOpen, setExpiredModalOpen] = useState(false);
   const accountRef = useRef<HTMLDivElement>(null);
 
   const navigate = useCallback(
@@ -51,6 +55,21 @@ export default function ClientTopbar({ viewKey }: ClientTopbarProps) {
       setDrawerOpen(false);
     },
     [router],
+  );
+
+  // Un módulo 'expired' está incluido en la membresía pero se venció — en
+  // vez de navegar, se avisa con el modal (ver getModuleAccessState, misma
+  // función que usan las cards del home).
+  const handleNavClick = useCallback(
+    (key: string) => {
+      if (getModuleAccessState(key, { moduleAccess, planExpired }) === "expired") {
+        setDrawerOpen(false);
+        setExpiredModalOpen(true);
+        return;
+      }
+      navigate(key);
+    },
+    [moduleAccess, planExpired, navigate],
   );
 
   useEffect(() => {
@@ -83,13 +102,6 @@ export default function ClientTopbar({ viewKey }: ClientTopbarProps) {
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // moduleAccess llega resuelto del backend contra la matriz real de Roles y
-  // Perfiles (ver getResolvedModuleAccess en type-module-access.service.ts)
-  // — nunca una lista hardcodeada acá, para que el candado no se
-  // desincronice cada vez que un admin edita la matriz. Una clave ausente
-  // (ej. "personal-info", que no es un módulo gateado) nunca bloquea.
-  const isLocked = (key: string) => moduleAccess[key] === false;
 
   return (
     <>
@@ -131,11 +143,11 @@ export default function ClientTopbar({ viewKey }: ClientTopbarProps) {
         <nav className="client-nav-row" style={{ display: "flex", alignItems: "center", gap: 10, flex: 1, minWidth: 0 }}>
           {items.map((item) => {
             const active = viewKey === item.key;
-            const locked = isLocked(item.key);
+            const state = getModuleAccessState(item.key, { moduleAccess, planExpired });
             return (
               <button
                 key={item.key}
-                onClick={() => navigate(item.key)}
+                onClick={() => handleNavClick(item.key)}
                 className={`client-nav-tab${active ? " active" : ""}`}
                 style={{
                   background: "none",
@@ -151,7 +163,8 @@ export default function ClientTopbar({ viewKey }: ClientTopbarProps) {
               >
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
                   {item.label}
-                  {locked && <IconLock size={10} />}
+                  {state === "expired" && <CrownBadge circleSize={14} iconSize={8} />}
+                  {state === "not_included" && <IconLock size={10} />}
                 </span>
               </button>
             );
@@ -246,11 +259,11 @@ export default function ClientTopbar({ viewKey }: ClientTopbarProps) {
         </span>
         {items.map((item) => {
           const active = viewKey === item.key;
-          const locked = isLocked(item.key);
+          const state = getModuleAccessState(item.key, { moduleAccess, planExpired });
           return (
             <button
               key={item.key}
-              onClick={() => navigate(item.key)}
+              onClick={() => handleNavClick(item.key)}
               style={{
                 background: "none", border: "none", textAlign: "left", cursor: "pointer",
                 padding: "12px 4px", fontSize: 14,
@@ -261,7 +274,8 @@ export default function ClientTopbar({ viewKey }: ClientTopbarProps) {
             >
               <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
                 {item.label}
-                {locked && <IconLock size={11} />}
+                {state === "expired" && <CrownBadge circleSize={14} iconSize={8} />}
+                {state === "not_included" && <IconLock size={11} />}
               </span>
             </button>
           );
@@ -290,6 +304,8 @@ export default function ClientTopbar({ viewKey }: ClientTopbarProps) {
           Cerrar sesión
         </button>
       </div>
+
+      <ModuleExpiredModal open={expiredModalOpen} onClose={() => setExpiredModalOpen(false)} />
 
       <style jsx>{`
         .client-nav-tab::after {

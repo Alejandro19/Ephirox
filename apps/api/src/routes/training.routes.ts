@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { TrainingDaysPatchSchema, ConfirmSessionInputSchema, AssignedQuotePatchSchema } from '@latribu/shared-types';
 import { validateBody } from '../middleware/validate.js';
 import { asyncHandler } from '../middleware/async-handler.js';
-import { authMiddleware, adminOnly, ownerOrAdmin } from '../middleware/auth.middleware.js';
+import { authMiddleware, adminOnly, ownerOrAdmin, blockExpiredPresencialSession } from '../middleware/auth.middleware.js';
 import { requirePermission } from '../middleware/require-permission.middleware.js';
 import * as trainingController from '../controllers/training.controller.js';
 import * as quotesController from '../controllers/quotes.controller.js';
@@ -29,6 +29,7 @@ trainingRouter.post(
   '/:id/training/confirm-session',
   authMiddleware,
   ownerOrAdmin,
+  blockExpiredPresencialSession,
   requirePermission('training'),
   validateBody(ConfirmSessionInputSchema),
   asyncHandler(trainingController.confirmSession)

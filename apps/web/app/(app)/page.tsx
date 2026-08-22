@@ -1,10 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import useSWR from "swr";
 import { useAuth } from "@/lib/auth-context";
 import { VIEW_TO_PATH } from "@/lib/constants";
+import { getModuleAccessState } from "@/lib/module-access";
 import { MemberCard } from "@/components/member/MemberCard";
 import { WellnessIndexCard } from "@/components/home/WellnessIndexCard";
+import { CrownBadge } from "@/components/ui/CrownBadge";
+import { ModuleExpiredModal } from "@/components/layout/ModuleExpiredModal";
 import { fetchClient } from "@/lib/clients-client";
 import { getNutrition } from "@/lib/nutrition-client";
 import { getWearableEstado } from "@/lib/wearable-client";
@@ -49,7 +53,8 @@ async function fetchQuickAccessSignals(clientId: string): Promise<Record<Exclude
 }
 
 export default function InicioPage() {
-  const { user, role, clientType, onboardingComplete } = useAuth();
+  const { user, role, clientType, onboardingComplete, moduleAccess, planExpired } = useAuth();
+  const [expiredModalOpen, setExpiredModalOpen] = useState(false);
 
   const isAdmin = role === "admin";
   // lead_wellness no ve accesos rápidos en absoluto (esos módulos están
@@ -73,6 +78,9 @@ export default function InicioPage() {
       ? { training: Boolean(clientDetail?.trainingDays), ...otherSignals }
       : null;
 
+  // Un módulo 'expired' fuerza su card a aparecer aunque no tenga datos —
+  // si no, un cliente que nunca usó Nutrición no vería ningún aviso de que
+  // la perdió al vencerse. 'not_included' nunca aparece (igual que hoy).
   const quickLinks = isAdmin
     ? [
         { key: "admin-clients", label: "Clientes", desc: "Gestionar clientes y permisos" },
@@ -80,7 +88,9 @@ export default function InicioPage() {
         { key: "community", label: "Club Wellness", desc: "Gestionar eventos y terapias" },
       ]
     : signals
-      ? ALL_CLIENT_QUICK_LINKS.filter((link) => signals[link.key])
+      ? ALL_CLIENT_QUICK_LINKS.filter(
+          (link) => signals[link.key] || getModuleAccessState(link.key, { moduleAccess, planExpired }) === "expired"
+        )
       : [];
 
   return (
@@ -119,12 +129,21 @@ export default function InicioPage() {
       >
         {quickLinks.map((link) => {
           const path = VIEW_TO_PATH[link.key] || `/${link.key}`;
+          const state = isAdmin ? "ok" : getModuleAccessState(link.key, { moduleAccess, planExpired });
+          const expired = state === "expired";
           return (
             <Link
               key={link.key}
               href={path}
+              onClick={(e) => {
+                if (expired) {
+                  e.preventDefault();
+                  setExpiredModalOpen(true);
+                }
+              }}
               style={{
                 display: "block",
+                position: "relative",
                 background: "var(--paper)",
                 border: "1px solid var(--line)",
                 borderRadius: "var(--radius)",
@@ -139,6 +158,11 @@ export default function InicioPage() {
                 e.currentTarget.style.borderColor = "var(--line)";
               }}
             >
+              {expired && (
+                <div style={{ position: "absolute", top: 14, right: 14 }}>
+                  <CrownBadge circleSize={26} iconSize={15} />
+                </div>
+              )}
               <div
                 style={{
                   fontSize: 15,
@@ -150,13 +174,15 @@ export default function InicioPage() {
                 {link.label}
               </div>
               <div style={{ fontSize: 12, color: "var(--ink-soft)" }}>
-                {link.desc}
+                {expired ? "Renueva para continuar" : link.desc}
               </div>
             </Link>
           );
         })}
       </div>
       )}
+
+      <ModuleExpiredModal open={expiredModalOpen} onClose={() => setExpiredModalOpen(false)} />
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { screen, waitFor } from '@testing-library/react';
+import { screen, waitFor, fireEvent } from '@testing-library/react';
 import { renderWithSWR as render } from './swr-test-utils';
 import InicioPage from '../app/(app)/page';
 import { useAuth } from '../lib/auth-context';
@@ -12,6 +12,7 @@ import * as eventsClient from '../lib/events-client';
 import * as therapiesClient from '../lib/therapies-client';
 import * as retreatsClient from '../lib/retreats-client';
 
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 vi.mock('../lib/auth-context', () => ({ useAuth: vi.fn() }));
 vi.mock('../lib/clients-client');
 vi.mock('../lib/nutrition-client');
@@ -26,12 +27,19 @@ vi.mock('../lib/retreats-client');
 vi.mock('../components/member/MemberCard', () => ({ MemberCard: () => null }));
 vi.mock('../components/home/WellnessIndexCard', () => ({ WellnessIndexCard: () => null }));
 
-function mockAuth(clientType: string | null, role: 'admin' | 'cliente' = 'cliente') {
+function mockAuth(
+  clientType: string | null,
+  role: 'admin' | 'cliente' = 'cliente',
+  overrides: { moduleAccess?: Record<string, boolean>; planExpired?: boolean } = {}
+) {
   vi.mocked(useAuth).mockReturnValue({
     user: { id: 'client-1', name: 'Ana', email: 'a@x.com' },
     role,
     clientType,
     onboardingComplete: true,
+    moduleAccess: {},
+    planExpired: false,
+    ...overrides,
   } as ReturnType<typeof useAuth>);
 }
 
@@ -118,5 +126,17 @@ describe('InicioPage — quick-access cards', () => {
     expect(screen.getByText('Frases')).toBeInTheDocument();
     expect(screen.getByText('Club Wellness')).toBeInTheDocument();
     expect(clientsClient.fetchClient).not.toHaveBeenCalled();
+  });
+
+  it('forces a card to appear (with "Renueva para continuar") for an expired-but-included module, even with no data — and opens the modal instead of navigating', async () => {
+    mockAuth('coaching_1_1', 'cliente', { moduleAccess: { training: true }, planExpired: true });
+    mockNoDataAnywhere();
+    render(<InicioPage />);
+
+    const trainingCard = await screen.findByText('Entrenamiento');
+    expect(screen.getByText('Renueva para continuar')).toBeInTheDocument();
+
+    fireEvent.click(trainingCard);
+    expect(screen.getByText('Este módulo está incluido en tu membresía. Renueva tu pago para volver a acceder.')).toBeInTheDocument();
   });
 });

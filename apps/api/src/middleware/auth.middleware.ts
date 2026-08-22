@@ -67,9 +67,20 @@ export function clientOnly(req: Request, res: Response, next: NextFunction) {
 
 export function ownerOrAdmin(req: Request, res: Response, next: NextFunction) {
   if (req.user?.role === 'admin') return next();
-  if (req.user?.id === req.params.id) {
-    if (req.planExpired) return unauthorized(res, 'Tu plan ha vencido. Contacta a tu coach para renovarlo.', 402);
-    return next();
-  }
+  if (req.user?.id === req.params.id) return next();
   return unauthorized(res, 'No tienes permiso para acceder a estos datos.', 403);
+}
+
+// Acceso no restrictivo (estilo Oura): un cliente vencido navega la app con
+// normalidad — ownerOrAdmin ya no lo bloquea a nivel de cuenta. La única
+// excepción "sin excepciones" que sigue en pie es Presencial: no puede
+// registrar más clases de un paquete vencido, sin importar sesiones_restantes
+// (ver manual-migrations y clients.service.ts::activatePaidPlan). Este
+// middleware es ese único bloqueo puntual — se monta solo en
+// confirm-session, no en el resto de rutas.
+export function blockExpiredPresencialSession(req: Request, res: Response, next: NextFunction) {
+  if (req.planExpired && req.client?.clientType === 'coaching_1_1') {
+    return unauthorized(res, 'Tu plan ha vencido. Contacta a tu coach para renovarlo.', 402);
+  }
+  next();
 }

@@ -12,10 +12,10 @@ import { showToast } from "../layout/AppShell";
 import AdminTherapistList from "./AdminTherapistList";
 
 function isPlanExpired(c: ClientSummary): boolean {
-  if (!c.plan_end_date) return false;
+  if (!c.planEndDate) return false;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  return new Date(c.plan_end_date + "T00:00:00") < today;
+  return new Date(c.planEndDate + "T00:00:00") < today;
 }
 
 function statusBadgeStyle(status: string): React.CSSProperties {
@@ -221,11 +221,11 @@ export default function AdminClientList() {
                   <td style={tdStyle}><span style={statusBadgeStyle(c.status)}>{c.status}</span></td>
                   <td style={tdStyle}>{CLIENT_TYPE_LABELS[ct] || "-"}</td>
                   <td style={tdStyle}>{ct === "lead_wellness" ? "-" :
-                    c.plan_end_date ? <span style={{ display: "inline-block",
+                    c.planEndDate ? <span style={{ display: "inline-block",
                       padding: "3px 10px", borderRadius: "9999px", fontSize: 11, fontWeight: 600,
                       background: isPlanExpired(c) ? "rgba(193,70,47,.12)" : "rgba(201,166,107,.14)",
                       color: isPlanExpired(c) ? "var(--danger)" : "var(--ring-accent)" }}>
-                      {c.plan_end_date}</span> : "-"}</td>
+                      {c.planEndDate}</span> : "-"}</td>
                   <td style={{ ...tdStyle, textAlign: "right" }}>
                     <a href={`/admin/clients/${c.id}`}
                       style={{ display: "inline-flex", alignItems: "center",

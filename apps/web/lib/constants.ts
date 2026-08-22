@@ -36,7 +36,7 @@ export const ADMIN_NAV: NavItem[] = [
 ];
 
 export const ADMIN_HUB_SUBITEMS: NavItem[] = [
-  { key: "admin-clients", label: "Crear Usuario" },
+  { key: "admin-clients", label: "Clientes" },
   { key: "admin-quotes", label: "Frases" },
   { key: "admin-roles", label: "Roles y Perfiles" },
   { key: "admin-membership-prices", label: "Precios de Membresía" },

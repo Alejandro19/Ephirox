@@ -67,7 +67,7 @@ describe('PanelConfiguracion', () => {
   });
 
   it('shows the plan expiration date and navigates to /configuracion/membresias on "Gestionar membresía"', async () => {
-    vi.mocked(clientsClient.fetchClient).mockResolvedValue(baseClient({ plan_end_date: '2099-06-15' }));
+    vi.mocked(clientsClient.fetchClient).mockResolvedValue(baseClient({ planEndDate: '2099-06-15' }));
     render(<PanelConfiguracion clientId={CLIENT_ID} />);
 
     await screen.findByDisplayValue('Ana Pérez');

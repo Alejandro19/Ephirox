@@ -23,6 +23,7 @@ export type MembershipPrice = {
   id: string;
   clientType: string;
   durationMonths: number;
+  packageSize: number | null;
   amountCents: number;
   currency: string;
 };
@@ -43,16 +44,37 @@ export async function updateMembershipPrice(id: string, amountCents: number): Pr
   return body.price;
 }
 
-export type MembershipCheckout = { clientSecret: string; membershipPaymentId: string };
+export type SupportedProvider = 'wompi' | 'stripe';
 
-export async function createMembershipCheckout(clientType: string, durationMonths: number): Promise<MembershipCheckout> {
-  const body = await authorizedRequest<{ success: boolean; clientSecret: string; membershipPaymentId: string; error?: string }>(
+export type MembershipCheckout =
+  | { provider: 'wompi'; membershipPaymentId: string; providerReference: string; publicKey: string; amountInCents: number; currency: string; integritySignature: string }
+  | { provider: 'stripe'; membershipPaymentId: string; providerReference: string; clientSecret: string };
+
+// Solo para diagnóstico/futuro — el checkout YA NO elige proveedor acá, lo
+// resuelve el servidor (config central tier→proveedor, ver
+// apps/api/src/services/payment-providers/tier-routing.ts).
+export async function getAvailableProviders(): Promise<{ name: SupportedProvider; available: boolean }[]> {
+  const body = await authorizedRequest<{ success: boolean; providers: { name: SupportedProvider; available: boolean }[]; error?: string }>(
+    '/api/account/membership/providers',
+    'GET'
+  );
+  if (!body.success) throw new Error(body.error || 'Error al consultar los medios de pago disponibles.');
+  return body.providers;
+}
+
+export async function createMembershipCheckout(
+  clientType: string,
+  durationMonths: number,
+  packageSize?: number
+): Promise<MembershipCheckout> {
+  const body = await authorizedRequest<{ success: boolean; error?: string } & Record<string, unknown>>(
     '/api/account/membership/checkout',
     'POST',
-    { client_type: clientType, duration_months: durationMonths }
+    { client_type: clientType, duration_months: durationMonths, package_size: packageSize }
   );
   if (!body.success) throw new Error(body.error || 'Error al iniciar el pago.');
-  return { clientSecret: body.clientSecret, membershipPaymentId: body.membershipPaymentId };
+  const { success: _success, ...checkout } = body;
+  return checkout as MembershipCheckout;
 }
 
 export async function getMembershipPaymentStatus(paymentId: string): Promise<{ status: 'pending' | 'succeeded' | 'failed' }> {

@@ -12,6 +12,7 @@ vi.mock('../lib/clients-client', () => ({
     id: 'client-1', name: 'Ana Ruiz', email: 'ana@example.com', plan: 'coaching_1_1',
     status: 'active', clientType: 'coaching_1_1',
   })),
+  fetchMembershipPayments: vi.fn(async () => []),
 }));
 
 vi.mock('../lib/personal-info-client', () => ({

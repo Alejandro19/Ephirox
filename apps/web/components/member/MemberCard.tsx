@@ -50,13 +50,21 @@ export function MemberCard({ clientId }: { clientId: string }) {
             <p className="text-[13px] font-semibold">{formatJoinDate(client.activatedAt)}</p>
           </div>
         )}
-        {client.plan_end_date && (() => {
+        {client.clientType === 'coaching_1_1' && client.sessionsTotal != null && client.sessionsRemaining != null && (
+          <div>
+            <p className="text-[10px] uppercase tracking-wide" style={{ color: 'var(--hero-espresso-text-muted)' }}>Clases</p>
+            <p className="text-[13px] font-semibold">
+              Quedan {client.sessionsRemaining} de {client.sessionsTotal}
+            </p>
+          </div>
+        )}
+        {client.planEndDate && (() => {
           // Pago único por periodo, no suscripción — al vencer, vuelve a
           // pagar en /configuracion/membresias. Mismo acento dorado que ya
           // usa esta card (Miembro N.°) para la fecha vencida — la card no
           // tiene ningún color de alerta hoy, y el dorado ya es el acento
           // de atención en el resto de la app.
-          const expired = new Date().toISOString().slice(0, 10) > client.plan_end_date;
+          const expired = new Date().toISOString().slice(0, 10) > client.planEndDate!;
           return (
             <div>
               <p className="text-[10px] uppercase tracking-wide" style={{ color: 'var(--hero-espresso-text-muted)' }}>
@@ -66,7 +74,7 @@ export function MemberCard({ clientId }: { clientId: string }) {
                 className="text-[13px] font-semibold"
                 style={expired ? { color: 'var(--hero-espresso-accent)' } : undefined}
               >
-                {formatPlanDate(client.plan_end_date)}
+                {formatPlanDate(client.planEndDate)}
               </p>
             </div>
           );

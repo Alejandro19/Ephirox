@@ -332,8 +332,11 @@ export default function PanelConfiguracion({ clientId }) {
                 sub={[
                   client.memberNumber != null ? `Miembro N.º ${formatMemberNumber(client.memberNumber)}` : null,
                   client.activatedAt ? `Ingresaste el ${formatDate(client.activatedAt)}` : null,
-                  client.plan_end_date
-                    ? `${new Date().toISOString().slice(0, 10) > client.plan_end_date ? "Venció" : "Vence"} el ${formatPlanDate(client.plan_end_date)}`
+                  client.clientType === "coaching_1_1" && client.sessionsTotal != null && client.sessionsRemaining != null
+                    ? `Quedan ${client.sessionsRemaining} de ${client.sessionsTotal} clases`
+                    : null,
+                  client.planEndDate
+                    ? `${new Date().toISOString().slice(0, 10) > client.planEndDate ? "Venció" : "Vence"} el ${formatPlanDate(client.planEndDate)}`
                     : null,
                 ].filter(Boolean).join(" · ")}
                 right={<Pill tone={client.status === "active" ? "gold" : "neutral"}>{client.status === "active" ? "Activa" : "Inactiva"}</Pill>}

@@ -4,7 +4,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import ClientTopbar from "./ClientTopbar";
 import AdminTopbar from "./AdminTopbar";
-import PlanExpiredScreen from "./PlanExpiredScreen";
+import { MembershipExpiredBanner } from "./MembershipExpiredBanner";
 import { useAuth } from "../../lib/auth-context";
 import {
   captureIncomingDeepLink,
@@ -102,12 +102,6 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
   if (!isLoading && !token) return null;
 
-  // ── Plan expired takeover ──
-  // /configuracion/membresias es la única puerta de salida de este bloqueo
-  // total — sin esta excepción, un cliente vencido nunca podría llegar a la
-  // pantalla de pago que justamente necesita para volver a pagar.
-  if (planExpired && role === "cliente" && pathname !== "/configuracion/membresias") return <PlanExpiredScreen />;
-
   // ── Error boundary ──
   if (boundaryError) {
     return (
@@ -147,6 +141,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
   return (
     <div style={{ display: "flex", minHeight: "100vh", position: "relative", flexDirection: "column" }}>
       {isAdmin ? <AdminTopbar viewKey={viewKey} /> : <ClientTopbar viewKey={viewKey} />}
+      {planExpired && role === "cliente" && <MembershipExpiredBanner />}
       <main
         id="main-content"
         className="app-main-content"

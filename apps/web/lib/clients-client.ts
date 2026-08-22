@@ -10,9 +10,12 @@ export type ClientSummary = {
   status: string;
   clientType: string;
   client_type?: string;
-  plan_end_date?: string;
-  plan_start_date?: string;
-  plan_duration_days?: number;
+  // El backend siempre serializa estos tres en camelCase (son columnas
+  // `plan_end_date`/etc. en Postgres, pero Drizzle expone la propiedad JS
+  // con el nombre camelCase del schema, sin conversión) — nunca snake_case.
+  planEndDate?: string | null;
+  planStartDate?: string | null;
+  planDurationDays?: number | null;
   deletionRequestedAt?: string | null;
 };
 
@@ -36,6 +39,29 @@ export type ClientDetail = ClientSummary & {
   avatarUrl?: string | null;
   notificationPreferences?: NotificationPreferences;
   deletionRequestedAt?: string | null;
+  // Saldo de clases del paquete Presencial vigente — null para cualquier
+  // otro tipo de cliente (ver activatePaidPlan en apps/api).
+  sessionsTotal?: number | null;
+  sessionsRemaining?: number | null;
+};
+
+export type MembershipPayment = {
+  id: string;
+  clientId: string;
+  clientType: string;
+  durationMonths: number;
+  packageSize: number | null;
+  amountCents: number;
+  currency: string;
+  provider: 'wompi' | 'stripe';
+  status: 'pending' | 'succeeded' | 'failed';
+  requiresApproval: boolean;
+  appliedAt: string | null;
+  trmUsed: string | null;
+  trmDate: string | null;
+  marginApplied: string | null;
+  createdAt: string;
+  succeededAt: string | null;
 };
 
 export async function fetchClients(): Promise<ClientSummary[]> {
@@ -154,6 +180,27 @@ export async function saveClientType(id: string, clientType: string): Promise<Cl
   });
   const body = await res.json();
   if (!body.success) throw new Error(body.error || 'Error al actualizar tipo de cliente.');
+  return body.client;
+}
+
+export async function fetchMembershipPayments(clientId: string): Promise<MembershipPayment[]> {
+  const token = getSessionToken();
+  const res = await fetch(`${API_BASE_URL}/api/clients/${clientId}/membership-payments`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const body = await res.json();
+  if (!body.success) throw new Error(body.error || 'Error al obtener el historial de pagos.');
+  return body.payments;
+}
+
+export async function approveMembershipPayment(clientId: string, paymentId: string): Promise<ClientDetail> {
+  const token = getSessionToken();
+  const res = await fetch(`${API_BASE_URL}/api/clients/${clientId}/membership-payments/${paymentId}/approve`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const body = await res.json();
+  if (!body.success) throw new Error(body.error || 'Error al aprobar el pago.');
   return body.client;
 }
 
