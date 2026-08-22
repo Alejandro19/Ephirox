@@ -1,6 +1,6 @@
 # session-memory.md
 
-> **Última actualización:** 2026-08-18
+> **Última actualización:** 2026-08-22
 > **Propósito:** Resumen ejecutivo por sesión (orden cronológico) y plan de continuidad inmediato para la siguiente sesión.
 
 ---
@@ -462,22 +462,81 @@ Todo lo de esta sesión, más trabajo de sesiones anteriores que seguía sin com
 
 ---
 
-## Próximas actividades — Siguiente sesión (actualizada 2026-08-18)
+## Resumen Ejecutivo — Sesión 2026-08-15 → 2026-08-22 — Membresías v2 (Wompi + paquetes + TRM), acceso no restrictivo, y validación real de pagos
 
-### Actividad 1 — Activar el cobro real de Stripe (bloqueante para probar el flujo)
+Sesión larga, con pruebas reales de Alejandro en el navegador intercaladas (primera vez en el proyecto que el flujo de pago se prueba de punta a punta con datos reales, no solo tests). Cubre dos features grandes más una batería de bugs reales encontrados durante esa validación.
 
-- Alejandro debe dar: `STRIPE_SECRET_KEY` y `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` (modo test), y configurar el endpoint del webhook (`/api/stripe/webhook`) en el dashboard de Stripe para obtener `STRIPE_WEBHOOK_SECRET`. Además, cargar los 5 montos reales desde `/admin/membership-prices` — hoy arrancan en $0 y el checkout rechaza pagar un plan en $0 (`PriceNotConfiguredError`, 409).
-- Con eso, probar un pago end-to-end con la tarjeta de test `4242 4242 4242 4242`: confirmar que el webhook llega, el PaymentIntent queda `succeeded` en el dashboard de Stripe, y que `clients.status`/`client_type`/`plan_end_date` se actualizan correctamente.
+### 1. Membresías v2 — paquetes de clases, puente TRM para Elite, proveedor unificado
 
-### Actividad 2 — Verificación visual pendiente (todo esta sesión se hizo por tests/tsc, sin browser)
+Construido sobre la interfaz `PaymentProvider` de la sesión anterior (Stripe ya andaba). Reemplaza "elige el primer proveedor disponible" (bug real: en cuanto había `STRIPE_SECRET_KEY` cargada, Wompi dejaba de usarse aunque fuera el proveedor real del día) por un mapeo fijo tier→proveedor en `apps/api/src/services/payment-providers/tier-routing.ts`: Presencial y Online siempre Wompi, Elite usa Stripe si está disponible y si no cae al puente TRM.
 
-- Panel de Configuración completo (perfil, avatar, notificaciones, privacidad, dispositivos, seguridad, eliminar cuenta), el dropdown rediseñado del avatar en el topbar, `/configuracion/membresias`, y `PlanExpiredScreen` con el botón "Renovar membresía" nuevo.
+- **Club Presencial** pasa a ser paquete de clases (8/12/16) × plazo (1/3 meses), 6 combinaciones de precio reales. `sessions_total`/`sessions_remaining` nuevas en `clients`, descontadas por el mismo botón "Completar día" de Entrenamiento (`training.service.ts::confirmSession`) — sin endpoint nuevo. Vencimiento sin excepciones ya estaba cubierto por infraestructura existente (ver más abajo, sección 3, esto cambió).
+- **Club Elite** vía Wompi (mientras no haya Stripe) convierte el precio de referencia USD a COP con la TRM oficial de datos.gov.co (`trm.service.ts`) + margen configurable (`WOMPI_ELITE_MARGIN`), cacheada hasta 48h si la API falla — nunca un valor inventado. TRM/fecha/margen se auditan por transacción en `membership_payments`.
+- **Aprobación diferenciada** (regla confirmada explícitamente por Alejandro, no la recomendación binaria original): un pago activa la membresía automático solo si el cliente ya tenía una membresía paga activa antes (upgrade/renovación); si es su primera membresía paga (viene de Lead Wellness o pendiente), el pago queda confirmado pero la activación espera aprobación manual del admin (`membership_payments.requires_approval`), visible en `admin/clientes` con historial de pagos y botón "Aprobar y activar".
+- Nuevas tablas/columnas: `membership_prices.package_size` (+ unique de 3 columnas), `clients.sessions_total/sessions_remaining`, `membership_payments.package_size/requires_approval/applied_at/trm_used/trm_date/margin_applied`.
 
-### Actividad 3 — Decidir sobre `login-page.test.tsx` / `LoginForm.tsx`
+### 2. Bug real de moneda con Wompi (encontrado probando un pago real)
+
+Al probar el primer pago real con las llaves de sandbox de Wompi, el widget tiraba `"Ingresa una moneda válida: COP, USD, GTQ."`. Causa: `wompi.provider.ts` pasaba la moneda tal cual la maneja el resto del sistema (minúscula, `'cop'`) tanto en la firma de integridad como al widget — Wompi exige mayúscula. Corregido normalizando a mayúscula solo en el borde con Wompi (firma + respuesta), sin tocar la convención interna minúscula que comparte con Stripe.
+
+### 3. Acceso no restrictivo para membresías vencidas (estilo Oura) — reemplaza el bloqueo total
+
+Pedido explícito de Alejandro: un cliente vencido debe poder seguir navegando la app con normalidad (banner + corona indicando qué perdió), en vez del bloqueo total que existía (`PlanExpiredScreen` reemplazaba toda la pantalla). **Decisión confirmada explícitamente**: esto reemplaza el bloqueo total incluso para Presencial, pero la regla "sin excepciones" de vencimiento de la sesión anterior se preserva acotada a un solo punto — no se puede registrar más clases de un paquete vencido (`blockExpiredPresencialSession`, nuevo middleware, montado solo en `confirm-session`). `ownerOrAdmin` dejó de bloquear por cuenta (era el mecanismo que antes cumplía esa regla de forma demasiado amplia).
+
+- `apps/web/lib/module-access.ts` — `getModuleAccessState(moduleId, {moduleAccess, planExpired})` → `'ok' | 'expired' | 'not_included'`, única fuente de verdad reusada por el topbar y las cards del home (antes las cards del home no tenían ningún candado, usaban una lógica de "¿hay datos?" no relacionada — se les agregó el criterio de permisos real).
+- Corona nueva (`IconCrown`/`CrownBadge`, SVG propio estilo Tabler, sin librería nueva) reemplaza el candado en módulos vencidos-pero-incluidos; el candado sigue igual para módulos nunca incluidos. Clic en un módulo vencido abre un modal en vez de navegar.
+- `PlanExpiredScreen.tsx` eliminado; `MembershipExpiredBanner.tsx` nuevo, persistente en todas las pantallas del cliente.
+- Webhook: cuando un veterano hace upgrade de tier (no una simple renovación), ahora sí se notifica al admin (antes solo se notificaba en la cola de aprobación).
+- **Refinamiento visual pedido después**: banner rediseñado como franja translúcida superpuesta al borde inferior del topbar (`rgba` + `backdrop-filter: blur`), íconos pasados a variantes rellenas (`ti-crown-filled`/`ti-alert-triangle-filled`, el "agujero" de la exclamación logrado con `fill-rule="evenodd"` para que funcione sobre cualquier fondo), corona de cards escalada a 26px/15px (definitiva, distinta de los 14px/8px del topbar).
+
+### 4. Bug real grave: `plan_end_date`/`plan_start_date`/`plan_duration_days` en snake_case, backend siempre devolvió camelCase
+
+Encontrado mientras se investigaban campos vacíos reportados por Alejandro en `AdminClientDetail`. El backend (Drizzle) nunca serializó estos 3 campos en snake_case — siempre fueron `planEndDate`/`planStartDate`/`planDurationDays`, confirmado pegándole directo a la API corriendo. Pero **5 componentes del frontend** (`AdminClientDetail`, `AdminClientList`, `MemberCard`, `PanelConfiguracion`, `PanelMembresias`) leían la versión snake_case, que nunca existió en la respuesta real — bug preexistente a esta sesión, nunca detectado porque los tests mockeaban el shape (snake_case) igual de mal que el código, sin validar contra la forma real de la API. Efecto real: `isCurrentlyActiveFor` en `PanelMembresias` siempre devolvía falso, así que un cliente con membresía vigente nunca veía "Vigente hasta" — solo el formulario de pago, con riesgo real de pago duplicado. Corregido en los 5 archivos + el tipo `ClientDetail`.
+
+### 5. Bug real de UX en la confirmación de pago (Stripe y Wompi)
+
+Encontrado probando pagos reales. Dos problemas encadenados:
+- El mensaje "Pago confirmado" nunca se veía — como el refetch del cliente (`mutate()`) resolvía casi al instante en local, la card saltaba directo a "Vigente hasta" sin mostrar el mensaje (el chequeo de `active` tenía prioridad sobre `justConfirmed` en el render).
+- Al corregir eso con un timer de 2.5s, apareció un bug peor: si a los 2.5s el webhook todavía no había marcado al cliente activo, la card volvía a renderizar el mismo formulario de Stripe con el `clientSecret` ya usado (PaymentIntent ya confirmado) → `"Unhandled payment Element loaderror"` + un botón "Pagar" fantasma.
+- Solución final (pedida explícitamente, estilo confirmación bancaria): el checkout se limpia apenas se confirma el pago (nunca se remonta), y el mensaje de éxito/rechazo se queda fijo en pantalla con un botón "Aceptar" explícito — nunca un timer. El rechazo también gana su propio mensaje ("El pago fue rechazado...") con botón "Reintentar", en vez de solo un texto de error chico que reseteaba la card en silencio.
+
+### 6. Rediseño de las cards de Membresías + ajustes menores de admin
+
+Labels ("Clases"/"Duración") sobre cada grupo de selectores, las 3 cards con la misma altura (flexbox + `margin-top: auto` empujando precio/botón al fondo), jerarquía de precio (label muted + valor grande), Elite diferenciada (borde dorado 2px + badge "Mentoría Premium" en la misma fila que el título). Además: menú admin "Crear Usuario" → "Clientes"; nueva columna "Plan" en el historial de pagos y campo "Plan pagado" en la card de Membresía del admin, concatenando paquete+plazo (`formatPlanDetail`, ej. "12 clases / 3 meses").
+
+### 7. Infraestructura de túneles para probar desde el celular (hallazgo operativo importante)
+
+Para que Wompi confirme pagos hace falta que su webhook llegue a algo público — se usó `cloudflared tunnel --url` (quick tunnel, sin cuenta) hacia `:3003`. Al intentar probar el NFC físico del gimnasio (`/training?m=entrenamiento&a=confirmar`) se descubrió que **clientes reales ya dependen de un túnel de este tipo apuntando a `:3000`**, porque el software todavía no está deployado (solo corre en el `localhost` de la compu de Alejandro). Se encontraron y cerraron 2 túneles huérfanos de 13 días atrás consumiendo ~97% de CPU cada uno — sin saber que uno de ellos era el link real del NFC, se rompió al cerrarlo. Se repuso con un túnel nuevo (URL distinta, hay que reprogramar el tag NFC). **Los túneles quick de Cloudflare generan una URL aleatoria nueva cada vez que se reinician — nunca se puede recuperar la misma** — cualquier cosa física (como un tag NFC) que dependa de esa URL se rompe cada vez que el túnel se cae.
+
+Adicionalmente se encontró que `apps/web/.env.local` tenía `NEXT_PUBLIC_API_BASE_URL=http://localhost:3003` — desde el celular eso apunta al propio celular, no a la compu de Alejandro, rompiendo silenciosamente TODO login (email/contraseña y Google) al entrar por el túnel del front. Se cambió temporalmente al túnel del API para poder probar desde el celular — **pendiente de confirmar si ya funciona, y de decidir si se revierte a `localhost` cuando se termine de probar desde el celular**.
+
+Alejandro no tiene dominio propio todavía, así que un túnel de Cloudflare con nombre fijo no es viable hoy (necesita un dominio dado de alta en Cloudflare). Decisión explícita: por ahora seguir con el túnel efímero; la solución de fondo (dominio + túnel fijo, o deploy real a Vercel/Railway/Render, ambos evaluados) queda pendiente de retomar.
+
+### 8. Verificación
+
+Suites completas de `apps/api` y `apps/web` corridas repetidamente durante toda la sesión, siempre con el mismo baseline conocido sin regresiones nuevas: 15 tests de Supabase Storage (credenciales inválidas en este entorno), 5 de `login-page.test.tsx` (determinístico, ver Actividad pendiente), y `wizard-shell-*`/`admin-roles-page.test.tsx` (flaky por contención de CPU bajo suite completa, confirmado repetidas veces corriéndolos aislados). `tsc --noEmit` limpio en ambos workspaces en cada punto de control. A diferencia de sesiones anteriores, esta vez hubo verificación real en navegador (Alejandro probando pagos/NFC/Google login en vivo), que fue justamente lo que encontró los bugs reales de las secciones 2, 4, 5 y 7 — ningún test los había detectado.
+
+---
+
+## Próximas actividades — Siguiente sesión (actualizada 2026-08-22)
+
+### Actividad 1 — Confirmar que el login desde el celular ya funciona
+
+- Verificar que el fix de `NEXT_PUBLIC_API_BASE_URL` (apuntado al túnel del API) resolvió el login por email/contraseña Y el botón de Google (este último además necesitaba el dominio del túnel del front agregado a "Authorized JavaScript origins" en Google Cloud Console — ya hecho por Alejandro, pendiente de confirmar que propagó). Decidir si `NEXT_PUBLIC_API_BASE_URL` vuelve a `localhost:3003` cuando se deje de probar desde el celular, o se documenta el swap como parte del flujo normal de pruebas mobile.
+
+### Actividad 2 — Resolver la fragilidad de infraestructura para el NFC del gimnasio (bloqueante real, clientes reales dependen de esto)
+
+- Elegir entre: (a) comprar un dominio + túnel de Cloudflare con nombre fijo, o (b) deploy real a Vercel (`apps/web`) + Railway/Render (`apps/api`), gratis y sin comprar dominio. Alejandro pateó la decisión para más adelante — de mientras, cualquier reinicio de su compu o caída del túnel corta el check-in de clientes reales hasta que alguien reprograme el NFC a mano.
+
+### Actividad 3 — Activar el cobro real de Wompi/Stripe con montos de producción
+
+- Sandbox ya validado end-to-end esta sesión (pago real de prueba, corrección del bug de moneda, confirmación con botón "Aceptar"). Falta que Alejandro decida cuándo pasar las llaves `pub_prod_`/`prod_integrity_`/`prod_events_` de Wompi (ya las compartió una vez, no se cargaron a propósito por ser de producción) y confirme los montos reales de Stripe para Online cuando ese tier deje de usar el puente Wompi.
+
+### Actividad 4 — Decidir sobre `login-page.test.tsx` / `LoginForm.tsx`
 
 - (Sigue sin resolver desde 2026-08-09 tarde.) Confirmar si se quiere restaurar el ruteo inteligente post-login conectando `components/auth/LoginForm.tsx` de verdad en `app/(auth)/login/page.tsx`, o si se prefiere borrar `LoginForm.tsx` como código muerto y simplificar/eliminar esos 5 tests.
 
-### Actividad 4 — Construir los 6 módulos placeholder del panel de terapeuta
+### Actividad 5 — Construir los 6 módulos placeholder del panel de terapeuta
 
 - (Sigue pendiente de varias sesiones atrás, sin tocar.) Mi perfil, Mis clientes, Mi agenda, Recursos clínicos, Comunidad de terapeutas, Dashboards.
 
@@ -498,3 +557,7 @@ Todo lo de esta sesión, más trabajo de sesiones anteriores que seguía sin com
 - **Cuidado con `campo ? new Date(campo) : null` en updates parciales de servicios `updateX()`:** si el campo no viene en el `input` (undefined), ese ternario igual evalúa a `null` y borra el valor existente en la base — a diferencia de `campo ?? undefined` (que sí deja el valor intacto cuando falta). Encontrado y corregido en `events.service.ts`/`retreats.service.ts` (2026-08-15): togglear "Desactivar" borraba silenciosamente la fecha del evento. Antes de escribir un `updateX()` nuevo con campos de fecha, usar el patrón correcto: `campo !== undefined ? (campo ? new Date(campo) : null) : undefined`. Vale la pena revisar si el mismo patrón roto existe en otros `updateX()` no tocados todavía.
 - **Webhooks de terceros (Stripe y cualquier futuro) necesitan el body crudo:** montar esa ruta específica en `app.ts` ANTES del `express.json()` global, con su propio `express.raw({ type: 'application/json' })` — si se monta después, la firma nunca verifica porque el body ya llegó parseado a objeto. Ver `apps/api/src/routes/stripe-webhook.routes.ts` (sesión 2026-08-18) como referencia del patrón.
 - **`membership_prices` arranca en $0 para los 5 planes** (Presencial/Online/Elite) hasta que Alejandro los cargue desde `/admin/membership-prices` — el checkout de Stripe rechaza pagar un plan en $0 a propósito (`PriceNotConfiguredError`, 409). Cualquier prueba end-to-end del pago necesita esto cargado primero.
+- **API camelCase, no snake_case (reforzado con un caso real, sesión 2026-08-22):** ya estaba anotado acá arriba, pero se confirmó pegándole directo a la API corriendo que `planEndDate`/`planStartDate`/`planDurationDays` NUNCA fueron snake_case — 5 componentes del frontend llevaban ese bug desde antes de esta sesión, sin que ningún test lo detectara porque los mocks copiaban el mismo error. Antes de confiar en un campo nuevo del lado del frontend, verificar contra una respuesta real de la API (`curl` o el Network tab), no solo contra el tipo TS declarado — el tipo puede estar mal y nadie lo notó.
+- **Wompi exige la moneda en MAYÚSCULA** (`COP`/`USD`/`GTQ`) tanto en la firma de integridad como en el payload del widget — el resto del sistema (incluido Stripe) usa minúscula como convención interna. Normalizado en el borde, dentro de `wompi.provider.ts` (`createCharge`), nunca en las capas de arriba.
+- **Probar pagos/NFC/Google login desde el celular necesita DOS túneles, no uno:** uno para `apps/web` (:3000, lo que el celular visita) y otro para `apps/api` (:3003, lo que ese frontend necesita llamar). Si `apps/web/.env.local` sigue apuntando `NEXT_PUBLIC_API_BASE_URL` a `http://localhost:3003`, el celular interpreta "localhost" como sí mismo y todo login falla en silencio (incluido Google, que además necesita el dominio del túnel de `apps/web` agregado a "Authorized JavaScript origins" en Google Cloud Console — cambios ahí tardan de minutos a un par de horas en propagar).
+- **Los túneles "quick" de `cloudflared` (sin cuenta) generan una URL aleatoria nueva cada vez que se reinician — nunca se recupera la misma.** Cualquier cosa física o durable que dependa de esa URL (como un tag NFC del gimnasio) se rompe cada vez que el túnel se cae, y hay que reprogramarla a mano. Antes de matar un proceso `cloudflared` "huérfano" de una sesión anterior, confirmar que no sea un link real en uso — en esta sesión uno de dos túneles de 13 días de antigüedad resultó ser el NFC físico que usan clientes reales del gimnasio. La solución de fondo (dominio propio + túnel con nombre fijo, o deploy real) sigue pendiente — ver Actividad 2 de la sección de próximas actividades.
