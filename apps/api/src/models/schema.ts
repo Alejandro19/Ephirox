@@ -56,6 +56,12 @@ export const clients = pgTable('clients', {
   // account.service.ts / panel admin de clientes). Nunca dispara un borrado
   // automático — solo lo hace visible para que un admin contacte al cliente.
   deletionRequestedAt: timestamp('deletion_requested_at', { withTimezone: true }),
+  // Saldo de clases del paquete Presencial vigente — se fija al activar el
+  // pago (ver clientsService.activatePaidPlan) y se descuenta en cada
+  // asistencia (ver training.service.ts::confirmSession). null para
+  // cualquier tipo de cliente que no sea coaching_1_1.
+  sessionsTotal: integer('sessions_total'),
+  sessionsRemaining: integer('sessions_remaining'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 });
@@ -685,30 +691,55 @@ export const membershipPrices = pgTable('membership_prices', {
   id: uuid('id').primaryKey().defaultRandom(),
   clientType: text('client_type').notNull(),
   durationMonths: integer('duration_months').notNull(),
+  // Solo coaching_1_1 (Presencial) usa esto — el paquete de clases (8/12/16)
+  // es una tercera dimensión de precio junto con la duración. null para
+  // el resto de los tiers (Online/Elite no venden por paquete).
+  packageSize: integer('package_size'),
   amountCents: integer('amount_cents').notNull().default(0),
   currency: text('currency').notNull().default('usd'),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 }, (table) => ({
-  clientTypeDurationUnique: unique().on(table.clientType, table.durationMonths),
+  clientTypeDurationPackageUnique: unique().on(table.clientType, table.durationMonths, table.packageSize),
 }));
 export type MembershipPrice = typeof membershipPrices.$inferSelect;
 
-// Ledger de pagos + mecanismo de idempotencia: Stripe puede reenviar el
-// mismo evento de webhook más de una vez — la membresía solo se activa la
-// primera vez que esta fila pasa a 'succeeded' (ver stripe-webhook.controller.ts).
+// Ledger de pagos + mecanismo de idempotencia: cualquier proveedor puede
+// reenviar el mismo evento de webhook más de una vez — la membresía solo se
+// activa la primera vez que esta fila pasa a 'succeeded' (ver
+// payment-webhook.controller.ts). `provider` + `providerReference` es
+// agnóstico: para Stripe, providerReference es el PaymentIntent id; para
+// Wompi, es la `reference` que nosotros mismos generamos al armar el cobro.
 export const membershipPayments = pgTable('membership_payments', {
   id: uuid('id').primaryKey().defaultRandom(),
   clientId: uuid('client_id').notNull().references(() => clients.id),
   clientType: text('client_type').notNull(),
   durationMonths: integer('duration_months').notNull(),
+  // Snapshot de lo comprado — solo Presencial. Se usa para setear
+  // sessionsTotal/sessionsRemaining al activar (ver activatePaidPlan).
+  packageSize: integer('package_size'),
   amountCents: integer('amount_cents').notNull(),
   currency: text('currency').notNull(),
-  stripePaymentIntentId: text('stripe_payment_intent_id').notNull().unique(),
+  provider: text('provider').notNull(), // 'wompi' | 'stripe'
+  providerReference: text('provider_reference').notNull(),
   status: text('status').notNull().default('pending'), // 'pending' | 'succeeded' | 'failed'
+  // Aprobación diferenciada (ver payment-webhook.controller.ts): un pago
+  // 'succeeded' de un cliente sin membresía paga previa NO se activa solo —
+  // queda con requiresApproval=true hasta que un admin lo apruebe
+  // (POST .../approve), que recién ahí setea appliedAt. Para un cliente ya
+  // activo en un tier pagable (upgrade/renovación), succeededAt y appliedAt
+  // quedan prácticamente iguales — el webhook hace ambas cosas de una.
+  requiresApproval: boolean('requires_approval').notNull().default(false),
+  appliedAt: timestamp('applied_at', { withTimezone: true }),
+  // Auditoría del puente TRM (Elite vía Wompi mientras no haya Stripe) — ver
+  // trm.service.ts. null para cualquier pago que no use el puente.
+  trmUsed: numeric('trm_used'),
+  trmDate: date('trm_date'),
+  marginApplied: numeric('margin_applied'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   succeededAt: timestamp('succeeded_at', { withTimezone: true }),
 }, (table) => ({
   clientIdIdx: index('membership_payments_client_id_idx').on(table.clientId),
+  providerReferenceUnique: unique().on(table.provider, table.providerReference),
 }));
 export type MembershipPayment = typeof membershipPayments.$inferSelect;
 

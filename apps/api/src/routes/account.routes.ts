@@ -35,3 +35,4 @@ accountRouter.post(
   asyncHandler(accountController.postMembershipCheckout)
 );
 accountRouter.get('/membership/payments/:id', asyncHandler(accountController.getMembershipPaymentStatus));
+accountRouter.get('/membership/providers', asyncHandler(accountController.getMembershipProviders));

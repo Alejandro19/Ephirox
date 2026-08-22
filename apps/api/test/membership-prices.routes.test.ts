@@ -61,8 +61,9 @@ describe('membership-prices routes', () => {
     expect(res.status).toBe(200);
     expect(res.body.price.amountCents).toBe(400000);
 
-    // Restaurar a 0 para no afectar otras corridas de test que asumen el seed original.
-    await db.update(membershipPrices).set({ amountCents: 0 }).where(eq(membershipPrices.id, price.id));
+    // Restaurar al valor que tenía antes del test (no hardcodear 0 — mentoring
+    // arranca con un precio de referencia real, $4.000 USD, no en $0).
+    await db.update(membershipPrices).set({ amountCents: price.amountCents }).where(eq(membershipPrices.id, price.id));
   });
 
   it('rejects a negative amount', async () => {

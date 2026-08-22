@@ -33,6 +33,7 @@ import { adminNotificationsRouter, clientNotificationsRouter } from './routes/no
 import { accountRouter } from './routes/account.routes.js';
 import { membershipPricesRouter } from './routes/membership-prices.routes.js';
 import { stripeWebhookRouter } from './routes/stripe-webhook.routes.js';
+import { wompiWebhookRouter } from './routes/wompi-webhook.routes.js';
 
 export function createApp() {
   const app = express();
@@ -45,10 +46,12 @@ export function createApp() {
   // achievements, etc.) son JSON repetitivo, comprimen muy bien.
   app.use(compression());
 
-  // Webhook de Stripe — DEBE montarse antes del express.json() global de
-  // abajo: Stripe exige el body crudo (sin parsear) para verificar la firma
-  // (ver stripe-webhook.routes.ts, que trae su propio express.raw()).
+  // Webhooks de proveedores de pago — DEBEN montarse antes del express.json()
+  // global de abajo: cada proveedor exige el body crudo (sin parsear) para
+  // verificar su firma/checksum (ver *-webhook.routes.ts, que traen su
+  // propio express.raw()).
   app.use('/api/stripe', stripeWebhookRouter);
+  app.use('/api/wompi', wompiWebhookRouter);
 
   app.use(express.json({ limit: '10mb' }));
 

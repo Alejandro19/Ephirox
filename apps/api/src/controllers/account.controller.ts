@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import type { LegalAcceptanceInput, NotificationPreferencesPatch, MembershipCheckoutInput } from '@latribu/shared-types';
 import * as accountService from '../services/account.service.js';
+import { TrmUnavailableError } from '../services/trm.service.js';
 
 function ok(res: Response, data: Record<string, unknown>, status = 200) {
   return res.status(status).json({ success: true, ...data });
@@ -47,15 +48,19 @@ export async function getExport(req: Request, res: Response) {
 }
 
 export async function postMembershipCheckout(req: Request, res: Response) {
-  const { client_type, duration_months } = req.body as MembershipCheckoutInput;
+  const { client_type, duration_months, package_size } = req.body as MembershipCheckoutInput;
   try {
     const checkout = await accountService.createMembershipCheckout(req.user!.id, {
       clientType: client_type,
       durationMonths: duration_months,
+      packageSize: package_size,
     });
     return ok(res, checkout, 201);
   } catch (e) {
     if (e instanceof accountService.PriceNotConfiguredError) return err(res, e.message, 409);
+    if (e instanceof accountService.ProviderUnavailableError) return err(res, e.message, 503);
+    // Nunca un valor de TRM inventado — error claro en el botón de pago.
+    if (e instanceof TrmUnavailableError) return err(res, e.message, 503);
     throw e;
   }
 }
@@ -64,4 +69,9 @@ export async function getMembershipPaymentStatus(req: Request, res: Response) {
   const status = await accountService.getMembershipPaymentStatus(req.user!.id, req.params.id);
   if (!status) return err(res, 'Pago no encontrado.', 404);
   return ok(res, status);
+}
+
+export async function getMembershipProviders(_req: Request, res: Response) {
+  const providers = accountService.getAvailableProviders();
+  return ok(res, { providers });
 }

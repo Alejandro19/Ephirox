@@ -1,10 +1,14 @@
+import type { PayableClientType } from '@latribu/shared-types';
 import { db } from '../db/index.js';
 import { uploadFile } from '../storage/index.js';
 import * as clientsService from './clients.service.js';
 import * as legalAcceptanceService from './legal-acceptance.service.js';
 import * as membershipPricesService from './membership-prices.service.js';
 import * as membershipPaymentsService from './membership-payments.service.js';
-import { stripeClient } from './stripe.service.js';
+import { getProvider, listProviders } from './payment-providers/index.js';
+import { resolveProviderForTier } from './payment-providers/tier-routing.js';
+import { getCurrentTrm } from './trm.service.js';
+import type { ChargeResult } from './payment-providers/index.js';
 import type { LegalAcceptanceInput } from './legal-acceptance.service.js';
 import type { Client } from '../models/schema.js';
 
@@ -80,36 +84,73 @@ export class PriceNotConfiguredError extends Error {
   }
 }
 
-export type MembershipCheckout = { clientSecret: string; membershipPaymentId: string };
+export class ProviderUnavailableError extends Error {
+  constructor(provider: string) {
+    super('Este medio de pago no está disponible todavía.');
+    this.name = 'ProviderUnavailableError';
+    this.provider = provider;
+  }
+  provider: string;
+}
 
-// Crea el PaymentIntent y la fila 'pending' correspondiente. NUNCA activa la
-// membresía acá — eso solo lo hace el webhook (stripe-webhook.controller.ts)
-// tras confirmar el pago con Stripe.
+// Wompi es el proveedor activo hoy; Stripe queda detrás de la misma
+// interfaz, construido pero inactivo hasta tener una llave real — ver
+// payment-providers/index.ts.
+export function getAvailableProviders() {
+  return listProviders();
+}
+
+export type MembershipCheckout = ChargeResult & { membershipPaymentId: string };
+
+// Arma el cobro y la fila 'pending' correspondiente. El proveedor NUNCA lo
+// elige el cliente — lo resuelve resolveProviderForTier (config central,
+// único lugar editable). NUNCA activa la membresía acá — eso solo lo hace
+// el webhook (payment-webhook.controller.ts), sin importar de qué proveedor
+// vino ni si terminó activando directo o quedando pendiente de aprobación.
 export async function createMembershipCheckout(
   clientId: string,
-  input: { clientType: string; durationMonths: number }
+  input: { clientType: PayableClientType; durationMonths: number; packageSize?: number }
 ): Promise<MembershipCheckout> {
-  const price = await membershipPricesService.findPrice(input.clientType, input.durationMonths);
+  const price = await membershipPricesService.findPrice(input.clientType, input.durationMonths, input.packageSize);
   if (!price || price.amountCents <= 0) throw new PriceNotConfiguredError();
 
-  const paymentIntent = await stripeClient().paymentIntents.create({
-    amount: price.amountCents,
-    currency: price.currency,
-    automatic_payment_methods: { enabled: true },
-    metadata: { clientId, clientType: input.clientType, durationMonths: String(input.durationMonths) },
-  });
-  if (!paymentIntent.client_secret) throw new Error('Stripe no devolvió un client_secret.');
+  const providerName = resolveProviderForTier(input.clientType);
+  const provider = getProvider(providerName);
+  if (!provider.isAvailable()) throw new ProviderUnavailableError(providerName);
+
+  let amountCents = price.amountCents;
+  let currency = price.currency;
+  let trmAudit: { trmUsed: number; trmDate: string; marginApplied: number } | undefined;
+
+  // Puente Elite: el monto de referencia es en USD, pero Wompi solo cobra en
+  // COP — se convierte acá con la TRM oficial del día + margen, fijada en
+  // este momento y nunca recalculada después (ver trm.service.ts). Cuando
+  // Stripe esté disponible, resolveProviderForTier devuelve 'stripe' y este
+  // bloque se salta por completo — se cobra el USD de referencia directo.
+  if (input.clientType === 'mentoring' && providerName === 'wompi') {
+    const trm = await getCurrentTrm();
+    const margin = Number(process.env.WOMPI_ELITE_MARGIN ?? '0.03');
+    const usdAmount = price.amountCents / 100;
+    amountCents = Math.round(usdAmount * trm.value * (1 + margin) * 100);
+    currency = 'cop';
+    trmAudit = { trmUsed: trm.value, trmDate: trm.date, marginApplied: margin };
+  }
+
+  const charge = await provider.createCharge({ amountCents, currency, clientId });
 
   const payment = await membershipPaymentsService.createPendingPayment({
     clientId,
     clientType: input.clientType,
     durationMonths: input.durationMonths,
-    amountCents: price.amountCents,
-    currency: price.currency,
-    stripePaymentIntentId: paymentIntent.id,
+    packageSize: input.packageSize,
+    amountCents,
+    currency,
+    provider: charge.provider,
+    providerReference: charge.providerReference,
+    ...trmAudit,
   });
 
-  return { clientSecret: paymentIntent.client_secret, membershipPaymentId: payment.id };
+  return { ...charge, membershipPaymentId: payment.id };
 }
 
 // Lo consulta el frontend mientras espera la confirmación real — nunca se

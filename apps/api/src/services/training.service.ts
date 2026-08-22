@@ -133,6 +133,19 @@ export async function confirmSession(
     if (existing.length === 0) {
       await db.insert(trainingCompletions).values({ clientId, dayNumber, completedDate: today, source });
       justInsertedNewSession = true;
+
+      // Club Presencial: cada asistencia (este mismo botón, sin endpoint
+      // nuevo) descuenta una sesión del paquete pagado — ver
+      // clientsService.activatePaidPlan, que fija sessionsRemaining al
+      // activar el pago. El bloqueo al vencer fecha_vencimiento (sin
+      // excepciones) ya lo cubre ownerOrAdmin/isPlanExpired antes de llegar
+      // acá, no hace falta un chequeo aparte.
+      if (client?.clientType === 'coaching_1_1' && client.sessionsRemaining != null && client.sessionsRemaining > 0) {
+        await db
+          .update(clients)
+          .set({ sessionsRemaining: client.sessionsRemaining - 1, updatedAt: new Date() })
+          .where(eq(clients.id, clientId));
+      }
     }
   }
 

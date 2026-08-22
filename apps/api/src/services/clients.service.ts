@@ -238,10 +238,15 @@ export async function updateClientType(id: string, clientType: string): Promise<
 // nunca seteaba.
 export async function activatePaidPlan(
   id: string,
-  input: { clientType: string; durationDays: number }
+  input: { clientType: string; durationDays: number; packageSize?: number }
 ): Promise<Client | null> {
   await updateStatus(id, 'active');
   await updateClientType(id, input.clientType);
+  // Solo Presencial vende por paquete de clases — fija el saldo vigente al
+  // tamaño comprado (ver training.service.ts::confirmSession, que lo descuenta).
+  if (input.packageSize != null) {
+    await updateClient(id, { sessionsTotal: input.packageSize, sessionsRemaining: input.packageSize });
+  }
   return renewPlan(id, { duration_days: input.durationDays });
 }
 

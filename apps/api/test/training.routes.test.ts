@@ -354,6 +354,74 @@ describe('training routes', () => {
       await db.delete(trainingCompletions).where(eq(trainingCompletions.clientId, twoDayClient.id));
       await db.delete(clients).where(eq(clients.id, twoDayClient.id));
     });
+
+    it('descuenta sessionsRemaining en 1 para un cliente Presencial (coaching_1_1) con paquete de clases activo', async () => {
+      const [presencialClient] = await db
+        .insert(clients)
+        .values({
+          name: 'Presencial Sessions Client', email: `presencial-sessions-${Date.now()}@example.com`, passwordHash: 'x',
+          clientType: 'coaching_1_1', trainingDays: 3, permissions: { training: true },
+          sessionsTotal: 8, sessionsRemaining: 8,
+        })
+        .returning();
+      const token = signToken({ id: presencialClient.id, role: 'cliente', name: presencialClient.name, email: presencialClient.email });
+
+      const res = await request(app)
+        .post(`/api/clients/${presencialClient.id}/training/confirm-session`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ tz: 'America/Mexico_City' });
+      expect(res.status).toBe(200);
+
+      const [updated] = await db.select().from(clients).where(eq(clients.id, presencialClient.id));
+      expect(updated.sessionsRemaining).toBe(7);
+      expect(updated.sessionsTotal).toBe(8); // el total no cambia, solo el restante
+
+      await db.delete(trainingCompletions).where(eq(trainingCompletions.clientId, presencialClient.id));
+      await db.delete(clients).where(eq(clients.id, presencialClient.id));
+    });
+
+    it('nunca deja sessionsRemaining en negativo, y no descuenta nada para un cliente que no es Presencial', async () => {
+      const [zeroSessionsClient] = await db
+        .insert(clients)
+        .values({
+          name: 'Zero Sessions Client', email: `zero-sessions-${Date.now()}@example.com`, passwordHash: 'x',
+          clientType: 'coaching_1_1', trainingDays: 3, permissions: { training: true },
+          sessionsTotal: 8, sessionsRemaining: 0,
+        })
+        .returning();
+      const token = signToken({ id: zeroSessionsClient.id, role: 'cliente', name: zeroSessionsClient.name, email: zeroSessionsClient.email });
+
+      await request(app).post(`/api/clients/${zeroSessionsClient.id}/training/confirm-session`).set('Authorization', `Bearer ${token}`).send({ tz: 'America/Mexico_City' });
+
+      const [updated] = await db.select().from(clients).where(eq(clients.id, zeroSessionsClient.id));
+      expect(updated.sessionsRemaining).toBe(0); // no baja de 0
+
+      await db.delete(trainingCompletions).where(eq(trainingCompletions.clientId, zeroSessionsClient.id));
+      await db.delete(clients).where(eq(clients.id, zeroSessionsClient.id));
+    });
+
+    it('bloquea confirm-session (402) para un Presencial con fecha_vencimiento pasada, sin excepción aunque tenga sesiones_restantes', async () => {
+      const [expiredClient] = await db
+        .insert(clients)
+        .values({
+          name: 'Presencial Expired Client', email: `presencial-expired-${Date.now()}@example.com`, passwordHash: 'x',
+          clientType: 'coaching_1_1', trainingDays: 3, permissions: { training: true },
+          sessionsTotal: 8, sessionsRemaining: 8, planEndDate: '2000-01-01',
+        })
+        .returning();
+      const token = signToken({ id: expiredClient.id, role: 'cliente', name: expiredClient.name, email: expiredClient.email });
+
+      const res = await request(app)
+        .post(`/api/clients/${expiredClient.id}/training/confirm-session`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ tz: 'America/Mexico_City' });
+      expect(res.status).toBe(402);
+
+      const [unchanged] = await db.select().from(clients).where(eq(clients.id, expiredClient.id));
+      expect(unchanged.sessionsRemaining).toBe(8); // no se descontó nada
+
+      await db.delete(clients).where(eq(clients.id, expiredClient.id));
+    });
   });
 
   describe('GET /training/achievements', () => {

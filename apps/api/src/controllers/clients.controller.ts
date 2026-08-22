@@ -8,6 +8,7 @@ import type {
   RenewPlanPatch,
 } from '@latribu/shared-types';
 import * as clientsService from '../services/clients.service.js';
+import * as membershipPaymentsService from '../services/membership-payments.service.js';
 
 function ok(res: Response, data: Record<string, unknown>, status = 200) {
   return res.status(status).json({ success: true, ...data });
@@ -74,6 +75,31 @@ export async function updateClientType(req: Request, res: Response) {
 export async function resolveDeletionRequest(req: Request, res: Response) {
   const client = await clientsService.resolveDeletionRequest(req.params.id);
   if (!client) return err(res, 'Cliente no encontrado.', 404);
+  return ok(res, { client });
+}
+
+// Historial de pagos del cliente — auditoría, sin ningún control de
+// override de fecha/sesiones (decisión explícita de Alejandro).
+export async function getMembershipPayments(req: Request, res: Response) {
+  const payments = await membershipPaymentsService.findAllByClientId(req.params.id);
+  return ok(res, { payments });
+}
+
+// Única forma de activar una membresía cuyo pago quedó pendiente de
+// aprobación (cliente sin membresía paga previa) — reusa la MISMA
+// activatePaidPlan que ya dispara el webhook para un cliente veterano.
+export async function approveMembershipPayment(req: Request, res: Response) {
+  const payment = await membershipPaymentsService.findById(req.params.paymentId);
+  if (!payment || payment.clientId !== req.params.id) return err(res, 'Pago no encontrado.', 404);
+  if (!payment.requiresApproval || payment.appliedAt) return err(res, 'Este pago no está pendiente de aprobación.', 409);
+
+  const durationDays = payment.durationMonths === 1 ? 30 : 90;
+  const client = await clientsService.activatePaidPlan(payment.clientId, {
+    clientType: payment.clientType,
+    durationDays,
+    packageSize: payment.packageSize ?? undefined,
+  });
+  await membershipPaymentsService.markApplied(payment.id);
   return ok(res, { client });
 }
 
