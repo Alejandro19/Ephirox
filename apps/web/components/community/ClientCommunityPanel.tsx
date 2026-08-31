@@ -132,7 +132,7 @@ export function ClientCommunityPanel({ clientId }: { clientId: string }) {
     return (
       <div>
         {header}
-        <p role="alert" className="font-body" style={{ color: '#D99483' }}>
+        <p role="alert" className="font-body" style={{ color: 'var(--eph-danger)' }}>
           {error}
         </p>
       </div>

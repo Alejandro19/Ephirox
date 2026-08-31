@@ -26,7 +26,7 @@ import {
   IconCamera,
 } from '../ui/icons';
 
-const AVATAR_COLORS = ['var(--eph-accent)', 'var(--eph-steel)', '#8C8177'];
+const AVATAR_COLORS = ['var(--eph-accent)', 'var(--eph-steel)', 'var(--eph-muted)'];
 
 const EVENT_CATEGORY_ICON: Record<EventCategoryKey, (props: { size?: number }) => ReactElement> = {
   ice: IconSnowflake,
