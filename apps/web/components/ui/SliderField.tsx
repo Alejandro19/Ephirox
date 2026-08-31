@@ -31,7 +31,7 @@ export default function SliderField({
             {label}
           </label>
         )}
-        <span className="font-mono text-[13px] font-normal" style={{ color: "var(--eph-text)" }}>{value}</span>
+        <span className="eph-num-mono font-mono text-[34px] font-normal" style={{ color: "var(--eph-accent)" }}>{value}</span>
       </div>
       <div style={{ height: 36, display: "flex", alignItems: "center", boxSizing: "border-box" }}>
         <input

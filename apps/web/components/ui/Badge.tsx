@@ -18,7 +18,7 @@ export default function Badge({ label, variant = "success" }: BadgeProps) {
   const color = VARIANT_COLOR[variant];
   return (
     <span
-      className="inline-block rounded-[999px] border font-mono text-[10px] font-normal uppercase tracking-[0.16em]"
+      className="inline-block rounded-[999px] border font-mono text-[10px] font-normal uppercase tracking-[0.18em]"
       style={{ padding: "4px 12px", borderColor: color, color }}
     >
       {label}

@@ -21,7 +21,7 @@ export default function RingProgress({
   value,
   size = 64,
   strokeWidth = 5,
-  trackColor = "rgba(237, 230, 220, 0.14)",
+  trackColor = "var(--eph-line-2)",
   children,
 }: RingProgressProps) {
   const pct = Math.max(0, Math.min(100, value));

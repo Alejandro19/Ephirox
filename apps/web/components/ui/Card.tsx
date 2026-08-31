@@ -21,7 +21,7 @@ export default function Card({ children, eyebrow, className = "", style }: CardP
     >
       {eyebrow && (
         <div
-          className="mb-5 border-b border-[var(--eph-line)] pb-3 font-mono text-[10px] font-normal uppercase tracking-[0.20em]"
+          className="mb-5 border-b border-[var(--eph-line)] pb-3 font-mono text-[10px] font-normal uppercase tracking-[0.22em]"
           style={{ color: "var(--eph-accent)" }}
         >
           {eyebrow}
