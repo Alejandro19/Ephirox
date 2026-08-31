@@ -36,7 +36,7 @@ export function AdminAchievementsPanel({ clientId }: { clientId: string }) {
   });
 
   if (loading) return <div style={cardStyle}><p style={{ color: 'var(--eph-muted)', margin: 0 }}>Cargando medallas y trofeos…</p></div>;
-  if (error) return <div style={cardStyle}><p style={{ color: '#D99483', margin: 0 }}>{(error as Error).message}</p></div>;
+  if (error) return <div style={cardStyle}><p style={{ color: 'var(--eph-danger)', margin: 0 }}>{(error as Error).message}</p></div>;
   if (!data) return null;
 
   const { medalsInCurrentCycle, trophiesEarned } = computeAchievements(data.streakWeeks ?? 0);

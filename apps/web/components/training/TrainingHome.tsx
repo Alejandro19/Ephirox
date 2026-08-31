@@ -82,7 +82,7 @@ export function TrainingHome({
         >
           <div
             className="pointer-events-none absolute -right-10 -top-10 h-[180px] w-[180px] rounded-full"
-            style={{ background: 'radial-gradient(circle, rgba(201,164,106,.16) 0%, transparent 70%)' }}
+            style={{ background: 'radial-gradient(circle, color-mix(in srgb, var(--eph-accent) 16%, transparent) 0%, transparent 70%)' }}
           />
           <div className="relative z-10 mb-2.5 flex items-start justify-between gap-3">
             <p className="font-mono text-[10px] uppercase tracking-[0.16em]" style={{ color: 'var(--eph-accent)' }}>
@@ -92,7 +92,7 @@ export function TrainingHome({
               <div className="flex flex-shrink-0 items-center gap-1.5 rounded-[999px] border px-3 py-1.5" style={{ borderColor: 'var(--eph-line-2)' }}>
                 <IconFlame size={14} />
                 <span className="font-mono text-[13px]">{streak.streakWeeks}</span>
-                <span className="font-mono text-[9px] uppercase tracking-[0.08em]" style={{ color: streak.atRisk ? '#D9A98A' : 'var(--eph-muted)' }}>
+                <span className="font-mono text-[9px] uppercase tracking-[0.08em]" style={{ color: streak.atRisk ? 'var(--eph-danger)' : 'var(--eph-muted)' }}>
                   {streak.atRisk ? 'en riesgo' : streak.streakWeeks === 1 ? 'semana seguida' : 'semanas seguidas'}
                 </span>
               </div>
@@ -224,7 +224,7 @@ export function TrainingHome({
             >
               Nivel de disciplina
               <span className="flex items-center gap-2.5">
-                <span className="inline-block h-[2px] w-[70px] overflow-hidden" style={{ background: 'rgba(237,230,220,0.14)' }}>
+                <span className="inline-block h-[2px] w-[70px] overflow-hidden" style={{ background: 'var(--eph-line-2)' }}>
                   <span
                     className="block h-full"
                     style={{ width: `${Math.min(stats.pct, 100)}%`, background: 'var(--eph-accent)' }}

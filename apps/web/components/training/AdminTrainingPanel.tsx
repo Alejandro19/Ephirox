@@ -156,7 +156,7 @@ function RowView({ row, onChange, onEdit, onConfirm, onCancel, onDelete }: RowVi
             <button type="button" aria-label="Editar" onClick={onEdit} style={iconButtonStyle('var(--eph-muted)')}>
               <IconEdit size={13} />
             </button>
-            <button type="button" aria-label="Eliminar" onClick={onDelete} style={iconButtonStyle('#D99483')}>
+            <button type="button" aria-label="Eliminar" onClick={onDelete} style={iconButtonStyle('var(--eph-danger)')}>
               <IconTrash size={13} />
             </button>
           </div>
@@ -227,7 +227,7 @@ function RowView({ row, onChange, onEdit, onConfirm, onCancel, onDelete }: RowVi
           <button type="button" aria-label="Guardar fila" onClick={onConfirm} style={iconButtonStyle('var(--eph-accent)')}>
             ✓
           </button>
-          <button type="button" aria-label="Cancelar" onClick={onCancel} style={iconButtonStyle('#D99483')}>
+          <button type="button" aria-label="Cancelar" onClick={onCancel} style={iconButtonStyle('var(--eph-danger)')}>
             <IconX size={13} />
           </button>
         </div>
@@ -369,7 +369,7 @@ export function AdminTrainingPanel({ clientId }: AdminTrainingPanelProps) {
   }
 
   if (loading) return <p style={{ color: 'var(--eph-muted)' }}>Cargando…</p>;
-  if (error) return <p style={{ color: '#D99483' }}>{(error as Error).message}</p>;
+  if (error) return <p style={{ color: 'var(--eph-danger)' }}>{(error as Error).message}</p>;
 
   return (
     <div>

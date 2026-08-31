@@ -78,7 +78,7 @@ export function ProgressBar({ done, total }: { done: number; total: number }) {
           {done}/{total} · {pct}%
         </span>
       </div>
-      <div className="h-[2px] overflow-hidden" style={{ background: 'rgba(237,230,220,0.14)' }}>
+      <div className="h-[2px] overflow-hidden" style={{ background: 'var(--eph-line-2)' }}>
         <div className="h-full" style={{ width: `${barWidth}%`, background: 'var(--eph-accent)' }} />
       </div>
     </div>
@@ -92,7 +92,7 @@ export function MiniRing({ pct, size = 46 }: { pct: number; size?: number }) {
   return (
     <div className="relative flex-shrink-0" style={{ width: size, height: size }}>
       <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size} className="-rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(237,230,220,0.14)" strokeWidth="4" />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--eph-line-2)" strokeWidth="4" />
         <circle
           cx={size / 2}
           cy={size / 2}

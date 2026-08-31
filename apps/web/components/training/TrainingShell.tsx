@@ -120,7 +120,7 @@ export function TrainingShell({ clientId, clientType }: TrainingShellProps) {
     return <LockedBenefit benefit="tu plan de entrenamiento" />;
   }
   const error = actionError || (loadError ? (loadError as Error).message : null);
-  if (error) return <p role="alert" className="font-body" style={{ color: '#D99483' }}>{error}</p>;
+  if (error) return <p role="alert" className="font-body" style={{ color: 'var(--eph-danger)' }}>{error}</p>;
   if (!data) return null;
 
   const { trainingDays, exercises, completions, streak, quote, clientName } = data;

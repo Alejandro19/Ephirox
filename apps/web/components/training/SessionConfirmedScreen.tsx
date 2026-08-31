@@ -84,7 +84,7 @@ export function SessionConfirmedScreen({ streak, phrase, clientId, onClose }: Se
         </p>
       )}
       {shareError && (
-        <p role="alert" className="font-body text-xs" style={{ color: '#D99483' }}>
+        <p role="alert" className="font-body text-xs" style={{ color: 'var(--eph-danger)' }}>
           {shareError}
         </p>
       )}
