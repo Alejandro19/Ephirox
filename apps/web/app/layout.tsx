@@ -69,7 +69,13 @@ export default function RootLayout({
             /login, sin el delay de varios segundos que había antes. */}
         <Script src="https://accounts.google.com/gsi/client" strategy="beforeInteractive" />
         <Script src="https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js" strategy="beforeInteractive" />
-        <Providers>{children}</Providers>
+        {/* Contenedor raíz del sistema de temas Ephirox — data-theme vive acá,
+            no en <body>, para que toda la app (incluida la barra superior)
+            herede los tokens por cascada. Valor estático por ahora; el paso
+            siguiente (resolución de tema + toggle) lo vuelve dinámico. */}
+        <div className="eph-root" data-theme="dark-carbon">
+          <Providers>{children}</Providers>
+        </div>
       </body>
     </html>
   );

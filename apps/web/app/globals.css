@@ -1,3 +1,4 @@
+@import "./tema.css";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -50,26 +51,13 @@
   --radius-control: 9px;
 
   /* ─── Identidad Ephirox (reskin en curso) ───
-     Conviven con la paleta anterior hasta que cada pantalla migre — no la
-     reemplazan todavía (ver plan de reskin). El "body" global sigue con el
-     fondo claro legacy; cada pantalla migrada setea su propio fondo oscuro
-     en su contenedor raíz, igual que ya hace /login. Cuando el árbol entero
-     esté migrado, la paleta legacy de arriba se retira en un solo paso. */
-  --eph-bg: #080807;
-  --eph-surface: #0E0C0B;
-  --eph-surface-2: #161311;
-  --eph-line: rgba(237, 230, 220, 0.12);
-  --eph-line-2: rgba(237, 230, 220, 0.20);
-  --eph-text: #F4EFE7;
-  --eph-body: #B7ADA2;
-  --eph-muted: #8C8177;
-  --eph-faint: #5F574F;
-  --eph-accent: #C9A46A;
-  --eph-accent-hi: #E3C795;
-  --eph-steel: #7E8A93;
-  --eph-danger: #8A4A3C;
-  --eph-ink: #0B0A09;
-  /* Documentos imprimibles/informes (PDF): únicos que usan claro */
+     Conviven con la paleta legacy de arriba hasta que cada pantalla migre.
+     Los tokens --eph-* de color ahora viven en tema.css, escalados por
+     data-theme (dark-brand / dark-carbon / light-premium) — ver
+     docs/EPHIROX-spec-temas.md. Cuando el árbol entero esté migrado, la
+     paleta legacy de arriba se retira en un solo paso. */
+  /* Documentos imprimibles/informes (PDF): únicos que usan claro siempre,
+     fuera del sistema de 3 temas (no dependen de data-theme). */
   --eph-paper-bg: #EDE6DC;
   --eph-paper-text: #1C1613;
 }
