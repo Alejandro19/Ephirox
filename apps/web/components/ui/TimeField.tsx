@@ -15,21 +15,24 @@ export default function TimeField({ value, onChange, label, id }: TimeFieldProps
   return (
     <div>
       {label && (
-        <div style={{ display: "flex", alignItems: "center", fontSize: 12, lineHeight: "16px", fontWeight: 400,
-          color: "var(--ink-secondary)", marginBottom: 4 }}>
-          <label htmlFor={fieldId} style={{ cursor: "pointer" }}>{label}</label>
-        </div>
+        <label
+          htmlFor={fieldId}
+          className="mb-1.5 block cursor-pointer font-mono text-[10px] font-normal uppercase tracking-[0.16em]"
+          style={{ color: "var(--eph-muted)" }}
+        >
+          {label}
+        </label>
       )}
-      <div style={{ background: "transparent", borderBottom: "1px solid var(--border-input)",
-        borderRadius: 0, height: 36, display: "flex", alignItems: "center",
+      <div style={{ background: "transparent", borderBottom: "1px solid var(--eph-line-2)",
+        borderRadius: 0, height: 40, display: "flex", alignItems: "center",
         padding: "0 2px", boxSizing: "border-box" }}>
         <input
           type="time"
           id={fieldId}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          style={{ border: "none", background: "transparent", fontWeight: 600,
-            color: "var(--ink)", fontSize: 14.5, width: "100%", height: "100%", padding: 0 }}
+          style={{ border: "none", background: "transparent", fontWeight: 400,
+            color: "var(--eph-text)", fontSize: 18, width: "100%", height: "100%", padding: 0 }}
         />
       </div>
     </div>

@@ -10,13 +10,14 @@ import {
 } from "./legal-content";
 
 /**
- * Paso de aceptación legal en el registro — La Tribu
+ * Paso de aceptación legal — La Tribu
  *
- * Se inserta como el ÚLTIMO paso antes de activar cualquier tipo de cuenta
- * (Club Explorador auto-aprobado, o solicitud de Membresía Premium),
- * y también tras el callback de SSO (Google/Apple) cuando se detecta
- * una identidad nueva sin cuenta previa — toda cuenta nueva pasa por aquí,
- * sin excepción, sin importar el método de autenticación.
+ * Dos usos: (1) gate obligatorio de pantalla completa en AppShell.tsx,
+ * bloqueando toda la app la primera vez que un cliente entra y todavía no
+ * tiene ninguna aceptación registrada (el alta de cuenta la hace un admin,
+ * no hay auto-registro); (2) reaceptación voluntaria desde Configuración de
+ * cuenta (PanelConfiguracion.jsx) cuando el cliente quiere revisar o
+ * actualizar su autorización.
  *
  * El texto completo de cada documento vive en ./legal-content.js y se
  * renderiza AQUÍ, dentro del mismo panel con scroll — no hay redirección
@@ -32,14 +33,14 @@ function Blocks({ blocks }) {
   return blocks.map((b, i) => {
     if (b.p) {
       return (
-        <p key={i} className="text-[13.5px] leading-relaxed mb-2.5" style={{ color: "#5A5248" }}>
+        <p key={i} className="text-[13.5px] leading-relaxed mb-2.5" style={{ color: "var(--eph-body)" }}>
           {b.p}
         </p>
       );
     }
     if (b.note) {
       return (
-        <p key={i} className="text-[12.5px] italic leading-relaxed mb-2.5" style={{ color: "#8A8070" }}>
+        <p key={i} className="text-[12.5px] italic leading-relaxed mb-2.5" style={{ color: "var(--eph-faint)" }}>
           {b.note}
         </p>
       );
@@ -48,8 +49,8 @@ function Blocks({ blocks }) {
       return (
         <ul key={i} className="mb-2.5 space-y-1.5">
           {b.ul.map((item, j) => (
-            <li key={j} className="text-[13.5px] leading-relaxed pl-4 relative" style={{ color: "#5A5248" }}>
-              <span className="absolute left-0" style={{ color: "#C9A66B" }}>•</span>
+            <li key={j} className="text-[13.5px] leading-relaxed pl-4 relative" style={{ color: "var(--eph-body)" }}>
+              <span className="absolute left-0" style={{ color: "var(--eph-accent)" }}>•</span>
               {item}
             </li>
           ))}
@@ -60,7 +61,7 @@ function Blocks({ blocks }) {
   });
 }
 
-const PANEL_BG = "#F7F2E8";
+const PANEL_BG = "var(--eph-surface-2)";
 
 function ScrollableDoc({ items, onReachEnd, scrolled }) {
   const ref = useRef(null);
@@ -76,11 +77,11 @@ function ScrollableDoc({ items, onReachEnd, scrolled }) {
         ref={ref}
         onScroll={handleScroll}
         className="h-[24rem] overflow-y-auto pr-3 border-t"
-        style={{ borderColor: "#E4DDCE" }}
+        style={{ borderColor: "var(--eph-line)" }}
       >
         {items.map((it, i) => (
           <div key={i} className="pt-5 pb-1">
-            <h4 className="font-serif text-[15px] mb-1.5" style={{ color: "#1A1712" }}>{it.h}</h4>
+            <h4 className="font-display font-normal text-[17px] mb-1.5" style={{ color: "var(--eph-text)" }}>{it.h}</h4>
             <Blocks blocks={it.blocks} />
           </div>
         ))}
@@ -92,7 +93,7 @@ function ScrollableDoc({ items, onReachEnd, scrolled }) {
           className="absolute bottom-0 left-0 right-3 h-11 pointer-events-none flex items-end justify-center pb-1.5"
           style={{ background: `linear-gradient(to bottom, transparent, ${PANEL_BG} 70%)` }}
         >
-          <span className="flex items-center gap-1 text-[11px]" style={{ color: "#8A8070" }}>
+          <span className="font-mono flex items-center gap-1 text-[10px] uppercase tracking-wide" style={{ color: "var(--eph-faint)" }}>
             <ChevronDown size={13} /> desplázate para continuar
           </span>
         </div>
@@ -111,17 +112,17 @@ function Consent({ label, checked, enabled, onToggle, locked }) {
       style={{ opacity: enabled ? 1 : 0.45, cursor: enabled ? "pointer" : "not-allowed" }}
     >
       <span
-        className="mt-0.5 flex-shrink-0 flex items-center justify-center rounded-[5px] border transition-colors"
+        className="mt-0.5 flex-shrink-0 flex items-center justify-center border transition-colors"
         style={{
-          width: 18, height: 18,
-          borderColor: checked ? "#C9A66B" : "#B9AF9B",
-          background: checked ? "#C9A66B" : "transparent",
+          width: 18, height: 18, borderRadius: 0,
+          borderColor: checked ? "var(--eph-accent)" : "var(--eph-line-2)",
+          background: checked ? "var(--eph-accent)" : "transparent",
         }}
       >
-        {checked && <Check size={12} color="#FAF7F1" strokeWidth={3} />}
-        {!checked && locked && <Lock size={9} color="#B9AF9B" />}
+        {checked && <Check size={12} color="var(--eph-ink)" strokeWidth={3} />}
+        {!checked && locked && <Lock size={9} color="var(--eph-line-2)" />}
       </span>
-      <span className="text-[13.5px] leading-snug" style={{ color: "#1A1712" }}>{label}</span>
+      <span className="text-[13.5px] leading-snug" style={{ color: "var(--eph-text)" }}>{label}</span>
     </button>
   );
 }
@@ -150,16 +151,16 @@ export default function AceptacionRegistro({ onComplete = () => {} }) {
 
   if (done) {
     return (
-      <div className="min-h-[560px] flex items-center justify-center" style={{ background: "#FAF7F1" }}>
+      <div className="min-h-[560px] flex items-center justify-center" style={{ background: "var(--eph-bg)" }}>
         <div className="text-center px-8">
           <div
             className="w-14 h-14 rounded-full mx-auto mb-5 flex items-center justify-center"
-            style={{ border: "1.5px solid #C9A66B" }}
+            style={{ border: "1.5px solid var(--eph-accent)" }}
           >
-            <Check size={22} color="#C9A66B" strokeWidth={2.5} />
+            <Check size={22} color="var(--eph-accent)" strokeWidth={2.5} />
           </div>
-          <h2 className="font-serif text-[22px] mb-2" style={{ color: "#1A1712" }}>Todo listo</h2>
-          <p className="text-[13.5px]" style={{ color: "#5A5248" }}>
+          <h2 className="font-display font-normal text-[24px] mb-2" style={{ color: "var(--eph-text)" }}>Todo listo</h2>
+          <p className="text-[13.5px]" style={{ color: "var(--eph-muted)" }}>
             Registramos tu aceptación con fecha y versión de cada documento.
           </p>
         </div>
@@ -168,16 +169,16 @@ export default function AceptacionRegistro({ onComplete = () => {} }) {
   }
 
   return (
-    <div className="min-h-[560px] flex items-center justify-center px-4 py-10" style={{ background: "#FAF7F1" }}>
+    <div className="min-h-[560px] flex items-center justify-center px-4 py-10" style={{ background: "var(--eph-bg)" }}>
       <div
-        className="w-full max-w-[500px] rounded-2xl border p-7 sm:p-8"
-        style={{ borderColor: "#E4DDCE", background: "#FFFEFB", boxShadow: "0 1px 3px rgba(26,23,18,0.05)" }}
+        className="w-full max-w-[500px] border p-7 sm:p-8"
+        style={{ borderRadius: 0, borderColor: "var(--eph-line)", background: "var(--eph-surface)" }}
       >
         <div className="flex items-center gap-2 mb-5">
-          <span className="font-serif text-[13px] tracking-[0.18em]" style={{ color: "#C9A66B" }}>LA TRIBU</span>
+          <span className="font-display text-[15px] tracking-[0.18em] uppercase" style={{ color: "var(--eph-accent)" }}>Ephirox</span>
         </div>
 
-        <h1 className="font-serif text-[22px] mb-6 leading-snug" style={{ color: "#1A1712" }}>Protección de datos y condiciones de uso</h1>
+        <h1 className="font-display font-normal text-[24px] mb-6 leading-snug" style={{ color: "var(--eph-text)" }}>Protección de datos y condiciones de uso</h1>
 
         <div className="flex gap-2 mb-4">
           {[
@@ -188,11 +189,11 @@ export default function AceptacionRegistro({ onComplete = () => {} }) {
               key={k}
               type="button"
               onClick={() => setTab(k)}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12.5px] border transition-colors"
+              className="font-mono flex items-center gap-1.5 px-3.5 py-2 text-[10px] uppercase tracking-wide border transition-colors"
               style={
                 tab === k
-                  ? { background: "#1A1712", borderColor: "#1A1712", color: "#FAF7F1" }
-                  : { background: "transparent", borderColor: "#D8D0BE", color: "#5A5248" }
+                  ? { borderRadius: 0, background: "var(--eph-accent)", borderColor: "var(--eph-accent)", color: "var(--eph-ink)" }
+                  : { borderRadius: 0, background: "transparent", borderColor: "var(--eph-line-2)", color: "var(--eph-body)" }
               }
             >
               <Icon size={13} />
@@ -202,7 +203,7 @@ export default function AceptacionRegistro({ onComplete = () => {} }) {
           ))}
         </div>
 
-        <div className="rounded-xl border p-5" style={{ borderColor: "#E4DDCE", background: PANEL_BG }}>
+        <div className="border p-5" style={{ borderRadius: 0, borderColor: "var(--eph-line)", background: PANEL_BG }}>
           {tab === "datos" ? (
             <ScrollableDoc items={DATOS_CONTENT} scrolled={scrolled.datos} onReachEnd={() => markScrolled("datos")} />
           ) : (
@@ -210,7 +211,7 @@ export default function AceptacionRegistro({ onComplete = () => {} }) {
           )}
         </div>
 
-        <div className="mt-2 divide-y" style={{ borderColor: "#EDE7D9" }}>
+        <div className="mt-2 divide-y" style={{ borderColor: "var(--eph-line)" }}>
           <Consent
             label="He leído y acepto la Política de Tratamiento de Datos Personales."
             checked={accepted.datos}
@@ -238,19 +239,19 @@ export default function AceptacionRegistro({ onComplete = () => {} }) {
           type="button"
           disabled={!allAccepted}
           onClick={handleContinue}
-          className="w-full mt-5 rounded-full text-[14px] font-medium transition-colors"
+          className="font-mono w-full mt-5 text-[11px] uppercase tracking-[0.1em] transition-colors"
           style={{
-            height: 48,
-            background: allAccepted ? "#1A1712" : "transparent",
-            color: allAccepted ? "#FAF7F1" : "#A79E8C",
-            border: allAccepted ? "1px solid #1A1712" : "1px solid #D8D0BE",
+            height: 48, borderRadius: 0,
+            background: allAccepted ? "var(--eph-accent)" : "transparent",
+            color: allAccepted ? "var(--eph-ink)" : "var(--eph-muted)",
+            border: allAccepted ? "1px solid var(--eph-accent)" : "1px solid var(--eph-line-2)",
             cursor: allAccepted ? "pointer" : "not-allowed",
           }}
         >
           Continuar
         </button>
 
-        <p className="text-[11px] text-center mt-3" style={{ color: "#A79E8C" }}>
+        <p className="text-[11px] text-center mt-3" style={{ color: "var(--eph-muted)" }}>
           {DATA_POLICY_VERSION} · {TERMS_VERSION}
         </p>
       </div>

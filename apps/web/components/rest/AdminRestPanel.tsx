@@ -7,30 +7,33 @@ import { fetchClient } from '../../lib/clients-client';
 import { isMentoringClient } from '../../lib/rest-logic';
 import { showToast } from '../layout/AppShell';
 import { RestToolsAdminPanel } from './RestToolsAdminPanel';
+import { InsightsSection } from '../insights/InsightsSection';
 
 const cardStyle: React.CSSProperties = {
-  background: 'var(--paper)', border: '1px solid var(--border-hairline)',
-  borderRadius: 'var(--radius-card)', padding: '22px 24px', marginBottom: 20,
+  background: 'var(--eph-surface)', border: '1px solid var(--eph-line)',
+  borderRadius: '0', padding: '22px 24px', marginBottom: 20,
 };
 const cardTitleStyle: React.CSSProperties = {
-  fontSize: 15, fontWeight: 700, color: 'var(--ink)', margin: '0 0 16px',
+  fontFamily: 'var(--font-cormorant), Georgia, serif', fontSize: 18, fontWeight: 400, color: 'var(--eph-text)', margin: '0 0 16px',
 };
 const labelStyle: React.CSSProperties = {
-  display: 'block', fontSize: 12, fontWeight: 400, color: 'var(--ink-secondary)', marginBottom: 4,
+  display: 'block', fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', fontSize: 10,
+  textTransform: 'uppercase', letterSpacing: '0.14em', fontWeight: 400, color: 'var(--eph-muted)', marginBottom: 6,
 };
 const fieldStyle: React.CSSProperties = {
-  width: '100%', height: 32, borderRadius: 0, border: 'none', borderBottom: '1px solid var(--border-input)',
-  padding: '0 2px 6px', fontSize: 14.5, fontWeight: 600, background: 'transparent', color: 'var(--ink)',
+  width: '100%', height: 32, borderRadius: 0, border: 'none', borderBottom: '1px solid var(--eph-line-2)',
+  padding: '0 2px 6px', fontSize: 15, fontWeight: 400, background: 'transparent', color: 'var(--eph-text)',
   outline: 'none', boxSizing: 'border-box',
 };
 const textareaStyle: React.CSSProperties = {
-  width: '100%', borderRadius: 10, border: '1px solid var(--border-hairline)',
-  padding: 10, fontSize: 14.5, fontWeight: 600, background: 'var(--paper)', color: 'var(--ink)',
+  width: '100%', borderRadius: 0, border: '1px solid var(--eph-line)',
+  padding: 10, fontSize: 15, fontWeight: 400, background: 'var(--eph-surface)', color: 'var(--eph-text)',
   outline: 'none', boxSizing: 'border-box', minHeight: 120, resize: 'vertical', fontFamily: 'inherit',
 };
 const primaryButtonStyle: React.CSSProperties = {
-  height: 40, padding: '0 22px', borderRadius: 9999, border: 'none',
-  background: 'var(--ink)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+  height: 40, padding: '0 22px', borderRadius: 0, border: 'none',
+  fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
+  background: 'var(--eph-accent)', color: 'var(--eph-ink)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.14em', cursor: 'pointer',
 };
 
 export function AdminRestPanel({ clientId }: { clientId: string }) {
@@ -70,10 +73,11 @@ export function AdminRestPanel({ clientId }: { clientId: string }) {
     }
   }
 
-  if (loading) return <p style={{ color: 'var(--ink-secondary)', fontSize: 14 }}>Cargando protocolo de sueño…</p>;
+  if (loading) return <p style={{ color: 'var(--eph-muted)', fontSize: 14 }}>Cargando protocolo de sueño…</p>;
 
   return (
     <div>
+      {mentoring && <InsightsSection clientId={clientId} moduleKey="sueno" />}
       {mentoring ? (
         <div style={cardStyle}>
           <h3 style={cardTitleStyle}>Protocolo personalizado</h3>
@@ -100,9 +104,9 @@ export function AdminRestPanel({ clientId }: { clientId: string }) {
       ) : (
         <div style={cardStyle}>
           <h3 style={cardTitleStyle}>Protocolo personalizado</h3>
-          <p style={{ fontSize: 13, color: 'var(--ink-secondary)', margin: 0 }}>
-            Este cliente no tiene el plan Mentoring — el módulo Hackeando el sueño se le muestra bloqueado con un CTA para
-            conocer planes. Cambia su tipo de cliente a Mentoring para poder escribirle este protocolo.
+          <p style={{ fontSize: 13, color: 'var(--eph-muted)', margin: 0 }}>
+            Este cliente no tiene el plan Premium — el módulo Sleep se le muestra bloqueado con un CTA para
+            conocer planes. Cambia su tipo de cliente a Premium para poder escribirle este protocolo.
           </p>
         </div>
       )}

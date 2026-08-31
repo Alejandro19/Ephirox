@@ -54,22 +54,25 @@ export default function TherapistTopbar({
           display: 'flex',
           alignItems: 'center',
           gap: 32,
-          height: 68,
+          height: 74,
           padding: '0 32px',
-          background: 'linear-gradient(135deg, var(--hero-piedra-start), var(--hero-piedra-end))',
+          background: 'var(--eph-bg)',
+          borderBottom: '1px solid var(--eph-line)',
         }}
       >
         <button
           onClick={() => navigate('casos')}
           aria-label="Ir al menú principal"
+          className="font-display"
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 8,
-            fontFamily: 'Fraunces, Georgia, serif',
-            fontSize: 19,
-            fontWeight: 700,
-            color: 'var(--hero-piedra-text)',
+            gap: 10,
+            fontSize: 18,
+            fontWeight: 400,
+            textTransform: 'uppercase',
+            letterSpacing: '0.14em',
+            color: 'var(--eph-text)',
             flexShrink: 0,
             background: 'none',
             border: 'none',
@@ -77,26 +80,28 @@ export default function TherapistTopbar({
             cursor: 'pointer',
           }}
         >
-          <BrandRing size={24} background="var(--hero-piedra-start)" />
-          La Tribu
+          <BrandRing size={24} />
+          Ephirox
         </button>
 
-        <nav className="therapist-nav-row" style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
+        <nav className="therapist-nav-row" style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1, minWidth: 0, overflowX: 'auto' }}>
           {THERAPIST_NAV.map((item) => {
             const active = activeModule === item.key;
             return (
               <button
                 key={item.key}
                 onClick={() => navigate(item.key)}
-                className={`therapist-nav-tab${active ? ' active' : ''}`}
+                className={`therapist-nav-tab font-mono${active ? ' active' : ''}`}
                 style={{
                   background: 'none',
                   border: 'none',
                   cursor: 'pointer',
                   whiteSpace: 'nowrap',
-                  fontSize: 12,
-                  fontWeight: active ? 500 : 400,
-                  color: active ? 'var(--hero-piedra-text)' : 'var(--hero-piedra-text-muted)',
+                  fontSize: 10.5,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.1em',
+                  fontWeight: 400,
+                  color: active ? 'var(--eph-text)' : 'var(--eph-muted)',
                   padding: '8px 12px',
                   position: 'relative',
                 }}
@@ -112,14 +117,15 @@ export default function TherapistTopbar({
             <button
               onClick={() => setAccountOpen((v) => !v)}
               aria-label="Cuenta"
+              className="font-mono"
               style={{
                 width: 32, height: 32, borderRadius: '50%',
-                border: '1px solid var(--hero-piedra-accent)',
-                background: accountOpen ? 'var(--hero-piedra-accent)' : 'transparent',
-                color: accountOpen ? 'var(--hero-piedra-start)' : 'var(--hero-piedra-text)',
-                fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                border: '1px solid var(--eph-line-2)',
+                background: accountOpen ? 'var(--eph-accent)' : 'transparent',
+                color: accountOpen ? 'var(--eph-ink)' : 'var(--eph-text)',
+                fontSize: 12, fontWeight: 400, cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                transition: 'background 0.2s ease, color 0.2s ease',
+                transition: 'background 0.15s ease, color 0.15s ease',
               }}
             >
               {initial}
@@ -127,18 +133,19 @@ export default function TherapistTopbar({
             {accountOpen && (
               <div style={{
                 position: 'absolute', top: 40, right: 0, width: 200,
-                background: 'var(--paper)', border: '1px solid var(--border-hairline)',
-                borderRadius: 'var(--radius-card)', padding: 10, zIndex: 90,
+                background: 'var(--eph-surface)', border: '1px solid var(--eph-line)',
+                borderRadius: 0, padding: 10, zIndex: 90,
               }}>
-                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)', padding: '4px 6px' }}>{name}</div>
-                <div style={{ fontSize: 11, color: 'var(--ink-secondary)', padding: '0 6px 6px' }}>Terapeuta</div>
+                <div className="font-body" style={{ fontSize: 13, fontWeight: 500, color: 'var(--eph-text)', padding: '4px 6px' }}>{name}</div>
+                <div className="font-mono" style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--eph-muted)', padding: '0 6px 6px' }}>Terapeuta</div>
                 <button
                   onClick={handleLogout}
+                  className="font-mono"
                   style={{
                     width: '100%', marginTop: 6, background: 'none',
-                    border: '1px solid var(--border-input)', borderRadius: '9999px',
-                    padding: '8px 14px', fontSize: 12, fontWeight: 500,
-                    color: 'var(--ink-secondary)', cursor: 'pointer',
+                    border: '1px solid var(--eph-line-2)', borderRadius: 0,
+                    padding: '8px 14px', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em',
+                    color: 'var(--eph-body)', cursor: 'pointer',
                   }}
                 >
                   Cerrar sesión
@@ -155,9 +162,9 @@ export default function TherapistTopbar({
               padding: 6, flexDirection: 'column', gap: 4, cursor: 'pointer',
             }}
           >
-            <span style={{ display: 'block', width: 20, height: 2, background: 'var(--hero-piedra-text)', borderRadius: 2 }} />
-            <span style={{ display: 'block', width: 20, height: 2, background: 'var(--hero-piedra-text)', borderRadius: 2 }} />
-            <span style={{ display: 'block', width: 20, height: 2, background: 'var(--hero-piedra-text)', borderRadius: 2 }} />
+            <span style={{ display: 'block', width: 20, height: 1, background: 'var(--eph-text)' }} />
+            <span style={{ display: 'block', width: 20, height: 1, background: 'var(--eph-text)' }} />
+            <span style={{ display: 'block', width: 20, height: 1, background: 'var(--eph-text)' }} />
           </button>
         </div>
       </header>
@@ -165,20 +172,20 @@ export default function TherapistTopbar({
       {drawerOpen && (
         <div
           onClick={() => setDrawerOpen(false)}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.4)', zIndex: 105 }}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.5)', zIndex: 105 }}
         />
       )}
       <div
         className={`therapist-drawer${drawerOpen ? ' open' : ''}`}
         style={{
           position: 'fixed', top: 0, right: 0, bottom: 0, width: '82vw', maxWidth: 300,
-          background: 'var(--page-bg)', zIndex: 110, padding: '24px 20px',
+          background: 'var(--eph-bg)', borderLeft: '1px solid var(--eph-line)', zIndex: 110, padding: '24px 20px',
           transition: 'transform 0.28s ease',
           display: 'flex', flexDirection: 'column', gap: 4,
         }}
       >
-        <span style={{ fontFamily: 'Fraunces, Georgia, serif', fontSize: 18, fontWeight: 700, color: 'var(--ink)', marginBottom: 16 }}>
-          La Tribu
+        <span className="font-display" style={{ fontSize: 17, textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--eph-text)', marginBottom: 16 }}>
+          Ephirox
         </span>
         {THERAPIST_NAV.map((item) => {
           const active = activeModule === item.key;
@@ -186,12 +193,13 @@ export default function TherapistTopbar({
             <button
               key={item.key}
               onClick={() => navigate(item.key)}
+              className="font-body"
               style={{
                 background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer',
                 padding: '12px 4px', fontSize: 14,
                 fontWeight: active ? 500 : 400,
-                color: active ? 'var(--ink)' : 'var(--ink-secondary)',
-                borderBottom: '1px solid var(--border-hairline)',
+                color: active ? 'var(--eph-text)' : 'var(--eph-body)',
+                borderBottom: '1px solid var(--eph-line)',
               }}
             >
               {item.label}
@@ -200,10 +208,11 @@ export default function TherapistTopbar({
         })}
         <button
           onClick={handleLogout}
+          className="font-mono"
           style={{
-            marginTop: 'auto', background: 'none', border: '1px solid var(--border-input)',
-            borderRadius: '9999px', padding: '10px 16px', fontSize: 13, fontWeight: 500,
-            color: 'var(--ink-secondary)', cursor: 'pointer',
+            marginTop: 'auto', background: 'none', border: '1px solid var(--eph-line-2)',
+            borderRadius: 0, padding: '10px 16px', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em',
+            color: 'var(--eph-body)', cursor: 'pointer',
           }}
         >
           Cerrar sesión
@@ -217,8 +226,8 @@ export default function TherapistTopbar({
           left: 12px;
           right: 12px;
           bottom: 2px;
-          height: 2px;
-          background: var(--hero-piedra-accent);
+          height: 1px;
+          background: var(--eph-accent);
           width: 0%;
           transition: width 0.18s ease;
         }
@@ -228,12 +237,15 @@ export default function TherapistTopbar({
         .therapist-nav-tab.active::after {
           width: calc(100% - 24px);
         }
+        .therapist-nav-row::-webkit-scrollbar {
+          display: none;
+        }
         .therapist-drawer {
           transform: translateX(100%);
         }
         .therapist-drawer.open {
           transform: translateX(0);
-          box-shadow: -8px 0 24px rgba(0, 0, 0, 0.18);
+          box-shadow: -8px 0 24px rgba(0, 0, 0, 0.4);
         }
         @media (max-width: ${COLLAPSE_BREAKPOINT}px) {
           .therapist-nav-row {

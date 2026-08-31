@@ -7,8 +7,8 @@ export const wellnessIndexRouter = Router();
 
 // GET /api/clients/:id/wellness-index — índice de bienestar unificado (home
 // + Mi Evolución). Sin requirePermission fijo: el propio servicio filtra por
-// módulo permitido (matriz de Roles y Perfiles) y devuelve `data: null` para
-// lead_wellness o cuando no hay ningún componente con datos suficientes.
+// módulo permitido (matriz de Roles y Perfiles) y devuelve `data: null`
+// cuando no hay ningún componente con datos suficientes.
 wellnessIndexRouter.get(
   '/clients/:id/wellness-index',
   authMiddleware, ownerOrAdmin,

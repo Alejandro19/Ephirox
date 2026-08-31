@@ -6,27 +6,31 @@ import { showToast } from '../layout/AppShell';
 import EmptyState from '../ui/EmptyState';
 
 const labelStyle: React.CSSProperties = {
-  display: 'block', fontSize: 12, fontWeight: 400, color: 'var(--ink-secondary)', marginBottom: 4,
+  display: 'block', fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', fontSize: 10,
+  textTransform: 'uppercase', letterSpacing: '0.14em', fontWeight: 400, color: 'var(--eph-muted)', marginBottom: 6,
 };
 const textareaStyle: React.CSSProperties = {
-  width: '100%', borderRadius: 10, border: '1px solid var(--border-hairline)',
-  padding: 10, fontSize: 14.5, fontWeight: 600, background: 'var(--paper)', color: 'var(--ink)',
+  width: '100%', borderRadius: 0, border: '1px solid var(--eph-line)',
+  padding: 10, fontSize: 15, fontWeight: 400, background: 'var(--eph-surface)', color: 'var(--eph-text)',
   outline: 'none', boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit',
 };
 const ghostButtonStyle: React.CSSProperties = {
-  height: 32, padding: '0 14px', borderRadius: 9999, border: '1px solid var(--border-hairline)',
-  background: 'transparent', color: 'var(--ink-secondary)', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+  height: 32, padding: '0 14px', borderRadius: 0, border: '1px solid var(--eph-line-2)',
+  fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
+  background: 'transparent', color: 'var(--eph-body)', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', cursor: 'pointer',
 };
 const dangerButtonStyle: React.CSSProperties = {
-  height: 32, padding: '0 14px', borderRadius: 9999, border: '1px solid var(--danger)',
-  background: 'transparent', color: 'var(--danger)', fontSize: 12, fontWeight: 600, cursor: 'pointer', flexShrink: 0,
+  height: 32, padding: '0 14px', borderRadius: 0, border: '1px solid var(--eph-danger)',
+  fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
+  background: 'transparent', color: '#D99483', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', cursor: 'pointer', flexShrink: 0,
 };
 const primaryButtonStyle: React.CSSProperties = {
-  height: 36, padding: '0 18px', borderRadius: 9999, border: 'none',
-  background: 'var(--ring-accent)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+  height: 36, padding: '0 18px', borderRadius: 0, border: 'none',
+  fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
+  background: 'var(--eph-accent)', color: 'var(--eph-ink)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.14em', cursor: 'pointer',
 };
 const rowStyle: React.CSSProperties = {
-  display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 0', borderBottom: '1px solid var(--border-hairline)',
+  display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 0', borderBottom: '1px solid var(--eph-line)',
 };
 
 export function CortisolTipsPanel() {
@@ -83,7 +87,7 @@ export function CortisolTipsPanel() {
     }
   }
 
-  if (loading) return <p style={{ color: 'var(--ink-secondary)', fontSize: 14 }}>Cargando tips…</p>;
+  if (loading) return <p style={{ color: 'var(--eph-muted)', fontSize: 14 }}>Cargando tips…</p>;
 
   return (
     <div>
@@ -106,7 +110,7 @@ export function CortisolTipsPanel() {
         ) : (
           tips.map((tip) =>
             editingId === tip.id ? (
-              <div key={tip.id} style={{ padding: '12px 0', borderBottom: '1px solid var(--border-hairline)' }}>
+              <div key={tip.id} style={{ padding: '12px 0', borderBottom: '1px solid var(--eph-line)' }}>
                 <textarea rows={2} style={textareaStyle} value={editContent} onChange={(e) => setEditContent(e.target.value)} />
                 <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
                   <button type="button" style={primaryButtonStyle} onClick={() => handleSaveEdit(tip.id)}>Guardar</button>
@@ -115,7 +119,7 @@ export function CortisolTipsPanel() {
               </div>
             ) : (
               <div key={tip.id} style={{ ...rowStyle, opacity: tip.active ? 1 : 0.5 }}>
-                <p style={{ margin: 0, flex: 1, fontSize: 13, color: 'var(--ink)' }}>{tip.content}</p>
+                <p style={{ margin: 0, flex: 1, fontSize: 13, color: 'var(--eph-text)' }}>{tip.content}</p>
                 <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
                   <button type="button" style={ghostButtonStyle} onClick={() => startEdit(tip)}>Editar</button>
                   <button type="button" style={dangerButtonStyle} onClick={() => handleDelete(tip.id)}>Eliminar</button>

@@ -3,6 +3,7 @@
 // registra la sincronización sin traer datos reales todavía). Se mantiene
 // así a propósito, tal como estaba en la fuente.
 import * as wearableService from './wearable.service.js';
+import { updateBaselineTimestampsIfNeeded } from './wearable-baseline.service.js';
 
 const POLAR_BASE_URL = 'https://www.polaraccesslink.com/v3';
 const POLAR_AUTH_URL = 'https://flow.polar.com/oauth2/authorization';
@@ -45,5 +46,6 @@ export async function getPerfil(accessToken: string): Promise<PolarPerfil> {
 export async function sincronizarPolar(clienteId: string): Promise<{ sincronizados: number }> {
   await getTokenValido(clienteId);
   await wearableService.actualizarUltimaSync(clienteId, 'polar');
+  await updateBaselineTimestampsIfNeeded(clienteId);
   return { sincronizados: 0 };
 }

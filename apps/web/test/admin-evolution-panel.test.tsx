@@ -36,7 +36,7 @@ describe('AdminEvolutionPanel', () => {
   it('shows the wellness dashboard and the next-checkin-date admin field', async () => {
     mockFetches({ nextCheckinDate: '2026-09-01' });
     render(<AdminEvolutionPanel clientId="c1" />);
-    expect(await screen.findByText('Índice de bienestar')).toBeInTheDocument();
+    expect(await screen.findByText('Índice de rendimiento')).toBeInTheDocument();
     expect(screen.getByLabelText('Fecha de la próxima medición')).toHaveValue('2026-09-01');
   });
 
@@ -51,11 +51,5 @@ describe('AdminEvolutionPanel', () => {
     await user.click(screen.getByRole('button', { name: 'Guardar fecha' }));
 
     await waitFor(() => expect(evolutionClient.updateNextCheckinDate).toHaveBeenCalledWith('c1', '2026-10-15'));
-  });
-
-  it('shows a locked note instead of the physical evolution section for a lead_wellness client', async () => {
-    mockFetches({ clientType: 'lead_wellness' });
-    render(<AdminEvolutionPanel clientId="c1" />);
-    expect(await screen.findByText(/la evolución física se le muestra bloqueada/)).toBeInTheDocument();
   });
 });

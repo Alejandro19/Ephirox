@@ -32,7 +32,7 @@ describe('requirePersonalInfoAccess', () => {
 
   it('blocks a client whose type has neither personal_info nor personal_info_mentoring allowed', async () => {
     vi.mocked(typeModuleAccess.isModuleAllowedForType).mockResolvedValue(false);
-    const req = { user: { role: 'cliente' }, client: { clientType: 'lead_wellness' } } as unknown as Request;
+    const req = { user: { role: 'cliente' }, client: { clientType: 'coaching_1_1' } } as unknown as Request;
     const res = mockRes();
     const next = vi.fn();
     requirePersonalInfoAccess(req, res, next);

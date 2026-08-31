@@ -9,10 +9,10 @@ import { getEvolutionData, type AnthropometricRecord, type InbodyRecord } from '
 import Accordion from '../ui/Accordion';
 
 const labelStyle: React.CSSProperties = {
-  display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--ink-secondary)',
+  display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--eph-muted)',
   textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4,
 };
-const valueStyle: React.CSSProperties = { margin: 0, fontSize: 13.5, color: 'var(--ink)', lineHeight: 1.4 };
+const valueStyle: React.CSSProperties = { margin: 0, fontSize: 13.5, color: 'var(--eph-text)', lineHeight: 1.4 };
 
 function calculateAge(birthdate: string | null): number | null {
   if (!birthdate) return null;
@@ -42,7 +42,7 @@ function buildGenericRows(fields: WizardFieldConfig[], report: Record<string, un
     if (field.id === 'checkup_file' && typeof report.checkup_file_url === 'string' && report.checkup_file_url) {
       return [
         field.label,
-        <a key="link" href={report.checkup_file_url as string} target="_blank" rel="noreferrer" style={{ color: 'var(--ring-accent)', textDecoration: 'underline' }}>
+        <a key="link" href={report.checkup_file_url as string} target="_blank" rel="noreferrer" style={{ color: 'var(--eph-accent)', textDecoration: 'underline' }}>
           {(report.checkup_file_name as string) || 'Ver archivo'}
         </a>,
       ];
@@ -54,7 +54,7 @@ function buildGenericRows(fields: WizardFieldConfig[], report: Record<string, un
 function FieldGrid({ rows }: { rows: [string, React.ReactNode][] }) {
   const visible = rows.filter(([, v]) => v !== null && v !== undefined);
   if (visible.length === 0) {
-    return <p style={{ fontSize: 13, color: 'var(--ink-secondary)', margin: 0 }}>Sin respuestas registradas en este módulo.</p>;
+    return <p style={{ fontSize: 13, color: 'var(--eph-muted)', margin: 0 }}>Sin respuestas registradas en este módulo.</p>;
   }
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 14 }}>
@@ -69,11 +69,11 @@ function FieldGrid({ rows }: { rows: [string, React.ReactNode][] }) {
 }
 
 const subheadStyle: React.CSSProperties = {
-  fontSize: 12.5, fontWeight: 700, color: 'var(--ink)', margin: '18px 0 8px',
+  fontSize: 12.5, fontWeight: 700, color: 'var(--eph-text)', margin: '18px 0 8px',
 };
 const rowStyle: React.CSSProperties = {
   display: 'flex', flexWrap: 'wrap', gap: '4px 18px', padding: '8px 0',
-  borderBottom: '1px solid var(--border-hairline)', fontSize: 12.5, color: 'var(--ink)',
+  borderBottom: '1px solid var(--eph-line)', fontSize: 12.5, color: 'var(--eph-text)',
 };
 
 function fmt(value: number | string | null | undefined, suffix = ''): string {
@@ -106,14 +106,14 @@ function BodyComposition({ clientId }: { clientId: string }) {
     return () => { cancelled = true; };
   }, [clientId]);
 
-  if (loading) return <p style={{ fontSize: 12.5, color: 'var(--ink-secondary)', marginTop: 14 }}>Cargando medidas, InBody y fotos…</p>;
-  if (error) return <p style={{ fontSize: 12.5, color: 'var(--danger)', marginTop: 14 }}>{error}</p>;
+  if (loading) return <p style={{ fontSize: 12.5, color: 'var(--eph-muted)', marginTop: 14 }}>Cargando medidas, InBody y fotos…</p>;
+  if (error) return <p style={{ fontSize: 12.5, color: '#D99483', marginTop: 14 }}>{error}</p>;
 
   return (
     <div>
       <p style={subheadStyle}>Medidas registradas ({anthropometrics.length})</p>
       {anthropometrics.length === 0 ? (
-        <p style={{ fontSize: 12.5, color: 'var(--ink-secondary)', margin: 0 }}>Sin medidas registradas.</p>
+        <p style={{ fontSize: 12.5, color: 'var(--eph-muted)', margin: 0 }}>Sin medidas registradas.</p>
       ) : (
         anthropometrics.map((a) => (
           <div key={a.id} style={rowStyle}>
@@ -130,7 +130,7 @@ function BodyComposition({ clientId }: { clientId: string }) {
 
       <p style={subheadStyle}>Registros InBody ({inbody.length})</p>
       {inbody.length === 0 ? (
-        <p style={{ fontSize: 12.5, color: 'var(--ink-secondary)', margin: 0 }}>Sin registros InBody.</p>
+        <p style={{ fontSize: 12.5, color: 'var(--eph-muted)', margin: 0 }}>Sin registros InBody.</p>
       ) : (
         inbody.map((r) => (
           <div key={r.id} style={rowStyle}>
@@ -146,7 +146,7 @@ function BodyComposition({ clientId }: { clientId: string }) {
             <span>Agua corporal (ECW/TBW): {fmt(r.ecwTbw)}</span>
             <span>BMR: {fmt(r.bmr, ' kcal')}</span>
             {r.fileUrl && (
-              <a href={r.fileUrl} target="_blank" rel="noreferrer" style={{ color: 'var(--ring-accent)', fontWeight: 600, textDecoration: 'underline' }}>
+              <a href={r.fileUrl} target="_blank" rel="noreferrer" style={{ color: 'var(--eph-accent)', fontWeight: 600, textDecoration: 'underline' }}>
                 Ver archivo
               </a>
             )}
@@ -156,7 +156,7 @@ function BodyComposition({ clientId }: { clientId: string }) {
 
       <p style={subheadStyle}>Fotos de progreso ({photos.length})</p>
       {photos.length === 0 ? (
-        <p style={{ fontSize: 12.5, color: 'var(--ink-secondary)', margin: 0 }}>Sin fotos registradas.</p>
+        <p style={{ fontSize: 12.5, color: 'var(--eph-muted)', margin: 0 }}>Sin fotos registradas.</p>
       ) : (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
           {photos.map((p) => (
@@ -164,9 +164,9 @@ function BodyComposition({ clientId }: { clientId: string }) {
               <img
                 src={p.photoUrl}
                 alt={`${p.angle ?? 'Foto'} · ${p.fecha}`}
-                style={{ width: 84, height: 84, objectFit: 'cover', borderRadius: 10, border: '1px solid var(--border-hairline)' }}
+                style={{ width: 84, height: 84, objectFit: 'cover', borderRadius: 10, border: '1px solid var(--eph-line)' }}
               />
-              <span style={{ display: 'block', marginTop: 3, fontSize: 10.5, color: 'var(--ink-secondary)', textAlign: 'center' }}>
+              <span style={{ display: 'block', marginTop: 3, fontSize: 10.5, color: 'var(--eph-muted)', textAlign: 'center' }}>
                 {p.angle ?? '—'} · {p.fecha}
               </span>
             </a>
@@ -183,7 +183,7 @@ function ModuleHeader({ n, title }: { n: number; title: string }) {
       <span
         style={{
           width: 24, height: 24, borderRadius: '50%', flexShrink: 0,
-          background: 'rgba(201,166,107,.14)', color: 'var(--ring-accent)',
+          background: 'rgba(201,166,107,.14)', color: 'var(--eph-accent)',
           fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}
       >
@@ -204,7 +204,7 @@ export function OnboardingSummaryAccordion({
   clientId: string;
 }) {
   if (!personalInfo || !personalInfo.completedAt) {
-    return <p style={{ color: 'var(--ink-secondary)', fontSize: 13 }}>Este cliente aún no completó el formulario de onboarding.</p>;
+    return <p style={{ color: 'var(--eph-muted)', fontSize: 13 }}>Este cliente aún no completó el formulario de onboarding.</p>;
   }
 
   const report = (personalInfo.onboardingReport ?? {}) as Record<string, unknown>;
@@ -258,7 +258,7 @@ export function OnboardingSummaryAccordion({
               ['VO2 max (Apple Health)', (report.m10_aw_vo2max as string) || null],
             ]}
           />
-          <p style={{ marginTop: 12, fontSize: 12, color: 'var(--ink-secondary)' }}>
+          <p style={{ marginTop: 12, fontSize: 12, color: 'var(--eph-muted)' }}>
             Los paneles de laboratorio (semana 0/6/12) se gestionan en su propio panel, no aquí.
           </p>
         </div>

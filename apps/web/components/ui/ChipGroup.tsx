@@ -21,8 +21,10 @@ export default function ChipGroup({ options, selected, onChange, label, max }: C
   return (
     <fieldset style={{ border: "none", margin: 0, padding: 0 }}>
       {label && (
-        <legend style={{ display: "flex", alignItems: "center", fontSize: 12, fontWeight: 400,
-          color: "var(--ink-secondary)", marginBottom: 8, padding: 0 }}>
+        <legend
+          className="mb-2 font-mono text-[10px] font-normal uppercase tracking-[0.18em]"
+          style={{ color: "var(--eph-muted)", padding: 0 }}
+        >
           {label}
         </legend>
       )}
@@ -32,14 +34,12 @@ export default function ChipGroup({ options, selected, onChange, label, max }: C
           return (
             <label
               key={opt.value}
+              className="relative inline-flex cursor-pointer items-center gap-1 rounded-[999px] border font-mono text-[10px] font-normal uppercase tracking-[0.14em] transition-colors duration-150"
               style={{
-                position: "relative",
-                display: "inline-flex", alignItems: "center", gap: 4,
-                padding: "6px 14px", borderRadius: 9999, fontSize: 12, fontWeight: 500,
-                border: isSel ? "1px solid var(--ink)" : "1px solid var(--border-input)",
-                background: isSel ? "var(--ink)" : "transparent",
-                color: isSel ? "#F5EFE2" : "var(--ink)",
-                cursor: "pointer", transition: "all .15s ease",
+                padding: "7px 16px",
+                borderColor: isSel ? "var(--eph-accent)" : "var(--eph-line-2)",
+                background: isSel ? "var(--eph-accent)" : "transparent",
+                color: isSel ? "var(--eph-ink)" : "var(--eph-body)",
               }}
             >
               <input

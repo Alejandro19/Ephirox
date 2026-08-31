@@ -17,47 +17,53 @@ import { CortisolTipsPanel } from './CortisolTipsPanel';
 import Accordion from '../ui/Accordion';
 import Badge from '../ui/Badge';
 import EmptyState from '../ui/EmptyState';
+import { InsightsSection } from '../insights/InsightsSection';
+import { CORTISOL_TECHNIQUE_TYPES } from '@latribu/shared-types';
 
-const TECHNIQUE_TYPES = ['Respiración', 'Breathwork', 'Meditación', 'Mindfulness'];
+const TECHNIQUE_TYPES: readonly string[] = CORTISOL_TECHNIQUE_TYPES;
 
 const cardStyle: React.CSSProperties = {
-  background: 'var(--paper)', border: '1px solid var(--border-hairline)',
-  borderRadius: 'var(--radius-card)', padding: '22px 24px', marginBottom: 20,
+  background: 'var(--eph-surface)', border: '1px solid var(--eph-line)',
+  borderRadius: '0', padding: '22px 24px', marginBottom: 20,
 };
 const cardTitleStyle: React.CSSProperties = {
-  fontSize: 15, fontWeight: 700, color: 'var(--ink)', margin: '0 0 16px',
+  fontFamily: 'var(--font-cormorant), Georgia, serif', fontSize: 18, fontWeight: 400, color: 'var(--eph-text)', margin: '0 0 16px',
 };
 const labelStyle: React.CSSProperties = {
-  display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--ink-soft)', marginBottom: 4,
+  display: 'block', fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', fontSize: 10,
+  textTransform: 'uppercase', letterSpacing: '0.14em', fontWeight: 400, color: 'var(--eph-muted)', marginBottom: 6,
 };
 const fieldStyle: React.CSSProperties = {
-  width: '100%', height: 32, borderRadius: 0, border: 'none', borderBottom: '1px solid var(--border-input)',
-  padding: '0 2px 6px', fontSize: 14.5, fontWeight: 600, background: 'transparent', color: 'var(--ink)',
+  width: '100%', height: 32, borderRadius: 0, border: 'none', borderBottom: '1px solid var(--eph-line-2)',
+  padding: '0 2px 6px', fontSize: 15, fontWeight: 400, background: 'transparent', color: 'var(--eph-text)',
   outline: 'none', boxSizing: 'border-box',
 };
 const textareaStyle: React.CSSProperties = {
-  width: '100%', borderRadius: 10, border: '1px solid var(--border-hairline)',
-  padding: 10, fontSize: 14.5, fontWeight: 600, background: 'var(--paper)', color: 'var(--ink)',
+  width: '100%', borderRadius: 0, border: '1px solid var(--eph-line)',
+  padding: 10, fontSize: 15, fontWeight: 400, background: 'var(--eph-surface)', color: 'var(--eph-text)',
   outline: 'none', boxSizing: 'border-box', minHeight: 72, resize: 'vertical', fontFamily: 'inherit',
 };
 const ghostButtonStyle: React.CSSProperties = {
-  height: 32, padding: '0 14px', borderRadius: 9999, border: '1px solid var(--line)',
-  background: 'transparent', color: 'var(--ink-soft)', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+  height: 32, padding: '0 14px', borderRadius: 0, border: '1px solid var(--eph-line-2)',
+  fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
+  background: 'transparent', color: 'var(--eph-body)', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', cursor: 'pointer',
 };
 const dangerButtonStyle: React.CSSProperties = {
-  height: 32, padding: '0 14px', borderRadius: 9999, border: '1px solid var(--danger)',
-  background: 'transparent', color: 'var(--danger)', fontSize: 12, fontWeight: 600, cursor: 'pointer', flexShrink: 0,
+  height: 32, padding: '0 14px', borderRadius: 0, border: '1px solid var(--eph-danger)',
+  fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
+  background: 'transparent', color: '#D99483', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', cursor: 'pointer', flexShrink: 0,
 };
 const primaryButtonStyle: React.CSSProperties = {
-  height: 40, padding: '0 22px', borderRadius: 9999, border: 'none',
-  background: 'var(--sage)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+  height: 40, padding: '0 22px', borderRadius: 0, border: 'none',
+  fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
+  background: 'var(--eph-accent)', color: 'var(--eph-ink)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.14em', cursor: 'pointer',
 };
 const listRowStyle: React.CSSProperties = {
-  display: 'flex', alignItems: 'center', gap: 10, padding: '12px 0', borderBottom: '1px solid var(--line)',
+  display: 'flex', alignItems: 'center', gap: 10, padding: '12px 0', borderBottom: '1px solid var(--eph-line)',
 };
 
 type EditDraft = {
-  title: string; type: string; minutes: string; seconds: string; youtubeUrl: string; description: string; emotion: string;
+  title: string; type: string; minutes: string; seconds: string; youtubeUrl: string; description: string; emotion: string; precautionNote: string;
 };
 
 function draftFromTechnique(t: CortisolTechnique): EditDraft {
@@ -69,6 +75,7 @@ function draftFromTechnique(t: CortisolTechnique): EditDraft {
     youtubeUrl: t.youtubeUrl || '',
     description: t.description || '',
     emotion: t.emotion || '',
+    precautionNote: t.precautionNote || '',
   };
 }
 
@@ -93,6 +100,7 @@ export function AdminCortisolPanel({ clientId }: { clientId: string }) {
   const [youtubeUrl, setYoutubeUrl] = useState('');
   const [description, setDescription] = useState('');
   const [emotion, setEmotion] = useState('');
+  const [precautionNote, setPrecautionNote] = useState('');
   const [audioFile, setAudioFile] = useState<File | null>(null);
 
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -115,6 +123,7 @@ export function AdminCortisolPanel({ clientId }: { clientId: string }) {
         youtube_url: youtubeUrl || undefined,
         description: description || undefined,
         emotion: emotion || null,
+        precaution_note: precautionNote || null,
       });
       if (audioFile) await uploadTechniqueAudio(clientId, created.id, audioFile);
       setTitle('');
@@ -124,6 +133,7 @@ export function AdminCortisolPanel({ clientId }: { clientId: string }) {
       setYoutubeUrl('');
       setDescription('');
       setEmotion('');
+      setPrecautionNote('');
       setAudioFile(null);
       await refetch();
       showToast('Técnica asignada.', 'success');
@@ -150,6 +160,7 @@ export function AdminCortisolPanel({ clientId }: { clientId: string }) {
         youtube_url: editDraft.youtubeUrl || undefined,
         description: editDraft.description || undefined,
         emotion: editDraft.emotion || null,
+        precaution_note: editDraft.precautionNote || null,
       });
       if (editAudioFile) await uploadTechniqueAudio(clientId, techId, editAudioFile);
       setEditingId(null);
@@ -189,10 +200,11 @@ export function AdminCortisolPanel({ clientId }: { clientId: string }) {
     }
   }
 
-  if (loading) return <p style={{ color: 'var(--ink-soft)', fontSize: 14 }}>Cargando técnicas…</p>;
+  if (loading) return <p style={{ color: 'var(--eph-body)', fontSize: 14 }}>Cargando técnicas…</p>;
 
   return (
     <div>
+      <InsightsSection clientId={clientId} moduleKey="cortisol" />
       <div style={cardStyle}>
         <h3 style={cardTitleStyle}>Asignar técnica</h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>
@@ -212,7 +224,7 @@ export function AdminCortisolPanel({ clientId }: { clientId: string }) {
             <label style={labelStyle}>Duración (min : seg)</label>
             <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
               <input aria-label="Minutos" type="number" min={0} style={fieldStyle} placeholder="min" value={minutes} onChange={(e) => setMinutes(e.target.value)} />
-              <span style={{ color: 'var(--ink-soft)' }}>:</span>
+              <span style={{ color: 'var(--eph-body)' }}>:</span>
               <input aria-label="Segundos" type="number" min={0} max={59} style={fieldStyle} placeholder="seg" value={seconds} onChange={(e) => setSeconds(e.target.value)} />
             </div>
           </div>
@@ -226,7 +238,7 @@ export function AdminCortisolPanel({ clientId }: { clientId: string }) {
             </select>
           </div>
         </div>
-        <p style={{ fontSize: 11.5, color: 'var(--ink-soft)', marginTop: 8 }}>
+        <p style={{ fontSize: 11.5, color: 'var(--eph-body)', marginTop: 8 }}>
           Cuando un cliente marque esta emoción, esta técnica es la que se recomienda en el hero y la que abre &quot;Empezar técnica&quot;.
         </p>
 
@@ -239,6 +251,9 @@ export function AdminCortisolPanel({ clientId }: { clientId: string }) {
         <label style={{ ...labelStyle, marginTop: 14 }} htmlFor="ct-desc">Descripción</label>
         <textarea id="ct-desc" rows={2} style={textareaStyle} value={description} onChange={(e) => setDescription(e.target.value)} />
 
+        <label style={{ ...labelStyle, marginTop: 14 }} htmlFor="ct-precaution">Nota de precaución/contraindicación (opcional)</label>
+        <textarea id="ct-precaution" rows={2} style={textareaStyle} value={precautionNote} onChange={(e) => setPrecautionNote(e.target.value)} placeholder="Ej.: no recomendado con hipertensión no controlada." />
+
         <button type="button" style={{ ...primaryButtonStyle, marginTop: 16 }} onClick={handleCreate}>
           Asignar
         </button>
@@ -247,7 +262,7 @@ export function AdminCortisolPanel({ clientId }: { clientId: string }) {
       <Accordion
         items={[
           {
-            header: <span>Técnicas asignadas <span style={{ color: 'var(--ink-soft)', fontWeight: 400 }}>— {techniques.length}</span></span>,
+            header: <span>Técnicas asignadas <span style={{ color: 'var(--eph-body)', fontWeight: 400 }}>— {techniques.length}</span></span>,
             content:
               techniques.length === 0 ? (
                 <EmptyState message="Aún no hay técnicas asignadas." />
@@ -274,7 +289,7 @@ export function AdminCortisolPanel({ clientId }: { clientId: string }) {
                               <label style={labelStyle}>Duración (min : seg)</label>
                               <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                                 <input aria-label={`Minutos-${t.id}`} type="number" min={0} style={fieldStyle} value={editDraft.minutes} onChange={(e) => setEditDraft({ ...editDraft, minutes: e.target.value })} />
-                                <span style={{ color: 'var(--ink-soft)' }}>:</span>
+                                <span style={{ color: 'var(--eph-body)' }}>:</span>
                                 <input aria-label={`Segundos-${t.id}`} type="number" min={0} max={59} style={fieldStyle} value={editDraft.seconds} onChange={(e) => setEditDraft({ ...editDraft, seconds: e.target.value })} />
                               </div>
                             </div>
@@ -295,7 +310,7 @@ export function AdminCortisolPanel({ clientId }: { clientId: string }) {
                           {t.audioUrl && (
                             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, flexWrap: 'wrap' }}>
                               <audio controls src={t.audioUrl} style={{ height: 32, maxWidth: 260 }} />
-                              <span style={{ fontSize: 12, color: 'var(--ink-soft)' }}>{t.audioName}</span>
+                              <span style={{ fontSize: 12, color: 'var(--eph-body)' }}>{t.audioName}</span>
                               <button type="button" style={ghostButtonStyle} onClick={() => handleRemoveAudio(t.id)}>Quitar audio</button>
                             </div>
                           )}
@@ -303,6 +318,9 @@ export function AdminCortisolPanel({ clientId }: { clientId: string }) {
 
                           <label style={{ ...labelStyle, marginTop: 10 }} htmlFor={`ct-edit-desc-${t.id}`}>Descripción</label>
                           <textarea id={`ct-edit-desc-${t.id}`} rows={2} style={textareaStyle} value={editDraft.description} onChange={(e) => setEditDraft({ ...editDraft, description: e.target.value })} />
+
+                          <label style={{ ...labelStyle, marginTop: 10 }} htmlFor={`ct-edit-precaution-${t.id}`}>Nota de precaución/contraindicación (opcional)</label>
+                          <textarea id={`ct-edit-precaution-${t.id}`} rows={2} style={textareaStyle} value={editDraft.precautionNote} onChange={(e) => setEditDraft({ ...editDraft, precautionNote: e.target.value })} />
 
                           <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
                             <button type="button" style={primaryButtonStyle} onClick={() => handleSaveEdit(t.id)}>Guardar</button>
@@ -317,14 +335,17 @@ export function AdminCortisolPanel({ clientId }: { clientId: string }) {
                               <span
                                 style={{
                                   display: 'inline-flex', marginLeft: 6, padding: '2px 8px', borderRadius: 9999,
-                                  background: 'rgba(201,166,107,.14)', color: 'var(--ring-accent)',
+                                  background: 'rgba(201,166,107,.14)', color: 'var(--eph-accent)',
                                   fontSize: 10.5, fontWeight: 700,
                                 }}
                               >
                                 {emotionLabel(t.emotion)}
                               </span>
                             )}
-                            <div style={{ color: 'var(--ink-soft)', fontSize: 13, marginTop: 4 }}>{t.duration}</div>
+                            <div style={{ color: 'var(--eph-body)', fontSize: 13, marginTop: 4 }}>{t.duration}</div>
+                            {t.precautionNote && (
+                              <div style={{ color: '#D99483', fontSize: 12, marginTop: 4 }}>⚠ {t.precautionNote}</div>
+                            )}
                           </div>
                           <label style={{ ...ghostButtonStyle, display: 'inline-flex', alignItems: 'center' }}>
                             Video
@@ -351,7 +372,7 @@ export function AdminCortisolPanel({ clientId }: { clientId: string }) {
             header: 'Tips educativos ("Sabías que...")',
             content: (
               <div>
-                <p style={{ fontSize: 13, color: 'var(--ink-soft)', margin: '0 0 14px' }}>
+                <p style={{ fontSize: 13, color: 'var(--eph-body)', margin: '0 0 14px' }}>
                   Se muestran al azar entre los que estén activos, uno por visita al módulo.
                 </p>
                 <CortisolTipsPanel />

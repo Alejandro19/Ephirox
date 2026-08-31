@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import type { LegalAcceptanceInput, NotificationPreferencesPatch, MembershipCheckoutInput } from '@latribu/shared-types';
+import type { LegalAcceptanceInput, NotificationPreferencesPatch, LanguagePatch, MembershipCheckoutInput } from '@latribu/shared-types';
 import * as accountService from '../services/account.service.js';
 import { TrmUnavailableError } from '../services/trm.service.js';
 
@@ -33,6 +33,12 @@ export async function uploadAvatar(req: Request, res: Response) {
 export async function patchNotificationPreferences(req: Request, res: Response) {
   const patch = req.body as NotificationPreferencesPatch;
   const client = await accountService.updateNotificationPreferences(req.user!.id, patch);
+  return ok(res, { client });
+}
+
+export async function patchLanguage(req: Request, res: Response) {
+  const { language } = req.body as LanguagePatch;
+  const client = await accountService.updateLanguage(req.user!.id, language);
   return ok(res, { client });
 }
 

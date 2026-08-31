@@ -72,7 +72,7 @@ describe('nutrition routes', () => {
     expect((updatedClient.permissions as Record<string, boolean>).nutrition).toBe(true);
 
     const notifications = await db.select().from(clientNotifications).where(eq(clientNotifications.clientId, clientId));
-    expect(notifications.some((n) => n.message.includes('nutrición'))).toBe(true);
+    expect(notifications.some((n) => n.message.includes('Nutrition'))).toBe(true);
   });
 
   it('saving the plan a second time does not duplicate the unlock notification', async () => {
@@ -80,7 +80,7 @@ describe('nutrition routes', () => {
     await request(app).put(`/api/clients/${clientId}/nutrition`).set('Authorization', `Bearer ${adminToken}`).send({ daily_cals: 2100 });
 
     const notifications = await db.select().from(clientNotifications).where(eq(clientNotifications.clientId, clientId));
-    expect(notifications.filter((n) => n.message.includes('nutrición'))).toHaveLength(1);
+    expect(notifications.filter((n) => n.message.includes('Nutrition'))).toHaveLength(1);
   });
 
   it('admin creates, updates, and deletes a meal', async () => {

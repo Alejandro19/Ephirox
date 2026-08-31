@@ -9,6 +9,9 @@ import type {
 } from '@latribu/shared-types';
 import * as clientsService from '../services/clients.service.js';
 import * as membershipPaymentsService from '../services/membership-payments.service.js';
+import * as clientInvitationsService from '../services/client-invitations.service.js';
+import { sendClientInvitationEmail } from '../services/password-reset.service.js';
+import * as onboardingApprovalsService from '../services/onboarding-approvals.service.js';
 
 function ok(res: Response, data: Record<string, unknown>, status = 200) {
   return res.status(status).json({ success: true, ...data });
@@ -36,7 +39,11 @@ export async function createClient(req: Request, res: Response) {
 export async function getClient(req: Request, res: Response) {
   const client = await clientsService.findClientById(req.params.id);
   if (!client) return err(res, 'Cliente no encontrado.', 404);
-  return ok(res, { client });
+  // Señal explícita para el botón "Reenviar invitación" — no se infiere de
+  // passwordHash === null en el frontend porque esa condición también es
+  // cierta para clientes SSO-only, que nunca deben ver ese botón.
+  const hasPendingInvitation = await clientInvitationsService.hasPendingInvitation(client.id);
+  return ok(res, { client: { ...client, hasPendingInvitation } });
 }
 
 export async function updateClient(req: Request, res: Response) {
@@ -70,6 +77,37 @@ export async function updateClientType(req: Request, res: Response) {
   const client = await clientsService.updateClientType(req.params.id, client_type);
   if (!client) return err(res, 'Cliente no encontrado.', 404);
   return ok(res, { client });
+}
+
+// Invalida cualquier invitación anterior sin usar y manda una nueva —
+// visible en la ficha del cliente solo mientras nunca haya creado su
+// contraseña (ver hasPendingInvitation, distingue de clientes SSO-only).
+export async function resendInvitation(req: Request, res: Response) {
+  const client = await clientsService.findClientById(req.params.id);
+  if (!client) return err(res, 'Cliente no encontrado.', 404);
+  if (client.passwordHash) return err(res, 'Este cliente ya creó su contraseña.', 409);
+
+  const webBaseUrl = process.env.WEB_APP_URL || 'http://localhost:3000';
+  const rawToken = await clientInvitationsService.resendInvitation(client.id);
+  await sendClientInvitationEmail(client.email, client.name, `${webBaseUrl}/invitacion?token=${rawToken}`);
+  return ok(res, { message: 'Invitación reenviada.' });
+}
+
+export async function approveBaseline(req: Request, res: Response) {
+  const client = await onboardingApprovalsService.approveBaseline(req.params.id);
+  if (!client) return err(res, 'Cliente no encontrado.', 404);
+  return ok(res, { client });
+}
+
+export async function approveWearable(req: Request, res: Response) {
+  try {
+    const client = await onboardingApprovalsService.approveWearable(req.params.id);
+    if (!client) return err(res, 'Cliente no encontrado.', 404);
+    return ok(res, { client });
+  } catch (e) {
+    if (e instanceof onboardingApprovalsService.WearableNotReadyError) return err(res, e.message, 409);
+    throw e;
+  }
 }
 
 export async function resolveDeletionRequest(req: Request, res: Response) {

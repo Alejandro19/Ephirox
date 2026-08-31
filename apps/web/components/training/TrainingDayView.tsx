@@ -4,6 +4,7 @@ import type { Exercise, ExerciseCategory } from '../../lib/training-client';
 import { CATEGORY_ORDER, getCategoryLockState } from '../../lib/training-day-logic';
 import { CATEGORY_LABELS, CategoryIcon, MiniRing, ProgressBar } from './TrainingVisuals';
 import { IconLock } from '../ui/icons';
+import Button from '../ui/Button';
 
 export type TrainingDayViewProps = {
   day: number;
@@ -37,12 +38,13 @@ export function TrainingDayView({
         <button
           type="button"
           onClick={onBack}
-          className="mb-3 inline-block bg-transparent p-0 text-xs font-semibold text-[#5C574E] hover:underline"
+          className="mb-3 inline-block bg-transparent p-0 font-mono text-[10px] uppercase tracking-[0.1em] hover:underline"
+          style={{ color: 'var(--eph-muted)' }}
         >
           ← Días de entrenamiento
         </button>
-        <h1 className="mb-1.5 font-serif text-[28px] font-bold text-[var(--ink)]">Día {day}</h1>
-        <p className="m-0 text-[var(--ink-secondary)]">Elige qué vas a entrenar hoy.</p>
+        <h1 className="mb-1.5 font-display text-[28px]" style={{ color: 'var(--eph-text)' }}>Día {day}</h1>
+        <p className="m-0 font-body" style={{ color: 'var(--eph-body)' }}>Elige qué vas a entrenar hoy.</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
@@ -64,39 +66,43 @@ export function TrainingDayView({
                   ? `${catDone}/${list.length} · ✓ Completado`
                   : `${catDone}/${list.length} ejercicio${list.length === 1 ? '' : 's'}`;
 
+          const stateStyle =
+            state === 'no_asignada'
+              ? { borderColor: 'var(--eph-line)', opacity: 0.4 }
+              : state === 'locked'
+                ? { borderColor: 'var(--eph-line)', opacity: 0.45 }
+                : state === 'done'
+                  ? { borderColor: 'var(--eph-accent)', background: 'rgba(201,164,106,.08)' }
+                  : { borderColor: 'var(--eph-accent)' };
+
           return (
             <button
               key={category}
               type="button"
               disabled={disabled}
               onClick={() => onOpenCategory(category)}
-              className={`flex flex-col items-center rounded-2xl border px-3.5 py-5 text-center transition-colors disabled:cursor-not-allowed ${
-                state === 'no_asignada'
-                  ? 'border-[#E7DFC9] bg-[#F0EBE0] opacity-40'
-                  : state === 'locked'
-                    ? 'border-[#E7DFC9] bg-white opacity-45'
-                    : state === 'done'
-                      ? 'border-2 border-[#5B7A4E] bg-[#F4F8EF]'
-                      : 'border-2 border-[#5B7A4E] bg-white'
-              } ${!disabled ? 'enabled:hover:border-[#B8935A] enabled:hover:shadow-[0_6px_16px_rgba(184,147,90,.15)]' : ''}`}
+              className={`flex flex-col items-center border px-3.5 py-5 text-center transition-colors disabled:cursor-not-allowed ${!disabled ? 'enabled:hover:border-[var(--eph-accent-hi)]' : ''}`}
+              style={stateStyle}
             >
               {state === 'locked' ? (
-                <IconLock size={15} className="text-[#8A8377]" />
+                <IconLock size={15} style={{ color: 'var(--eph-faint)' }} />
               ) : (
-                <CategoryIcon category={category} className={state === 'done' ? 'text-[#5B7A4E]' : 'text-[#8A8377]'} />
+                <span style={{ color: state === 'done' ? 'var(--eph-accent)' : 'var(--eph-muted)' }}>
+                  <CategoryIcon category={category} />
+                </span>
               )}
-              <div className="mt-2 flex items-center justify-center gap-1 font-serif text-[15px] font-semibold text-[var(--ink)]">
+              <div className="mt-2 flex items-center justify-center gap-1 font-display text-[15px]" style={{ color: 'var(--eph-text)' }}>
                 {CATEGORY_LABELS[category]}
-                {state === 'locked' && <IconLock size={11} className="text-[#8A8377]" />}
+                {state === 'locked' && <IconLock size={11} style={{ color: 'var(--eph-faint)' }} />}
                 {state === 'done' ? ' ✓' : ''}
               </div>
-              <div className="mt-1 text-[10px] text-[#8A8377]">{countText}</div>
+              <div className="mt-1 font-mono text-[10px] uppercase tracking-[0.06em]" style={{ color: 'var(--eph-muted)' }}>{countText}</div>
             </button>
           );
         })}
       </div>
 
-      <div className="mt-5 border-t border-[var(--border-hairline)] pt-6">
+      <div className="mt-5 border-t pt-6" style={{ borderColor: 'var(--eph-line)' }}>
         <div className="flex items-center gap-4">
           <MiniRing pct={pct} />
           <div className="flex-1">
@@ -104,17 +110,12 @@ export function TrainingDayView({
           </div>
         </div>
         {alreadyCompletedThisWeek ? (
-          <p className="mt-4 text-center text-[var(--ink-secondary)]">Día completado esta semana.</p>
+          <p className="mt-4 text-center font-body" style={{ color: 'var(--eph-body)' }}>Día completado esta semana.</p>
         ) : (
           <div className="mt-4 text-center">
-            <button
-              type="button"
-              disabled={!allDone || completingDay}
-              onClick={() => onCompleteDay()}
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-[var(--hero-espresso-accent)] px-[22px] py-3 font-semibold text-white transition-transform active:scale-[.97] disabled:cursor-not-allowed disabled:opacity-50"
-            >
+            <Button type="button" variant="primary" disabled={!allDone || completingDay} onClick={() => onCompleteDay()}>
               Completar Entrenamiento Día {day}
-            </button>
+            </Button>
           </div>
         )}
       </div>

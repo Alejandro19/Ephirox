@@ -7,10 +7,10 @@ describe('WIZARD_MODULES', () => {
     expect(WIZARD_MODULES.map((m) => m.n)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9]);
   });
 
-  it('marks module 1 as the country-custom module with 10 fields', () => {
+  it('marks module 1 as the country-custom module with 14 fields', () => {
     const mod1 = WIZARD_MODULES.find((m) => m.n === 1)!;
     expect(mod1.custom).toBe('country');
-    expect(mod1.fields).toHaveLength(10);
+    expect(mod1.fields).toHaveLength(14);
   });
 
   it('marks module 3 as the body-custom module with no config-driven fields', () => {
@@ -36,8 +36,8 @@ describe('WIZARD_MODULES', () => {
 });
 
 describe('CONDITIONAL_RULES', () => {
-  it('has exactly 12 rules', () => {
-    expect(CONDITIONAL_RULES).toHaveLength(12);
+  it('has exactly 16 rules', () => {
+    expect(CONDITIONAL_RULES).toHaveLength(16);
   });
 
   it('every rule references a real controlling field and a real target field', () => {

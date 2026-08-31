@@ -49,17 +49,6 @@ describe('clients patch routes', () => {
     await request(app).patch(`/api/clients/${clientId}/status`).set('Authorization', `Bearer ${adminToken}`).send({ status: 'active' });
   });
 
-  it('classifying as lead_wellness bumps cortisol and community permissions', async () => {
-    const res = await request(app)
-      .patch(`/api/clients/${clientId}/client-type`)
-      .set('Authorization', `Bearer ${adminToken}`)
-      .send({ client_type: 'lead_wellness' });
-    expect(res.status).toBe(200);
-    expect(res.body.client.clientType).toBe('lead_wellness');
-    expect(res.body.client.permissions.cortisol).toBe(true);
-    expect(res.body.client.permissions.community).toBe(true);
-  });
-
   it('rejects an invalid client type', async () => {
     const res = await request(app)
       .patch(`/api/clients/${clientId}/client-type`)

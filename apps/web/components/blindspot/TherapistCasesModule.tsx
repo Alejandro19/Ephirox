@@ -18,29 +18,31 @@ import {
 import IdentityHeader from '@/components/ui/IdentityHeader';
 
 const trackedLabelStyle: React.CSSProperties = {
-  display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--ink-secondary)',
-  textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6,
+  display: 'block', fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', fontSize: 10, fontWeight: 400, color: 'var(--eph-muted)',
+  textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6,
 };
 const fieldStyle: React.CSSProperties = {
-  width: '100%', height: 32, borderRadius: 0, border: 'none', borderBottom: '1px solid var(--border-input)',
-  padding: '0 2px 6px', fontSize: 14.5, fontWeight: 600, background: 'transparent', color: 'var(--ink)',
+  width: '100%', height: 32, borderRadius: 0, border: 'none', borderBottom: '1px solid var(--eph-line-2)',
+  padding: '0 2px 6px', fontSize: 15, fontWeight: 400, background: 'transparent', color: 'var(--eph-text)',
   outline: 'none', boxSizing: 'border-box',
 };
 const textareaStyle: React.CSSProperties = {
-  width: '100%', borderRadius: 10, border: '1px solid var(--border-hairline)',
-  padding: 10, fontSize: 14.5, fontWeight: 600, background: 'var(--paper)', color: 'var(--ink)',
+  width: '100%', borderRadius: 0, border: '1px solid var(--eph-line)',
+  padding: 10, fontSize: 15, fontWeight: 400, background: 'var(--eph-surface)', color: 'var(--eph-text)',
   outline: 'none', boxSizing: 'border-box', minHeight: 72, resize: 'vertical', fontFamily: 'inherit',
 };
 const primaryButtonStyle: React.CSSProperties = {
-  height: 40, padding: '0 20px', borderRadius: 9999, border: 'none',
-  color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+  height: 40, padding: '0 20px', borderRadius: 0, border: 'none',
+  fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
+  color: 'var(--eph-ink)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.12em', cursor: 'pointer',
 };
 function tabButtonStyle(active: boolean): React.CSSProperties {
   return {
-    height: 38, padding: '0 18px', borderRadius: 9999, fontSize: 13, fontWeight: 700, cursor: 'pointer',
-    border: active ? 'none' : '1px solid var(--border-input)',
-    background: active ? 'var(--ring-accent)' : 'transparent',
-    color: active ? '#fff' : 'var(--ink-secondary)',
+    height: 38, padding: '0 18px', borderRadius: 0, fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
+    fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', cursor: 'pointer',
+    border: active ? 'none' : '1px solid var(--eph-line-2)',
+    background: active ? 'var(--eph-accent)' : 'transparent',
+    color: active ? 'var(--eph-ink)' : 'var(--eph-muted)',
   };
 }
 
@@ -67,9 +69,9 @@ function relativeTime(dateStr: string | null): string {
 }
 
 function caseBadge(c: TherapistCaseListItem): { label: string; bg: string; color: string } {
-  if (c.crisisFlag) return { label: 'En crisis', bg: 'var(--danger)', color: '#fff' };
-  if (c.status === 'cerrado') return { label: 'Cerrado', bg: 'var(--border-hairline)', color: 'var(--ink-secondary)' };
-  return { label: STATUS_LABEL[c.status], bg: 'rgba(201,166,107,.18)', color: 'var(--ring-accent)' };
+  if (c.crisisFlag) return { label: 'En crisis', bg: 'var(--eph-danger)', color: '#F4EFE7' };
+  if (c.status === 'cerrado') return { label: 'Cerrado', bg: 'transparent', color: 'var(--eph-muted)' };
+  return { label: STATUS_LABEL[c.status], bg: 'rgba(201,166,107,.18)', color: 'var(--eph-accent)' };
 }
 
 function AlertIcon() {
@@ -105,7 +107,7 @@ export function TherapistCasesModule() {
     refetch();
   }, [refetch]);
 
-  if (loading) return <p style={{ color: 'var(--ink-secondary)', fontSize: 13 }}>Cargando...</p>;
+  if (loading) return <p style={{ color: 'var(--eph-muted)', fontSize: 13 }}>Cargando...</p>;
 
   const crisisCases = cases.filter((c) => c.crisisFlag);
   const closedCases = cases.filter((c) => !c.crisisFlag && c.status === 'cerrado');
@@ -126,9 +128,9 @@ export function TherapistCasesModule() {
 
       <div
         style={{
-          position: 'relative', overflow: 'hidden', borderRadius: 'var(--radius-hero)',
+          position: 'relative', overflow: 'hidden', borderRadius: '0',
           padding: '26px 28px', marginTop: 32, marginBottom: 18, display: 'flex', gap: 32,
-          background: 'var(--hero-espresso)', color: 'var(--hero-espresso-text)',
+          background: 'var(--eph-surface)', color: 'var(--eph-text)',
         }}
       >
         <div
@@ -138,25 +140,25 @@ export function TherapistCasesModule() {
           }}
         />
         <div style={{ position: 'relative', zIndex: 1 }}>
-          <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--hero-espresso-accent)' }}>
+          <p className="font-mono" style={{ margin: '0 0 6px', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--eph-accent)' }}>
             Casos activos
           </p>
-          <p style={{ margin: 0, fontFamily: 'Fraunces, Georgia, serif', fontSize: 34, fontWeight: 700 }}>{activeCases.length}</p>
+          <p className="font-display" style={{ margin: 0, fontSize: 34, fontWeight: 400 }}>{activeCases.length}</p>
         </div>
         <div style={{ position: 'relative', zIndex: 1 }}>
-          <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--hero-espresso-accent)' }}>
+          <p className="font-mono" style={{ margin: '0 0 6px', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--eph-accent)' }}>
             En crisis
           </p>
-          <p style={{ margin: 0, fontFamily: 'Fraunces, Georgia, serif', fontSize: 34, fontWeight: 700 }}>{crisisCases.length}</p>
+          <p className="font-display" style={{ margin: 0, fontSize: 34, fontWeight: 400 }}>{crisisCases.length}</p>
         </div>
         <div style={{ position: 'relative', zIndex: 1, flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
-          <p style={{ margin: 0, fontSize: 13, color: crisisCases.length > 0 ? 'var(--hero-espresso-accent)' : 'var(--hero-espresso-text-muted)', fontWeight: crisisCases.length > 0 ? 700 : 400 }}>
+          <p className="font-body" style={{ margin: 0, fontSize: 13, color: crisisCases.length > 0 ? 'var(--eph-accent)' : 'var(--eph-muted)', fontWeight: crisisCases.length > 0 ? 600 : 400 }}>
             {crisisCases.length > 0 ? `${crisisCases.length} caso${crisisCases.length === 1 ? '' : 's'} requiere${crisisCases.length === 1 ? '' : 'n'} atención urgente` : 'Sin crisis activas ahora mismo'}
           </p>
         </div>
       </div>
 
-      {error && <p style={{ color: 'var(--danger)', fontSize: 13 }}>{error}</p>}
+      {error && <p className="font-body" style={{ color: '#D99483', fontSize: 13 }}>{error}</p>}
 
       <div style={{ display: 'flex', gap: 10, marginBottom: 18 }}>
         <button style={tabButtonStyle(statusTab === 'activos')} onClick={() => setStatusTab('activos')}>
@@ -183,9 +185,9 @@ export function TherapistCasesModule() {
 
       <div>
         {cases.length === 0 ? (
-          <p style={{ color: 'var(--ink-secondary)', fontSize: 13, margin: 0 }}>Aún no tienes casos asignados.</p>
+          <p style={{ color: 'var(--eph-muted)', fontSize: 13, margin: 0 }}>Aún no tienes casos asignados.</p>
         ) : filteredCases.length === 0 ? (
-          <p style={{ color: 'var(--ink-secondary)', fontSize: 13, margin: 0 }}>Ningún caso coincide en esta pestaña.</p>
+          <p style={{ color: 'var(--eph-muted)', fontSize: 13, margin: 0 }}>Ningún caso coincide en esta pestaña.</p>
         ) : (
           filteredCases.map((c) => {
             const badge = caseBadge(c);
@@ -195,28 +197,29 @@ export function TherapistCasesModule() {
                 onClick={() => setSelectedId(c.id === selectedId ? null : c.id)}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 12,
-                  padding: '14px 4px', borderBottom: '1px solid var(--border-hairline)', cursor: 'pointer',
+                  padding: '14px 4px', borderBottom: '1px solid var(--eph-line)', cursor: 'pointer',
                 }}
               >
                 <div
+                  className="font-mono"
                   style={{
                     width: 38, height: 38, borderRadius: '50%', flexShrink: 0,
-                    background: 'rgba(201,166,107,.18)', color: 'var(--ring-accent)',
+                    background: 'rgba(201,166,107,.18)', color: 'var(--eph-accent)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 15, fontWeight: 700,
+                    fontSize: 15, fontWeight: 400,
                   }}
                 >
                   {initials(c.clientName)}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ margin: 0, fontSize: 13.5, fontWeight: 700, color: 'var(--ink)' }}>
+                  <p className="font-body" style={{ margin: 0, fontSize: 13.5, fontWeight: 600, color: 'var(--eph-text)' }}>
                     {c.clientName} · #{c.caseNumber}
                   </p>
-                  <p style={{ margin: '2px 0 0', fontSize: 11.5, color: 'var(--ink-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <p className="font-body" style={{ margin: '2px 0 0', fontSize: 11.5, color: 'var(--eph-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {c.initialAssessment.motivoConsulta} · {relativeTime(c.lastSessionAt)}
                   </p>
                 </div>
-                <span style={{ background: badge.bg, color: badge.color, fontSize: 10.5, fontWeight: 700, padding: '4px 10px', borderRadius: 9999, flexShrink: 0 }}>
+                <span className="font-mono" style={{ background: badge.bg, color: badge.color, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em', padding: '4px 12px', borderRadius: 999, flexShrink: 0 }}>
                   {badge.label}
                 </span>
               </div>
@@ -297,11 +300,11 @@ function CaseDetail({ blindspotCase, onRefetch }: { blindspotCase: TherapistCase
     ['Celular', client?.phone ?? null],
   ];
 
-  const sectionStyle: React.CSSProperties = { borderTop: '1px solid var(--border-hairline)', paddingTop: 20, paddingBottom: 20 };
+  const sectionStyle: React.CSSProperties = { borderTop: '1px solid var(--eph-line)', paddingTop: 20, paddingBottom: 20 };
 
   return (
     <div>
-      <p style={{ margin: '0 0 4px', fontSize: 15, fontWeight: 700, color: 'var(--ink)' }}>Caso #{blindspotCase.caseNumber}</p>
+      <p className="font-display" style={{ margin: '0 0 4px', fontSize: 18, fontWeight: 400, color: 'var(--eph-text)' }}>Caso #{blindspotCase.caseNumber}</p>
 
       {/* a. Datos personales */}
       <div style={sectionStyle}>
@@ -310,7 +313,7 @@ function CaseDetail({ blindspotCase, onRefetch }: { blindspotCase: TherapistCase
           {personalFields.map(([label, value]) => (
             <div key={label}>
               <span style={trackedLabelStyle}>{label}</span>
-              <p style={{ margin: 0, fontSize: 13.5, color: 'var(--ink)' }}>{value ?? '—'}</p>
+              <p style={{ margin: 0, fontSize: 13.5, color: 'var(--eph-text)' }}>{value ?? '—'}</p>
             </div>
           ))}
         </div>
@@ -320,11 +323,11 @@ function CaseDetail({ blindspotCase, onRefetch }: { blindspotCase: TherapistCase
       <div style={{ ...sectionStyle, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 20 }}>
         <div>
           <span style={trackedLabelStyle}>Motivo de consulta</span>
-          <p style={{ margin: 0, fontSize: 13.5, color: 'var(--ink)' }}>{blindspotCase.initialAssessment.motivoConsulta}</p>
+          <p style={{ margin: 0, fontSize: 13.5, color: 'var(--eph-text)' }}>{blindspotCase.initialAssessment.motivoConsulta}</p>
         </div>
         <div>
           <span style={trackedLabelStyle}>Área percibida</span>
-          <p style={{ margin: 0, fontSize: 13.5, color: 'var(--ink)' }}>{blindspotCase.initialAssessment.areaPercibida}</p>
+          <p style={{ margin: 0, fontSize: 13.5, color: 'var(--eph-text)' }}>{blindspotCase.initialAssessment.areaPercibida}</p>
         </div>
       </div>
 
@@ -335,7 +338,8 @@ function CaseDetail({ blindspotCase, onRefetch }: { blindspotCase: TherapistCase
           disabled={blindspotCase.crisisFlag}
           style={{
             ...primaryButtonStyle,
-            background: 'var(--danger)',
+            background: 'var(--eph-danger)',
+            color: '#F4EFE7',
             display: 'inline-flex', alignItems: 'center', gap: 8,
             opacity: blindspotCase.crisisFlag ? 0.6 : 1,
             cursor: blindspotCase.crisisFlag ? 'not-allowed' : 'pointer',
@@ -348,30 +352,30 @@ function CaseDetail({ blindspotCase, onRefetch }: { blindspotCase: TherapistCase
 
       {/* d. Tareas */}
       <div style={sectionStyle}>
-        <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)', marginBottom: 10 }}>Tareas</p>
+        <p className="font-display" style={{ fontSize: 16, fontWeight: 400, color: 'var(--eph-text)', marginBottom: 10 }}>Tareas</p>
         {tasks.map((t) => (
           <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 0' }}>
             <span
               style={{
                 width: 18, height: 18, borderRadius: '50%', flexShrink: 0,
-                border: t.status === 'pendiente' ? '2px solid var(--border-input)' : 'none',
-                background: t.status === 'pendiente' ? 'transparent' : t.status === 'completada' ? 'var(--ring-accent)' : 'var(--border-hairline)',
+                border: t.status === 'pendiente' ? '2px solid var(--eph-line-2)' : 'none',
+                background: t.status === 'pendiente' ? 'transparent' : t.status === 'completada' ? 'var(--eph-accent)' : 'var(--eph-line)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}
             >
               {t.status === 'completada' && (
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--eph-ink)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
               )}
             </span>
-            <span style={{ flex: 1, fontSize: 12.5, color: 'var(--ink)', textDecoration: t.status !== 'pendiente' ? 'line-through' : 'none' }}>
+            <span className="font-body" style={{ flex: 1, fontSize: 12.5, color: 'var(--eph-text)', textDecoration: t.status !== 'pendiente' ? 'line-through' : 'none' }}>
               {t.title}
             </span>
             {t.status === 'pendiente' && (
-              <span style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-                <button onClick={() => handleTaskStatus(t.id, 'completada')} style={{ fontSize: 11, border: '1px solid var(--border-hairline)', borderRadius: 9999, padding: '3px 10px', background: 'transparent', cursor: 'pointer' }}>Completada</button>
-                <button onClick={() => handleTaskStatus(t.id, 'omitida')} style={{ fontSize: 11, border: '1px solid var(--border-hairline)', borderRadius: 9999, padding: '3px 10px', background: 'transparent', cursor: 'pointer' }}>Omitir</button>
+              <span className="font-mono" style={{ display: 'flex', gap: 6, flexShrink: 0, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                <button onClick={() => handleTaskStatus(t.id, 'completada')} style={{ border: '1px solid var(--eph-line-2)', borderRadius: 0, padding: '4px 10px', background: 'transparent', color: 'var(--eph-body)', cursor: 'pointer' }}>Completada</button>
+                <button onClick={() => handleTaskStatus(t.id, 'omitida')} style={{ border: '1px solid var(--eph-line-2)', borderRadius: 0, padding: '4px 10px', background: 'transparent', color: 'var(--eph-body)', cursor: 'pointer' }}>Omitir</button>
               </span>
             )}
           </div>
@@ -380,7 +384,7 @@ function CaseDetail({ blindspotCase, onRefetch }: { blindspotCase: TherapistCase
           <input style={fieldStyle} placeholder="Nueva tarea" value={newTaskTitle} onChange={(e) => setNewTaskTitle(e.target.value)} />
           <button
             onClick={handleAddTask}
-            style={{ ...primaryButtonStyle, height: 40, flexShrink: 0, background: 'rgba(201,166,107,.18)', color: 'var(--ring-accent)' }}
+            style={{ ...primaryButtonStyle, height: 40, flexShrink: 0, background: 'rgba(201,166,107,.18)', color: 'var(--eph-accent)' }}
           >
             Agregar
           </button>
@@ -389,7 +393,7 @@ function CaseDetail({ blindspotCase, onRefetch }: { blindspotCase: TherapistCase
 
       {/* e. Registrar sesión */}
       <div style={sectionStyle}>
-        <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)', marginBottom: 10 }}>Registrar sesión</p>
+        <p className="font-display" style={{ fontSize: 16, fontWeight: 400, color: 'var(--eph-text)', marginBottom: 10 }}>Registrar sesión</p>
         <div style={{ display: 'grid', gap: 10 }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10 }}>
             <div>
@@ -418,7 +422,7 @@ function CaseDetail({ blindspotCase, onRefetch }: { blindspotCase: TherapistCase
           <button
             onClick={handleLogSession}
             disabled={saving}
-            style={{ ...primaryButtonStyle, background: 'var(--ink)', alignSelf: 'flex-start' }}
+            style={{ ...primaryButtonStyle, background: 'var(--eph-accent)', color: 'var(--eph-ink)', alignSelf: 'flex-start', opacity: saving ? 0.6 : 1 }}
           >
             {saving ? 'Guardando...' : 'Guardar sesión'}
           </button>
@@ -426,16 +430,16 @@ function CaseDetail({ blindspotCase, onRefetch }: { blindspotCase: TherapistCase
       </div>
 
       <div style={sectionStyle}>
-        <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)', marginBottom: 8 }}>Historial de sesiones</p>
+        <p className="font-display" style={{ fontSize: 16, fontWeight: 400, color: 'var(--eph-text)', marginBottom: 8 }}>Historial de sesiones</p>
         {sessionLogs.length === 0 ? (
-          <p style={{ fontSize: 12.5, color: 'var(--ink-secondary)' }}>Sin sesiones registradas todavía.</p>
+          <p className="font-body" style={{ fontSize: 12.5, color: 'var(--eph-muted)' }}>Sin sesiones registradas todavía.</p>
         ) : (
           sessionLogs.map((log) => (
-            <div key={log.id} style={{ borderLeft: '2px solid var(--border-hairline)', paddingLeft: 12, marginBottom: 8 }}>
-              <p style={{ margin: 0, fontSize: 11.5, fontWeight: 700, color: 'var(--ink-secondary)', textTransform: 'uppercase' }}>
+            <div key={log.id} style={{ borderLeft: '2px solid var(--eph-line)', paddingLeft: 12, marginBottom: 8 }}>
+              <p className="font-mono" style={{ margin: 0, fontSize: 10, letterSpacing: '0.06em', color: 'var(--eph-muted)', textTransform: 'uppercase' }}>
                 {log.sessionDate} · {log.progressMarker}
               </p>
-              {log.internalSummary && <p style={{ margin: '2px 0 0', fontSize: 12.5, color: 'var(--ink)' }}>{log.internalSummary}</p>}
+              {log.internalSummary && <p className="font-body" style={{ margin: '2px 0 0', fontSize: 12.5, color: 'var(--eph-text)' }}>{log.internalSummary}</p>}
             </div>
           ))
         )}

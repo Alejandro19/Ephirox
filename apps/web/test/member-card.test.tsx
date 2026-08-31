@@ -21,10 +21,10 @@ describe('MemberCard', () => {
     render(<MemberCard clientId="client-1" />);
     expect(await screen.findByText('Ana López')).toBeInTheDocument();
     expect(screen.getByText('Miembro N.° 00142')).toBeInTheDocument();
-    expect(screen.getByText('Club Elite')).toBeInTheDocument();
+    expect(screen.getByText('Premium')).toBeInTheDocument();
   });
 
-  it('shows "Quedan X de Y clases" for a Presencial client with an active package, alongside the expiration date', async () => {
+  it('shows "Quedan X de Y clases" for a Cliente 1:1 client with an active package, alongside the expiration date', async () => {
     vi.mocked(clientsClient.fetchClient).mockResolvedValue({
       id: 'client-3',
       name: 'Presencial Client',
@@ -42,14 +42,14 @@ describe('MemberCard', () => {
     expect(await screen.findByText('Quedan 5 de 8')).toBeInTheDocument();
   });
 
-  it('does not show a sessions line for a non-Presencial client', async () => {
+  it('does not show a sessions line for a non-Cliente-1:1 client', async () => {
     vi.mocked(clientsClient.fetchClient).mockResolvedValue({
       id: 'client-4',
-      name: 'Online Client',
-      email: 'online@example.com',
+      name: 'Mentoring Client',
+      email: 'mentoring@example.com',
       plan: 'Miembro',
       status: 'active',
-      clientType: 'coaching_online',
+      clientType: 'mentoring',
       memberNumber: 8,
       activatedAt: '2026-01-01T00:00:00.000Z',
       planEndDate: '2099-01-01',
@@ -66,7 +66,7 @@ describe('MemberCard', () => {
       email: 'pending@example.com',
       plan: 'Miembro',
       status: 'inactive',
-      clientType: 'lead_wellness',
+      clientType: 'coaching_1_1',
       memberNumber: null,
       activatedAt: null,
     });

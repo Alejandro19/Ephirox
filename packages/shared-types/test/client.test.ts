@@ -34,8 +34,13 @@ describe('client schemas', () => {
   });
 
   it('accepts a valid client-type patch', () => {
-    const result = ClientTypePatchSchema.safeParse({ client_type: 'lead_wellness' });
+    const result = ClientTypePatchSchema.safeParse({ client_type: 'mentoring' });
     expect(result.success).toBe(true);
+  });
+
+  it('rejects a client-type patch with a retired type', () => {
+    const result = ClientTypePatchSchema.safeParse({ client_type: 'lead_wellness' });
+    expect(result.success).toBe(false);
   });
 
   it('rejects a renew-plan patch with an invalid duration', () => {

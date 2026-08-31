@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Fraunces, Inter } from "next/font/google";
+import { Fraunces, Inter, Cormorant_Garamond, Jost, JetBrains_Mono } from "next/font/google";
 import Script from "next/script";
 import Providers from "./providers";
 import "./globals.css";
@@ -19,9 +19,34 @@ const inter = Inter({
   display: "swap",
 });
 
+// Identidad Ephirox (reskin en curso, ver plan de reskin) — conviven con
+// Fraunces/Inter hasta que cada pantalla migre; no reemplazan las fuentes
+// legacy todavía.
+const cormorant = Cormorant_Garamond({
+  subsets: ["latin"],
+  weight: ["300", "400", "500"],
+  style: ["normal", "italic"],
+  variable: "--font-cormorant",
+  display: "swap",
+});
+
+const jost = Jost({
+  subsets: ["latin"],
+  weight: ["300", "400", "500"],
+  variable: "--font-jost",
+  display: "swap",
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  weight: ["300", "400", "500"],
+  variable: "--font-jetbrains-mono",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  title: "LA TRIBU",
-  description: "Comunidad de bienestar y alto rendimiento.",
+  title: "EPHIROX",
+  description: "Redefining limits.",
 };
 
 export default function RootLayout({
@@ -30,7 +55,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="es" className={`${fraunces.variable} ${inter.variable}`} suppressHydrationWarning>
+    <html lang="es" className={`${fraunces.variable} ${inter.variable} ${cormorant.variable} ${jost.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning>
       <head>
         {/* Acelera la conexión TLS antes de que los scripts la necesiten */}
         <link rel="preconnect" href="https://accounts.google.com" />

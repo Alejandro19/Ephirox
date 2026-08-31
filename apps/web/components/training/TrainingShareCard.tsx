@@ -30,7 +30,7 @@ export default function TrainingShareCard({ streakWeeks, phrase }: TrainingShare
       const ctx = canvasRef.current.getContext("2d");
       if (!ctx) throw new Error("Canvas no disponible.");
       drawInstagramCard(ctx, { streakWeeks, phrase });
-      await shareCanvasAsImage(canvasRef.current, `latribu-entreno-s${streakWeeks}.png`);
+      await shareCanvasAsImage(canvasRef.current, `ephirox-workout-s${streakWeeks}.png`);
       showToast("¡Tarjeta lista para compartir!", "success");
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Error al generar la tarjeta.";

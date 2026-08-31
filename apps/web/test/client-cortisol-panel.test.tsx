@@ -29,7 +29,7 @@ describe('ClientCortisolPanel', () => {
   it('shows the assigned techniques and the tip of the day', async () => {
     mockFetches({
       techniques: [
-        { id: 't1', title: 'Respiración 4-7-8', type: 'Respiración', duration: '5 min', durationMinutes: 5, durationSeconds: null, description: null, videoUrl: null, videoName: null, youtubeUrl: null, audioUrl: null, audioName: null, emotion: null },
+        { id: 't1', title: 'Respiración 4-7-8', type: 'Respiración', duration: '5 min', durationMinutes: 5, durationSeconds: null, description: null, videoUrl: null, videoName: null, youtubeUrl: null, audioUrl: null, audioName: null, emotion: null, precautionNote: null },
       ],
       tip: { id: 'tip1', content: 'Duerme 8 horas.' },
     });
@@ -49,7 +49,7 @@ describe('ClientCortisolPanel', () => {
     const user = userEvent.setup();
     mockFetches({
       techniques: [
-        { id: 't1', title: 'Meditación guiada', type: 'Meditación', duration: null, durationMinutes: null, durationSeconds: null, description: null, videoUrl: null, videoName: null, youtubeUrl: 'https://youtube.com/watch?v=abcdef', audioUrl: null, audioName: null, emotion: null },
+        { id: 't1', title: 'Meditación guiada', type: 'Meditación', duration: null, durationMinutes: null, durationSeconds: null, description: null, videoUrl: null, videoName: null, youtubeUrl: 'https://youtube.com/watch?v=abcdef', audioUrl: null, audioName: null, emotion: null, precautionNote: null },
       ],
     });
 
@@ -78,8 +78,8 @@ describe('ClientCortisolPanel', () => {
     const user = userEvent.setup();
     mockFetches({
       techniques: [
-        { id: 't1', title: 'Respiración de caja', type: 'Respiración', duration: null, durationMinutes: null, durationSeconds: null, description: 'Ordena tus pensamientos.', videoUrl: null, videoName: null, youtubeUrl: 'https://youtube.com/watch?v=boxbreath', audioUrl: null, audioName: null, emotion: 'ansioso' },
-        { id: 't2', title: 'Meditación guiada', type: 'Meditación', duration: null, durationMinutes: null, durationSeconds: null, description: null, videoUrl: null, videoName: null, youtubeUrl: null, audioUrl: null, audioName: null, emotion: null },
+        { id: 't1', title: 'Respiración de caja', type: 'Respiración', duration: null, durationMinutes: null, durationSeconds: null, description: 'Ordena tus pensamientos.', videoUrl: null, videoName: null, youtubeUrl: 'https://youtube.com/watch?v=boxbreath', audioUrl: null, audioName: null, emotion: 'ansioso', precautionNote: null },
+        { id: 't2', title: 'Meditación guiada', type: 'Meditación', duration: null, durationMinutes: null, durationSeconds: null, description: null, videoUrl: null, videoName: null, youtubeUrl: null, audioUrl: null, audioName: null, emotion: null, precautionNote: null },
       ],
       checkin: { id: 'c1', emotion: 'ansioso', checkinDate: '2026-08-02' },
     });
@@ -99,6 +99,6 @@ describe('ClientCortisolPanel', () => {
     vi.mocked(cortisolClient.getTodayCheckin).mockResolvedValue(null);
 
     render(<ClientCortisolPanel clientId="client-1" />);
-    expect(await screen.findByText('Beneficio exclusivo de una membresía superior')).toBeInTheDocument();
+    expect(await screen.findByText('Disponible en Premium')).toBeInTheDocument();
   });
 });

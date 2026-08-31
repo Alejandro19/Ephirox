@@ -82,7 +82,7 @@ describe('PanelConfiguracion', () => {
     render(<PanelConfiguracion clientId={CLIENT_ID} />);
 
     await screen.findByDisplayValue('Ana Pérez');
-    const newsRow = screen.getByText('Novedades de La Tribu').closest('div')!.parentElement!;
+    const newsRow = screen.getByText('Novedades de Ephirox').closest('div')!.parentElement!;
     const toggle = newsRow.querySelector('button')!;
     fireEvent.click(toggle);
 

@@ -49,7 +49,7 @@ export default function OnboardingPage() {
 
   if (variant === 'none') {
     return (
-      <LockedOverlay title="Información Personal no disponible" subtitle="Este módulo no está disponible para tu tipo de cuenta.">
+      <LockedOverlay title="Baseline no disponible" subtitle="Este módulo no está disponible para tu tipo de cuenta.">
         <div style={{ minHeight: 240 }} />
       </LockedOverlay>
     );

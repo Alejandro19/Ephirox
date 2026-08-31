@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { LoginInputSchema, RegisterInputSchema, ChangePasswordInputSchema, GoogleAuthInputSchema } from '../src/auth.js';
+import { LoginInputSchema, ChangePasswordInputSchema, GoogleAuthInputSchema } from '../src/auth.js';
 
 describe('auth schemas', () => {
   it('accepts a valid login input', () => {
@@ -9,16 +9,6 @@ describe('auth schemas', () => {
 
   it('rejects a login input with an invalid email', () => {
     const result = LoginInputSchema.safeParse({ email: 'not-an-email', password: 'secret' });
-    expect(result.success).toBe(false);
-  });
-
-  it('accepts a valid register input', () => {
-    const result = RegisterInputSchema.safeParse({ name: 'Ana', email: 'a@a.com', password: 'secret' });
-    expect(result.success).toBe(true);
-  });
-
-  it('rejects a register input missing the name', () => {
-    const result = RegisterInputSchema.safeParse({ email: 'a@a.com', password: 'secret' });
     expect(result.success).toBe(false);
   });
 

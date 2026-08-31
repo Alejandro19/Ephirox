@@ -14,6 +14,7 @@ import {
 } from '../../lib/cortisol-client';
 import { youtubeEmbedUrl } from '../../lib/training-timer-logic';
 import { CORTISOL_EMOTIONS, CORTISOL_RECOMMENDATIONS, calculateCortisolWeeklyStats } from '../../lib/cortisol-logic';
+import { NEUROWELLNESS_TECHNIQUE_TYPES } from '@latribu/shared-types';
 import { PermissionDeniedError } from '../../lib/api-client';
 import IdentityHeader from '../ui/IdentityHeader';
 import Badge from '../ui/Badge';
@@ -21,6 +22,9 @@ import EmptyState from '../ui/EmptyState';
 import RingProgress from '../ui/RingProgress';
 import ProgressBar from '../ui/ProgressBar';
 import LockedBenefit from '../ui/LockedBenefit';
+import { ProtocolDisclaimerFooter } from '../ui/ProtocolDisclaimerFooter';
+import { InsightsSection } from '../insights/InsightsSection';
+import Button from '../ui/Button';
 
 const TECHNIQUE_ICON_PATHS: Record<string, React.ReactNode> = {
   respiración: <path d="M3 10c2.5-3 4.5-3 7 0s4.5 3 7 0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" fill="none" />,
@@ -31,6 +35,13 @@ const TECHNIQUE_ICON_PATHS: Record<string, React.ReactNode> = {
       <circle cx="10" cy="10" r="6.5" stroke="currentColor" strokeWidth="1.4" fill="none" />
       <circle cx="10" cy="10" r="2" fill="currentColor" />
     </>
+  ),
+  'respiración vagal': <path d="M3 10c2.5-3 4.5-3 7 0s4.5 3 7 0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" fill="none" />,
+  'exposición controlada': (
+    <path d="M10 3v14M4.5 6.5l11 7M4.5 13.5l11-7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+  ),
+  'recuperación activa': (
+    <path d="M4 12l3-6 2.5 9L12 6l1.5 6H16" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" fill="none" />
   ),
   base: (
     <>
@@ -44,7 +55,7 @@ function TechniqueIcon({ type }: { type: string | null }) {
   const key = (type || '').toLowerCase();
   const path = TECHNIQUE_ICON_PATHS[key] || TECHNIQUE_ICON_PATHS.base;
   return (
-    <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[var(--page-bg)]" style={{ color: 'var(--hero-espresso-accent)' }}>
+    <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[var(--eph-surface-2)]" style={{ color: 'var(--eph-accent)' }}>
       <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
         {path}
       </svg>
@@ -66,15 +77,15 @@ function CortisolPlayer({
   const embedUrl = youtubeEmbedUrl(technique.youtubeUrl);
   return (
     <div>
-      <button type="button" onClick={onBack} className="mb-3 inline-block bg-transparent p-0 text-xs font-semibold text-[var(--ink-secondary)] hover:underline">
-        ← Gestión de Cortisol
+      <button type="button" onClick={onBack} className="mb-3 inline-block bg-transparent p-0 font-mono text-[10px] uppercase tracking-[0.1em] hover:underline" style={{ color: 'var(--eph-muted)' }}>
+        ← Stress
       </button>
-      <h1 className="mb-1 font-serif text-2xl font-bold text-[var(--ink)]">{technique.title}</h1>
-      <p className="mb-5 text-sm text-[var(--ink-secondary)]">{[technique.type, technique.duration].filter(Boolean).join(' · ')}</p>
+      <h1 className="mb-1 font-display text-2xl" style={{ color: 'var(--eph-text)' }}>{technique.title}</h1>
+      <p className="mb-5 font-body text-sm" style={{ color: 'var(--eph-muted)' }}>{[technique.type, technique.duration].filter(Boolean).join(' · ')}</p>
 
-      <div className="rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--paper)] p-[26px]">
+      <div className="border p-[26px]" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface)' }}>
         {embedUrl ? (
-          <div className="relative overflow-hidden rounded-[14px] bg-black pt-[56.25%]">
+          <div className="relative overflow-hidden bg-black pt-[56.25%]">
             <iframe
               src={embedUrl}
               title={technique.title}
@@ -84,40 +95,88 @@ function CortisolPlayer({
             />
           </div>
         ) : technique.audioUrl ? (
-          <div className="rounded-[14px] bg-[#F1EAF7] p-6 text-center">
+          <div className="border p-6 text-center" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface-2)' }}>
             <audio src={technique.audioUrl} controls className="w-full" />
           </div>
         ) : (
-          <div className="py-10 text-center text-[var(--ink-secondary)]">Sin video ni audio asignado.</div>
+          <div className="py-10 text-center font-body" style={{ color: 'var(--eph-muted)' }}>Sin video ni audio asignado.</div>
         )}
 
-        {technique.description && <p className="mt-4 text-sm leading-relaxed text-[var(--ink)]">{technique.description}</p>}
+        {technique.description && <p className="mt-4 font-body text-sm leading-relaxed" style={{ color: 'var(--eph-text)' }}>{technique.description}</p>}
+        {technique.precautionNote && (
+          <div className="mt-4 border px-4 py-3 font-body text-sm" style={{ borderColor: 'var(--eph-danger)', background: 'rgba(138,74,60,.14)', color: '#D99483' }}>
+            <strong>Precaución:</strong> {technique.precautionNote}
+          </div>
+        )}
 
         <div className="mt-5 flex justify-center gap-2.5">
           {doneToday ? (
-            <button type="button" disabled className="h-11 cursor-default rounded-full border border-[var(--border-hairline)] px-6 text-sm font-semibold text-[var(--ink-secondary)]">
+            <Button type="button" variant="secondary" disabled>
               Completado hoy ✓
-            </button>
+            </Button>
           ) : (
-            <button
-              type="button"
-              onClick={onComplete}
-              className="h-11 rounded-full px-6 text-sm font-semibold"
-              style={{ background: 'var(--hero-espresso-accent)', color: 'var(--hero-espresso)' }}
-            >
+            <Button type="button" variant="primary" onClick={onComplete}>
               Marcar completado
-            </button>
+            </Button>
           )}
-          <button
-            type="button"
-            onClick={onBack}
-            className="h-11 rounded-full px-6 text-sm font-semibold"
-            style={{ background: 'var(--hero-espresso)', color: 'var(--hero-espresso-text)' }}
-          >
+          <Button type="button" variant="secondary" onClick={onBack}>
             Finalizar
-          </button>
+          </Button>
         </div>
       </div>
+    </div>
+  );
+}
+
+function TechniqueList({
+  techniques,
+  playingAudioId,
+  setPlayingAudioId,
+  setActiveId,
+}: {
+  techniques: CortisolTechnique[];
+  playingAudioId: string | null;
+  setPlayingAudioId: (updater: (prev: string | null) => string | null) => void;
+  setActiveId: (id: string) => void;
+}) {
+  return (
+    <div>
+      {techniques.map((t, i) => {
+        const hasVideo = !!(t.youtubeUrl || t.videoUrl);
+        const hasAudio = !!t.audioUrl;
+        const isPlayingAudio = playingAudioId === t.id;
+        return (
+          <div key={t.id} className={`py-3 ${i === 0 ? '' : 'border-t border-[var(--eph-line)]'}`}>
+            <div className="flex items-center gap-3">
+              <TechniqueIcon type={t.type} />
+              <div className="flex-1">
+                <div className="font-body text-sm font-medium" style={{ color: 'var(--eph-text)' }}>
+                  {t.title} {t.type && <Badge label={t.type} />}
+                </div>
+                <div className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.08em]" style={{ color: 'var(--eph-muted)' }}>{t.duration}</div>
+              </div>
+              {hasVideo && (
+                <Button type="button" variant="secondary" onClick={() => setActiveId(t.id)}>
+                  Reproducir
+                </Button>
+              )}
+              {!hasVideo && hasAudio && (
+                <Button type="button" variant="secondary" onClick={() => setPlayingAudioId((prev) => (prev === t.id ? null : t.id))}>
+                  {isPlayingAudio ? 'Ocultar' : 'Reproducir'}
+                </Button>
+              )}
+            </div>
+            {t.precautionNote && (
+              <div className="mt-2 border px-3 py-2 font-body text-xs" style={{ borderColor: 'var(--eph-danger)', background: 'rgba(138,74,60,.14)', color: '#D99483' }}>
+                <strong>Precaución:</strong> {t.precautionNote}
+              </div>
+            )}
+            {isPlayingAudio && hasAudio && (
+              <audio controls autoPlay src={t.audioUrl ?? undefined} className="mt-2.5 w-full" />
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -132,7 +191,7 @@ async function fetchCortisolBundle(clientId: string) {
   return { techniques, completions, tip, checkin };
 }
 
-export function ClientCortisolPanel({ clientId }: { clientId: string }) {
+export function ClientCortisolPanel({ clientId, clientType }: { clientId: string; clientType?: string | null }) {
   const { data, error, isLoading, mutate } = useSWR(['cortisol-bundle', clientId], () =>
     fetchCortisolBundle(clientId),
   );
@@ -160,13 +219,13 @@ export function ClientCortisolPanel({ clientId }: { clientId: string }) {
     void techniqueId;
   }
 
-  const header = <IdentityHeader title="Gestión de Cortisol" subtitle="Es momento de bajar el ritmo." />;
+  const header = <IdentityHeader title="Stress" subtitle="Es momento de bajar el ritmo." />;
 
   if (isLoading) {
     return (
       <div>
         {header}
-        <p className="text-sm text-[var(--ink-secondary)]">Cargando técnicas de cortisol…</p>
+        <p className="text-sm text-[var(--eph-muted)]">Cargando técnicas de cortisol…</p>
       </div>
     );
   }
@@ -174,7 +233,7 @@ export function ClientCortisolPanel({ clientId }: { clientId: string }) {
     return (
       <div>
         {header}
-        <LockedBenefit variant="upgrade" benefit="tu gestión de cortisol" />
+        <LockedBenefit benefit="tu protocolo de Stress" />
       </div>
     );
   }
@@ -183,7 +242,7 @@ export function ClientCortisolPanel({ clientId }: { clientId: string }) {
     return (
       <div>
         {header}
-        <p role="alert" className="text-[var(--danger)]">{errorMessage}</p>
+        <p role="alert" className="font-body" style={{ color: '#D99483' }}>{errorMessage}</p>
       </div>
     );
   }
@@ -218,13 +277,17 @@ export function ClientCortisolPanel({ clientId }: { clientId: string }) {
     ? { title: matched.title, desc: matched.description || fallback.desc }
     : fallback;
   const weeklyStats = calculateCortisolWeeklyStats(completions);
+  const isNeurowellnessType = (type: string | null) => !!type && (NEUROWELLNESS_TECHNIQUE_TYPES as readonly string[]).includes(type);
+  const neurowellnessTechniques = techniques.filter((t) => isNeurowellnessType(t.type));
+  const generalTechniques = techniques.filter((t) => !isNeurowellnessType(t.type));
 
   return (
     <div>
       {header}
+      {clientType === 'mentoring' && <InsightsSection clientId={clientId} moduleKey="cortisol" />}
 
-      <div className="mb-5 rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--paper)] p-6">
-        <p className="mb-2.5 text-xs font-bold text-[var(--ink)]">¿Cómo te sientes ahora mismo?</p>
+      <div className="mb-5 border p-6" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface)' }}>
+        <p className="mb-2.5 font-mono text-[10px] uppercase tracking-[0.12em]" style={{ color: 'var(--eph-muted)' }}>¿Cómo te sientes ahora mismo?</p>
         <div className="grid grid-cols-3 gap-2">
           {CORTISOL_EMOTIONS.map((o) => {
             const selected = emotion === o.key;
@@ -233,14 +296,14 @@ export function ClientCortisolPanel({ clientId }: { clientId: string }) {
                 key={o.key}
                 type="button"
                 onClick={() => handleSelectEmotion(o.key)}
-                className="rounded-xl border px-2.5 py-2.5 text-center transition-colors"
+                className="border px-2.5 py-2.5 text-center transition-colors"
                 style={selected
-                  ? { borderColor: 'var(--hero-espresso-accent)', background: 'var(--hero-espresso-accent)' }
-                  : { borderColor: 'var(--border-input)', background: 'var(--page-bg)' }}
+                  ? { borderColor: 'var(--eph-accent)', background: 'var(--eph-accent)' }
+                  : { borderColor: 'var(--eph-line-2)', background: 'var(--eph-surface-2)' }}
               >
                 <span
-                  className="block text-[11.5px] font-bold leading-tight"
-                  style={{ color: selected ? 'var(--hero-espresso)' : 'var(--ink-secondary)' }}
+                  className="font-body block text-[11.5px] font-medium leading-tight"
+                  style={{ color: selected ? 'var(--eph-ink)' : 'var(--eph-body)' }}
                 >
                   {o.label}
                 </span>
@@ -251,80 +314,65 @@ export function ClientCortisolPanel({ clientId }: { clientId: string }) {
       </div>
 
       <div
-        className="relative mt-8 mb-5 overflow-hidden rounded-[var(--radius-hero)] p-7 text-center"
-        style={{ background: 'var(--hero-espresso)', color: 'var(--hero-espresso-text)' }}
+        className="relative mt-8 mb-5 overflow-hidden rounded-[0] p-7 text-center"
+        style={{ background: 'var(--eph-surface)', color: 'var(--eph-text)' }}
       >
         <div
           className="pointer-events-none absolute -right-10 -top-10 h-[180px] w-[180px] rounded-full"
           style={{ background: 'radial-gradient(circle, rgba(217,183,126,.18) 0%, transparent 70%)' }}
         />
-        <p className="relative z-10 mb-1 text-[11px] font-bold uppercase tracking-wide" style={{ color: 'var(--hero-espresso-accent)' }}>
+        <p className="relative z-10 mb-1 font-mono text-[10px] uppercase tracking-[0.14em]" style={{ color: 'var(--eph-accent)' }}>
           Recomendada para ti ahora
         </p>
-        <h3 className="relative z-10 mb-1 font-serif text-lg font-bold">{recommended.title}</h3>
-        <p className="relative z-10 mb-3 text-sm" style={{ color: 'var(--hero-espresso-text-muted)' }}>{recommended.desc}</p>
+        <h3 className="relative z-10 mb-1 font-display text-lg" style={{ color: 'var(--eph-text)' }}>{recommended.title}</h3>
+        <p className="relative z-10 mb-3 font-body text-sm" style={{ color: 'var(--eph-muted)' }}>{recommended.desc}</p>
         {matched && (
-          <button
-            type="button"
-            onClick={() => setActiveId(matched.id)}
-            className="relative z-10 h-11 rounded-full px-6 text-sm font-semibold"
-            style={{ background: 'var(--hero-espresso-accent)', color: 'var(--hero-espresso)' }}
-          >
-            Empezar técnica
-          </button>
+          <span className="relative z-10 inline-block">
+            <Button type="button" variant="primary" onClick={() => setActiveId(matched.id)}>
+              Empezar técnica
+            </Button>
+          </span>
         )}
       </div>
 
-      <section className="rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--paper)] p-6 mb-5">
-        <h2 className="mb-4 font-serif text-lg font-bold text-[var(--ink)]">Tus técnicas</h2>
-        {techniques.length === 0 ? (
+      {clientType === 'mentoring' && (
+        <section className="border p-6 mb-5" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface)' }}>
+          <h2 className="mb-1 font-display text-lg" style={{ color: 'var(--eph-text)' }}>Regulación del Sistema Nervioso</h2>
+          <p className="mb-4 font-body text-xs" style={{ color: 'var(--eph-muted)' }}>
+            Entrenamiento proactivo de tu capacidad de regulación — no depende de cómo te sientas hoy.
+          </p>
+          {neurowellnessTechniques.length === 0 ? (
+            <EmptyState message="Tu mentor aún no te ha asignado prácticas de regulación." />
+          ) : (
+            <TechniqueList
+              techniques={neurowellnessTechniques}
+              playingAudioId={playingAudioId}
+              setPlayingAudioId={setPlayingAudioId}
+              setActiveId={setActiveId}
+            />
+          )}
+        </section>
+      )}
+
+      <section className="border p-6 mb-5" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface)' }}>
+        <h2 className="mb-4 font-display text-lg" style={{ color: 'var(--eph-text)' }}>Tus técnicas</h2>
+        {generalTechniques.length === 0 ? (
           <EmptyState message="Aún no tienes técnicas asignadas." />
         ) : (
-          <div>
-            {techniques.map((t, i) => {
-              const hasVideo = !!(t.youtubeUrl || t.videoUrl);
-              const hasAudio = !!t.audioUrl;
-              const isPlayingAudio = playingAudioId === t.id;
-              return (
-                <div key={t.id} className={`py-3 ${i === 0 ? '' : 'border-t border-[var(--border-hairline)]'}`}>
-                  <div className="flex items-center gap-3">
-                    <TechniqueIcon type={t.type} />
-                    <div className="flex-1">
-                      <div className="text-sm font-semibold text-[var(--ink)]">
-                        {t.title} {t.type && <Badge label={t.type} />}
-                      </div>
-                      <div className="mt-0.5 text-xs text-[var(--ink-secondary)]">{t.duration}</div>
-                    </div>
-                    {hasVideo && (
-                      <button type="button" onClick={() => setActiveId(t.id)} className="rounded-full border border-[var(--border-input)] px-3.5 py-1.5 text-xs font-semibold text-[var(--ink)]">
-                        Reproducir
-                      </button>
-                    )}
-                    {!hasVideo && hasAudio && (
-                      <button
-                        type="button"
-                        onClick={() => setPlayingAudioId((prev) => (prev === t.id ? null : t.id))}
-                        className="rounded-full border border-[var(--border-input)] px-3.5 py-1.5 text-xs font-semibold text-[var(--ink)]"
-                      >
-                        {isPlayingAudio ? 'Ocultar' : 'Reproducir'}
-                      </button>
-                    )}
-                  </div>
-                  {isPlayingAudio && hasAudio && (
-                    <audio controls autoPlay src={t.audioUrl ?? undefined} className="mt-2.5 w-full" />
-                  )}
-                </div>
-              );
-            })}
-          </div>
+          <TechniqueList
+            techniques={generalTechniques}
+            playingAudioId={playingAudioId}
+            setPlayingAudioId={setPlayingAudioId}
+            setActiveId={setActiveId}
+          />
         )}
       </section>
 
       {techniques.length > 0 && (
-        <section className="rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--paper)] p-6 mb-5">
-          <h2 className="mb-4 font-serif text-lg font-bold text-[var(--ink)]">Momento de regulación</h2>
+        <section className="border p-6 mb-5" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface)' }}>
+          <h2 className="mb-4 font-display text-lg" style={{ color: 'var(--eph-text)' }}>Momento de regulación</h2>
           <div className="flex items-center gap-4">
-            <RingProgress value={weeklyStats.pct} size={48} color="espresso" />
+            <RingProgress value={weeklyStats.pct} size={48} />
             <div className="flex-1">
               <ProgressBar done={weeklyStats.count} total={7} label="Esta semana" />
             </div>
@@ -333,12 +381,13 @@ export function ClientCortisolPanel({ clientId }: { clientId: string }) {
       )}
 
       {tip && (
-        <div className="rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--page-bg)] p-[18px_20px]">
-          <p className="m-0 text-xs text-[var(--ink-secondary)]">
-            <strong className="text-[var(--ink)]">Sabías que</strong> {tip.content}
+        <div className="border p-[18px_20px]" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface-2)' }}>
+          <p className="m-0 font-body text-xs" style={{ color: 'var(--eph-muted)' }}>
+            <strong style={{ color: 'var(--eph-text)' }}>Sabías que</strong> {tip.content}
           </p>
         </div>
       )}
+      <ProtocolDisclaimerFooter />
     </div>
   );
 }

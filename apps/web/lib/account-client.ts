@@ -64,6 +64,16 @@ export async function updateNotificationPreferences(patch: Partial<NotificationP
   return body.client;
 }
 
+export async function updateLanguage(language: 'es' | 'en'): Promise<ClientDetail> {
+  const body = await authorizedRequest<{ success: boolean; client: ClientDetail; error?: string }>(
+    '/api/account/language',
+    'PATCH',
+    { language }
+  );
+  if (!body.success) throw new Error(body.error || 'Error al guardar tu idioma.');
+  return body.client;
+}
+
 export async function requestAccountDeletion(): Promise<void> {
   const body = await authorizedRequest<{ success: boolean; error?: string }>('/api/account/deletion-request', 'POST');
   if (!body.success) throw new Error(body.error || 'Error al enviar tu solicitud.');

@@ -41,10 +41,10 @@ export function verifyToken(token: string): TokenPayload {
   return jwt.verify(token, requireJwtSecret()) as TokenPayload;
 }
 
-// mentoring (Club Elite) también vence a los 3 meses desde que se sumó el
-// pago digital por Stripe — antes nunca bloqueaba, porque nadie renovaba su
+// mentoring también vence a los 3 meses desde que se sumó el pago digital
+// por Stripe — antes nunca bloqueaba, porque nadie renovaba su
 // plan_end_date en la práctica (ver renewPlan, huérfano hasta el webhook).
-const ACTIVE_PLAN_TYPES = ['coaching_1_1', 'coaching_online', 'mentoring'];
+const ACTIVE_PLAN_TYPES = ['coaching_1_1', 'mentoring'];
 
 export function isPlanExpired(client: Pick<Client, 'clientType' | 'planEndDate'> | null): boolean {
   if (!client) return false;

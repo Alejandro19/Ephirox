@@ -2,9 +2,11 @@
 //
 // Coverage for WizardShell's finalize() — the function that runs when the
 // user clicks "Finalizar" on module 9. It orchestrates, in order: an
-// optional pending-checkup-file upload, putPersonalInfo, a conditional
-// createAnthropometric, per-angle createPhoto calls, and a conditional
-// createInbodyRecord. None of this had test coverage before this file.
+// optional pending-checkup-file upload, putPersonalInfo (without `complete`
+// — that flag now lives in finalizeOnboarding, which runs last so the
+// backend can validate Mentoría's wearable/lab/InBody gate), a conditional
+// createAnthropometric, per-angle createPhoto calls, a conditional
+// createInbodyRecord, and finally finalizeOnboarding.
 //
 // These tests drive the wizard through all 9 real steps (no shortcuts,
 // no reaching into component internals) because that's exactly the kind
@@ -171,6 +173,8 @@ function fillModule6() {
   setField('Hora de despertar', '06:00');
   setSliderByPrefix('Calidad del sueño (1-10)', 8);
   setField('Despertares nocturnos', 'Ninguno');
+  setField('¿Roncas con frecuencia mientras duermes?', 'No');
+  setField('¿Alguien te ha comentado que dejas de respirar o haces pausas al dormir?', 'No');
 }
 
 function fillModule7() {
@@ -241,7 +245,7 @@ async function driveWizardToFinalize(options: DriveOptions = {}) {
   fillModule9();
   clickContinue();
 
-  await screen.findByText('¡Listo!');
+  await screen.findByText('Listo.');
 }
 
 // Driving 9 real wizard steps end-to-end is slower than a typical unit test
@@ -264,6 +268,7 @@ describe('WizardShell finalize()', () => {
     vi.mocked(onboardingClient.createAnthropometric).mockResolvedValue(undefined);
     vi.mocked(onboardingClient.createPhoto).mockResolvedValue(undefined);
     vi.mocked(onboardingClient.createInbodyRecord).mockResolvedValue(undefined);
+    vi.mocked(onboardingClient.finalizeOnboarding).mockResolvedValue({ success: true });
     vi.mocked(onboardingClient.uploadPersonalInfoFile).mockResolvedValue({
       file_url: 'https://files.example.com/chequeo.pdf',
       file_name: 'chequeo.pdf',
@@ -271,18 +276,60 @@ describe('WizardShell finalize()', () => {
     });
   });
 
-  it('runs the minimum-viable full path and calls putPersonalInfo with complete: true', async () => {
+  it('runs the minimum-viable full path, saves personal info, and finalizes onboarding', async () => {
     await driveWizardToFinalize();
 
     expect(onboardingClient.putPersonalInfo).toHaveBeenCalledTimes(1);
     const [clientId, payload] = vi.mocked(onboardingClient.putPersonalInfo).mock.calls[0];
     expect(clientId).toBe('');
-    expect(payload.complete).toBe(true);
+    expect(payload.complete).toBeUndefined();
+    expect(payload.apple_health_connected).toBe(false);
     expect(payload.birthdate).toBe('1990-01-01');
     expect(payload.weight).toBe(80);
     expect(payload.height).toBe(180);
     expect(payload.body_fat).toBe(20);
     expect(payload.onboarding_report).toMatchObject({ birthdate: '1990-01-01', goals: 'Bajar grasa y ganar músculo' });
+
+    expect(onboardingClient.finalizeOnboarding).toHaveBeenCalledWith('');
+    const putOrder = vi.mocked(onboardingClient.putPersonalInfo).mock.invocationCallOrder[0];
+    const finalizeOrder = vi.mocked(onboardingClient.finalizeOnboarding).mock.invocationCallOrder[0];
+    expect(putOrder).toBeLessThan(finalizeOrder);
+  }, 15000);
+
+  it('shows an explicit error and never completes when finalizeOnboarding reports missing items', async () => {
+    vi.mocked(onboardingClient.finalizeOnboarding).mockResolvedValue({ success: false, missing: ['wearable', 'lab_week0'] });
+    render(<OnboardingPage />);
+
+    await screen.findByLabelText('País de residencia');
+    fillModule1();
+    clickContinue();
+    await screen.findByLabelText('¿Horas de trabajo al día?');
+    fillModule2();
+    clickContinue();
+    await screen.findByLabelText('Peso total');
+    fillModule3();
+    clickContinue();
+    await screen.findByLabelText('Condición médica diagnosticada');
+    fillModule4();
+    clickContinue();
+    await screen.findByLabelText('Describe cómo se ve tu desayuno');
+    fillModule5();
+    clickContinue();
+    await screen.findByLabelText('Horas de sueño promedio');
+    fillModule6();
+    clickContinue();
+    await screen.findByLabelText(/^Energía en la mañana/);
+    fillModule7();
+    clickContinue();
+    await screen.findByLabelText(/^Nivel de estrés crónico/);
+    fillModule8();
+    clickContinue();
+    await screen.findByLabelText('¿Has realizado alguna vez actividad física?');
+    fillModule9();
+    clickContinue();
+
+    expect(await screen.findByText(/conectar un wearable.*cargar tu laboratorio de Semana 0/)).toBeInTheDocument();
+    expect(screen.queryByText('Listo.')).not.toBeInTheDocument();
   }, 15000);
 
   it('does NOT call createAnthropometric when no antropometric measurement was entered', async () => {

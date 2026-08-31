@@ -14,25 +14,25 @@ export type AppState = {
 };
 
 export const CLIENT_NAV: NavItem[] = [
-  { key: "personal-info", label: "Información Personal", visible: (s) => s.clientType !== "lead_wellness" },
-  { key: "training", label: "Entrenamiento", visible: (s) => s.clientType === "lead_wellness" ? true : s.onboardingComplete === true },
-  { key: "nutrition", label: "Nutrición", visible: (s) => s.clientType === "lead_wellness" ? true : s.onboardingComplete === true },
-  { key: "cortisol", label: "Gestión de Cortisol", visible: (s) => s.clientType === "lead_wellness" ? true : s.onboardingComplete === true },
-  { key: "rest", label: "Hackea tu Sueño", visible: (s) => s.clientType === "lead_wellness" ? true : s.onboardingComplete === true },
-  { key: "blindspot", label: "Punto Ciego", visible: (s) => s.clientType === "lead_wellness" ? true : s.onboardingComplete === true },
-  { key: "community", label: "Club Wellness", visible: (s) => s.clientType === "lead_wellness" ? true : s.onboardingComplete === true },
-  { key: "evolution", label: "Mi Evolución", visible: (s) => s.clientType === "lead_wellness" ? true : s.onboardingComplete === true },
+  { key: "personal-info", label: "Baseline" },
+  { key: "training", label: "Workout", visible: (s) => s.onboardingComplete === true },
+  { key: "nutrition", label: "Nutrition", visible: (s) => s.onboardingComplete === true },
+  { key: "cortisol", label: "Stress", visible: (s) => s.onboardingComplete === true },
+  { key: "rest", label: "Sleep", visible: (s) => s.onboardingComplete === true },
+  { key: "blindspot", label: "Breakthrough Sessions", visible: (s) => s.onboardingComplete === true },
+  { key: "community", label: "The Circle", visible: (s) => s.onboardingComplete === true },
+  { key: "evolution", label: "Evolution", visible: (s) => s.onboardingComplete === true },
 ];
 
 export const ADMIN_NAV: NavItem[] = [
-  { key: "admin-hub", label: "Administración" },
-  { key: "training", label: "Entrenamiento" },
-  { key: "nutrition", label: "Nutrición" },
-  { key: "cortisol", label: "Gestión de Cortisol" },
-  { key: "rest", label: "Hackea tu Sueño" },
-  { key: "blindspot", label: "Punto Ciego" },
-  { key: "evolution", label: "Mi Evolución" },
-  { key: "community", label: "Club Wellness" },
+  { key: "admin-hub", label: "Administration" },
+  { key: "training", label: "Workout" },
+  { key: "nutrition", label: "Nutrition" },
+  { key: "cortisol", label: "Stress" },
+  { key: "rest", label: "Sleep" },
+  { key: "blindspot", label: "Breakthrough Sessions" },
+  { key: "evolution", label: "Evolution" },
+  { key: "community", label: "The Circle" },
 ];
 
 export const ADMIN_HUB_SUBITEMS: NavItem[] = [
@@ -43,20 +43,17 @@ export const ADMIN_HUB_SUBITEMS: NavItem[] = [
 ];
 
 export const CLIENT_TYPE_LABELS: Record<string, string> = {
-  coaching_1_1: "Coaching 1:1",
-  coaching_online: "Coaching Online",
-  lead_wellness: "Leads Wellness",
-  mentoring: "Mentoring",
+  coaching_1_1: "Cliente 1:1",
+  mentoring: "Premium",
 };
 
-// Nombres cara-al-cliente (member card, candados de nivel, copy de
-// membresía) — nunca en pantallas de admin, que siguen usando
-// CLIENT_TYPE_LABELS (las categorías internas de Roles y Perfiles).
+// Nombres cara-al-cliente (member card, candados de nivel) — nunca en
+// pantallas de admin, que siguen usando CLIENT_TYPE_LABELS (las categorías
+// internas de Roles y Perfiles). Hoy son los mismos nombres directos — se
+// mantiene separado porque cada uno cumple un propósito distinto.
 export const MEMBERSHIP_LABELS: Record<string, string> = {
-  lead_wellness: "Club Explorador",
-  coaching_online: "Club Online",
-  coaching_1_1: "Club Presencial",
-  mentoring: "Club Elite",
+  coaching_1_1: "Cliente 1:1",
+  mentoring: "Premium",
 };
 
 
@@ -83,7 +80,7 @@ export const MANTRA_BANK: Record<string, string[]> = {
     "La recuperación es donde el esfuerzo se convierte en progreso.",
   ],
   community: [
-    "Nadie mejora solo — la tribu sostiene el ritmo.",
+    "Ningún líder sostiene su ritmo más alto en soledad.",
     "Presencia, no competencia.",
     "Compartir el proceso lo hace más liviano.",
   ],

@@ -2,12 +2,10 @@ import type { Request, Response, NextFunction } from 'express';
 import { isModuleAllowedForType } from '../services/type-module-access.service.js';
 import { asyncHandler } from './async-handler.js';
 
-// Reemplaza al viejo blockForLeadWellness — esa regla ("lead_wellness no
-// entra a Información Personal") hardcodeaba justo lo que la matriz de
-// "Roles y Perfiles" existe para poder cambiar sin tocar código. Acá se
-// permite el paso si CUALQUIERA de las dos variantes (estándar o Mentoring)
-// está habilitada para el tipo de ese cliente — cuál de las dos ve dentro del
-// formulario (con o sin módulo 10) lo resuelve resolvePersonalInfoVariant.
+// Se permite el paso si CUALQUIERA de las dos variantes (estándar o
+// Mentoring) está habilitada para el tipo de ese cliente en la matriz de
+// "Roles y Perfiles" — cuál de las dos ve dentro del formulario (con o sin
+// módulo 10) lo resuelve resolvePersonalInfoVariant.
 export const requirePersonalInfoAccess = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   if (req.user?.role === 'admin') return next();
   const clientType = req.client?.clientType;

@@ -21,7 +21,7 @@ export const clients = pgTable('clients', {
   mustChangePassword: boolean('must_change_password').notNull().default(false),
   status: text('status').notNull().default('active'),
   plan: text('plan').notNull().default('Miembro'),
-  clientType: text('client_type').notNull().default('lead_wellness'),
+  clientType: text('client_type').notNull().default('coaching_1_1'),
   planDurationDays: integer('plan_duration_days'),
   planStartDate: date('plan_start_date'),
   planEndDate: date('plan_end_date'),
@@ -52,6 +52,10 @@ export const clients = pgTable('clients', {
     events: true,
     news: false,
   }),
+  // Idioma de la interfaz fija (nav, botones, textos del sistema) —
+  // Configuración > Idioma. El contenido administrable (frases, legal)
+  // sigue en español independientemente de esto, por ahora.
+  language: text('language').notNull().default('es'),
   // No-nulo = solicitud de eliminación pendiente de revisión humana (ver
   // account.service.ts / panel admin de clientes). Nunca dispara un borrado
   // automático — solo lo hace visible para que un admin contacte al cliente.
@@ -62,9 +66,40 @@ export const clients = pgTable('clients', {
   // cualquier tipo de cliente que no sea coaching_1_1.
   sessionsTotal: integer('sessions_total'),
   sessionsRemaining: integer('sessions_remaining'),
+  // Flujo de alta con invitación (solo Mentoría, ver client-invitations.service.ts):
+  // se setea una vez, la primera vez que se alcanzan 7 días de datos de
+  // wearable acumulados — habilita que el admin pueda aprobar wearable.
+  wearableBaselineReadyAt: timestamp('wearable_baseline_ready_at', { withTimezone: true }),
+  // Se setea una vez al alcanzar 28 días — evita recalcular el conteo de días
+  // en cada carga de la lista de admin (ver clients-client.ts::ClientSummary).
+  wearableBaselineStableAt: timestamp('wearable_baseline_stable_at', { withTimezone: true }),
+  baselineApprovedAt: timestamp('baseline_approved_at', { withTimezone: true }),
+  wearableApprovedAt: timestamp('wearable_approved_at', { withTimezone: true }),
+  // Se marca una sola vez, cuando baseline + wearable + laboratorio semana 0
+  // quedan aprobados simultáneamente por primera vez — nunca se vuelve a
+  // disparar (ver onboarding.service.ts::checkWeek1Activation).
+  week1ActivatedAt: timestamp('week1_activated_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 });
+
+// Invitación de alta de cliente (solo Mentoría) — separada de
+// passwordResetTokens a propósito: invariantes de negocio distintas (una
+// invitación asume passwordHash NULL, un reset asume una cuenta ya usable) y
+// "reenviar" (ver resendInvitation) no tiene equivalente en el flujo de
+// reset. El hash del token comparte helper con passwordResetTokens (ver
+// token-hashing.ts) para no divergir en el mecanismo.
+export const clientInvitations = pgTable('client_invitations', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  clientId: uuid('client_id').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+  tokenHash: text('token_hash').notNull().unique(),
+  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  usedAt: timestamp('used_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (table) => ({
+  clientIdIdx: index('client_invitations_client_id_idx').on(table.clientId),
+}));
+export type ClientInvitation = typeof clientInvitations.$inferSelect;
 
 export const adminNotifications = pgTable('admin_notifications', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -102,6 +137,28 @@ export const personalInfo = pgTable('personal_info', {
   weight: numeric('weight', { precision: 5, scale: 1 }).$type<number>(),
   height: numeric('height', { precision: 5, scale: 1 }).$type<number>(),
   bodyFat: numeric('body_fat', { precision: 4, scale: 1 }).$type<number>(),
+  // Salud hormonal (Módulo 1, baseline) — motor de insights Mentoría.
+  hormonalStatus: text('hormonal_status'),
+  hormonalStatusOther: text('hormonal_status_other'),
+  lastPeriodDate: date('last_period_date'),
+  cycleLengthDays: integer('cycle_length_days'),
+  // Última vez que se confirmó/actualizó cycleLengthDays — usado para pedir
+  // revisión cada 3-6 meses en la reflexión semanal (Fase C), nunca desde cero.
+  cycleLengthConfirmedAt: timestamp('cycle_length_confirmed_at', { withTimezone: true }),
+  // Apnea del sueño (Módulo 6, baseline) — alimenta SUE-07.
+  snores: text('snores'),
+  sleepApneaSigns: text('sleep_apnea_signs'),
+  // Segmentación para el benchmark comparativo anonimizado de Mentoría (ver
+  // mentoring-benchmark.service.ts) — la llena un admin a mano desde la
+  // ficha del cliente, nunca el wizard de onboarding. Null hasta que se
+  // clasifique; sin ambos campos, ese cliente no aporta al benchmark.
+  cargoType: text('cargo_type'),
+  sector: text('sector'),
+  // true cuando el cliente Mentoría llena los campos manuales de Apple
+  // Health en el Módulo 10 del onboarding — no hay OAuth real para Apple
+  // Watch, así que esto es la única señal server-side de "wearable
+  // conectado" para ese caso (ver onboarding.service.ts::validateMentoringOnboarding).
+  appleHealthConnected: boolean('apple_health_connected').notNull().default(false),
   onboardingReport: jsonb('onboarding_report').default({}),
   completedAt: timestamp('completed_at', { withTimezone: true }),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
@@ -345,6 +402,9 @@ export const cortisolTechniques = pgTable('cortisol_techniques', {
   // en apps/web/lib/cortisol-logic.ts) para la que esta técnica es la
   // recomendación del hero — null si no está asignada a ninguna.
   emotion: text('emotion'),
+  // Aviso de precaución/contraindicación visible en el cliente — sobre todo
+  // para "Exposición Controlada" (frío/calor), disponible para cualquier tipo.
+  precautionNote: text('precaution_note'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 }, (table) => ({
   clientIdIdx: index('cortisol_techniques_client_id_idx').on(table.clientId),
@@ -610,6 +670,20 @@ export const labPanels = pgTable('lab_panels', {
   semanaNumero: integer('semana_numero').notNull(), // 0, 6, 12
   fecha: date('fecha'),
   datos: jsonb('datos').notNull().default({}),
+  // Día del ciclo menstrual en que se tomó el panel (P6, solo Mentoría) —
+  // auto-calculado desde last_period_date/cycle_length_days o corregido a
+  // mano; resuelve la interpretación de Estradiol en mujeres premenopáusicas
+  // (PC-03). Nulo si no aplica (ciclo no natural, u otros tiers).
+  diaCicloPanel: integer('dia_ciclo_panel'),
+  // 'pendiente' (subiendo/procesando) | 'en_revision' (OCR+IA listo, con o
+  // sin campos "no detectados", esperando aprobación del admin) | 'aprobado'.
+  status: text('status').notNull().default('pendiente'),
+  fileUrl: text('file_url'),
+  fileName: text('file_name'),
+  approvedAt: timestamp('approved_at', { withTimezone: true }),
+  // Hash del archivo fuente (ver lab-ai-extraction.service.ts) — evita
+  // volver a llamar a la IA si se re-sube el mismo PDF sin cambios.
+  sourceFileHash: text('source_file_hash'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 }, (table) => ({
@@ -617,8 +691,57 @@ export const labPanels = pgTable('lab_panels', {
   clientSemanaUnique: unique('lab_panels_client_id_semana_numero_unique').on(table.clientId, table.semanaNumero),
 }));
 
+// Copia anonimizada de cada snapshot (semana 0/6/12) de un cliente de
+// Mentoría, para un futuro benchmark comparativo entre pares (ver
+// mentoring-benchmark.service.ts). Deliberadamente SIN client_id ni ningún
+// otro campo identificable — instrucción explícita del producto: esta tabla
+// nunca debe permitir reidentificar a la persona, ni siquiera con acceso
+// completo a la base de datos. Consecuencia aceptada: si un admin corrige un
+// lab_panels ya guardado, se inserta una fila anonimizada adicional en vez de
+// actualizar la anterior (inserción pura, sin upsert) — un hash del clientId
+// para deduplicar reintroduciría exactamente el vector de reidentificación
+// que se pidió evitar, así que no se hace.
+export const mentoringBenchmarkSnapshots = pgTable('mentoring_benchmark_snapshots', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  semanaNumero: integer('semana_numero').notNull(), // 0, 6, 12
+  ageBand: text('age_band').notNull(), // ver MENTORING_AGE_BANDS en shared-types
+  cargoType: text('cargo_type').notNull(), // ver MENTORING_CARGO_TYPES
+  sector: text('sector').notNull(), // ver MENTORING_SECTORS
+  markers: jsonb('markers').notNull().default({}), // subconjunto de lab_panels.datos filtrado a ALL_MARKER_IDS
+  wearable: jsonb('wearable').notNull().default({}), // subconjunto de WearableTrendSummary
+  capturedAt: timestamp('captured_at', { withTimezone: true }).defaultNow(),
+});
+export type MentoringBenchmarkSnapshot = typeof mentoringBenchmarkSnapshots.$inferSelect;
+
+// Check-ins de baja fricción (Fase C, solo Mentoría) — nunca se guarda una
+// fila para un día/semana sin responder: la "confianza degradada" es la
+// ausencia de fila, no un valor almacenado (ver checkins.service.ts).
+export const dailyCheckins = pgTable('daily_checkins', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  clientId: uuid('client_id').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+  fecha: date('fecha').notNull(),
+  pulsoAnimo: integer('pulso_animo').notNull(), // 1-5, escala de caras
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (table) => ({
+  clientFechaUnique: unique('daily_checkins_client_id_fecha_unique').on(table.clientId, table.fecha),
+}));
+
+export const weeklyReflections = pgTable('weekly_reflections', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  clientId: uuid('client_id').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+  semanaInicio: date('semana_inicio').notNull(), // lunes de la semana ISO, ver wellness-index.service.ts:83-89
+  estresCronico: integer('estres_cronico').notNull(), // 1-10
+  tecnicasManejoUsadas: text('tecnicas_manejo_usadas'),
+  despertaresNocturnosSemana: text('despertares_nocturnos_semana'), // 'Ninguno'|'1-2'|'3+'
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (table) => ({
+  clientSemanaUnique: unique('weekly_reflections_client_id_semana_inicio_unique').on(table.clientId, table.semanaInicio),
+}));
+
 export type WearableToken = typeof wearableTokens.$inferSelect;
 export type WearableMetrica = typeof wearableMetricas.$inferSelect;
+export type DailyCheckin = typeof dailyCheckins.$inferSelect;
+export type WeeklyReflection = typeof weeklyReflections.$inferSelect;
 
 // ==== PUNTO CIEGO MODULE (módulo Mentoring) ====
 
@@ -665,25 +788,6 @@ export const legalAcceptances = pgTable('legal_acceptances', {
 }));
 export type LegalAcceptance = typeof legalAcceptances.$inferSelect;
 
-// Borrador de una identidad SSO (Google/Apple) nueva ya verificada contra el
-// proveedor, pero que todavía no completó el paso de aceptación legal — ver
-// sso-registration-draft.service.ts. Token de un solo uso, vida corta
-// (10 min), guardado solo como hash, igual que password_reset_tokens.
-// Deliberadamente NO es un JWT: nunca debe poder confundirse con una sesión
-// real ni pasar por authMiddleware.
-export const ssoRegistrationDrafts = pgTable('sso_registration_drafts', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  tokenHash: text('token_hash').notNull().unique(),
-  provider: text('provider').notNull(), // 'google' | 'apple'
-  providerSub: text('provider_sub').notNull(),
-  email: text('email').notNull(),
-  name: text('name').notNull(),
-  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
-  usedAt: timestamp('used_at', { withTimezone: true }),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-});
-export type SsoRegistrationDraft = typeof ssoRegistrationDrafts.$inferSelect;
-
 // Montos editables desde el panel admin ("Precios de Membresía") — no se
 // usan Price objects de Stripe (esos son para Checkout/Subscriptions);
 // PaymentIntent.create() recibe el amount directo desde esta tabla.
@@ -691,9 +795,9 @@ export const membershipPrices = pgTable('membership_prices', {
   id: uuid('id').primaryKey().defaultRandom(),
   clientType: text('client_type').notNull(),
   durationMonths: integer('duration_months').notNull(),
-  // Solo coaching_1_1 (Presencial) usa esto — el paquete de clases (8/12/16)
-  // es una tercera dimensión de precio junto con la duración. null para
-  // el resto de los tiers (Online/Elite no venden por paquete).
+  // Solo coaching_1_1 usa esto — el paquete de clases (8/12/16) es una
+  // tercera dimensión de precio junto con la duración. null para Mentoría,
+  // que no vende por paquete.
   packageSize: integer('package_size'),
   amountCents: integer('amount_cents').notNull().default(0),
   currency: text('currency').notNull().default('usd'),

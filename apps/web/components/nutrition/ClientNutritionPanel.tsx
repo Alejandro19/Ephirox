@@ -11,12 +11,14 @@ import { pickMantra } from '../../lib/mantra-bank';
 import IdentityHeader from '../ui/IdentityHeader';
 import RingProgress from '../ui/RingProgress';
 import LockedBenefit from '../ui/LockedBenefit';
+import { ProtocolDisclaimerFooter } from '../ui/ProtocolDisclaimerFooter';
 import { IconFileDownload } from '../ui/icons';
+import { InsightsSection } from '../insights/InsightsSection';
 
 function MealIcon({ name }: { name: string }) {
   const isSnack = /snack|merienda|fruta|colaci[oó]n/i.test(name || '');
   return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="mr-2 flex-shrink-0 text-[var(--hero-piedra-accent)]">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="mr-2 flex-shrink-0 text-[var(--eph-accent)]">
       {isSnack ? (
         <>
           <path
@@ -39,18 +41,18 @@ function MealIcon({ name }: { name: string }) {
 
 function MealBlock({ meal, isFirst }: { meal: MenuMeal; isFirst: boolean }) {
   return (
-    <div className={`py-3.5 ${isFirst ? '' : 'border-t border-[var(--border-hairline)]'}`}>
-      <div className="mb-2 flex items-center font-serif text-base font-semibold text-[var(--ink)]">
+    <div className={`py-3.5 ${isFirst ? '' : 'border-t border-[var(--eph-line)]'}`}>
+      <div className="mb-2 flex items-center font-display text-base font-normal text-[var(--eph-text)]">
         <MealIcon name={meal.name} />
         {meal.name}
       </div>
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
         {(meal.options || []).map((opt, i) => (
           <div key={i}>
-            <p className="mb-1 text-[10.5px] font-bold uppercase tracking-wide text-[var(--hero-piedra-accent)]">{opt.label}</p>
-            <ul className="space-y-1 text-sm leading-relaxed text-[var(--ink)]">
+            <p className="mb-1 font-mono text-[10px] font-normal uppercase tracking-[0.1em] text-[var(--eph-accent)]">{opt.label}</p>
+            <ul className="space-y-1 text-sm leading-relaxed text-[var(--eph-text)]">
               {opt.items.map((item, j) => (
-                <li key={j} className="relative pl-3.5 before:absolute before:left-0 before:top-[8px] before:h-[5px] before:w-[5px] before:rounded-full before:bg-[var(--hero-piedra-accent)] before:content-['']">
+                <li key={j} className="relative pl-3.5 before:absolute before:left-0 before:top-[8px] before:h-[5px] before:w-[5px] before:rounded-full before:bg-[var(--eph-accent)] before:content-['']">
                   {item}
                 </li>
               ))}
@@ -75,8 +77,8 @@ function MacroRing({ grams, pct, label }: { grams: number | null | undefined; pc
   return (
     <RingProgress value={pct} size={68} strokeWidth={6} color="espresso" trackColor="rgba(255,255,255,.16)">
       <div className="flex flex-col items-center justify-center">
-        <span className="text-[15px] font-bold leading-none" style={{ color: 'var(--hero-espresso-text)' }}>{grams ?? '-'}g</span>
-        <span className="mt-0.5 text-[9px] uppercase tracking-wide" style={{ color: 'var(--hero-espresso-text-muted)' }}>{label}</span>
+        <span className="text-[15px] font-bold leading-none" style={{ color: 'var(--eph-text)' }}>{grams ?? '-'}g</span>
+        <span className="mt-0.5 text-[9px] uppercase tracking-wide" style={{ color: 'var(--eph-muted)' }}>{label}</span>
       </div>
     </RingProgress>
   );
@@ -136,40 +138,40 @@ function SupplementIcon({ category }: { category: string | null }) {
 const NUTRITION_PDF_CSS = `
 @page{margin:0;}
 *{box-sizing:border-box;}
-body{font-family:'Inter',Arial,sans-serif;color:#2B2621;padding:26mm 20mm 10mm;max-width:760px;margin:0 auto;}
+body{font-family:'Jost',Arial,sans-serif;color:#1C1613;background:#EDE6DC;padding:26mm 20mm 10mm;max-width:760px;margin:0 auto;}
 .pdf-meal,.pdf-supp-row,.pdf-closing,.pdf-section{break-inside:avoid;page-break-inside:avoid;}
 .pdf-meal,.pdf-section{padding-top:12mm;}
 .pdf-header{display:flex;flex-direction:column;align-items:flex-start;text-align:left;margin-top:0;}
-.pdf-wordmark{font-family:'Fraunces',serif;font-weight:700;font-size:22pt;line-height:1.25;color:#5B7A4E;margin:0;}
+.pdf-wordmark{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:22pt;line-height:1.25;color:#C9A46A;margin:0;}
 .pdf-tagline{font-size:9pt;color:#8A8377;margin:4px 0 14px;}
-.pdf-rule{border:none;border-top:1.5px solid #5B7A4E;margin:0 0 40px;}
-.pdf-title{font-family:'Fraunces',serif;font-weight:700;font-size:19pt;line-height:1.25;color:#2B2621;margin:0 0 6px;text-align:center;}
+.pdf-rule{border:none;border-top:1.5px solid #C9A46A;margin:0 0 40px;}
+.pdf-title{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:19pt;line-height:1.25;color:#2B2621;margin:0 0 6px;text-align:center;}
 .pdf-summary{font-size:9.5pt;line-height:1.6;color:#6B6459;text-align:left;max-width:560px;margin:0 0 24px;}
 .pdf-summary strong{color:#2B2621;}
-.pdf-macros{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #E7DFC9;border-radius:10px;overflow:hidden;margin:0 0 28px;}
+.pdf-macros{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #E7DFC9;border-radius:0;overflow:hidden;margin:0 0 28px;}
 .pdf-macros > div{padding:12px 6px;text-align:center;border-left:1px solid #E7DFC9;}
 .pdf-macros > div:first-child{border-left:none;}
-.pdf-macros .pm-val{display:block;font-family:'Fraunces',serif;font-weight:700;font-size:13pt;color:#2B2621;}
+.pdf-macros .pm-val{display:block;font-family:'Cormorant Garamond',serif;font-weight:600;font-size:13pt;color:#2B2621;}
 .pdf-macros .pm-lbl{font-size:8pt;color:#8A8377;text-transform:uppercase;letter-spacing:.04em;}
 .pdf-meal{margin-bottom:22px;}
-.pdf-meal-title{font-family:'Fraunces',serif;font-weight:700;font-size:13pt;line-height:1.25;color:#2B2621;margin:0 0 4px;}
+.pdf-meal-title{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:13pt;line-height:1.25;color:#2B2621;margin:0 0 4px;}
 .pdf-meal-rule{border:none;border-top:1px solid #E7DFC9;margin:0 0 10px;}
 .pdf-options{display:flex;gap:26px;}
 .pdf-option{flex:1;}
 .pdf-option-label{font-size:9pt;font-weight:700;color:#B36B5E;text-transform:uppercase;letter-spacing:.04em;margin:0 0 6px;}
 .pdf-option ul{margin:0;padding-left:16px;font-size:10.5pt;line-height:1.55;}
-.pdf-section-title{font-family:'Fraunces',serif;font-weight:700;font-size:13pt;line-height:1.25;color:#2B2621;margin:0 0 12px;padding-bottom:6px;border-bottom:1.5px solid #E7DFC9;}
-.pdf-supp-section{background:#F7FAF3;border-radius:14px;padding:18px 20px;padding-top:12mm;}
-.pdf-supp-title{color:#5B7A4E;border-bottom-color:#5B7A4E;}
+.pdf-section-title{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:13pt;line-height:1.25;color:#2B2621;margin:0 0 12px;padding-bottom:6px;border-bottom:1.5px solid #E7DFC9;}
+.pdf-supp-section{background:#E4DBC9;border-radius:0;padding:18px 20px;padding-top:12mm;}
+.pdf-supp-title{color:#C9A46A;border-bottom-color:#C9A46A;}
 .pdf-reco ul{margin:0;padding-left:16px;font-size:10.5pt;line-height:1.6;}
 .pdf-supp-row{margin-bottom:10px;}
 .pdf-supp-name{font-weight:700;font-size:11pt;}
 .pdf-supp-detail{font-size:9.5pt;color:#8A8377;margin-top:2px;}
 .pdf-closing{text-align:center;margin:20px 0 4px;padding-top:12mm;}
 .pdf-closing-rule{width:30%;margin:0 auto 16px;border:none;border-top:1px solid #E7DFC9;}
-.pdf-closing-quote{font-family:'Fraunces',serif;font-style:italic;font-weight:500;font-size:12pt;line-height:1.5;color:#2B2621;}
+.pdf-closing-quote{font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:500;font-size:12pt;line-height:1.5;color:#2B2621;}
 .pdf-footer{text-align:center;margin-top:24px;page-break-inside:avoid;break-inside:avoid;}
-.pdf-footer-word{font-family:'Fraunces',serif;font-weight:700;font-size:15pt;color:#5B7A4E;margin:0 0 6px;}
+.pdf-footer-word{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:15pt;color:#C9A46A;margin:0 0 6px;}
 .pdf-footer-tagline{font-size:8pt;color:#8A8377;margin:0;}
 `;
 
@@ -237,11 +239,11 @@ function downloadNutritionPdf(plan: NutritionPlan, supplements: Supplement[]) {
   w.document.write(
     `<!doctype html><html><head><title>Plan nutricional</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,700;1,500&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,500&family=Jost:wght@400;600&display=swap" rel="stylesheet">
     <style>${NUTRITION_PDF_CSS}</style></head><body>
     <div class="pdf-header">
-      <p class="pdf-wordmark">La Tribu</p>
-      <p class="pdf-tagline">Comunidad de bienestar y alto rendimiento.</p>
+      <p class="pdf-wordmark">Ephirox</p>
+      <p class="pdf-tagline">Redefining limits.</p>
     </div>
     <hr class="pdf-rule">
     <p class="pdf-title">Plan nutricional</p>
@@ -252,8 +254,8 @@ function downloadNutritionPdf(plan: NutritionPlan, supplements: Supplement[]) {
     ${suppHtml}
     ${closingHtml}
     <div class="pdf-footer">
-      <p class="pdf-footer-word">La Tribu</p>
-      <p class="pdf-footer-tagline">Comunidad de bienestar y alto rendimiento.</p>
+      <p class="pdf-footer-word">Ephirox</p>
+      <p class="pdf-footer-tagline">Redefining limits.</p>
     </div>
     </body></html>`
   );
@@ -284,27 +286,28 @@ async function fetchNutritionBundle(clientId: string) {
   return { plan, supplements, tips, recipes };
 }
 
-export function ClientNutritionPanel({ clientId }: { clientId: string }) {
+export function ClientNutritionPanel({ clientId, clientType }: { clientId: string; clientType?: string | null }) {
   const [showAllMeals, setShowAllMeals] = useState(false);
   const [mantra] = useState(() => pickMantra('nutrition'));
   const { data, error, isLoading } = useSWR(['nutrition-bundle', clientId], () => fetchNutritionBundle(clientId));
 
   const header = (
     <>
-      <IdentityHeader title="Nutrición" subtitle="Plan de alimentación y protocolos asignados por tu mentor." />
+      <IdentityHeader title="Nutrition" subtitle="Plan de alimentación y protocolos asignados por tu mentor." />
       {mantra && (
-        <p className="mb-6 font-serif text-base italic leading-relaxed text-[var(--ink-secondary)]">
+        <p className="mb-6 font-display text-base italic leading-relaxed text-[var(--eph-muted)]">
           &ldquo;{mantra}&rdquo;
         </p>
       )}
     </>
   );
+  const insights = clientType === 'mentoring' ? <InsightsSection clientId={clientId} moduleKey="nutricion" /> : null;
 
   if (isLoading) {
     return (
       <div>
         {header}
-        <p className="text-sm text-[var(--ink-secondary)]">Cargando tu plan de nutrición…</p>
+        <p className="text-sm text-[var(--eph-muted)]">Cargando tu plan de nutrición…</p>
       </div>
     );
   }
@@ -312,7 +315,7 @@ export function ClientNutritionPanel({ clientId }: { clientId: string }) {
     return (
       <div>
         {header}
-        <LockedBenefit variant="upgrade" benefit="tu plan de nutrición" />
+        <LockedBenefit benefit="tu plan de nutrición" />
       </div>
     );
   }
@@ -320,7 +323,7 @@ export function ClientNutritionPanel({ clientId }: { clientId: string }) {
     return (
       <div>
         {header}
-        <p role="alert" className="text-[var(--danger)]">{(error as Error).message}</p>
+        <p role="alert" className="text-[#D99483]">{(error as Error).message}</p>
       </div>
     );
   }
@@ -335,7 +338,8 @@ export function ClientNutritionPanel({ clientId }: { clientId: string }) {
     return (
       <div>
         {header}
-        <p className="text-[var(--ink-secondary)]">Todavía no tienes un plan de nutrición asignado.</p>
+        {insights}
+        <p className="text-[var(--eph-muted)]">Todavía no tienes un plan de nutrición asignado.</p>
       </div>
     );
   }
@@ -348,24 +352,25 @@ export function ClientNutritionPanel({ clientId }: { clientId: string }) {
   return (
     <div>
       {header}
+      {insights}
 
       <div
-        className="relative mt-8 mb-6 overflow-hidden rounded-[var(--radius-hero)] p-7"
-        style={{ background: 'var(--hero-espresso)', color: 'var(--hero-espresso-text)' }}
+        className="relative mt-8 mb-6 overflow-hidden rounded-[0] p-7"
+        style={{ background: 'var(--eph-surface)', color: 'var(--eph-text)' }}
       >
         <div
           className="pointer-events-none absolute -right-10 -top-10 h-[180px] w-[180px] rounded-full"
           style={{ background: 'radial-gradient(circle, rgba(217,183,126,.18) 0%, transparent 70%)' }}
         />
         <div className="relative z-10 mb-5 flex items-center justify-between gap-3">
-          <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: 'var(--hero-espresso-accent)' }}>
+          <p className="font-mono text-[10px] font-normal uppercase tracking-[0.14em]" style={{ color: 'var(--eph-accent)' }}>
             Tu objetivo · hoy
           </p>
           {plan.dailyCals ? (
-            <p className="text-[13px] font-semibold" style={{ color: 'var(--hero-espresso-text-muted)' }}>{plan.dailyCals} kcal/día</p>
+            <p className="text-[13px] font-semibold" style={{ color: 'var(--eph-muted)' }}>{plan.dailyCals} kcal/día</p>
           ) : null}
         </div>
-        <p className="relative z-10 mb-6 font-serif text-xl font-semibold">Meta nutricional diaria</p>
+        <p className="relative z-10 mb-6 font-display text-xl font-normal">Meta nutricional diaria</p>
         <div className="relative z-10 flex flex-wrap items-center justify-center gap-6 sm:justify-start">
           <MacroRing grams={plan.proteinG} pct={proteinPct} label="Prot" />
           <MacroRing grams={plan.carbsG} pct={carbsPct} label="Carbs" />
@@ -373,8 +378,8 @@ export function ClientNutritionPanel({ clientId }: { clientId: string }) {
         </div>
       </div>
 
-      <section className="rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--paper)] p-6 mb-5">
-        <h2 className="mb-4 font-serif text-lg font-bold text-[var(--ink)]">Vista previa de tu plan</h2>
+      <section className="rounded-[0] border border-[var(--eph-line)] bg-[var(--eph-surface)] p-6 mb-5">
+        <h2 className="mb-4 font-display text-lg font-normal text-[var(--eph-text)]">Vista previa de tu plan</h2>
         {menu.length ? (
           <>
             <MealBlock meal={menu[0]} isFirst />
@@ -383,7 +388,7 @@ export function ClientNutritionPanel({ clientId }: { clientId: string }) {
               <button
                 type="button"
                 onClick={() => downloadNutritionPdf(plan, supplements)}
-                className="inline-flex h-12 items-center rounded-full bg-[var(--hero-piedra-accent)] px-5 text-sm font-semibold text-white"
+                className="inline-flex h-12 items-center rounded-[999px] bg-[var(--eph-accent)] px-5 text-sm font-medium text-[var(--eph-ink)]"
               >
                 Descargar PDF
               </button>
@@ -391,7 +396,7 @@ export function ClientNutritionPanel({ clientId }: { clientId: string }) {
                 <button
                   type="button"
                   onClick={() => setShowAllMeals((v) => !v)}
-                  className="inline-flex h-12 items-center gap-1.5 rounded-full border border-[var(--border-input)] px-5 text-sm text-[var(--ink)]"
+                  className="inline-flex h-12 items-center gap-1.5 rounded-full border border-[var(--eph-line-2)] px-5 text-sm text-[var(--eph-text)]"
                 >
                   {showAllMeals ? 'Ver menos' : 'Ver más'}
                   <span className={`inline-block transition-transform ${showAllMeals ? 'rotate-180' : ''}`}>⌄</span>
@@ -400,18 +405,18 @@ export function ClientNutritionPanel({ clientId }: { clientId: string }) {
             </div>
           </>
         ) : (
-          <p className="py-6 text-center text-[var(--ink-secondary)]">Tu mentor aún no ha cargado el plan de alimentación.</p>
+          <p className="py-6 text-center text-[var(--eph-muted)]">Tu mentor aún no ha cargado el plan de alimentación.</p>
         )}
       </section>
 
       {(recommendations.length > 0 || plan.closingMessage) && (
-        <section className="rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--paper)] p-6 mb-5">
+        <section className="rounded-[0] border border-[var(--eph-line)] bg-[var(--eph-surface)] p-6 mb-5">
           {recommendations.length > 0 && (
             <>
-              <h2 className="mb-3 font-serif text-lg font-bold text-[var(--ink)]">Recomendaciones</h2>
-              <ul className="space-y-1.5 text-sm leading-relaxed text-[var(--ink)]">
+              <h2 className="mb-3 font-display text-lg font-normal text-[var(--eph-text)]">Recomendaciones</h2>
+              <ul className="space-y-1.5 text-sm leading-relaxed text-[var(--eph-text)]">
                 {recommendations.map((r, i) => (
-                  <li key={i} className="relative pl-3.5 before:absolute before:left-0 before:top-[8px] before:h-[5px] before:w-[5px] before:rounded-full before:bg-[var(--hero-piedra-accent)] before:content-['']">
+                  <li key={i} className="relative pl-3.5 before:absolute before:left-0 before:top-[8px] before:h-[5px] before:w-[5px] before:rounded-full before:bg-[var(--eph-accent)] before:content-['']">
                     {r}
                   </li>
                 ))}
@@ -419,32 +424,32 @@ export function ClientNutritionPanel({ clientId }: { clientId: string }) {
             </>
           )}
           {plan.closingMessage && (
-            <p className={`font-serif text-base italic leading-relaxed text-[var(--ink)] ${recommendations.length ? 'mt-4 border-t border-[var(--border-hairline)] pt-4' : ''}`}>
+            <p className={`font-display text-base italic leading-relaxed text-[var(--eph-text)] ${recommendations.length ? 'mt-4 border-t border-[var(--eph-line)] pt-4' : ''}`}>
               &quot;{plan.closingMessage}&quot;
             </p>
           )}
         </section>
       )}
 
-      <section className="rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--paper)] p-6 mb-5">
-        <h2 className="mb-4 font-serif text-lg font-bold text-[var(--ink)]">Esquema de suplementación</h2>
+      <section className="rounded-[0] border border-[var(--eph-line)] bg-[var(--eph-surface)] p-6 mb-5">
+        <h2 className="mb-4 font-display text-lg font-normal text-[var(--eph-text)]">Esquema de suplementación</h2>
         {supplements.length ? (
           <div>
             {supplements.map((s, i) => {
               const pill = supplementTimePill(s.timing);
               return (
-                <div key={s.id} className={`flex items-center gap-3 py-3 ${i === 0 ? '' : 'border-t border-[var(--border-hairline)]'}`}>
-                  <div className="flex h-[38px] w-[38px] flex-shrink-0 items-center justify-center rounded-full bg-[var(--page-bg)]" style={{ color: 'var(--hero-piedra-accent)' }}>
+                <div key={s.id} className={`flex items-center gap-3 py-3 ${i === 0 ? '' : 'border-t border-[var(--eph-line)]'}`}>
+                  <div className="flex h-[38px] w-[38px] flex-shrink-0 items-center justify-center rounded-full bg-[var(--eph-surface-2)]" style={{ color: 'var(--eph-accent)' }}>
                     <SupplementIcon category={s.category} />
                   </div>
                   <div className="flex-1">
-                    <div className="font-serif text-sm font-semibold text-[var(--ink)]">{s.name}</div>
-                    <div className="mt-0.5 text-[11px] text-[var(--ink-secondary)]">{[s.dose, s.timing].filter(Boolean).join(' · ')}</div>
+                    <div className="font-display text-sm font-normal text-[var(--eph-text)]">{s.name}</div>
+                    <div className="mt-0.5 text-[11px] text-[var(--eph-muted)]">{[s.dose, s.timing].filter(Boolean).join(' · ')}</div>
                   </div>
                   {pill && (
                     <span
                       className="ml-auto flex-shrink-0 whitespace-nowrap rounded-full px-2.5 py-1 text-[10px] font-semibold"
-                      style={{ background: 'var(--border-hairline)', color: 'var(--hero-piedra-accent)' }}
+                      style={{ background: 'var(--eph-line)', color: 'var(--eph-accent)' }}
                     >
                       {pill}
                     </span>
@@ -454,35 +459,35 @@ export function ClientNutritionPanel({ clientId }: { clientId: string }) {
             })}
           </div>
         ) : (
-          <p className="py-6 text-center text-[var(--ink-secondary)]">Aún no tienes suplementos asignados.</p>
+          <p className="py-6 text-center text-[var(--eph-muted)]">Aún no tienes suplementos asignados.</p>
         )}
       </section>
 
       {recipes.length > 0 && (
-        <section className="mt-2 mb-6 border-t border-[var(--border-hairline)] pt-5">
-          <h2 className="mb-3 font-serif text-lg font-bold text-[var(--ink)]">Recetas saludables</h2>
+        <section className="mt-2 mb-6 border-t border-[var(--eph-line)] pt-5">
+          <h2 className="mb-3 font-display text-lg font-normal text-[var(--eph-text)]">Recetas saludables</h2>
           <div>
             {recipes.map((recipe: Recipe, i: number) => (
-              <div key={recipe.id} className={`flex items-center gap-3 py-3 ${i === 0 ? '' : 'border-t'}`} style={{ borderColor: 'var(--border-hairline)', borderTopWidth: i === 0 ? 0 : '0.5px' }}>
-                <span aria-hidden className="flex-shrink-0" style={{ color: 'var(--hero-piedra-accent)' }}>
+              <div key={recipe.id} className={`flex items-center gap-3 py-3 ${i === 0 ? '' : 'border-t'}`} style={{ borderColor: 'var(--eph-line)', borderTopWidth: i === 0 ? 0 : '0.5px' }}>
+                <span aria-hidden className="flex-shrink-0" style={{ color: 'var(--eph-accent)' }}>
                   <IconFileDownload size={18} />
                 </span>
-                <p className="flex-1 truncate font-serif text-sm font-semibold text-[var(--ink)]">{recipe.name}</p>
+                <p className="flex-1 truncate font-display text-sm font-normal text-[var(--eph-text)]">{recipe.name}</p>
                 <div className="flex flex-shrink-0 gap-2.5">
                   <a
                     href={recipe.pdfUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="rounded-full border px-3.5 py-1.5 text-xs font-semibold text-[var(--ink)]"
-                    style={{ borderColor: 'var(--border-input)' }}
+                    className="rounded-full border px-3.5 py-1.5 text-xs font-semibold text-[var(--eph-text)]"
+                    style={{ borderColor: 'var(--eph-line-2)' }}
                   >
                     Ver
                   </a>
                   <a
                     href={recipe.pdfUrl}
                     download={recipe.pdfName}
-                    className="rounded-full border px-3.5 py-1.5 text-xs font-semibold text-[var(--ink)]"
-                    style={{ borderColor: 'var(--border-input)' }}
+                    className="rounded-full border px-3.5 py-1.5 text-xs font-semibold text-[var(--eph-text)]"
+                    style={{ borderColor: 'var(--eph-line-2)' }}
                   >
                     Descargar
                   </a>
@@ -494,17 +499,18 @@ export function ClientNutritionPanel({ clientId }: { clientId: string }) {
       )}
 
       {tips.length > 0 && (
-        <section className="mt-2 mb-6 border-t border-[var(--border-hairline)] pt-5">
-          <h2 className="mb-3 font-serif text-lg font-bold text-[var(--ink)]">Tips and tricks</h2>
-          <ul className="space-y-2 text-sm leading-relaxed text-[var(--ink)]">
+        <section className="mt-2 mb-6 border-t border-[var(--eph-line)] pt-5">
+          <h2 className="mb-3 font-display text-lg font-normal text-[var(--eph-text)]">Tips and tricks</h2>
+          <ul className="space-y-2 text-sm leading-relaxed text-[var(--eph-text)]">
             {tips.map((tip: NutritionTip) => (
-              <li key={tip.id} className="relative pl-3.5 before:absolute before:left-0 before:top-[8px] before:h-[5px] before:w-[5px] before:rounded-full before:bg-[var(--hero-piedra-accent)] before:content-['']">
+              <li key={tip.id} className="relative pl-3.5 before:absolute before:left-0 before:top-[8px] before:h-[5px] before:w-[5px] before:rounded-full before:bg-[var(--eph-accent)] before:content-['']">
                 {tip.content}
               </li>
             ))}
           </ul>
         </section>
       )}
+      <ProtocolDisclaimerFooter />
     </div>
   );
 }

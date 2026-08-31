@@ -26,33 +26,33 @@ export function MemberCard({ clientId }: { clientId: string }) {
 
   return (
     <div
-      className="relative mb-8 overflow-hidden rounded-[var(--radius-hero)] p-7"
-      style={{ background: 'var(--hero-espresso)', color: 'var(--hero-espresso-text)' }}
+      className="relative mb-8 overflow-hidden rounded-[0] p-7"
+      style={{ background: 'var(--eph-surface)', color: 'var(--eph-text)' }}
     >
       <div className="flex items-center gap-2.5">
-        <BrandRing size={24} background="var(--hero-espresso)" />
-        <span className="font-serif text-base font-bold">La Tribu</span>
+        <BrandRing size={24} />
+        <span className="font-display text-base font-normal uppercase tracking-[0.1em]">Ephirox</span>
       </div>
 
-      <p className="mt-6 font-serif text-xl font-semibold">{client.name}</p>
-      <p className="mt-1 text-[11px] font-bold uppercase tracking-wider" style={{ color: 'var(--hero-espresso-accent)' }}>
+      <p className="mt-6 font-display text-xl font-normal">{client.name}</p>
+      <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.14em]" style={{ color: 'var(--eph-accent)' }}>
         Miembro N.° {formatMemberNumber(client.memberNumber)}
       </p>
 
       <div className="mt-6 flex flex-wrap gap-x-8 gap-y-2">
         <div>
-          <p className="text-[10px] uppercase tracking-wide" style={{ color: 'var(--hero-espresso-text-muted)' }}>Membresía</p>
+          <p className="text-[10px] uppercase tracking-wide" style={{ color: 'var(--eph-muted)' }}>Membresía</p>
           <p className="text-[13px] font-semibold">{MEMBERSHIP_LABELS[client.clientType] || client.clientType}</p>
         </div>
         {client.activatedAt && (
           <div>
-            <p className="text-[10px] uppercase tracking-wide" style={{ color: 'var(--hero-espresso-text-muted)' }}>Miembro desde</p>
+            <p className="text-[10px] uppercase tracking-wide" style={{ color: 'var(--eph-muted)' }}>Miembro desde</p>
             <p className="text-[13px] font-semibold">{formatJoinDate(client.activatedAt)}</p>
           </div>
         )}
         {client.clientType === 'coaching_1_1' && client.sessionsTotal != null && client.sessionsRemaining != null && (
           <div>
-            <p className="text-[10px] uppercase tracking-wide" style={{ color: 'var(--hero-espresso-text-muted)' }}>Clases</p>
+            <p className="text-[10px] uppercase tracking-wide" style={{ color: 'var(--eph-muted)' }}>Clases</p>
             <p className="text-[13px] font-semibold">
               Quedan {client.sessionsRemaining} de {client.sessionsTotal}
             </p>
@@ -67,12 +67,12 @@ export function MemberCard({ clientId }: { clientId: string }) {
           const expired = new Date().toISOString().slice(0, 10) > client.planEndDate!;
           return (
             <div>
-              <p className="text-[10px] uppercase tracking-wide" style={{ color: 'var(--hero-espresso-text-muted)' }}>
+              <p className="text-[10px] uppercase tracking-wide" style={{ color: 'var(--eph-muted)' }}>
                 {expired ? 'Venció' : 'Vence'}
               </p>
               <p
                 className="text-[13px] font-semibold"
-                style={expired ? { color: 'var(--hero-espresso-accent)' } : undefined}
+                style={expired ? { color: 'var(--eph-accent)' } : undefined}
               >
                 {formatPlanDate(client.planEndDate)}
               </p>

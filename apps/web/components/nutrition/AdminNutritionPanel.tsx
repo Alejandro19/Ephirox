@@ -7,6 +7,7 @@ import { listSupplements, createSupplement, updateSupplement, deleteSupplement, 
 import { showToast } from '../layout/AppShell';
 import { AdminRecipesPanel } from './AdminRecipesPanel';
 import { NutritionTipsPanel } from './NutritionTipsPanel';
+import { InsightsSection } from '../insights/InsightsSection';
 
 export type AdminNutritionPanelProps = { clientId: string };
 
@@ -35,38 +36,42 @@ function supplementsToRows(list: Supplement[]): SupplementRowDraft[] {
 }
 
 const cardStyle: React.CSSProperties = {
-  background: 'var(--paper)', border: '1px solid var(--border-hairline)',
-  borderRadius: 'var(--radius-card)', padding: '22px 24px', marginBottom: 20,
+  background: 'var(--eph-surface)', border: '1px solid var(--eph-line)',
+  borderRadius: '0', padding: '22px 24px', marginBottom: 20,
 };
 const cardTitleStyle: React.CSSProperties = {
-  fontSize: 15, fontWeight: 700, color: 'var(--ink)', margin: '0 0 16px',
+  fontFamily: 'var(--font-cormorant), Georgia, serif', fontSize: 18, fontWeight: 400, color: 'var(--eph-text)', margin: '0 0 16px',
 };
 const sectionLabelStyle: React.CSSProperties = {
-  display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--ink-secondary)', margin: '18px 0 8px',
+  display: 'block', fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', fontSize: 10,
+  textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 400, color: 'var(--eph-accent)', margin: '18px 0 10px',
 };
 const labelStyle: React.CSSProperties = {
-  display: 'block', fontSize: 12, fontWeight: 400, color: 'var(--ink-secondary)', marginBottom: 4,
+  display: 'block', fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', fontSize: 10,
+  textTransform: 'uppercase', letterSpacing: '0.14em', fontWeight: 400, color: 'var(--eph-muted)', marginBottom: 6,
 };
 const fieldStyle: React.CSSProperties = {
-  width: '100%', height: 32, borderRadius: 0, border: 'none', borderBottom: '1px solid var(--border-input)',
-  padding: '0 2px 6px', fontSize: 14.5, fontWeight: 600, background: 'transparent', color: 'var(--ink)',
+  width: '100%', height: 32, borderRadius: 0, border: 'none', borderBottom: '1px solid var(--eph-line-2)',
+  padding: '0 2px 6px', fontSize: 15, fontWeight: 400, background: 'transparent', color: 'var(--eph-text)',
   outline: 'none', boxSizing: 'border-box',
 };
 const textareaStyle: React.CSSProperties = {
-  width: '100%', borderRadius: 10, border: '1px solid var(--border-hairline)',
-  padding: 10, fontSize: 14.5, fontWeight: 600, background: 'var(--paper)', color: 'var(--ink)',
+  width: '100%', borderRadius: 0, border: '1px solid var(--eph-line)',
+  padding: 10, fontSize: 15, fontWeight: 400, background: 'var(--eph-surface)', color: 'var(--eph-text)',
   outline: 'none', boxSizing: 'border-box', minHeight: 72, resize: 'vertical', fontFamily: 'inherit',
 };
 const draftCardStyle: React.CSSProperties = {
-  background: 'var(--page-bg)', border: '1px solid var(--border-hairline)', borderRadius: 14, padding: 16, marginBottom: 10,
+  background: 'var(--eph-surface-2)', border: '1px solid var(--eph-line)', borderRadius: 0, padding: 16, marginBottom: 10,
 };
 const ghostButtonStyle: React.CSSProperties = {
-  height: 32, padding: '0 14px', borderRadius: 9999, border: '1px solid var(--border-hairline)',
-  background: 'transparent', color: 'var(--ink-secondary)', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+  height: 32, padding: '0 14px', borderRadius: 0, border: '1px solid var(--eph-line-2)',
+  fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
+  background: 'transparent', color: 'var(--eph-body)', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', cursor: 'pointer',
 };
 const dangerButtonStyle: React.CSSProperties = {
-  height: 32, padding: '0 14px', borderRadius: 9999, border: '1px solid var(--danger)',
-  background: 'transparent', color: 'var(--danger)', fontSize: 12, fontWeight: 600, cursor: 'pointer', flexShrink: 0,
+  height: 32, padding: '0 14px', borderRadius: 0, border: '1px solid var(--eph-danger)',
+  fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
+  background: 'transparent', color: '#D99483', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', cursor: 'pointer', flexShrink: 0,
 };
 
 async function fetchNutritionAdminBundle(clientId: string) {
@@ -185,11 +190,12 @@ export function AdminNutritionPanel({ clientId }: AdminNutritionPanelProps) {
     }
   }
 
-  if (loading) return <p style={{ color: 'var(--ink-secondary)', fontSize: 14 }}>Cargando plan de nutrición…</p>;
-  if (error) return <p style={{ color: 'var(--danger)' }}>{(error as Error).message}</p>;
+  if (loading) return <p style={{ color: 'var(--eph-muted)', fontSize: 14 }}>Cargando plan de nutrición…</p>;
+  if (error) return <p style={{ color: '#D99483' }}>{(error as Error).message}</p>;
 
   return (
     <div>
+      <InsightsSection clientId={clientId} moduleKey="nutricion" />
       <div style={cardStyle}>
         <h3 style={cardTitleStyle}>Plan nutricional (admin)</h3>
 
@@ -232,7 +238,7 @@ export function AdminNutritionPanel({ clientId }: AdminNutritionPanelProps) {
           <div key={row.key} style={draftCardStyle}>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               <input
-                style={{ ...fieldStyle, flex: 1, fontFamily: 'Fraunces, Georgia, serif', fontWeight: 600 }}
+                style={{ ...fieldStyle, flex: 1, fontFamily: 'var(--font-cormorant), Georgia, serif', fontWeight: 600 }}
                 placeholder="Nombre de la comida (ej. Desayuno)"
                 value={row.name}
                 onChange={(e) => updateMenuRow(row.key, { name: e.target.value })}
@@ -292,7 +298,7 @@ export function AdminNutritionPanel({ clientId }: AdminNutritionPanelProps) {
           <div key={row.key} style={draftCardStyle}>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 10 }}>
               <input
-                style={{ ...fieldStyle, flex: 1, fontFamily: 'Fraunces, Georgia, serif', fontWeight: 600 }}
+                style={{ ...fieldStyle, flex: 1, fontFamily: 'var(--font-cormorant), Georgia, serif', fontWeight: 600 }}
                 placeholder="Nombre del suplemento"
                 value={row.name}
                 onChange={(e) => updateSupplementRow(row.key, { name: e.target.value })}
@@ -326,8 +332,9 @@ export function AdminNutritionPanel({ clientId }: AdminNutritionPanelProps) {
           disabled={saving}
           onClick={handleSave}
           style={{
-            height: 44, padding: '0 28px', borderRadius: 9999, border: 'none',
-            background: 'var(--ring-accent)', color: '#fff', fontSize: 14, fontWeight: 700,
+            height: 44, padding: '0 32px', borderRadius: 0, border: 'none',
+            fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
+            background: 'var(--eph-accent)', color: 'var(--eph-ink)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.18em',
             cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.6 : 1,
           }}
         >

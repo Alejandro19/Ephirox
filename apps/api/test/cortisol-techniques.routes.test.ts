@@ -58,7 +58,7 @@ describe('cortisol techniques routes', () => {
     expect((updatedClient.permissions as Record<string, boolean>).cortisol).toBe(true);
 
     const notifications = await db.select().from(clientNotifications).where(eq(clientNotifications.clientId, clientId));
-    expect(notifications.some((n) => n.message.includes('cortisol'))).toBe(true);
+    expect(notifications.some((n) => n.message.includes('Stress'))).toBe(true);
   });
 
   it('admin updates and deletes a technique', async () => {
@@ -115,6 +115,34 @@ describe('cortisol techniques routes', () => {
       .attach('audio', Buffer.from('fake-audio-bytes-2'), 'second.mp3');
     expect(secondUpload.status).toBe(200);
     expect(secondUpload.body.technique.audioUrl).not.toBe(firstAudioUrl);
+  });
+
+  it('asigna una técnica de Neurowellness (Exposición Controlada) con nota de precaución, y la actualiza', async () => {
+    const createRes = await request(app)
+      .post(`/api/clients/${clientId}/cortisol-techniques`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ title: 'Ducha fría 2 min', type: 'Exposición Controlada', precaution_note: 'No recomendado con hipertensión no controlada.' });
+    expect(createRes.status).toBe(201);
+    expect(createRes.body.technique.type).toBe('Exposición Controlada');
+    expect(createRes.body.technique.precautionNote).toBe('No recomendado con hipertensión no controlada.');
+
+    const techId = createRes.body.technique.id;
+    const updateRes = await request(app)
+      .put(`/api/clients/${clientId}/cortisol-techniques/${techId}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ title: 'Ducha fría 2 min', type: 'Respiración Vagal', precaution_note: null });
+    expect(updateRes.status).toBe(200);
+    expect(updateRes.body.technique.type).toBe('Respiración Vagal');
+    expect(updateRes.body.technique.precautionNote).toBeNull();
+  });
+
+  it('acepta el tipo "Recuperación Activa"', async () => {
+    const res = await request(app)
+      .post(`/api/clients/${clientId}/cortisol-techniques`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ title: 'Caminata entre bloques', type: 'Recuperación Activa' });
+    expect(res.status).toBe(201);
+    expect(res.body.technique.type).toBe('Recuperación Activa');
   });
 
   it('PUT with audio_url: null clears the audio field and deletes the stored file', async () => {

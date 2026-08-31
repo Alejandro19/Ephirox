@@ -35,12 +35,12 @@ describe('membership-prices routes', () => {
     expect(res.status).toBe(401);
   });
 
-  it('lets any logged-in role read the 5 seeded prices', async () => {
+  it('lets any logged-in role read the seeded prices', async () => {
     const res = await request(app).get('/api/membership-prices').set('Authorization', `Bearer ${clientToken}`);
     expect(res.status).toBe(200);
-    expect(res.body.prices.length).toBeGreaterThanOrEqual(5);
+    expect(res.body.prices.length).toBeGreaterThanOrEqual(3);
     const combos = res.body.prices.map((p: { clientType: string; durationMonths: number }) => `${p.clientType}-${p.durationMonths}`);
-    expect(combos).toEqual(expect.arrayContaining(['coaching_1_1-1', 'coaching_1_1-3', 'coaching_online-1', 'coaching_online-3', 'mentoring-3']));
+    expect(combos).toEqual(expect.arrayContaining(['coaching_1_1-1', 'coaching_1_1-3', 'mentoring-3']));
   });
 
   it('rejects a non-admin trying to edit a price', async () => {

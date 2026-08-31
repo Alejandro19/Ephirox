@@ -12,6 +12,8 @@ import {
 import { PermissionDeniedError } from '@/lib/api-client';
 import LockedOverlay from '@/components/ui/LockedOverlay';
 import LockedBenefit from '@/components/ui/LockedBenefit';
+import Button from '@/components/ui/Button';
+import { InsightsSection } from '@/components/insights/InsightsSection';
 
 const STATUS_LABEL: Record<BlindspotCaseStatus, string> = {
   evaluando: 'En evaluación con Alejandro',
@@ -27,7 +29,7 @@ const PROGRESS_LABEL: Record<BlindspotSessionLog['progressMarker'], string> = {
   cerrado: 'Cerrado',
 };
 
-export function ClientBlindspotPanel({ clientType }: { clientType: string | null }) {
+export function ClientBlindspotPanel({ clientType, clientId }: { clientType: string | null; clientId: string }) {
   if (clientType !== 'mentoring') {
     // Nunca montar <BlindspotBody/> acá: es un componente vivo que hace su
     // propio fetch, recibiría su propio 403, y renderizaría su propio
@@ -35,16 +37,14 @@ export function ClientBlindspotPanel({ clientType }: { clientType: string | null
     // `children`, LockedBenefit usa su placeholder estático por defecto.
     return (
       <LockedBenefit
-        variant="upgrade"
-        requiredLevel="Club Elite"
         benefit="tu auditoría de punto ciego con un terapeuta especializado"
       />
     );
   }
-  return <BlindspotBody />;
+  return <BlindspotBody clientId={clientId} />;
 }
 
-function BlindspotBody() {
+function BlindspotBody({ clientId }: { clientId: string }) {
   const { data, error: fetchError, isLoading, mutate } = useSWR('blindspot-my-case', clientGetMyCase);
   const [actionError, setActionError] = useState<string | null>(null);
   const [helpSent, setHelpSent] = useState(false);
@@ -72,7 +72,7 @@ function BlindspotBody() {
   }
 
   if (isLoading) {
-    return <p className="text-[13px] text-[var(--ink-secondary)]">Cargando...</p>;
+    return <p className="text-[13px] text-[var(--eph-muted)]">Cargando...</p>;
   }
 
   if (fetchError && fetchError instanceof PermissionDeniedError) {
@@ -85,7 +85,7 @@ function BlindspotBody() {
 
   const error = actionError || (fetchError ? (fetchError instanceof Error ? fetchError.message : 'Error al cargar tu Punto Ciego.') : null);
   if (error) {
-    return <p className="text-[13px] text-[var(--danger)]">{error}</p>;
+    return <p className="font-body text-[13px]" style={{ color: '#D99483' }}>{error}</p>;
   }
 
   const caseData = data?.case ?? null;
@@ -94,12 +94,15 @@ function BlindspotBody() {
 
   if (!caseData) {
     return (
-      <section className="rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--paper)] p-6">
-        <h2 className="mb-2 font-serif text-lg font-bold text-[var(--ink)]">Punto Ciego</h2>
-        <p className="text-[13px] text-[var(--ink-secondary)]">
-          Alejandro aún no ha iniciado tu evaluación en este módulo. Cuando la agenden contigo, aparecerá aquí.
-        </p>
-      </section>
+      <div>
+        <InsightsSection clientId={clientId} moduleKey="puntoCiego" />
+        <section className="border p-6" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface)' }}>
+          <h2 className="mb-2 font-display text-lg" style={{ color: 'var(--eph-text)' }}>Punto Ciego</h2>
+          <p className="font-body text-[13px]" style={{ color: 'var(--eph-muted)' }}>
+            Alejandro aún no ha iniciado tu evaluación en este módulo. Cuando la agenden contigo, aparecerá aquí.
+          </p>
+        </section>
+      </div>
     );
   }
 
@@ -108,39 +111,37 @@ function BlindspotBody() {
 
   return (
     <div>
-      <section className="rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--paper)] p-6">
-        <p className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.08em] text-[#8A5FA0]">Punto Ciego · Caso #{caseData.caseNumber}</p>
-        <h2 className="mb-2 font-serif text-lg font-bold text-[var(--ink)]">{STATUS_LABEL[caseData.status]}</h2>
+      <InsightsSection clientId={clientId} moduleKey="puntoCiego" />
+      <section className="border p-6" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface)' }}>
+        <p className="mb-1.5 font-mono text-[10px] uppercase tracking-[0.1em]" style={{ color: 'var(--eph-steel)' }}>Punto Ciego · Caso #{caseData.caseNumber}</p>
+        <h2 className="mb-2 font-display text-lg" style={{ color: 'var(--eph-text)' }}>{STATUS_LABEL[caseData.status]}</h2>
         {caseData.therapistName && (
-          <p className="text-[13px] text-[var(--ink-secondary)]">
-            Terapeuta asignado: <span className="font-semibold text-[var(--ink)]">{caseData.therapistName}</span>
+          <p className="font-body text-[13px]" style={{ color: 'var(--eph-muted)' }}>
+            Terapeuta asignado: <span className="font-medium" style={{ color: 'var(--eph-text)' }}>{caseData.therapistName}</span>
           </p>
         )}
       </section>
 
       {tasks.length > 0 && (
-        <section className="border-t border-[var(--border-hairline)] py-6">
-          <h3 className="mb-3.5 font-serif text-base font-bold text-[var(--ink)]">Tus tareas</h3>
+        <section className="border-t py-6" style={{ borderColor: 'var(--eph-line)' }}>
+          <h3 className="mb-3.5 font-display text-base" style={{ color: 'var(--eph-text)' }}>Tus tareas</h3>
           <ul className="flex flex-col gap-2">
             {pendingTasks.map((task) => (
-              <li key={task.id} className="flex items-start justify-between gap-3 rounded-[var(--radius-card)] border border-[var(--border-hairline)] p-3.5">
+              <li key={task.id} className="flex items-start justify-between gap-3 border p-3.5" style={{ borderColor: 'var(--eph-line)' }}>
                 <div>
-                  <p className="text-[13.5px] font-semibold text-[var(--ink)]">{task.title}</p>
-                  {task.description && <p className="mt-1 text-[12px] text-[var(--ink-secondary)]">{task.description}</p>}
-                  {task.dueDate && <p className="mt-1 text-[11px] text-[var(--ink-secondary)]">Antes de: {task.dueDate}</p>}
+                  <p className="font-body text-[13.5px] font-medium" style={{ color: 'var(--eph-text)' }}>{task.title}</p>
+                  {task.description && <p className="mt-1 font-body text-[12px]" style={{ color: 'var(--eph-muted)' }}>{task.description}</p>}
+                  {task.dueDate && <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.06em]" style={{ color: 'var(--eph-muted)' }}>Antes de: {task.dueDate}</p>}
                 </div>
-                <button
-                  onClick={() => handleCompleteTask(task.id)}
-                  className="shrink-0 rounded-full border border-[var(--border-hairline)] px-3 py-1.5 text-[11px] font-semibold text-[var(--ink)] hover:bg-black/5"
-                >
+                <Button type="button" variant="secondary" onClick={() => handleCompleteTask(task.id)} className="shrink-0">
                   Marcar hecha
-                </button>
+                </Button>
               </li>
             ))}
             {doneTasks.map((task) => (
-              <li key={task.id} className="flex items-center justify-between gap-3 rounded-[var(--radius-card)] border border-[var(--border-hairline)] p-3.5 opacity-60">
-                <p className="text-[13.5px] font-semibold text-[var(--ink)] line-through">{task.title}</p>
-                <span className="text-[11px] text-[var(--ink-secondary)]">{task.status === 'completada' ? 'Completada' : 'Omitida'}</span>
+              <li key={task.id} className="flex items-center justify-between gap-3 border p-3.5 opacity-60" style={{ borderColor: 'var(--eph-line)' }}>
+                <p className="font-body text-[13.5px] font-medium line-through" style={{ color: 'var(--eph-text)' }}>{task.title}</p>
+                <span className="font-mono text-[10px] uppercase tracking-[0.06em]" style={{ color: 'var(--eph-muted)' }}>{task.status === 'completada' ? 'Completada' : 'Omitida'}</span>
               </li>
             ))}
           </ul>
@@ -148,34 +149,30 @@ function BlindspotBody() {
       )}
 
       {sessionLogs.length > 0 && (
-        <section className="border-t border-[var(--border-hairline)] py-6">
-          <h3 className="mb-3.5 font-serif text-base font-bold text-[var(--ink)]">Tu avance</h3>
+        <section className="border-t py-6" style={{ borderColor: 'var(--eph-line)' }}>
+          <h3 className="mb-3.5 font-display text-base" style={{ color: 'var(--eph-text)' }}>Tu avance</h3>
           <ul className="flex flex-col gap-3">
             {sessionLogs.map((log) => (
-              <li key={log.id} className="border-l-2 border-[var(--border-hairline)] pl-3.5">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--ink-secondary)]">
+              <li key={log.id} className="border-l-2 pl-3.5" style={{ borderColor: 'var(--eph-line)' }}>
+                <p className="font-mono text-[10px] uppercase tracking-[0.08em]" style={{ color: 'var(--eph-muted)' }}>
                   {log.sessionDate} · {PROGRESS_LABEL[log.progressMarker]}
                 </p>
-                {log.clientNote && <p className="mt-1 text-[13px] text-[var(--ink)]">{log.clientNote}</p>}
+                {log.clientNote && <p className="mt-1 font-body text-[13px]" style={{ color: 'var(--eph-text)' }}>{log.clientNote}</p>}
               </li>
             ))}
           </ul>
         </section>
       )}
 
-      <section className="border-t border-[var(--border-hairline)] py-6">
+      <section className="border-t py-6" style={{ borderColor: 'var(--eph-line)' }}>
         {helpSent ? (
-          <p className="text-[13px] text-[var(--ink-secondary)]">Le avisamos a Alejandro. Te contactará lo antes posible.</p>
+          <p className="font-body text-[13px]" style={{ color: 'var(--eph-muted)' }}>Le avisamos a Alejandro. Te contactará lo antes posible.</p>
         ) : (
           <>
-            <p className="mb-2 text-[13px] text-[var(--ink-secondary)]">¿Necesitas ayuda urgente?</p>
-            <button
-              onClick={handleHelp}
-              disabled={helpLoading}
-              className="rounded-full border border-[var(--border-hairline)] px-4 py-2 text-[12px] font-semibold text-[var(--ink)] hover:bg-black/5 disabled:opacity-50"
-            >
+            <p className="mb-2 font-body text-[13px]" style={{ color: 'var(--eph-muted)' }}>¿Necesitas ayuda urgente?</p>
+            <Button type="button" variant="secondary" onClick={handleHelp} disabled={helpLoading}>
               {helpLoading ? 'Enviando...' : 'Avisar a Alejandro ahora'}
-            </button>
+            </Button>
           </>
         )}
       </section>

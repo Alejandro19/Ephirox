@@ -33,7 +33,11 @@ export default function SelectField({ value, onChange, options, label, placehold
   return (
     <div>
       {label && (
-        <label htmlFor={selectId} className="mb-1 block truncate text-xs font-normal text-[var(--ink-secondary)]">
+        <label
+          htmlFor={selectId}
+          className="mb-1.5 block truncate font-mono text-[10px] font-normal uppercase tracking-[0.16em]"
+          style={{ color: "var(--eph-muted)" }}
+        >
           {label}
         </label>
       )}
@@ -42,7 +46,7 @@ export default function SelectField({ value, onChange, options, label, placehold
           id={selectId}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="h-9 w-full appearance-none border-0 border-b border-[var(--border-input)] rounded-none bg-transparent px-0.5 pr-5 text-[14.5px] font-semibold text-transparent outline-none transition-colors focus:border-[var(--ink)] focus-visible:ring-0"
+          className="h-9 w-full appearance-none border-0 border-b border-[var(--eph-line-2)] rounded-none bg-transparent px-0.5 pr-5 text-[18px] font-normal text-transparent outline-none transition-colors focus:border-[var(--eph-accent)] focus-visible:ring-0"
         >
           <option value="" aria-label={placeholder}></option>
           {options.map((o) => (
@@ -53,16 +57,15 @@ export default function SelectField({ value, onChange, options, label, placehold
         </select>
         <span
           aria-hidden
-          className={`pointer-events-none absolute inset-y-0 left-0.5 right-5 flex items-center truncate text-[14.5px] leading-none ${
-            showingPlaceholder ? 'font-normal text-[var(--ink-secondary)]' : 'font-semibold text-[var(--ink)]'
-          }`}
+          className="pointer-events-none absolute inset-y-0 left-0.5 right-5 flex items-center truncate text-[18px] font-normal leading-none"
+          style={{ color: showingPlaceholder ? "var(--eph-muted)" : "var(--eph-text)" }}
         >
           {showingPlaceholder ? placeholder : selectedLabel}
         </span>
         <IconChevronDown
           size={14}
           className="pointer-events-none absolute right-0.5 top-1/2 -translate-y-1/2"
-          style={{ color: "#B8B4A8" }}
+          style={{ color: "var(--eph-muted)" }}
         />
       </div>
     </div>

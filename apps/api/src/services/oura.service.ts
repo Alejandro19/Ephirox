@@ -1,6 +1,7 @@
 // Puerto fiel de BIO360services/ouraService.js — OAuth 2.0 + sincronización
 // de métricas Oura Ring. Traducido de axios a fetch nativo, misma lógica.
 import * as wearableService from './wearable.service.js';
+import { updateBaselineTimestampsIfNeeded } from './wearable-baseline.service.js';
 
 const OURA_BASE_URL = 'https://api.ouraring.com/v2';
 const OURA_AUTH_URL = 'https://cloud.ouraring.com/oauth/authorize';
@@ -141,6 +142,7 @@ export async function sincronizarOura(clienteId: string): Promise<{ sincronizado
   const metricas = Object.values(metricasPorFecha);
   if (metricas.length > 0) await wearableService.guardarMetricas(metricas);
   await wearableService.actualizarUltimaSync(clienteId, 'oura');
+  await updateBaselineTimestampsIfNeeded(clienteId);
 
   return { sincronizados: metricas.length };
 }

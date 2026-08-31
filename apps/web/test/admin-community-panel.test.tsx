@@ -188,15 +188,6 @@ describe('AdminCommunityPanel', () => {
     await waitFor(() => expect(therapiesClient.updateTherapy).toHaveBeenCalledWith('t1', { active: false }));
   });
 
-  it('shows the locked preview for the Lead Wellness client type', async () => {
-    const user = userEvent.setup();
-    render(<AdminCommunityPanel />);
-    await screen.findByText('Vista previa por tipo de cliente');
-
-    await user.click(screen.getByRole('button', { name: 'Lead Wellness' }));
-    expect(await screen.findByText('Beneficio exclusivo de una membresía superior')).toBeInTheDocument();
-  });
-
   it('switches to the Reservas tab and shows grouped reservations in an accordion', async () => {
     const user = userEvent.setup();
     vi.mocked(reservationsClient.getConfirmedReservations).mockResolvedValue({

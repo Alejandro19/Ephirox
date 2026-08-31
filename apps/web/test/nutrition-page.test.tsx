@@ -18,6 +18,6 @@ vi.mock('../lib/supplements-client', () => ({
 describe('NutritionPage', () => {
   it('renders the nutrition heading', async () => {
     render(<NutritionPage />);
-    expect(await screen.findByRole('heading', { name: 'Nutrición' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Nutrition' })).toBeInTheDocument();
   });
 });

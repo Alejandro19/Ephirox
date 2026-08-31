@@ -12,10 +12,10 @@ export async function listExercisesByClient(clientId: string): Promise<Exercise[
 }
 
 const MODULE_LABELS: Record<string, string> = {
-  training: 'entrenamiento',
-  nutrition: 'nutrición',
+  training: 'Workout',
+  nutrition: 'Nutrition',
   supplementation: 'suplementación',
-  cortisol: 'gestión de cortisol',
+  cortisol: 'Stress',
 };
 
 async function unlockModule(clientId: string, moduleKey: string): Promise<void> {

@@ -55,16 +55,43 @@ const config: Config = {
         "border-hairline": "#EAE6DC",
         "border-input": "#E4E0D5",
         "ring-accent": "#C9A66B",
+        // Identidad Ephirox (reskin en curso) — namespace nuevo, la paleta
+        // de arriba sigue viva hasta que todas las pantallas migren.
+        eph: {
+          bg: "#080807",
+          surface: "#0E0C0B",
+          "surface-2": "#161311",
+          line: "rgba(237, 230, 220, 0.12)",
+          "line-2": "rgba(237, 230, 220, 0.20)",
+          text: "#F4EFE7",
+          body: "#B7ADA2",
+          muted: "#8C8177",
+          faint: "#5F574F",
+          accent: "#C9A46A",
+          "accent-hi": "#E3C795",
+          steel: "#7E8A93",
+          danger: "#8A4A3C",
+          ink: "#0B0A09",
+          "paper-bg": "#EDE6DC",
+          "paper-text": "#1C1613",
+        },
       },
       fontFamily: {
         serif: ["Fraunces", "Georgia", "serif"],
         sans: ["Inter", "system-ui", "sans-serif"],
+        // Identidad Ephirox — nuevas, no reemplazan serif/sans todavía.
+        display: ["var(--font-cormorant)", "Georgia", "serif"],
+        body: ["var(--font-jost)", "system-ui", "sans-serif"],
+        mono: ["var(--font-jetbrains-mono)", "ui-monospace", "monospace"],
       },
       borderRadius: {
         default: "16px",
         hero: "16px",
         card: "14px",
         control: "9px",
+        // Identidad Ephirox: 0 por defecto en tarjetas/inputs/botones,
+        // 999px solo en píldoras/chips/avatares (ver clase `eph-pill`).
+        "eph-pill": "999px",
       },
     },
   },

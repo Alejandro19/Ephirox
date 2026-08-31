@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../lib/auth-context";
+import { useTranslation } from "../../lib/i18n/useTranslation";
 import { ADMIN_NAV, ADMIN_HUB_SUBITEMS, VIEW_TO_PATH } from "../../lib/constants";
 import NotificationBell from "./NotificationBell";
 import BrandRing from "../ui/BrandRing";
@@ -18,6 +19,7 @@ const FLAT_NAV = ADMIN_NAV.filter((item) => item.key !== "admin-hub");
 export default function AdminTopbar({ viewKey }: AdminTopbarProps) {
   const router = useRouter();
   const { user, logout } = useAuth();
+  const { t } = useTranslation();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [hubOpen, setHubOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
@@ -67,22 +69,25 @@ export default function AdminTopbar({ viewKey }: AdminTopbarProps) {
           display: "flex",
           alignItems: "center",
           gap: 32,
-          height: 68,
+          height: 74,
           padding: "0 32px",
-          background: "linear-gradient(135deg, var(--hero-piedra-start), var(--hero-piedra-end))",
+          background: "var(--eph-bg)",
+          borderBottom: "1px solid var(--eph-line)",
         }}
       >
         <button
           onClick={() => router.push("/")}
           aria-label="Ir al menú principal"
+          className="font-display"
           style={{
             display: "flex",
             alignItems: "center",
-            gap: 8,
-            fontFamily: "Fraunces, Georgia, serif",
-            fontSize: 19,
-            fontWeight: 700,
-            color: "var(--hero-piedra-text)",
+            gap: 10,
+            fontSize: 18,
+            fontWeight: 400,
+            textTransform: "uppercase",
+            letterSpacing: "0.14em",
+            color: "var(--eph-text)",
             flexShrink: 0,
             background: "none",
             border: "none",
@@ -90,48 +95,51 @@ export default function AdminTopbar({ viewKey }: AdminTopbarProps) {
             cursor: "pointer",
           }}
         >
-          <BrandRing size={24} background="var(--hero-piedra-start)" />
-          La Tribu
+          <BrandRing size={24} />
+          Ephirox
         </button>
 
-        <nav className="admin-nav-row" style={{ display: "flex", alignItems: "center", gap: 10, flex: 1, minWidth: 0 }}>
+        <nav className="admin-nav-row" style={{ display: "flex", alignItems: "center", gap: 6, flex: 1, minWidth: 0 }}>
           <div ref={hubRef} style={{ position: "relative" }}>
             <button
               onClick={() => setHubOpen((v) => !v)}
-              className={`admin-nav-tab${hubActive ? " active" : ""}`}
+              className={`admin-nav-tab font-mono${hubActive ? " active" : ""}`}
               style={{
                 background: "none",
                 border: "none",
                 cursor: "pointer",
                 whiteSpace: "nowrap",
-                fontSize: 12,
-                fontWeight: hubActive ? 500 : 400,
-                color: hubActive ? "var(--hero-piedra-text)" : "var(--hero-piedra-text-muted)",
+                fontSize: 10.5,
+                textTransform: "uppercase",
+                letterSpacing: "0.1em",
+                fontWeight: 400,
+                color: hubActive ? "var(--eph-text)" : "var(--eph-muted)",
                 padding: "8px 12px",
                 position: "relative",
               }}
             >
-              Administración
+              Administration
             </button>
             {hubOpen && (
               <div
                 style={{
                   position: "absolute", top: 40, left: 0, minWidth: 180,
-                  background: "var(--paper)", border: "1px solid var(--border-hairline)",
-                  borderRadius: "var(--radius-card)", padding: 6, zIndex: 90,
+                  background: "var(--eph-surface)", border: "1px solid var(--eph-line)",
+                  borderRadius: 0, padding: 6, zIndex: 90,
                 }}
               >
                 {ADMIN_HUB_SUBITEMS.map((sub) => (
                   <button
                     key={sub.key}
                     onClick={() => navigate(sub.key)}
+                    className="font-body"
                     style={{
                       display: "block", width: "100%", textAlign: "left",
-                      background: viewKey === sub.key ? "rgba(201,166,107,.14)" : "none",
-                      border: "none", borderRadius: "var(--radius-control)",
+                      background: viewKey === sub.key ? "var(--eph-surface-2)" : "none",
+                      border: "none", borderRadius: 0,
                       padding: "10px 12px", fontSize: 13,
-                      fontWeight: viewKey === sub.key ? 600 : 500,
-                      color: viewKey === sub.key ? "var(--ring-accent)" : "var(--ink)",
+                      fontWeight: viewKey === sub.key ? 500 : 400,
+                      color: viewKey === sub.key ? "var(--eph-accent)" : "var(--eph-body)",
                       cursor: "pointer",
                     }}
                   >
@@ -148,15 +156,17 @@ export default function AdminTopbar({ viewKey }: AdminTopbarProps) {
               <button
                 key={item.key}
                 onClick={() => navigate(item.key)}
-                className={`admin-nav-tab${active ? " active" : ""}`}
+                className={`admin-nav-tab font-mono${active ? " active" : ""}`}
                 style={{
                   background: "none",
                   border: "none",
                   cursor: "pointer",
                   whiteSpace: "nowrap",
-                  fontSize: 12,
-                  fontWeight: active ? 500 : 400,
-                  color: active ? "var(--hero-piedra-text)" : "var(--hero-piedra-text-muted)",
+                  fontSize: 10.5,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.1em",
+                  fontWeight: 400,
+                  color: active ? "var(--eph-text)" : "var(--eph-muted)",
                   padding: "8px 12px",
                   position: "relative",
                 }}
@@ -175,14 +185,15 @@ export default function AdminTopbar({ viewKey }: AdminTopbarProps) {
             <button
               onClick={() => setAccountOpen((v) => !v)}
               aria-label="Membresía"
+              className="font-mono"
               style={{
                 width: 32, height: 32, borderRadius: "50%",
-                border: "1px solid var(--hero-piedra-accent)",
-                background: accountOpen ? "var(--hero-piedra-accent)" : "transparent",
-                color: accountOpen ? "var(--hero-piedra-start)" : "var(--hero-piedra-text)",
-                fontSize: 13, fontWeight: 700, cursor: "pointer",
+                border: "1px solid var(--eph-line-2)",
+                background: accountOpen ? "var(--eph-accent)" : "transparent",
+                color: accountOpen ? "var(--eph-ink)" : "var(--eph-text)",
+                fontSize: 12, fontWeight: 400, cursor: "pointer",
                 display: "flex", alignItems: "center", justifyContent: "center",
-                transition: "background 0.2s ease, color 0.2s ease",
+                transition: "background 0.15s ease, color 0.15s ease",
               }}
             >
               {initial}
@@ -190,23 +201,24 @@ export default function AdminTopbar({ viewKey }: AdminTopbarProps) {
             {accountOpen && (
               <div style={{
                 position: "absolute", top: 40, right: 0, width: 200,
-                background: "var(--paper)", border: "1px solid var(--border-hairline)",
-                borderRadius: "var(--radius-card)", padding: 10, zIndex: 90,
+                background: "var(--eph-surface)", border: "1px solid var(--eph-line)",
+                borderRadius: 0, padding: 10, zIndex: 90,
               }}>
-                <div style={{ fontSize: 13, fontWeight: 600, color: "var(--ink)", padding: "4px 6px" }}>
-                  {user?.name ?? "Admin"}
+                <div className="font-body" style={{ fontSize: 13, fontWeight: 500, color: "var(--eph-text)", padding: "4px 6px" }}>
+                  {user?.name ?? t('nav.admin')}
                 </div>
-                <div style={{ fontSize: 11, color: "var(--ink-secondary)", padding: "0 6px 6px" }}>Admin</div>
+                <div className="font-mono" style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--eph-muted)", padding: "0 6px 6px" }}>{t('nav.admin')}</div>
                 <button
                   onClick={logout}
+                  className="font-mono"
                   style={{
                     width: "100%", marginTop: 6, background: "none",
-                    border: "1px solid var(--border-input)", borderRadius: "9999px",
-                    padding: "8px 14px", fontSize: 12, fontWeight: 500,
-                    color: "var(--ink-secondary)", cursor: "pointer",
+                    border: "1px solid var(--eph-line-2)", borderRadius: 0,
+                    padding: "8px 14px", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.1em",
+                    color: "var(--eph-body)", cursor: "pointer",
                   }}
                 >
-                  Cerrar sesión
+                  {t('nav.logout')}
                 </button>
               </div>
             )}
@@ -220,9 +232,9 @@ export default function AdminTopbar({ viewKey }: AdminTopbarProps) {
               padding: 6, flexDirection: "column", gap: 4, cursor: "pointer",
             }}
           >
-            <span style={{ display: "block", width: 20, height: 2, background: "var(--hero-piedra-text)", borderRadius: 2 }} />
-            <span style={{ display: "block", width: 20, height: 2, background: "var(--hero-piedra-text)", borderRadius: 2 }} />
-            <span style={{ display: "block", width: 20, height: 2, background: "var(--hero-piedra-text)", borderRadius: 2 }} />
+            <span style={{ display: "block", width: 20, height: 1, background: "var(--eph-text)" }} />
+            <span style={{ display: "block", width: 20, height: 1, background: "var(--eph-text)" }} />
+            <span style={{ display: "block", width: 20, height: 1, background: "var(--eph-text)" }} />
           </button>
         </div>
       </header>
@@ -231,34 +243,35 @@ export default function AdminTopbar({ viewKey }: AdminTopbarProps) {
       {drawerOpen && (
         <div
           onClick={() => setDrawerOpen(false)}
-          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.4)", zIndex: 105 }}
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.5)", zIndex: 105 }}
         />
       )}
       <div
         className={`admin-drawer${drawerOpen ? " open" : ""}`}
         style={{
           position: "fixed", top: 0, right: 0, bottom: 0, width: "82vw", maxWidth: 300,
-          background: "var(--page-bg)", zIndex: 110, padding: "24px 20px", overflowY: "auto",
+          background: "var(--eph-bg)", borderLeft: "1px solid var(--eph-line)", zIndex: 110, padding: "24px 20px", overflowY: "auto",
           transition: "transform 0.28s ease",
           display: "flex", flexDirection: "column", gap: 4,
         }}
       >
-        <span style={{ fontFamily: "Fraunces, Georgia, serif", fontSize: 18, fontWeight: 700, color: "var(--ink)", marginBottom: 16 }}>
-          La Tribu
+        <span className="font-display" style={{ fontSize: 17, textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--eph-text)", marginBottom: 16 }}>
+          Ephirox
         </span>
-        <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".04em", color: "var(--ink-secondary)", padding: "8px 4px 2px" }}>
-          Administración
+        <span className="font-mono" style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--eph-muted)", padding: "8px 4px 2px" }}>
+          Administration
         </span>
         {ADMIN_HUB_SUBITEMS.map((sub) => (
           <button
             key={sub.key}
             onClick={() => navigate(sub.key)}
+            className="font-body"
             style={{
               background: "none", border: "none", textAlign: "left", cursor: "pointer",
               padding: "10px 4px 10px 14px", fontSize: 13.5,
-              fontWeight: viewKey === sub.key ? 600 : 400,
-              color: viewKey === sub.key ? "var(--ink)" : "var(--ink-secondary)",
-              borderBottom: "1px solid var(--border-hairline)",
+              fontWeight: viewKey === sub.key ? 500 : 400,
+              color: viewKey === sub.key ? "var(--eph-text)" : "var(--eph-body)",
+              borderBottom: "1px solid var(--eph-line)",
             }}
           >
             {sub.label}
@@ -270,12 +283,13 @@ export default function AdminTopbar({ viewKey }: AdminTopbarProps) {
             <button
               key={item.key}
               onClick={() => navigate(item.key)}
+              className="font-body"
               style={{
                 background: "none", border: "none", textAlign: "left", cursor: "pointer",
                 padding: "12px 4px", fontSize: 14,
                 fontWeight: active ? 500 : 400,
-                color: active ? "var(--ink)" : "var(--ink-secondary)",
-                borderBottom: "1px solid var(--border-hairline)",
+                color: active ? "var(--eph-text)" : "var(--eph-body)",
+                borderBottom: "1px solid var(--eph-line)",
               }}
             >
               {item.label}
@@ -284,13 +298,14 @@ export default function AdminTopbar({ viewKey }: AdminTopbarProps) {
         })}
         <button
           onClick={logout}
+          className="font-mono"
           style={{
-            marginTop: "auto", background: "none", border: "1px solid var(--border-input)",
-            borderRadius: "9999px", padding: "10px 16px", fontSize: 13, fontWeight: 500,
-            color: "var(--ink-secondary)", cursor: "pointer",
+            marginTop: "auto", background: "none", border: "1px solid var(--eph-line-2)",
+            borderRadius: 0, padding: "10px 16px", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.12em",
+            color: "var(--eph-body)", cursor: "pointer",
           }}
         >
-          Cerrar sesión
+          {t('nav.logout')}
         </button>
       </div>
 
@@ -301,8 +316,8 @@ export default function AdminTopbar({ viewKey }: AdminTopbarProps) {
           left: 12px;
           right: 12px;
           bottom: 2px;
-          height: 2px;
-          background: var(--hero-piedra-accent);
+          height: 1px;
+          background: var(--eph-accent);
           width: 0%;
           transition: width 0.18s ease;
         }
@@ -315,18 +330,18 @@ export default function AdminTopbar({ viewKey }: AdminTopbarProps) {
         .bell-circle {
           display: flex; align-items: center; justify-content: center;
           width: 32px; height: 32px; border-radius: 50%;
-          border: 1px solid var(--hero-piedra-accent);
-          transition: background 0.2s ease;
+          border: 1px solid var(--eph-line-2);
+          transition: border-color 0.15s ease;
         }
         .bell-circle:hover {
-          background: var(--hero-espresso);
+          border-color: var(--eph-accent);
         }
         .admin-drawer {
           transform: translateX(100%);
         }
         .admin-drawer.open {
           transform: translateX(0);
-          box-shadow: -8px 0 24px rgba(0, 0, 0, 0.18);
+          box-shadow: -8px 0 24px rgba(0, 0, 0, 0.4);
         }
         @media (max-width: ${COLLAPSE_BREAKPOINT}px) {
           .admin-nav-row {

@@ -5,8 +5,8 @@ type MiniRingProps = { pct: number; size?: number; strokeColor?: string; trackCo
 export default function MiniRing({
   pct,
   size = 46,
-  strokeColor = "#B8935A",
-  trackColor = "#E7DFC9",
+  strokeColor = "var(--eph-accent)",
+  trackColor = "rgba(237, 230, 220, 0.14)",
 }: MiniRingProps) {
   const r = (size - 8) / 2;
   const circ = 2 * Math.PI * r;
@@ -23,7 +23,7 @@ export default function MiniRing({
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={trackColor} strokeWidth="4" />
         <circle
           cx={size / 2} cy={size / 2} r={r} fill="none" stroke={strokeColor}
-          strokeWidth="4" strokeLinecap="round"
+          strokeWidth="4" strokeLinecap="butt"
           strokeDasharray={`${filled.toFixed(1)} ${circ.toFixed(1)}`}
         />
       </svg>

@@ -61,34 +61,24 @@ describe('InicioPage — quick-access cards', () => {
     vi.clearAllMocks();
   });
 
-  it('shows no quick-access cards for a lead_wellness client, regardless of data', async () => {
-    mockAuth('lead_wellness');
-    mockNoDataAnywhere();
-    render(<InicioPage />);
-
-    await waitFor(() => expect(screen.queryByText('¡Hola, Ana!')).toBeInTheDocument());
-    expect(screen.queryByText('Entrenamiento')).not.toBeInTheDocument();
-    expect(screen.queryByText('Club Wellness')).not.toBeInTheDocument();
-  });
-
   it('shows no quick-access cards for coaching_1_1 when no module has any data loaded yet', async () => {
     mockAuth('coaching_1_1');
     mockNoDataAnywhere();
     render(<InicioPage />);
 
     await waitFor(() => expect(nutritionClient.getNutrition).toHaveBeenCalled());
-    expect(screen.queryByText('Entrenamiento')).not.toBeInTheDocument();
-    expect(screen.queryByText('Nutrición')).not.toBeInTheDocument();
-    expect(screen.queryByText('Club Wellness')).not.toBeInTheDocument();
-    expect(screen.queryByText('Hackea tu Sueño')).not.toBeInTheDocument();
-    expect(screen.queryByText('Mi Evolución')).not.toBeInTheDocument();
+    expect(screen.queryByText('Workout')).not.toBeInTheDocument();
+    expect(screen.queryByText('Nutrition')).not.toBeInTheDocument();
+    expect(screen.queryByText('The Circle')).not.toBeInTheDocument();
+    expect(screen.queryByText('Sleep')).not.toBeInTheDocument();
+    expect(screen.queryByText('Evolution')).not.toBeInTheDocument();
   });
 
-  it('shows only the cards with real data for a coaching_online client', async () => {
-    mockAuth('coaching_online');
+  it('shows only the cards with real data for a mentoring client', async () => {
+    mockAuth('mentoring');
     mockNoDataAnywhere();
     vi.mocked(clientsClient.fetchClient).mockResolvedValue({
-      id: 'client-1', name: 'Ana', email: 'a@x.com', plan: '', status: 'active', clientType: 'coaching_online', trainingDays: 4,
+      id: 'client-1', name: 'Ana', email: 'a@x.com', plan: '', status: 'active', clientType: 'mentoring', trainingDays: 4,
     });
     vi.mocked(evolutionClient.getEvolutionData).mockResolvedValue({
       checkins: [{ id: 'c1', clientId: 'client-1', fecha: '2026-08-01' } as evolutionClient.EvolutionCheckin],
@@ -98,14 +88,14 @@ describe('InicioPage — quick-access cards', () => {
 
     render(<InicioPage />);
 
-    expect(await screen.findByText('Entrenamiento')).toBeInTheDocument();
-    expect(await screen.findByText('Mi Evolución')).toBeInTheDocument();
-    expect(screen.queryByText('Nutrición')).not.toBeInTheDocument();
-    expect(screen.queryByText('Club Wellness')).not.toBeInTheDocument();
-    expect(screen.queryByText('Hackea tu Sueño')).not.toBeInTheDocument();
+    expect(await screen.findByText('Workout')).toBeInTheDocument();
+    expect(await screen.findByText('Evolution')).toBeInTheDocument();
+    expect(screen.queryByText('Nutrition')).not.toBeInTheDocument();
+    expect(screen.queryByText('The Circle')).not.toBeInTheDocument();
+    expect(screen.queryByText('Sleep')).not.toBeInTheDocument();
   });
 
-  it('shows Club Wellness for a mentoring client when there is at least one active published event', async () => {
+  it('shows The Circle for a mentoring client when there is at least one active published event', async () => {
     mockAuth('mentoring');
     mockNoDataAnywhere();
     vi.mocked(eventsClient.listEvents).mockResolvedValue([
@@ -114,8 +104,8 @@ describe('InicioPage — quick-access cards', () => {
 
     render(<InicioPage />);
 
-    expect(await screen.findByText('Club Wellness')).toBeInTheDocument();
-    expect(screen.queryByText('Entrenamiento')).not.toBeInTheDocument();
+    expect(await screen.findByText('The Circle')).toBeInTheDocument();
+    expect(screen.queryByText('Workout')).not.toBeInTheDocument();
   });
 
   it('shows the admin quick links unchanged, without the data-gating logic', () => {
@@ -124,7 +114,7 @@ describe('InicioPage — quick-access cards', () => {
 
     expect(screen.getByText('Clientes')).toBeInTheDocument();
     expect(screen.getByText('Frases')).toBeInTheDocument();
-    expect(screen.getByText('Club Wellness')).toBeInTheDocument();
+    expect(screen.getByText('The Circle')).toBeInTheDocument();
     expect(clientsClient.fetchClient).not.toHaveBeenCalled();
   });
 
@@ -133,7 +123,7 @@ describe('InicioPage — quick-access cards', () => {
     mockNoDataAnywhere();
     render(<InicioPage />);
 
-    const trainingCard = await screen.findByText('Entrenamiento');
+    const trainingCard = await screen.findByText('Workout');
     expect(screen.getByText('Renueva para continuar')).toBeInTheDocument();
 
     fireEvent.click(trainingCard);

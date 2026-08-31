@@ -170,10 +170,10 @@ export function drawInstagramCard(ctx: CanvasRenderingContext2D, { streakWeeks, 
   const brandY = H - padBottom;
   ctx.fillStyle = '#E8C97D';
   ctx.font = `700 ${s(13)}px Georgia, serif`;
-  ctx.fillText('La Tribu', W / 2, brandY - s(14));
+  ctx.fillText('Ephirox', W / 2, brandY - s(14));
   ctx.fillStyle = '#9C8A67';
   ctx.font = `${s(7.5)}px Georgia, serif`;
   ctx.letterSpacing = `${s(0.05 * 7.5)}px`;
-  ctx.fillText('COMUNIDAD DE BIENESTAR Y ALTO RENDIMIENTO', W / 2, brandY);
+  ctx.fillText('REDEFINING LIMITS.', W / 2, brandY);
   ctx.letterSpacing = '0px';
 }

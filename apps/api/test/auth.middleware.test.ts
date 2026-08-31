@@ -61,7 +61,7 @@ describe('auth.middleware', () => {
   });
 
   it('blockExpiredPresencialSession no bloquea a un cliente vencido que no es Presencial', async () => {
-    await db.update(clients).set({ clientType: 'coaching_online' }).where(eq(clients.id, clientId));
+    await db.update(clients).set({ clientType: 'mentoring' }).where(eq(clients.id, clientId));
     const token = signToken({ id: clientId, role: 'cliente', name: 'Test Client', email });
     const res = await request(buildTestApp()).get(`/owner/${clientId}/session`).set('Authorization', `Bearer ${token}`);
     expect(res.status).toBe(200);

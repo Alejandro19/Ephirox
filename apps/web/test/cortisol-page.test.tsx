@@ -18,6 +18,6 @@ vi.mock('../lib/cortisol-client', () => ({
 describe('CortisolPage', () => {
   it('renders the cortisol heading', async () => {
     render(<CortisolPage />);
-    expect(await screen.findByRole('heading', { name: 'Gestión de Cortisol' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Stress' })).toBeInTheDocument();
   });
 });

@@ -27,5 +27,8 @@ clientsRouter.patch('/:id/status', authMiddleware, adminOnly, validateBody(Statu
 clientsRouter.patch('/:id/client-type', authMiddleware, adminOnly, validateBody(ClientTypePatchSchema), asyncHandler(clientsController.updateClientType));
 clientsRouter.patch('/:id/renew-plan', authMiddleware, adminOnly, validateBody(RenewPlanPatchSchema), asyncHandler(clientsController.renewPlan));
 clientsRouter.patch('/:id/deletion-request/resolve', authMiddleware, adminOnly, asyncHandler(clientsController.resolveDeletionRequest));
+clientsRouter.post('/:id/resend-invitation', authMiddleware, adminOnly, asyncHandler(clientsController.resendInvitation));
+clientsRouter.post('/:id/onboarding/approve-baseline', authMiddleware, adminOnly, asyncHandler(clientsController.approveBaseline));
+clientsRouter.post('/:id/onboarding/approve-wearable', authMiddleware, adminOnly, asyncHandler(clientsController.approveWearable));
 clientsRouter.get('/:id/membership-payments', authMiddleware, adminOnly, asyncHandler(clientsController.getMembershipPayments));
 clientsRouter.post('/:id/membership-payments/:paymentId/approve', authMiddleware, adminOnly, asyncHandler(clientsController.approveMembershipPayment));

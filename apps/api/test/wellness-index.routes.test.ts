@@ -14,8 +14,8 @@ describe('wellness-index route', () => {
   const app = createApp();
   let clientId: string;
   let clientToken: string;
-  let leadClientId: string;
-  let leadToken: string;
+  let otherClientId: string;
+  let otherClientToken: string;
 
   beforeAll(async () => {
     const [client] = await db
@@ -30,17 +30,22 @@ describe('wellness-index route', () => {
     clientId = client.id;
     clientToken = signToken({ id: clientId, role: 'cliente', name: client.name, email: client.email });
 
-    const [lead] = await db
+    const [otherClient] = await db
       .insert(clients)
-      .values({ name: 'Lead Client', email: `wellness-lead-${Date.now()}@example.com`, status: 'active', clientType: 'lead_wellness' })
+      .values({
+        name: 'Other Wellness Client',
+        email: `wellness-other-${Date.now()}@example.com`,
+        status: 'active',
+        clientType: 'coaching_1_1',
+      })
       .returning();
-    leadClientId = lead.id;
-    leadToken = signToken({ id: leadClientId, role: 'cliente', name: lead.name, email: lead.email });
+    otherClientId = otherClient.id;
+    otherClientToken = signToken({ id: otherClientId, role: 'cliente', name: otherClient.name, email: otherClient.email });
   });
 
   afterAll(async () => {
     await db.delete(clients).where(eq(clients.id, clientId));
-    await db.delete(clients).where(eq(clients.id, leadClientId));
+    await db.delete(clients).where(eq(clients.id, otherClientId));
   });
 
   afterEach(async () => {
@@ -48,12 +53,6 @@ describe('wellness-index route', () => {
     await db.delete(sleepLogs).where(eq(sleepLogs.clientId, clientId));
     await db.delete(cortisolCheckins).where(eq(cortisolCheckins.clientId, clientId));
     await db.delete(wellnessIndexHistory).where(eq(wellnessIndexHistory.clientId, clientId));
-  });
-
-  it('returns null for a lead_wellness client — the card never shows for this type', async () => {
-    const res = await request(app).get(`/api/clients/${leadClientId}/wellness-index`).set('Authorization', `Bearer ${leadToken}`);
-    expect(res.status).toBe(200);
-    expect(res.body.data).toBeNull();
   });
 
   it('returns null when the client has no data in any component yet', async () => {
@@ -109,7 +108,7 @@ describe('wellness-index route', () => {
   });
 
   it('rejects a client fetching a different client\'s index', async () => {
-    const res = await request(app).get(`/api/clients/${clientId}/wellness-index`).set('Authorization', `Bearer ${leadToken}`);
+    const res = await request(app).get(`/api/clients/${clientId}/wellness-index`).set('Authorization', `Bearer ${otherClientToken}`);
     expect(res.status).toBe(403);
   });
 });

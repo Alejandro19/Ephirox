@@ -1,9 +1,10 @@
-import { eq, desc, sql } from 'drizzle-orm';
+import { eq, desc, sql, inArray, and } from 'drizzle-orm';
 import { db } from '../db/index.js';
-import { clients, adminNotifications, type Client } from '../models/schema.js';
+import { clients, personalInfo, bioInbodyRecords, labPanels, wearableMetricas, type Client } from '../models/schema.js';
 import { hashPassword } from './auth.service.js';
 import { findAdminByEmail } from './admins.service.js';
-import { recordLegalAcceptance, type LegalAcceptanceInput } from './legal-acceptance.service.js';
+import { createInvitation } from './client-invitations.service.js';
+import { sendClientInvitationEmail } from './password-reset.service.js';
 
 export async function findClientByEmail(email: string): Promise<Client | null> {
   const rows = await db.select().from(clients).where(eq(clients.email, email)).limit(1);
@@ -53,69 +54,6 @@ export async function findClientAuthRowById(id: string): Promise<ClientAuthRow |
   return (rows[0] as ClientAuthRow | undefined) ?? null;
 }
 
-export async function createInactiveClient(input: {
-  name: string;
-  email: string;
-  password?: string;
-  googleId?: string;
-  appleId?: string;
-  legalAcceptance: LegalAcceptanceInput;
-}): Promise<Client> {
-  const passwordHash = input.password ? await hashPassword(input.password) : null;
-  // Transaccional (antes no lo era) — para que la fila del cliente y la de
-  // evidencia de aceptación legal se creen atómicamente: nunca uno sin el otro.
-  return db.transaction(async (tx) => {
-    const [client] = await tx
-      .insert(clients)
-      .values({ name: input.name, email: input.email, passwordHash, googleId: input.googleId, appleId: input.appleId, status: 'inactive' })
-      .returning();
-    const via = input.googleId ? 'con Google ' : input.appleId ? 'con Apple ' : '';
-    await tx.insert(adminNotifications).values({
-      clientId: client.id,
-      type: 'new_registration',
-      message: `${input.name} se registró ${via}en la plataforma.`,
-    });
-    await recordLegalAcceptance(tx, client.id, input.legalAcceptance);
-    return client;
-  });
-}
-
-// Alta instantánea de "Club Explorador" — activa de una, sin cola de
-// aprobación. Nunca lleva contraseña (ni siquiera temporal): el registro la
-// loguea directo (ver auth.controller.ts) y, si más adelante quiere entrar
-// por email/password, usa el flujo ya existente de "¿Olvidaste tu
-// contraseña?" para fijar una por primera vez. Recibe número de miembro y
-// activatedAt de una, con la misma secuencia atómica que updateStatus() usa
-// para activaciones manuales — así la member card también le aparece.
-export async function createActiveExplorerClient(input: {
-  name: string;
-  email: string;
-  googleId?: string;
-  appleId?: string;
-  legalAcceptance: LegalAcceptanceInput;
-}): Promise<Client> {
-  return db.transaction(async (tx) => {
-    const [client] = await tx
-      .insert(clients)
-      .values({
-        name: input.name, email: input.email, passwordHash: null,
-        googleId: input.googleId, appleId: input.appleId,
-        status: 'active', clientType: 'lead_wellness',
-        memberNumber: sql`nextval('member_number_seq')`,
-        activatedAt: new Date(),
-      })
-      .returning();
-    const via = input.googleId ? ' con Google' : input.appleId ? ' con Apple' : '';
-    await tx.insert(adminNotifications).values({
-      clientId: client.id,
-      type: 'new_registration',
-      message: `${input.name} se unió como Explorador${via}.`,
-    });
-    await recordLegalAcceptance(tx, client.id, input.legalAcceptance);
-    return client;
-  });
-}
-
 export async function updateClientPassword(id: string, passwordHash: string): Promise<void> {
   // Cualquier cambio de contraseña (change-password normal o reset por token)
   // satisface la obligación de la temporal — se limpia acá para no duplicar
@@ -138,11 +76,57 @@ export class ClientEmailTakenError extends Error {
   }
 }
 
-export async function listClients(): Promise<Client[]> {
-  return db.select().from(clients).orderBy(desc(clients.createdAt));
+// Indicadores de onboarding Mentoría para la lista de admin, sin abrir cada
+// ficha individual (ver plan). Solo se calculan para mentoring — el resto
+// queda con valores vacíos/null, que el frontend renderiza como "-".
+export type ClientWithOnboardingIndicators = Client & {
+  baselineComplete: boolean;
+  wearableDaysConDatos: number | null;
+  labWeek0Status: string | null;
+};
+
+export async function listClients(): Promise<ClientWithOnboardingIndicators[]> {
+  const rows = await db.select().from(clients).orderBy(desc(clients.createdAt));
+  const mentoringIds = rows.filter((c) => c.clientType === 'mentoring').map((c) => c.id);
+  if (mentoringIds.length === 0) {
+    return rows.map((c) => ({ ...c, baselineComplete: false, wearableDaysConDatos: null, labWeek0Status: null }));
+  }
+
+  const [infoRows, inbodyRows, labRows, wearableRows] = await Promise.all([
+    db.select({ clientId: personalInfo.clientId, completedAt: personalInfo.completedAt }).from(personalInfo).where(inArray(personalInfo.clientId, mentoringIds)),
+    db.select({ clientId: bioInbodyRecords.clientId }).from(bioInbodyRecords).where(inArray(bioInbodyRecords.clientId, mentoringIds)),
+    db.select({ clientId: labPanels.clientId, status: labPanels.status }).from(labPanels).where(and(inArray(labPanels.clientId, mentoringIds), eq(labPanels.semanaNumero, 0))),
+    db
+      .select({ clientId: wearableMetricas.clientId, dias: sql<number>`count(distinct ${wearableMetricas.fecha})` })
+      .from(wearableMetricas)
+      .where(inArray(wearableMetricas.clientId, mentoringIds))
+      .groupBy(wearableMetricas.clientId),
+  ]);
+
+  const completedAtById = new Map(infoRows.map((r) => [r.clientId, !!r.completedAt]));
+  const inbodyIds = new Set(inbodyRows.map((r) => r.clientId));
+  const labStatusById = new Map(labRows.map((r) => [r.clientId, r.status]));
+  const wearableDaysById = new Map(wearableRows.map((r) => [r.clientId, Number(r.dias) || 0]));
+
+  return rows.map((c) => {
+    if (c.clientType !== 'mentoring') return { ...c, baselineComplete: false, wearableDaysConDatos: null, labWeek0Status: null };
+    return {
+      ...c,
+      baselineComplete: !!completedAtById.get(c.id) && inbodyIds.has(c.id),
+      wearableDaysConDatos: c.wearableBaselineReadyAt ? null : (wearableDaysById.get(c.id) ?? 0),
+      labWeek0Status: labStatusById.get(c.id) ?? null,
+    };
+  });
 }
 
-export type CreateClientInput = { name: string; email: string; password: string; plan?: string; mustChangePassword?: boolean };
+export type CreateClientInput = {
+  name: string;
+  email: string;
+  password?: string;
+  plan?: string;
+  mustChangePassword?: boolean;
+  client_type?: string;
+};
 
 export async function createClient(input: CreateClientInput): Promise<Client> {
   const emailLower = input.email.toLowerCase().trim();
@@ -151,7 +135,13 @@ export async function createClient(input: CreateClientInput): Promise<Client> {
     findAdminByEmail(emailLower),
   ]);
   if (existingClient || existingAdmin) throw new ClientEmailTakenError();
-  const passwordHash = await hashPassword(input.password);
+
+  const isMentoring = input.client_type === 'mentoring';
+
+  // Mentoría: sin contraseña asignada a mano — se crea con passwordHash NULL
+  // y se invita por correo (ver client-invitations.service.ts). Cliente 1:1
+  // conserva el alta manual existente, sin cambios.
+  const passwordHash = isMentoring ? null : await hashPassword(input.password!);
   const [client] = await db
     .insert(clients)
     .values({
@@ -159,9 +149,17 @@ export async function createClient(input: CreateClientInput): Promise<Client> {
       email: emailLower,
       passwordHash,
       plan: input.plan || 'Miembro',
-      mustChangePassword: input.mustChangePassword ?? false,
+      clientType: input.client_type ?? 'coaching_1_1',
+      mustChangePassword: isMentoring ? true : (input.mustChangePassword ?? false),
     })
     .returning();
+
+  if (isMentoring) {
+    const webBaseUrl = process.env.WEB_APP_URL || 'http://localhost:3000';
+    const rawToken = await createInvitation(client.id);
+    await sendClientInvitationEmail(client.email, client.name, `${webBaseUrl}/invitacion?token=${rawToken}`);
+  }
+
   return client;
 }
 
@@ -221,13 +219,7 @@ export async function updateStatus(id: string, status: 'active' | 'inactive'): P
 }
 
 export async function updateClientType(id: string, clientType: string): Promise<Client | null> {
-  const existing = await findClientById(id);
-  if (!existing) return null;
-  const patch: Record<string, unknown> = { clientType };
-  if (clientType === 'lead_wellness') {
-    patch.permissions = { ...(existing.permissions as Record<string, boolean>), cortisol: true, community: true };
-  }
-  return updateClient(id, patch);
+  return updateClient(id, { clientType });
 }
 
 // Único consumidor: el webhook de Stripe (stripe-webhook.controller.ts),

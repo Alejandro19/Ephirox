@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import type { LoginInput, RegisterInput, ChangePasswordInput, GoogleAuthInput, AppleAuthInput, ForgotPasswordInput, ResetPasswordInput, SsoCompleteRegistrationInput } from '@latribu/shared-types';
+import type { LoginInput, ChangePasswordInput, GoogleAuthInput, AppleAuthInput, ForgotPasswordInput, ResetPasswordInput, AcceptInvitationInput } from '@latribu/shared-types';
 import * as authService from '../services/auth.service.js';
 import * as clientsService from '../services/clients.service.js';
 import * as adminsService from '../services/admins.service.js';
@@ -7,7 +7,7 @@ import * as therapistsService from '../services/therapists.service.js';
 import * as googleAuthService from '../services/google-auth.service.js';
 import * as appleAuthService from '../services/apple-auth.service.js';
 import * as passwordResetService from '../services/password-reset.service.js';
-import * as ssoDraftService from '../services/sso-registration-draft.service.js';
+import * as clientInvitationsService from '../services/client-invitations.service.js';
 import { getPersonalInfoByClientId } from '../services/personal-info.service.js';
 import { getResolvedModuleAccess } from '../services/type-module-access.service.js';
 
@@ -16,27 +16,6 @@ function ok(res: Response, data: Record<string, unknown>, status = 200) {
 }
 function err(res: Response, message: string, status = 400) {
   return res.status(status).json({ success: false, error: message });
-}
-
-// Alta de "Club Explorador" (registro directo o SSO con una identidad
-// nueva): activa al instante, misma forma de respuesta que login() para que
-// el frontend reutilice el mismo código de "guardar sesión y navegar" — sin
-// `pending`, con `token` de una.
-async function explorerCreatedResponse(res: Response, client: Awaited<ReturnType<typeof clientsService.createActiveExplorerClient>>) {
-  const token = authService.signToken({ id: client.id, role: 'cliente', name: client.name, email: client.email, plan: client.plan, clientType: client.clientType });
-  const moduleAccess = await getResolvedModuleAccess(client.clientType, client.permissions);
-  return ok(res, {
-    token,
-    role: 'cliente',
-    user: { id: client.id, name: client.name, email: client.email, plan: client.plan },
-    permissions: client.permissions,
-    clientType: client.clientType,
-    moduleAccess,
-    planExpired: false,
-    planEndDate: client.planEndDate,
-    onboardingComplete: false,
-    message: 'Bienvenido al Club como Explorador.',
-  }, 201);
 }
 
 export async function login(req: Request, res: Response) {
@@ -71,6 +50,7 @@ export async function login(req: Request, res: Response) {
     planExpired: authService.isPlanExpired(client),
     planEndDate: client.planEndDate,
     onboardingComplete: Boolean(clientInfo?.completedAt),
+    language: client.language,
   });
 }
 
@@ -97,48 +77,6 @@ export async function therapistLogin(req: Request, res: Response) {
     mustChangePassword: therapist.mustChangePassword,
     user: { id: therapist.id, name: therapist.name, email: therapist.email, specialty: therapist.specialty },
   });
-}
-
-export async function register(req: Request, res: Response) {
-  const { name, email, password, intent, legalAcceptance } = req.body as RegisterInput;
-  const emailLower = email.toLowerCase().trim();
-  const [existingAdmin, existingClient] = await Promise.all([
-    adminsService.findAdminByEmail(emailLower),
-    clientsService.findClientByEmail(emailLower),
-  ]);
-  if (existingAdmin || existingClient) return err(res, 'Ese email ya está registrado.', 409);
-
-  if (intent === 'explorer') {
-    const client = await clientsService.createActiveExplorerClient({ name, email: emailLower, legalAcceptance });
-    return explorerCreatedResponse(res, client);
-  }
-
-  await clientsService.createInactiveClient({ name, email: emailLower, password, legalAcceptance });
-  return ok(res, { pending: true, message: 'Tu cuenta fue creada y quedará activa cuando el administrador la confirme.' }, 201);
-}
-
-// Completa el registro de una identidad SSO (Google/Apple) nueva una vez
-// aceptados los documentos legales — ver googleLogin/appleLogin más abajo,
-// que ya no crean la cuenta directamente para una identidad sin cuenta
-// previa, sino que emiten un draftToken (sso-registration-draft.service.ts)
-// que esta ruta consume.
-export async function completeSsoRegistration(req: Request, res: Response) {
-  const { draftToken, legalAcceptance } = req.body as SsoCompleteRegistrationInput;
-  const draft = await ssoDraftService.consumeSsoDraft(draftToken);
-  if (!draft) return err(res, 'Tu sesión de registro expiró. Intenta de nuevo con Google o Apple.', 401);
-
-  // Guarda de carrera: el draft vive hasta 10 min y en ese tiempo el email
-  // pudo haberse registrado por otra vía (ej. la solicitud de Membresía
-  // Premium, o dos pestañas).
-  const [existingAdmin, existingClient] = await Promise.all([
-    adminsService.findAdminByEmail(draft.email),
-    clientsService.findClientByEmail(draft.email),
-  ]);
-  if (existingAdmin || existingClient) return err(res, 'Ese email ya está registrado.', 409);
-
-  const providerIdField = draft.provider === 'google' ? { googleId: draft.providerSub } : { appleId: draft.providerSub };
-  const client = await clientsService.createActiveExplorerClient({ name: draft.name, email: draft.email, ...providerIdField, legalAcceptance });
-  return explorerCreatedResponse(res, client);
 }
 
 export async function me(req: Request, res: Response) {
@@ -168,6 +106,7 @@ export async function me(req: Request, res: Response) {
     planExpired: authService.isPlanExpired(client),
     planEndDate: client.planEndDate,
     onboardingComplete: Boolean(clientInfo?.completedAt),
+    language: client.language,
   });
 }
 
@@ -253,6 +192,40 @@ export async function resetPassword(req: Request, res: Response) {
   return ok(res, { message: 'Contraseña actualizada. Ya puedes iniciar sesión.' });
 }
 
+// Canjea el token de invitación por una contraseña + sesión activa
+// (auto-login) — el cliente nunca ve /login tras crear su contraseña, cae
+// directo en /onboarding. Mismo endpoint "canjear secreto por sesión" que
+// /reset-password, mismo riesgo de fuerza bruta sobre el token → loginLimiter
+// en la ruta (ver auth.routes.ts).
+export async function acceptInvitation(req: Request, res: Response) {
+  const { token, password } = req.body as AcceptInvitationInput;
+  const consumed = await clientInvitationsService.consumeInvitation(token);
+  if (!consumed.ok) {
+    return err(res, 'Este enlace venció o ya fue usado. Pide al equipo que te reenvíe la invitación.', 400);
+  }
+
+  const passwordHash = await authService.hashPassword(password);
+  await clientsService.updateClientPassword(consumed.clientId, passwordHash);
+
+  const client = await clientsService.findClientById(consumed.clientId);
+  if (!client) return err(res, 'No encontrado.', 404);
+
+  const tokenJwt = authService.signToken({ id: client.id, role: 'cliente', name: client.name, email: client.email, plan: client.plan, clientType: client.clientType });
+  const moduleAccess = await getResolvedModuleAccess(client.clientType, client.permissions);
+  return ok(res, {
+    token: tokenJwt,
+    role: 'cliente',
+    user: { id: client.id, name: client.name, email: client.email, plan: client.plan },
+    permissions: client.permissions,
+    clientType: client.clientType,
+    moduleAccess,
+    planExpired: authService.isPlanExpired(client),
+    planEndDate: client.planEndDate,
+    onboardingComplete: false,
+    language: client.language,
+  });
+}
+
 export async function googleLogin(req: Request, res: Response) {
   if (!process.env.GOOGLE_CLIENT_ID) return err(res, 'Login con Google no está configurado en el servidor.', 503);
   const { credential } = req.body as GoogleAuthInput;
@@ -264,7 +237,6 @@ export async function googleLogin(req: Request, res: Response) {
 
   const emailLower = payload.email.toLowerCase().trim();
   const googleId = payload.sub;
-  const displayName = payload.name || emailLower;
 
   const admin = await adminsService.findAdminByEmail(emailLower);
   if (admin) {
@@ -292,18 +264,13 @@ export async function googleLogin(req: Request, res: Response) {
       moduleAccess,
       planExpired: authService.isPlanExpired(client),
       planEndDate: client.planEndDate,
+      language: client.language,
     });
   }
 
-  // Regla unificada: cualquier identidad nueva por SSO se vuelve Club
-  // Explorador — el SSO nunca es una vía directa a un tier pago ni pasa por
-  // la cola de aprobación de la solicitud Premium. Pero antes de crear la
-  // cuenta, exige el paso de aceptación legal: se emite un borrador de un
-  // solo uso (sso-registration-draft.service.ts) y el frontend debe
-  // completar POST /auth/sso/complete-registration con el consentimiento
-  // antes de que la cuenta llegue a existir.
-  const draftToken = await ssoDraftService.createSsoDraft({ provider: 'google', providerSub: googleId, email: emailLower, name: displayName });
-  return ok(res, { needsConsent: true, provider: 'google', draftToken });
+  // El alta de cliente es exclusivamente manual desde el panel admin — una
+  // identidad de Google sin cuenta previa nunca crea una por su cuenta.
+  return err(res, 'No existe una cuenta asociada a este correo. Contacta al administrador para que te dé acceso.', 403);
 }
 
 export async function appleLogin(req: Request, res: Response) {
@@ -318,7 +285,6 @@ export async function appleLogin(req: Request, res: Response) {
 
   const emailLower = payload.email.toLowerCase().trim();
   const appleId = payload.sub;
-  const displayName = name || emailLower;
 
   const admin = await adminsService.findAdminByEmail(emailLower);
   if (admin) {
@@ -343,10 +309,10 @@ export async function appleLogin(req: Request, res: Response) {
       moduleAccess,
       planExpired: authService.isPlanExpired(client),
       planEndDate: client.planEndDate,
+      language: client.language,
     });
   }
 
-  // Misma regla en dos fases que Google — ver comentario arriba.
-  const draftToken = await ssoDraftService.createSsoDraft({ provider: 'apple', providerSub: appleId, email: emailLower, name: displayName });
-  return ok(res, { needsConsent: true, provider: 'apple', draftToken });
+  // Misma regla que Google — ver comentario arriba.
+  return err(res, 'No existe una cuenta asociada a este correo. Contacta al administrador para que te dé acceso.', 403);
 }

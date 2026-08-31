@@ -5,7 +5,6 @@ import useSWR from 'swr';
 import { listEvents, reserveEvent, cancelEventReservation, listMyEventReservations } from '../../lib/events-client';
 import { listTherapies, reserveTherapy, cancelTherapyReservation, listMyTherapyReservations } from '../../lib/therapies-client';
 import { listRetreats, reserveRetreat, cancelRetreatReservation, listMyRetreatReservations } from '../../lib/retreats-client';
-import { fetchClient } from '../../lib/clients-client';
 import { PermissionDeniedError } from '../../lib/api-client';
 import { pickMantra } from '../../lib/mantra-bank';
 import { formatEventDateTime } from '../../lib/community-logic';
@@ -15,32 +14,28 @@ import LockedBenefit from '../ui/LockedBenefit';
 import EmptyState from '../ui/EmptyState';
 import { IconFlame } from '../ui/icons';
 import { EventCard, TherapyCard, RetreatCard } from './CommunityVisuals';
+import Button from '../ui/Button';
 
 function ReserveButton({ reserved, onReserve, onCancel }: { reserved: boolean; onReserve: () => void; onCancel: () => void }) {
   return reserved ? (
-    <button
-      type="button"
-      onClick={onCancel}
-      className="mt-4 h-11 w-full rounded-full border border-[var(--border-input)] text-sm font-semibold text-[var(--ink)]"
-    >
+    <Button type="button" variant="secondary" onClick={onCancel} className="mt-4 w-full">
       Cancelar reserva
-    </button>
+    </Button>
   ) : (
-    <button type="button" onClick={onReserve} className="mt-4 h-11 w-full rounded-full bg-[var(--ink)] text-sm font-semibold text-white">
+    <Button type="button" variant="primary" onClick={onReserve} className="mt-4 w-full">
       Reservar mi lugar
-    </button>
+    </Button>
   );
 }
 
 async function fetchCommunityBundle(clientId: string) {
-  const [eventsList, therapiesList, retreatsList, myEvents, myTherapies, myRetreats, client] = await Promise.all([
+  const [eventsList, therapiesList, retreatsList, myEvents, myTherapies, myRetreats] = await Promise.all([
     listEvents(),
     listTherapies().catch(() => []),
     listRetreats().catch(() => []),
     listMyEventReservations(clientId).catch(() => []),
     listMyTherapyReservations(clientId).catch(() => []),
     listMyRetreatReservations(clientId).catch(() => []),
-    fetchClient(clientId).catch(() => null),
   ]);
   return {
     events: eventsList,
@@ -49,11 +44,6 @@ async function fetchCommunityBundle(clientId: string) {
     myEventReservations: myEvents,
     myTherapyReservations: myTherapies,
     myRetreatReservations: myRetreats,
-    // Eventos nunca cambia por tipo de cliente; Terapias y Retiros (experiencia
-    // premium/paga) se bloquean solo para lead_wellness — 1:1 y online se
-    // comportan igual.
-    therapiesUnlocked: client?.clientType !== 'lead_wellness',
-    retreatsUnlocked: client?.clientType !== 'lead_wellness',
   };
 }
 
@@ -116,7 +106,7 @@ export function ClientCommunityPanel({ clientId }: { clientId: string }) {
 
   const header = (
     <>
-      <IdentityHeader title="La tribu esta semana" subtitle="Presencia, no competencia." />
+      <IdentityHeader title="The Circle" subtitle="Acceso reservado a quienes lideran al mismo nivel que tú." />
       {mantra && <MantraCard mantra={mantra} />}
     </>
   );
@@ -125,7 +115,7 @@ export function ClientCommunityPanel({ clientId }: { clientId: string }) {
     return (
       <div>
         {header}
-        <p className="text-sm text-[var(--ink-secondary)]">Cargando el Club…</p>
+        <p className="text-sm text-[var(--eph-muted)]">Cargando The Circle…</p>
       </div>
     );
   }
@@ -133,7 +123,7 @@ export function ClientCommunityPanel({ clientId }: { clientId: string }) {
     return (
       <div>
         {header}
-        <LockedBenefit variant="upgrade" benefit="la comunidad y sus beneficios" />
+        <LockedBenefit benefit="The Circle y sus beneficios" />
       </div>
     );
   }
@@ -142,7 +132,7 @@ export function ClientCommunityPanel({ clientId }: { clientId: string }) {
     return (
       <div>
         {header}
-        <p role="alert" className="text-[var(--danger)]">
+        <p role="alert" className="font-body" style={{ color: '#D99483' }}>
           {error}
         </p>
       </div>
@@ -150,7 +140,7 @@ export function ClientCommunityPanel({ clientId }: { clientId: string }) {
   }
   if (!data) return null;
 
-  const { events, therapies, retreats, myEventReservations, myTherapyReservations, myRetreatReservations, therapiesUnlocked, retreatsUnlocked } = data;
+  const { events, therapies, retreats, myEventReservations, myTherapyReservations, myRetreatReservations } = data;
   const nextEvent = events[0];
   const nextEventConfirmed = nextEvent?.confirmed_count || 0;
 
@@ -222,22 +212,22 @@ export function ClientCommunityPanel({ clientId }: { clientId: string }) {
       {header}
 
       <div
-        className="relative mt-8 mb-6 overflow-hidden rounded-[var(--radius-hero)] p-7"
-        style={{ background: 'var(--hero-espresso)', color: 'var(--hero-espresso-text)' }}
+        className="relative mt-8 mb-6 overflow-hidden rounded-[0] p-7"
+        style={{ background: 'var(--eph-surface)', color: 'var(--eph-text)' }}
       >
         <div
           className="pointer-events-none absolute -right-10 -top-10 h-[180px] w-[180px] rounded-full"
           style={{ background: 'radial-gradient(circle, rgba(217,183,126,.18) 0%, transparent 70%)' }}
         />
-        <p className="relative z-10 mb-2 text-[11px] font-bold uppercase tracking-wider" style={{ color: 'var(--hero-espresso-accent)' }}>{nextEvent ? 'Próximo evento' : 'Club Wellness'}</p>
-        <p className="relative z-10 mb-1 font-serif text-2xl font-bold">{nextEvent ? nextEvent.title : 'Aún no hay eventos programados'}</p>
-        <p className="relative z-10 text-sm" style={{ color: 'var(--hero-espresso-text-muted)' }}>
+        <p className="relative z-10 mb-2 font-mono text-[10px] uppercase tracking-[0.14em]" style={{ color: 'var(--eph-accent)' }}>{nextEvent ? 'Próximo evento' : 'The Circle'}</p>
+        <p className="relative z-10 mb-1 font-display text-2xl font-normal">{nextEvent ? nextEvent.title : 'Aún no hay eventos programados'}</p>
+        <p className="relative z-10 font-body text-sm" style={{ color: 'var(--eph-muted)' }}>
           {nextEvent
             ? `${formatEventDateTime(nextEvent.eventDate)}${nextEvent.location ? ' · ' + nextEvent.location : ''}`
             : 'Tu coach publicará el próximo evento pronto.'}
         </p>
         {nextEventConfirmed > 0 && (
-          <p className="relative z-10 mt-1.5 flex items-center gap-1.5 text-[11px] font-semibold" style={{ color: 'var(--hero-espresso-accent)' }}>
+          <p className="relative z-10 mt-1.5 flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.06em]" style={{ color: 'var(--eph-accent)' }}>
             <IconFlame size={12} /> {nextEventConfirmed} persona{nextEventConfirmed === 1 ? '' : 's'} ya confirmaron su lugar
           </p>
         )}
@@ -247,68 +237,36 @@ export function ClientCommunityPanel({ clientId }: { clientId: string }) {
         <button
           type="button"
           onClick={() => setTab('events')}
-          className="h-10 rounded-full px-5 text-sm font-semibold transition-colors"
+          className="h-10 rounded-none px-5 font-mono text-[10px] uppercase tracking-[0.1em] transition-colors"
           style={tab === 'events'
-            ? { background: 'var(--hero-piedra-accent)', color: '#fff' }
-            : { border: '1px solid var(--border-input)', color: 'var(--ink-secondary)' }}
+            ? { background: 'var(--eph-accent)', color: 'var(--eph-ink)' }
+            : { border: '1px solid var(--eph-line-2)', color: 'var(--eph-muted)' }}
         >
           Eventos
         </button>
         <button
           type="button"
           onClick={() => setTab('therapies')}
-          className="h-10 rounded-full px-5 text-sm font-semibold transition-colors"
+          className="h-10 rounded-none px-5 font-mono text-[10px] uppercase tracking-[0.1em] transition-colors"
           style={tab === 'therapies'
-            ? { background: 'var(--hero-piedra-accent)', color: '#fff' }
-            : { border: '1px solid var(--border-input)', color: 'var(--ink-secondary)' }}
+            ? { background: 'var(--eph-accent)', color: 'var(--eph-ink)' }
+            : { border: '1px solid var(--eph-line-2)', color: 'var(--eph-muted)' }}
         >
           Terapias
         </button>
         <button
           type="button"
           onClick={() => setTab('retreats')}
-          className="h-10 rounded-full px-5 text-sm font-semibold transition-colors"
+          className="h-10 rounded-none px-5 font-mono text-[10px] uppercase tracking-[0.1em] transition-colors"
           style={tab === 'retreats'
-            ? { background: 'var(--hero-piedra-accent)', color: '#fff' }
-            : { border: '1px solid var(--border-input)', color: 'var(--ink-secondary)' }}
+            ? { background: 'var(--eph-accent)', color: 'var(--eph-ink)' }
+            : { border: '1px solid var(--eph-line-2)', color: 'var(--eph-muted)' }}
         >
           Retiros
         </button>
       </div>
 
-      {tab === 'events' ? (
-        eventsBody
-      ) : tab === 'therapies' ? (
-        therapiesUnlocked ? (
-          therapiesBody
-        ) : (
-          <LockedBenefit variant="upgrade" benefit="descuentos reales en spa, terapia, fisioterapia">
-            {therapies.length > 0 ? (
-              <div className="space-y-4">
-                {therapies.slice(0, 3).map((t) => (
-                  <TherapyCard key={t.id} therapy={t} />
-                ))}
-              </div>
-            ) : (
-              <EmptyState message="No hay terapias disponibles por ahora." />
-            )}
-          </LockedBenefit>
-        )
-      ) : retreatsUnlocked ? (
-        retreatsBody
-      ) : (
-        <LockedBenefit variant="upgrade" benefit="reservar retiros">
-          {retreats.length > 0 ? (
-            <div className="space-y-4">
-              {retreats.slice(0, 3).map((r) => (
-                <RetreatCard key={r.id} retreat={r} />
-              ))}
-            </div>
-          ) : (
-            <EmptyState message="No hay retiros disponibles por ahora." />
-          )}
-        </LockedBenefit>
-      )}
+      {tab === 'events' ? eventsBody : tab === 'therapies' ? therapiesBody : retreatsBody}
     </div>
   );
 }

@@ -19,15 +19,20 @@ import IdentityHeader from '../ui/IdentityHeader';
 import MantraCard from '../ui/MantraCard';
 import LockedBenefit from '../ui/LockedBenefit';
 import EmptyState from '../ui/EmptyState';
+import { ProtocolDisclaimerFooter } from '../ui/ProtocolDisclaimerFooter';
 import { RestToolsClientPanel } from './RestToolsClientPanel';
+import { InsightsSection } from '../insights/InsightsSection';
 
 // ─── Hipnograma ─────────────────────────────────────────────────
+// Rampa tonal steel→bronce (en vez de la paleta lila anterior) — mantiene la
+// diferenciación real entre fases de sueño sin salirse de los tokens
+// Ephirox: --eph-steel está reservado justo para este tipo de dato clínico.
 
 const PHASES = [
-  { key: 'despierto', label: 'despierto', color: 'rgba(255,255,255,.35)' },
-  { key: 'profundo', label: 'profundo', color: '#5B3F82' },
-  { key: 'rem', label: 'REM', color: '#8A5FA0' },
-  { key: 'ligero', label: 'ligero', color: '#C6B4E0' },
+  { key: 'despierto', label: 'despierto', color: 'rgba(237,230,220,.18)' },
+  { key: 'ligero', label: 'ligero', color: 'rgba(126,138,147,.45)' },
+  { key: 'rem', label: 'REM', color: 'var(--eph-steel)' },
+  { key: 'profundo', label: 'profundo', color: 'var(--eph-accent)' },
 ] as const;
 
 function Hypnogram({ despierto, profundo, rem, ligero }: { despierto: number; profundo: number; rem: number; ligero: number }) {
@@ -36,12 +41,12 @@ function Hypnogram({ despierto, profundo, rem, ligero }: { despierto: number; pr
 
   return (
     <div>
-      <div className="flex h-2.5 w-full overflow-hidden rounded-full">
+      <div className="flex h-[3px] w-full overflow-hidden">
         {PHASES.map((p) => (
           <div key={p.key} style={{ width: `${(minutesByKey[p.key] / total) * 100}%`, background: p.color }} />
         ))}
       </div>
-      <div className="mt-2.5 flex flex-wrap gap-x-4 gap-y-1 text-[11px] opacity-80">
+      <div className="mt-2.5 flex flex-wrap gap-x-4 gap-y-1 font-mono text-[10px] uppercase tracking-[0.06em] opacity-80">
         {PHASES.map((p) => (
           <span key={p.key} className="inline-flex items-center gap-1.5">
             <span className="inline-block h-2 w-2 rounded-full" style={{ background: p.color }} />
@@ -72,7 +77,7 @@ function SyncIcon() {
 function SyncHero({ latest, ultimaSync }: { latest: WearableMetrica | null; ultimaSync: string | null }) {
   if (!latest) {
     return (
-      <div className="relative mt-8 mb-5 overflow-hidden rounded-[var(--radius-hero)] p-7" style={{ background: 'var(--hero-espresso)', color: 'var(--hero-espresso-text)' }}>
+      <div className="relative mt-8 mb-5 overflow-hidden rounded-[0] p-7" style={{ background: 'var(--eph-surface)', color: 'var(--eph-text)' }}>
         <div
           className="pointer-events-none absolute -right-10 -top-10 h-[180px] w-[180px] rounded-full"
           style={{ background: 'radial-gradient(circle, rgba(217,183,126,.18) 0%, transparent 70%)' }}
@@ -89,25 +94,25 @@ function SyncHero({ latest, ultimaSync }: { latest: WearableMetrica | null; ulti
   const despierto = Math.max(0, totalMin - (profundo + rem + ligero));
 
   return (
-    <div className="relative mt-8 mb-5 overflow-hidden rounded-[var(--radius-hero)] p-7" style={{ background: 'var(--hero-espresso)', color: 'var(--hero-espresso-text)' }}>
+    <div className="relative mt-8 mb-5 overflow-hidden rounded-[0] p-7" style={{ background: 'var(--eph-surface)', color: 'var(--eph-text)' }}>
       <div
         className="pointer-events-none absolute -right-10 -top-10 h-[180px] w-[180px] rounded-full"
         style={{ background: 'radial-gradient(circle, rgba(217,183,126,.18) 0%, transparent 70%)' }}
       />
-      <div className="relative z-10 mb-4 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wide" style={{ color: 'var(--hero-espresso-accent)' }}>
+      <div className="relative z-10 mb-4 flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.1em]" style={{ color: 'var(--eph-accent)' }}>
         <span className="inline-flex items-center gap-1.5">
           <SyncIcon /> Sincronizado con Oura {ultimaSync ? `· ${formatRelativeSync(ultimaSync)}` : ''}
         </span>
-        <span className="normal-case tracking-normal" style={{ color: 'var(--hero-espresso-text-muted)' }}>Anoche</span>
+        <span className="normal-case tracking-normal" style={{ color: 'var(--eph-muted)' }}>Anoche</span>
       </div>
 
       <div className="relative z-10 mb-1 flex items-start justify-between gap-3">
-        <p className="font-serif text-4xl font-bold leading-none">{latest.suenoScore ?? '—'}</p>
-        <p className="text-right font-serif text-lg font-semibold">{formatMinutesDuration(totalMin)}</p>
+        <p className="font-display text-4xl leading-none">{latest.suenoScore ?? '—'}</p>
+        <p className="text-right font-display text-lg">{formatMinutesDuration(totalMin)}</p>
       </div>
       <div className="relative z-10 mb-5 flex items-start justify-between gap-3">
-        <p className="text-sm" style={{ color: 'var(--hero-espresso-text-muted)' }}>puntaje de sueño · {sleepScoreLabel(latest.suenoScore)}</p>
-        {latest.horaDormir && <p className="text-right text-xs" style={{ color: 'var(--hero-espresso-text-muted)' }}>te dormiste {formatClockTime(latest.horaDormir)}</p>}
+        <p className="font-body text-sm" style={{ color: 'var(--eph-muted)' }}>puntaje de sueño · {sleepScoreLabel(latest.suenoScore)}</p>
+        {latest.horaDormir && <p className="text-right font-body text-xs" style={{ color: 'var(--eph-muted)' }}>te dormiste {formatClockTime(latest.horaDormir)}</p>}
       </div>
 
       <div className="relative z-10">
@@ -121,11 +126,11 @@ function SyncHero({ latest, ultimaSync }: { latest: WearableMetrica | null; ulti
 
 function MetricCard({ label, value, caption, captionColor }: { label: string; value: string; caption?: string; captionColor?: string }) {
   return (
-    <div className="rounded-xl bg-[var(--page-bg)] p-4">
-      <p className="mb-1 text-[11px] font-semibold text-[var(--ink-secondary)]">{label}</p>
-      <p className="font-serif text-xl font-bold text-[var(--ink)]">{value}</p>
+    <div className="border p-4" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface-2)' }}>
+      <p className="mb-1 font-mono text-[10px] uppercase tracking-[0.08em]" style={{ color: 'var(--eph-muted)' }}>{label}</p>
+      <p className="font-display text-xl" style={{ color: 'var(--eph-text)' }}>{value}</p>
       {caption && (
-        <p className="mt-1 text-[11px]" style={{ color: captionColor || 'var(--ink-secondary)' }}>
+        <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.06em]" style={{ color: captionColor || 'var(--eph-muted)' }}>
           {caption}
         </p>
       )}
@@ -146,7 +151,7 @@ function RecoveryMetricsRow({ latest, previous }: { latest: WearableMetrica; pre
         label="HRV"
         value={latest.hrvNocturno != null ? `${latest.hrvNocturno} ms` : '—'}
         caption={hrvPct != null ? `${hrvPct >= 0 ? '↑' : '↓'} ${Math.abs(hrvPct)}% vs. prom.` : undefined}
-        captionColor={hrvPct != null && hrvPct >= 0 ? 'var(--hero-espresso-accent)' : 'var(--danger)'}
+        captionColor={hrvPct != null && hrvPct >= 0 ? 'var(--eph-accent)' : '#D99483'}
       />
       <MetricCard label="FC reposo" value={latest.fcReposo != null ? `${latest.fcReposo} bpm` : '—'} caption="estable" />
       <MetricCard label="Temp. piel" value={tempDelta != null ? `${tempDelta >= 0 ? '+' : ''}${tempDelta.toFixed(1)}°` : '—'} caption="vs. tu base" />
@@ -166,8 +171,8 @@ function TrendChart({ points }: { points: WearableMetrica[] }) {
   const scores = points.map((p) => p.suenoScore).filter((s): s is number => s != null);
   if (!scores.length) {
     return (
-      <section className="rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--paper)] p-6 mb-5">
-        <h2 className="mb-4 font-serif text-lg font-bold text-[var(--ink)]">Tendencia · últimos 7 días</h2>
+      <section className="border p-6 mb-5" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface)' }}>
+        <h2 className="mb-4 font-display text-lg" style={{ color: 'var(--eph-text)' }}>Tendencia · últimos 7 días</h2>
         <EmptyState message="Aún no hay suficientes días sincronizados para ver la tendencia." />
       </section>
     );
@@ -191,23 +196,23 @@ function TrendChart({ points }: { points: WearableMetrica[] }) {
   for (let v = yMin; v <= yMax; v += 10) gridValues.push(v);
 
   return (
-    <section className="rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--paper)] p-6 mb-5">
-      <h2 className="mb-4 font-serif text-lg font-bold text-[var(--ink)]">Tendencia · últimos 7 días</h2>
+    <section className="border p-6 mb-5" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface)' }}>
+      <h2 className="mb-4 font-display text-lg" style={{ color: 'var(--eph-text)' }}>Tendencia · últimos 7 días</h2>
       <svg viewBox={`0 0 ${w} ${h}`} className="w-full" style={{ height: 180 }} role="img" aria-label="Tendencia del puntaje de sueño de los últimos 7 días">
         {gridValues.map((v) => (
           <g key={v}>
-            <line x1={padL} x2={w - padR} y1={yFor(v)} y2={yFor(v)} stroke="var(--border-hairline)" strokeWidth={1} />
-            <text x={0} y={yFor(v) + 3} fontSize={10} fill="var(--ink-secondary)">
+            <line x1={padL} x2={w - padR} y1={yFor(v)} y2={yFor(v)} stroke="var(--eph-line)" strokeWidth={1} />
+            <text x={0} y={yFor(v) + 3} fontSize={10} fill="var(--eph-muted)">
               {v}
             </text>
           </g>
         ))}
-        <polyline points={linePoints} fill="none" stroke="#8A5FA0" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
+        <polyline points={linePoints} fill="none" stroke="var(--eph-accent)" strokeWidth={1.5} strokeLinecap="butt" strokeLinejoin="round" />
         {points.map((p, i) =>
-          p.suenoScore != null ? <circle key={p.id} cx={xFor(i)} cy={yFor(p.suenoScore)} r={3.5} fill="#8A5FA0" /> : null
+          p.suenoScore != null ? <circle key={p.id} cx={xFor(i)} cy={yFor(p.suenoScore)} r={3} fill="var(--eph-accent)" /> : null
         )}
         {points.map((p, i) => (
-          <text key={`${p.id}-label`} x={xFor(i)} y={h - 4} fontSize={10} fill="var(--ink-secondary)" textAnchor="middle">
+          <text key={`${p.id}-label`} x={xFor(i)} y={h - 4} fontSize={10} fill="var(--eph-muted)" textAnchor="middle">
             {shortWeekday(p.fecha)}
           </text>
         ))}
@@ -224,10 +229,10 @@ function TrendChart({ points }: { points: WearableMetrica[] }) {
 function renderProtocolLine(line: string, key: number) {
   const parts = line.split(/(\*\*[^*]+\*\*)/g).filter(Boolean);
   return (
-    <p key={key} className="font-serif text-[13.5px] italic leading-relaxed text-[var(--ink)]">
+    <p key={key} className="font-display text-[14.5px] italic leading-relaxed" style={{ color: 'var(--eph-text)' }}>
       {parts.map((part, i) =>
         part.startsWith('**') && part.endsWith('**') ? (
-          <span key={i} className="font-semibold not-italic text-[var(--ink)]">
+          <span key={i} className="not-italic" style={{ color: 'var(--eph-accent)' }}>
             {part.slice(2, -2)}
           </span>
         ) : (
@@ -242,18 +247,18 @@ function ProtocolCard({ protocol }: { protocol: SleepProtocol }) {
   const lines = (protocol?.protocolText || '').split('\n').map((l) => l.trim()).filter(Boolean);
 
   return (
-    <section className="rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--paper)] p-6 mb-5">
-      <p className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--ink)]">Actualizado con tu data</p>
-      <h2 className="mb-3.5 font-serif text-lg font-bold text-[var(--ink)]">Tu protocolo de sueño personalizado</h2>
+    <section className="border p-6 mb-5" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface)' }}>
+      <p className="mb-1.5 font-mono text-[10px] uppercase tracking-[0.1em]" style={{ color: 'var(--eph-muted)' }}>Actualizado con tu data</p>
+      <h2 className="mb-3.5 font-display text-lg" style={{ color: 'var(--eph-text)' }}>Tu protocolo de sueño personalizado</h2>
       {lines.length ? (
         <div className="space-y-2">{lines.map((line, i) => renderProtocolLine(line, i))}</div>
       ) : (
         <EmptyState message="Tu mentor está preparando tu protocolo personalizado." />
       )}
       {protocol?.supplement && (
-        <div className="mt-4 border-t border-[var(--border-hairline)] pt-4">
-          <p className="mb-0.5 text-[9px] font-bold uppercase tracking-[0.08em] text-[var(--ink)]">Suplemento sugerido</p>
-          <p className="font-serif text-sm font-semibold text-[var(--ink)]">{protocol.supplement}</p>
+        <div className="mt-4 border-t pt-4" style={{ borderColor: 'var(--eph-line)' }}>
+          <p className="mb-0.5 font-mono text-[9px] uppercase tracking-[0.1em]" style={{ color: 'var(--eph-muted)' }}>Suplemento sugerido</p>
+          <p className="font-display text-sm" style={{ color: 'var(--eph-text)' }}>{protocol.supplement}</p>
         </div>
       )}
     </section>
@@ -290,7 +295,7 @@ export function ClientRestPanel({ clientId }: { clientId: string }) {
 
   const header = (
     <>
-      <IdentityHeader title="Hackeando el sueño" subtitle="Tu recuperación nocturna, medida por tu wearable." />
+      <IdentityHeader title="Sleep" subtitle="Tu recuperación nocturna, medida por tu wearable." />
       {mantra && <MantraCard mantra={mantra} />}
     </>
   );
@@ -299,7 +304,7 @@ export function ClientRestPanel({ clientId }: { clientId: string }) {
     return (
       <div>
         {header}
-        <p className="text-sm text-[var(--ink-secondary)]">Cargando tu recuperación…</p>
+        <p className="text-sm text-[var(--eph-muted)]">Cargando tu recuperación…</p>
       </div>
     );
   }
@@ -307,7 +312,7 @@ export function ClientRestPanel({ clientId }: { clientId: string }) {
     return (
       <div>
         {header}
-        <LockedBenefit variant="upgrade" benefit="tu protocolo de sueño y descanso" />
+        <LockedBenefit benefit="tu protocolo de sueño y descanso" />
       </div>
     );
   }
@@ -315,7 +320,7 @@ export function ClientRestPanel({ clientId }: { clientId: string }) {
     return (
       <div>
         {header}
-        <p role="alert" className="text-[var(--danger)]">{(error as Error).message}</p>
+        <p role="alert" className="font-body" style={{ color: '#D99483' }}>{(error as Error).message}</p>
       </div>
     );
   }
@@ -342,12 +347,16 @@ export function ClientRestPanel({ clientId }: { clientId: string }) {
     <div>
       {header}
       {mentoring ? (
-        body
+        <>
+          <InsightsSection clientId={clientId} moduleKey="sueno" />
+          {body}
+        </>
       ) : (
-        <LockedBenefit variant="upgrade" requiredLevel="Club Elite" benefit="tu protocolo de sueño personalizado y el seguimiento con wearable">
+        <LockedBenefit benefit="tu protocolo de sueño personalizado y el seguimiento con wearable">
           {body}
         </LockedBenefit>
       )}
+      <ProtocolDisclaimerFooter />
     </div>
   );
 }

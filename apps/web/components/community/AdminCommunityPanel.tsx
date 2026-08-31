@@ -10,64 +10,63 @@ import { formatEventDateTime } from '../../lib/community-logic';
 import { showToast } from '../layout/AppShell';
 import Accordion from '../ui/Accordion';
 import EmptyState from '../ui/EmptyState';
-import LockedBenefit from '../ui/LockedBenefit';
 import ImageField from '../ui/ImageField';
 import { TherapyCard, RetreatCard } from './CommunityVisuals';
 
 const cardStyle: React.CSSProperties = {
-  background: 'var(--paper)', border: '1px solid var(--border-hairline)',
-  borderRadius: 'var(--radius-card)', padding: '22px 24px', marginBottom: 20,
+  background: 'var(--eph-surface)', border: '1px solid var(--eph-line)',
+  borderRadius: '0', padding: '22px 24px', marginBottom: 20,
 };
 const cardTitleStyle: React.CSSProperties = {
-  fontSize: 15, fontWeight: 700, color: 'var(--ink)', margin: '0 0 16px',
+  fontFamily: 'var(--font-cormorant), Georgia, serif', fontSize: 18, fontWeight: 400, color: 'var(--eph-text)', margin: '0 0 16px',
 };
 const labelStyle: React.CSSProperties = {
-  display: 'block', fontSize: 12, fontWeight: 400, color: 'var(--ink-secondary)', marginBottom: 4,
+  display: 'block', fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', fontSize: 10,
+  textTransform: 'uppercase', letterSpacing: '0.14em', fontWeight: 400, color: 'var(--eph-muted)', marginBottom: 6,
 };
 const fieldStyle: React.CSSProperties = {
-  width: '100%', height: 32, borderRadius: 0, border: 'none', borderBottom: '1px solid var(--border-input)',
-  padding: '0 2px 6px', fontSize: 14.5, fontWeight: 600, background: 'transparent', color: 'var(--ink)',
+  width: '100%', height: 32, borderRadius: 0, border: 'none', borderBottom: '1px solid var(--eph-line-2)',
+  padding: '0 2px 6px', fontSize: 15, fontWeight: 400, background: 'transparent', color: 'var(--eph-text)',
   outline: 'none', boxSizing: 'border-box',
 };
 const textareaStyle: React.CSSProperties = {
-  width: '100%', borderRadius: 10, border: '1px solid var(--border-hairline)',
-  padding: 10, fontSize: 14.5, fontWeight: 600, background: 'var(--paper)', color: 'var(--ink)',
+  width: '100%', borderRadius: 0, border: '1px solid var(--eph-line)',
+  padding: 10, fontSize: 15, fontWeight: 400, background: 'var(--eph-surface)', color: 'var(--eph-text)',
   outline: 'none', boxSizing: 'border-box', minHeight: 72, resize: 'vertical', fontFamily: 'inherit',
 };
 const primaryButtonStyle: React.CSSProperties = {
-  height: 40, padding: '0 22px', borderRadius: 9999, border: 'none',
-  background: 'var(--ring-accent)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+  height: 40, padding: '0 22px', borderRadius: 0, border: 'none',
+  fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
+  background: 'var(--eph-accent)', color: 'var(--eph-ink)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.14em', cursor: 'pointer',
 };
 const ghostButtonStyle: React.CSSProperties = {
-  height: 32, padding: '0 14px', borderRadius: 9999, border: '1px solid var(--border-hairline)',
-  background: 'transparent', color: 'var(--ink-secondary)', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+  height: 32, padding: '0 14px', borderRadius: 0, border: '1px solid var(--eph-line-2)',
+  fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
+  background: 'transparent', color: 'var(--eph-body)', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', cursor: 'pointer',
 };
 const dangerButtonStyle: React.CSSProperties = {
-  height: 32, padding: '0 14px', borderRadius: 9999, border: '1px solid var(--danger)',
-  background: 'transparent', color: 'var(--danger)', fontSize: 12, fontWeight: 600, cursor: 'pointer', flexShrink: 0,
+  height: 32, padding: '0 14px', borderRadius: 0, border: '1px solid var(--eph-danger)',
+  fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
+  background: 'transparent', color: '#D99483', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', cursor: 'pointer', flexShrink: 0,
 };
 function tabButtonStyle(active: boolean): React.CSSProperties {
   return {
-    height: 38, padding: '0 20px', borderRadius: 9999, fontSize: 13, fontWeight: 700, cursor: 'pointer',
-    border: active ? 'none' : '1px solid var(--border-hairline)',
-    background: active ? 'var(--ring-accent)' : 'transparent',
-    color: active ? '#fff' : 'var(--ink-secondary)',
+    height: 38, padding: '0 20px', borderRadius: 0, fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
+    fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', cursor: 'pointer',
+    border: active ? 'none' : '1px solid var(--eph-line-2)',
+    background: active ? 'var(--eph-accent)' : 'transparent',
+    color: active ? 'var(--eph-ink)' : 'var(--eph-muted)',
   };
 }
 function segmentButtonStyle(active: boolean): React.CSSProperties {
   return {
-    flex: 1, height: 36, borderRadius: 9999, fontSize: 13, fontWeight: 700, cursor: 'pointer',
-    border: active ? 'none' : '1px solid var(--border-hairline)',
-    background: active ? 'var(--ink)' : 'transparent',
-    color: active ? '#fff' : 'var(--ink-secondary)',
+    flex: 1, height: 36, borderRadius: 0, fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
+    fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', cursor: 'pointer',
+    border: active ? 'none' : '1px solid var(--eph-line-2)',
+    background: active ? 'var(--eph-accent)' : 'transparent',
+    color: active ? 'var(--eph-ink)' : 'var(--eph-muted)',
   };
 }
-
-const PREVIEW_TYPES: { key: string; label: string }[] = [
-  { key: 'coaching_1_1', label: 'Coaching 1:1' },
-  { key: 'coaching_online', label: 'Coaching Online' },
-  { key: 'lead_wellness', label: 'Lead Wellness' },
-];
 
 function PublishedRow({
   title, badge, meta, active, onToggleActive, onDelete, onEdit,
@@ -75,10 +74,10 @@ function PublishedRow({
   title: string; badge?: React.ReactNode; meta: string; active: boolean; onToggleActive: () => void; onDelete: () => void; onEdit?: () => void;
 }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 0', borderBottom: '1px solid var(--border-hairline)', opacity: active ? 1 : 0.5 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 0', borderBottom: '1px solid var(--eph-line)', opacity: active ? 1 : 0.5 }}>
       <div style={{ flex: 1 }}>
         <strong>{title}</strong> {badge}
-        <div style={{ fontSize: 12, color: 'var(--ink-secondary)', marginTop: 2 }}>{meta}</div>
+        <div style={{ fontSize: 12, color: 'var(--eph-muted)', marginTop: 2 }}>{meta}</div>
       </div>
       {onEdit && (
         <button type="button" style={ghostButtonStyle} onClick={onEdit}>
@@ -113,16 +112,16 @@ function ReservationAccordionSection({
           items={groups.map((g) => ({
             header: (
               <span>
-                {g.heading} <span style={{ color: 'var(--ink-secondary)', fontWeight: 400 }}>— {g.rows.length} reserva{g.rows.length === 1 ? '' : 's'}</span>
+                {g.heading} <span style={{ color: 'var(--eph-muted)', fontWeight: 400 }}>— {g.rows.length} reserva{g.rows.length === 1 ? '' : 's'}</span>
               </span>
             ),
             content: (
               <div>
-                <div style={{ fontSize: 13, color: 'var(--ink-secondary)', marginBottom: 10 }}>{g.meta}</div>
+                <div style={{ fontSize: 13, color: 'var(--eph-muted)', marginBottom: 10 }}>{g.meta}</div>
                 {g.rows.map((r, i) => (
-                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: i < g.rows.length - 1 ? '1px solid var(--border-hairline)' : 'none' }}>
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: i < g.rows.length - 1 ? '1px solid var(--eph-line)' : 'none' }}>
                     <strong>{r.name}</strong>
-                    <span style={{ color: 'var(--ink-secondary)', fontSize: 13 }}>{r.phone || 'Sin celular registrado'}</span>
+                    <span style={{ color: 'var(--eph-muted)', fontSize: 13 }}>{r.phone || 'Sin celular registrado'}</span>
                   </div>
                 ))}
               </div>
@@ -175,7 +174,6 @@ function groupReservations<T extends { name: string; phone: string | null }>(
 export function AdminCommunityPanel() {
   const [tab, setTab] = useState<'gestion' | 'reservas'>('gestion');
   const [newType, setNewType] = useState<'event' | 'therapy' | 'retreat'>('event');
-  const [previewType, setPreviewType] = useState<string>('coaching_1_1');
 
   const { data: bundle, error: bundleError, isLoading: loading, mutate: refetch } = useSWR('community-admin-bundle', async () => {
     const [eventsList, therapiesList, retreatsList] = await Promise.all([listEvents(), listTherapies(), listRetreats()]);
@@ -469,7 +467,7 @@ export function AdminCommunityPanel() {
     }
   }
 
-  if (loading) return <p style={{ color: 'var(--ink-secondary)', fontSize: 14 }}>Cargando el Club…</p>;
+  if (loading) return <p style={{ color: 'var(--eph-muted)', fontSize: 14 }}>Cargando The Circle…</p>;
 
   const tabSwitcher = (
     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
@@ -510,7 +508,7 @@ export function AdminCommunityPanel() {
       <div>
         {tabSwitcher}
         {reservationsLoading ? (
-          <p style={{ color: 'var(--ink-secondary)', fontSize: 14 }}>Cargando reservas…</p>
+          <p style={{ color: 'var(--eph-muted)', fontSize: 14 }}>Cargando reservas…</p>
         ) : (
           <>
             <ReservationAccordionSection title="Reservas de Eventos" groups={eventGroups} />
@@ -521,8 +519,6 @@ export function AdminCommunityPanel() {
       </div>
     );
   }
-
-  const previewUnlocked = previewType !== 'lead_wellness';
 
   return (
     <div>
@@ -639,7 +635,7 @@ export function AdminCommunityPanel() {
         ) : (
           events.map((ev) =>
             editingEventId === ev.id ? (
-              <div key={ev.id} style={{ padding: '14px 0', borderBottom: '1px solid var(--border-hairline)' }}>
+              <div key={ev.id} style={{ padding: '14px 0', borderBottom: '1px solid var(--eph-line)' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>
                   <div>
                     <label style={labelStyle} htmlFor={`ev-edit-title-${ev.id}`}>Título</label>
@@ -690,7 +686,7 @@ export function AdminCommunityPanel() {
         ) : (
           therapies.map((t) =>
             editingTherapyId === t.id ? (
-              <div key={t.id} style={{ padding: '14px 0', borderBottom: '1px solid var(--border-hairline)' }}>
+              <div key={t.id} style={{ padding: '14px 0', borderBottom: '1px solid var(--eph-line)' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>
                   <div>
                     <label style={labelStyle} htmlFor={`th-edit-title-${t.id}`}>Título</label>
@@ -724,7 +720,7 @@ export function AdminCommunityPanel() {
                 key={t.id}
                 title={t.title}
                 badge={t.discountPct ? (
-                  <span style={{ background: 'rgba(201,166,107,.14)', color: 'var(--ring-accent)', borderRadius: 9999, padding: '2px 8px', fontSize: 11, fontWeight: 700 }}>
+                  <span className="font-mono" style={{ background: 'rgba(201,166,107,.14)', color: 'var(--eph-accent)', borderRadius: 999, padding: '2px 10px', fontSize: 10 }}>
                     -{t.discountPct}%
                   </span>
                 ) : undefined}
@@ -746,7 +742,7 @@ export function AdminCommunityPanel() {
         ) : (
           retreats.map((r) =>
             editingRetreatId === r.id ? (
-              <div key={r.id} style={{ padding: '14px 0', borderBottom: '1px solid var(--border-hairline)' }}>
+              <div key={r.id} style={{ padding: '14px 0', borderBottom: '1px solid var(--eph-line)' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>
                   <div>
                     <label style={labelStyle} htmlFor={`rt-edit-title-${r.id}`}>Título</label>
@@ -802,56 +798,6 @@ export function AdminCommunityPanel() {
         )}
       </div>
 
-      <div style={cardStyle}>
-        <h3 style={cardTitleStyle}>Vista previa por tipo de cliente</h3>
-        <p style={{ fontSize: 13, color: 'var(--ink-secondary)', margin: '-8px 0 14px' }}>
-          Eventos se ve igual para los 3 tipos, así que no cambia aquí. Esto es exactamente lo que un cliente vería hoy
-          en las pestañas Terapias y Retiros, según su tipo — sin necesidad de entrar con otra cuenta.
-        </p>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
-          {PREVIEW_TYPES.map((pt) => (
-            <button key={pt.key} type="button" style={tabButtonStyle(previewType === pt.key)} onClick={() => setPreviewType(pt.key)}>
-              {pt.label}
-            </button>
-          ))}
-        </div>
-        {previewUnlocked ? (
-          <>
-            <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--ink-secondary)', textTransform: 'uppercase', letterSpacing: '.04em', margin: '0 0 10px' }}>Terapias</p>
-            {therapies.length > 0 ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 20 }}>
-                {therapies.map((t) => (
-                  <TherapyCard key={t.id} therapy={t} />
-                ))}
-              </div>
-            ) : (
-              <EmptyState message="Sin terapias publicadas." />
-            )}
-            <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--ink-secondary)', textTransform: 'uppercase', letterSpacing: '.04em', margin: '20px 0 10px' }}>Retiros</p>
-            {retreats.length > 0 ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                {retreats.map((r) => (
-                  <RetreatCard key={r.id} retreat={r} />
-                ))}
-              </div>
-            ) : (
-              <EmptyState message="Sin retiros publicados." />
-            )}
-          </>
-        ) : (
-          <LockedBenefit variant="upgrade" benefit="descuentos reales en spa, terapia, fisioterapia, retiros">
-            {therapies.length > 0 ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                {therapies.slice(0, 3).map((t) => (
-                  <TherapyCard key={t.id} therapy={t} />
-                ))}
-              </div>
-            ) : (
-              <EmptyState message="Sin terapias publicadas." />
-            )}
-          </LockedBenefit>
-        )}
-      </div>
     </div>
   );
 }

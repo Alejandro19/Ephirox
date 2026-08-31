@@ -17,6 +17,7 @@ import * as anthropometricsController from '../controllers/anthropometrics.contr
 import * as photosController from '../controllers/photos.controller.js';
 import * as inbodyController from '../controllers/inbody.controller.js';
 import * as ocrController from '../controllers/ocr.controller.js';
+import * as onboardingController from '../controllers/onboarding.controller.js';
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } });
 
@@ -125,6 +126,14 @@ personalInfoRouter.post(
   requirePersonalInfoAccess,
   upload.single('file'),
   asyncHandler(inbodyController.uploadInbodyFile)
+);
+
+personalInfoRouter.post(
+  '/:id/onboarding/finalize',
+  authMiddleware,
+  ownerOrAdmin,
+  requirePersonalInfoAccess,
+  asyncHandler(onboardingController.finalizeOnboarding)
 );
 
 personalInfoRouter.post(

@@ -31,42 +31,18 @@ export type LoginResult = {
   moduleAccess?: Record<string, boolean>;
   planExpired?: boolean;
   planEndDate?: string;
+  // Idioma de la interfaz fija (Configuración > Idioma) — 'es' | 'en'.
+  language?: string;
   error?: string;
-  // Cuenta nueva creada por Google, queda inactiva hasta que un admin la confirme.
-  pending?: boolean;
-  message?: string;
-  // Identidad SSO nueva ya verificada, sin cuenta todavía — falta el paso de
-  // aceptación legal antes de crearla. Ver completeSsoRegistrationRequest.
-  needsConsent?: boolean;
-  provider?: 'google' | 'apple';
-  draftToken?: string;
 };
 
-// Payload que produce AceptacionRegistro.jsx al completar el paso legal.
+// Payload que produce AceptacionRegistro.jsx al completar el paso legal —
+// usado hoy por el flujo de re-aceptación en el panel de Configuración.
 export type LegalAcceptancePayload = {
   dataPolicyVersion: string;
   termsVersion: string;
   acceptedAt: string;
   sensitiveDataConsent: boolean;
-};
-
-export type RegisterResult = {
-  success: boolean;
-  // intent="membership_request" (Solicita tu membresía): la cuenta queda
-  // "inactive" hasta que un admin la active — nunca devuelve token.
-  pending?: boolean;
-  // intent="explorer" (Únete como Explorador): la cuenta queda activa al
-  // instante — mismos campos que LoginResult, para auto-loguear de una.
-  token?: string;
-  role?: 'cliente';
-  user?: { id: string; name: string; email: string };
-  clientType?: string;
-  permissions?: Record<string, boolean>;
-  planExpired?: boolean;
-  planEndDate?: string;
-  onboardingComplete?: boolean;
-  message?: string;
-  error?: string;
 };
 
 export type SimpleResult = {
@@ -86,6 +62,7 @@ export type MeResult = {
   moduleAccess?: Record<string, boolean>;
   planExpired?: boolean;
   planEndDate?: string | null;
+  language?: string;
   error?: string;
 };
 
@@ -95,40 +72,6 @@ export async function loginRequest(email: string, password: string): Promise<Log
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
-    });
-    return res.json();
-  } catch {
-    return { success: false, error: 'Error de conexión. Intenta de nuevo.' };
-  }
-}
-
-export async function registerRequest(
-  name: string,
-  email: string,
-  intent: 'explorer' | 'membership_request',
-  legalAcceptance: LegalAcceptancePayload
-): Promise<RegisterResult> {
-  try {
-    const res = await fetch(`${API_BASE}/auth/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, intent, legalAcceptance }),
-    });
-    return res.json();
-  } catch {
-    return { success: false, error: 'Error de conexión. Intenta de nuevo.' };
-  }
-}
-
-// Completa el registro de una identidad SSO (Google/Apple) nueva, una vez
-// aceptados los documentos legales — ver el flujo de needsConsent/draftToken
-// en LoginResult.
-export async function completeSsoRegistrationRequest(draftToken: string, legalAcceptance: LegalAcceptancePayload): Promise<LoginResult> {
-  try {
-    const res = await fetch(`${API_BASE}/auth/sso/complete-registration`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ draftToken, legalAcceptance }),
     });
     return res.json();
   } catch {
@@ -201,6 +144,22 @@ export async function resetPasswordRequest(token: string, newPassword: string): 
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token, newPassword }),
+    });
+    return res.json();
+  } catch {
+    return { success: false, error: 'Error de conexión. Intenta de nuevo.' };
+  }
+}
+
+// Canjea el token de invitación (alta de cliente Mentoría) por una
+// contraseña + sesión activa — devuelve el mismo shape que loginRequest
+// porque el backend hace auto-login (ver auth.controller.ts::acceptInvitation).
+export async function acceptInvitationRequest(token: string, password: string): Promise<LoginResult> {
+  try {
+    const res = await fetch(`${API_BASE}/auth/accept-invitation`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, password }),
     });
     return res.json();
   } catch {

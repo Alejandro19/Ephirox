@@ -103,7 +103,7 @@ describe('POST /api/wompi/webhook', () => {
     });
 
     it('avisa al admin cuando el pago es un cambio de tipo de membresía (upgrade), aunque active directo sin aprobación', async () => {
-      await db.update(clients).set({ clientType: 'coaching_online' }).where(eq(clients.id, clientId));
+      await db.update(clients).set({ clientType: 'mentoring' }).where(eq(clients.id, clientId));
 
       const [payment] = await db
         .insert(membershipPayments)
@@ -201,7 +201,7 @@ describe('POST /api/wompi/webhook', () => {
     beforeAll(async () => {
       const [client] = await db
         .insert(clients)
-        .values({ name: 'Newcomer Client', email: clientEmail, passwordHash: await hashPassword('x'), status: 'active', clientType: 'lead_wellness' })
+        .values({ name: 'Newcomer Client', email: clientEmail, passwordHash: await hashPassword('x'), status: 'inactive', clientType: 'coaching_1_1' })
         .returning();
       clientId = client.id;
     });
@@ -233,7 +233,7 @@ describe('POST /api/wompi/webhook', () => {
       expect(res.status).toBe(200);
 
       const [client] = await db.select().from(clients).where(eq(clients.id, clientId));
-      expect(client.clientType).toBe('lead_wellness'); // sin cambios — no se activó
+      expect(client.status).toBe('inactive'); // sin cambios — no se activó
       expect(client.planEndDate).toBeNull();
       expect(client.sessionsRemaining).toBeNull();
 

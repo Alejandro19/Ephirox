@@ -11,8 +11,8 @@ export type WellnessIndexResult = {
 };
 
 // GET /api/clients/:id/wellness-index — índice unificado (home + Mi
-// Evolución). `null` cuando no aplica (lead_wellness) o no hay datos
-// suficientes todavía — en ambos casos la card simplemente no se muestra.
+// Evolución). `null` cuando no hay datos suficientes todavía — la card
+// simplemente no se muestra.
 export async function getWellnessIndex(clientId: string): Promise<WellnessIndexResult | null> {
   const token = getSessionToken();
   const res = await fetch(`${API_BASE_URL}/api/clients/${clientId}/wellness-index`, {

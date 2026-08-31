@@ -38,7 +38,7 @@ describe('TrainingPage', () => {
 
   it('renders the training home once the session is resolved', async () => {
     render(<TrainingPage />);
-    await screen.findByText('Entrenamiento');
+    await screen.findByText('Workout');
   });
 
   it('executes the NFC confirmation immediately when m/a query params are present and a session exists', async () => {
@@ -53,7 +53,7 @@ describe('TrainingPage', () => {
     render(<TrainingPage />);
 
     await waitFor(() => expect(trainingClient.confirmSession).toHaveBeenCalledWith(expect.any(String), expect.any(String), 'nfc'));
-    expect(await screen.findByText('¡Sesión confirmada!')).toBeInTheDocument();
+    expect(await screen.findByText('Sesión confirmada.')).toBeInTheDocument();
   });
 
   it('consumes a pending action from localStorage (no query params) when a session exists', async () => {
@@ -86,9 +86,9 @@ describe('TrainingPage', () => {
     await waitFor(() =>
       expect(showToast).toHaveBeenCalledWith('Ya confirmaste tu sesión de hoy — vuelve mañana para el siguiente día.', 'info'),
     );
-    expect(screen.queryByText('¡Sesión confirmada!')).not.toBeInTheDocument();
+    expect(screen.queryByText('Sesión confirmada.')).not.toBeInTheDocument();
     // Cae al home normal (TrainingShell) en vez de reemplazar toda la página por el aviso.
-    expect(await screen.findByText('Entrenamiento')).toBeInTheDocument();
+    expect(await screen.findByText('Workout')).toBeInTheDocument();
   });
 
   it('falls through to TrainingShell (never a dead-end alert) when the NFC confirm-session call fails', async () => {
@@ -97,7 +97,7 @@ describe('TrainingPage', () => {
 
     render(<TrainingPage />);
 
-    await screen.findByText('Entrenamiento');
+    await screen.findByText('Workout');
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 });

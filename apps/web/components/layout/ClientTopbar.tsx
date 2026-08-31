@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../lib/auth-context";
+import { useTranslation } from "../../lib/i18n/useTranslation";
 import { CLIENT_NAV, VIEW_TO_PATH, type AppState } from "../../lib/constants";
 import { getModuleAccessState } from "../../lib/module-access";
 import NotificationBell from "./NotificationBell";
@@ -27,14 +28,15 @@ function AccountMenuRow({ icon, label, onClick }: { icon: React.ReactNode; label
       onClick={onClick}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
+      className="font-body"
       style={{
         width: "100%", display: "flex", alignItems: "center", gap: 9,
-        background: hover ? "var(--page-bg)" : "transparent", border: "none",
-        padding: "9px 14px", fontSize: 12.5, fontWeight: 500,
-        color: "var(--ink-secondary)", cursor: "pointer", textAlign: "left",
+        background: hover ? "var(--eph-surface-2)" : "transparent", border: "none",
+        padding: "9px 14px", fontSize: 12.5, fontWeight: 400,
+        color: "var(--eph-body)", cursor: "pointer", textAlign: "left",
       }}
     >
-      <span style={{ display: "flex", alignItems: "center", color: "var(--ink-secondary)" }}>{icon}</span>
+      <span style={{ display: "flex", alignItems: "center", color: "var(--eph-muted)" }}>{icon}</span>
       {label}
     </button>
   );
@@ -43,6 +45,7 @@ function AccountMenuRow({ icon, label, onClick }: { icon: React.ReactNode; label
 export default function ClientTopbar({ viewKey }: ClientTopbarProps) {
   const router = useRouter();
   const { user, clientType, onboardingComplete, moduleAccess, planExpired, logout } = useAuth();
+  const { t } = useTranslation();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [expiredModalOpen, setExpiredModalOpen] = useState(false);
@@ -113,22 +116,25 @@ export default function ClientTopbar({ viewKey }: ClientTopbarProps) {
           display: "flex",
           alignItems: "center",
           gap: 32,
-          height: 68,
+          height: 74,
           padding: "0 32px",
-          background: "linear-gradient(135deg, var(--hero-piedra-start), var(--hero-piedra-end))",
+          background: "var(--eph-bg)",
+          borderBottom: "1px solid var(--eph-line)",
         }}
       >
         <button
           onClick={() => router.push("/")}
           aria-label="Ir al menú principal"
+          className="font-display"
           style={{
             display: "flex",
             alignItems: "center",
-            gap: 8,
-            fontFamily: "Fraunces, Georgia, serif",
-            fontSize: 19,
-            fontWeight: 700,
-            color: "var(--hero-piedra-text)",
+            gap: 10,
+            fontSize: 18,
+            fontWeight: 400,
+            textTransform: "uppercase",
+            letterSpacing: "0.14em",
+            color: "var(--eph-text)",
             flexShrink: 0,
             background: "none",
             border: "none",
@@ -136,11 +142,11 @@ export default function ClientTopbar({ viewKey }: ClientTopbarProps) {
             cursor: "pointer",
           }}
         >
-          <BrandRing size={24} background="var(--hero-piedra-start)" />
-          La Tribu
+          <BrandRing size={24} />
+          Ephirox
         </button>
 
-        <nav className="client-nav-row" style={{ display: "flex", alignItems: "center", gap: 10, flex: 1, minWidth: 0 }}>
+        <nav className="client-nav-row" style={{ display: "flex", alignItems: "center", gap: 6, flex: 1, minWidth: 0, overflowX: "auto" }}>
           {items.map((item) => {
             const active = viewKey === item.key;
             const state = getModuleAccessState(item.key, { moduleAccess, planExpired });
@@ -148,20 +154,22 @@ export default function ClientTopbar({ viewKey }: ClientTopbarProps) {
               <button
                 key={item.key}
                 onClick={() => handleNavClick(item.key)}
-                className={`client-nav-tab${active ? " active" : ""}`}
+                className={`client-nav-tab font-mono${active ? " active" : ""}`}
                 style={{
                   background: "none",
                   border: "none",
                   cursor: "pointer",
                   whiteSpace: "nowrap",
-                  fontSize: 12,
-                  fontWeight: active ? 500 : 400,
-                  color: active ? "var(--hero-piedra-text)" : "var(--hero-piedra-text-muted)",
+                  fontSize: 10.5,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.1em",
+                  fontWeight: 400,
+                  color: active ? "var(--eph-text)" : "var(--eph-muted)",
                   padding: "8px 12px",
                   position: "relative",
                 }}
               >
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
                   {item.label}
                   {state === "expired" && <CrownBadge circleSize={14} iconSize={8} />}
                   {state === "not_included" && <IconLock size={10} />}
@@ -179,14 +187,15 @@ export default function ClientTopbar({ viewKey }: ClientTopbarProps) {
             <button
               onClick={() => setAccountOpen((v) => !v)}
               aria-label="Membresía"
+              className="font-mono"
               style={{
                 width: 32, height: 32, borderRadius: "50%",
-                border: "1px solid var(--hero-piedra-accent)",
-                background: accountOpen ? "var(--hero-piedra-accent)" : "transparent",
-                color: accountOpen ? "var(--hero-piedra-start)" : "var(--hero-piedra-text)",
-                fontSize: 13, fontWeight: 700, cursor: "pointer",
+                border: "1px solid var(--eph-line-2)",
+                background: accountOpen ? "var(--eph-accent)" : "transparent",
+                color: accountOpen ? "var(--eph-ink)" : "var(--eph-text)",
+                fontSize: 12, fontWeight: 400, cursor: "pointer",
                 display: "flex", alignItems: "center", justifyContent: "center",
-                transition: "background 0.2s ease, color 0.2s ease",
+                transition: "background 0.15s ease, color 0.15s ease",
               }}
             >
               {initial}
@@ -194,21 +203,21 @@ export default function ClientTopbar({ viewKey }: ClientTopbarProps) {
             {accountOpen && (
               <div style={{
                 position: "absolute", top: 40, right: 0, width: 200,
-                background: "var(--paper)", border: "1px solid var(--border-hairline)",
-                borderRadius: "var(--radius-card)", padding: "6px 0", zIndex: 90,
+                background: "var(--eph-surface)", border: "1px solid var(--eph-line)",
+                borderRadius: 0, padding: "6px 0", zIndex: 90,
                 overflow: "hidden",
               }}>
-                <div style={{
-                  fontSize: 13, fontWeight: 600, color: "var(--ink)",
-                  padding: "8px 14px 10px", borderBottom: "1px solid var(--border-hairline)",
+                <div className="font-body" style={{
+                  fontSize: 13, fontWeight: 500, color: "var(--eph-text)",
+                  padding: "8px 14px 10px", borderBottom: "1px solid var(--eph-line)",
                 }}>
-                  {user?.name ?? "Miembro"}
+                  {user?.name ?? t('nav.member')}
                 </div>
                 {/* Navegación — agregar futuras filas acá (mismo AccountMenuRow) */}
-                <div style={{ padding: "4px 0", borderBottom: "1px solid var(--border-hairline)" }}>
+                <div style={{ padding: "4px 0", borderBottom: "1px solid var(--eph-line)" }}>
                   <AccountMenuRow
                     icon={<IconSettings size={14} />}
-                    label="Configuración"
+                    label={t('settings.title')}
                     onClick={() => {
                       setAccountOpen(false);
                       router.push("/configuracion");
@@ -217,7 +226,7 @@ export default function ClientTopbar({ viewKey }: ClientTopbarProps) {
                 </div>
                 {/* Sesión */}
                 <div style={{ padding: "4px 0" }}>
-                  <AccountMenuRow icon={<IconLogout size={14} />} label="Cerrar sesión" onClick={logout} />
+                  <AccountMenuRow icon={<IconLogout size={14} />} label={t('nav.logout')} onClick={logout} />
                 </div>
               </div>
             )}
@@ -231,9 +240,9 @@ export default function ClientTopbar({ viewKey }: ClientTopbarProps) {
               padding: 6, flexDirection: "column", gap: 4, cursor: "pointer",
             }}
           >
-            <span style={{ display: "block", width: 20, height: 2, background: "var(--hero-piedra-text)", borderRadius: 2 }} />
-            <span style={{ display: "block", width: 20, height: 2, background: "var(--hero-piedra-text)", borderRadius: 2 }} />
-            <span style={{ display: "block", width: 20, height: 2, background: "var(--hero-piedra-text)", borderRadius: 2 }} />
+            <span style={{ display: "block", width: 20, height: 1, background: "var(--eph-text)" }} />
+            <span style={{ display: "block", width: 20, height: 1, background: "var(--eph-text)" }} />
+            <span style={{ display: "block", width: 20, height: 1, background: "var(--eph-text)" }} />
           </button>
         </div>
       </header>
@@ -242,20 +251,20 @@ export default function ClientTopbar({ viewKey }: ClientTopbarProps) {
       {drawerOpen && (
         <div
           onClick={() => setDrawerOpen(false)}
-          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.4)", zIndex: 105 }}
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.5)", zIndex: 105 }}
         />
       )}
       <div
         className={`client-drawer${drawerOpen ? " open" : ""}`}
         style={{
           position: "fixed", top: 0, right: 0, bottom: 0, width: "82vw", maxWidth: 300,
-          background: "var(--page-bg)", zIndex: 110, padding: "24px 20px",
+          background: "var(--eph-bg)", borderLeft: "1px solid var(--eph-line)", zIndex: 110, padding: "24px 20px",
           transition: "transform 0.28s ease",
           display: "flex", flexDirection: "column", gap: 4,
         }}
       >
-        <span style={{ fontFamily: "Fraunces, Georgia, serif", fontSize: 18, fontWeight: 700, color: "var(--ink)", marginBottom: 16 }}>
-          La Tribu
+        <span className="font-display" style={{ fontSize: 17, textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--eph-text)", marginBottom: 16 }}>
+          Ephirox
         </span>
         {items.map((item) => {
           const active = viewKey === item.key;
@@ -264,12 +273,13 @@ export default function ClientTopbar({ viewKey }: ClientTopbarProps) {
             <button
               key={item.key}
               onClick={() => handleNavClick(item.key)}
+              className="font-body"
               style={{
                 background: "none", border: "none", textAlign: "left", cursor: "pointer",
                 padding: "12px 4px", fontSize: 14,
                 fontWeight: active ? 500 : 400,
-                color: active ? "var(--ink)" : "var(--ink-secondary)",
-                borderBottom: "1px solid var(--border-hairline)",
+                color: active ? "var(--eph-text)" : "var(--eph-body)",
+                borderBottom: "1px solid var(--eph-line)",
               }}
             >
               <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
@@ -285,23 +295,25 @@ export default function ClientTopbar({ viewKey }: ClientTopbarProps) {
             setDrawerOpen(false);
             router.push("/configuracion");
           }}
+          className="font-mono"
           style={{
-            marginTop: "auto", background: "none", border: "1px solid var(--border-input)",
-            borderRadius: "9999px", padding: "10px 16px", fontSize: 13, fontWeight: 500,
-            color: "var(--ink-secondary)", cursor: "pointer",
+            marginTop: "auto", background: "none", border: "1px solid var(--eph-line-2)",
+            borderRadius: 0, padding: "10px 16px", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.12em",
+            color: "var(--eph-body)", cursor: "pointer",
           }}
         >
-          Configuración
+          {t('settings.title')}
         </button>
         <button
           onClick={logout}
+          className="font-mono"
           style={{
-            marginTop: 8, background: "none", border: "1px solid var(--border-input)",
-            borderRadius: "9999px", padding: "10px 16px", fontSize: 13, fontWeight: 500,
-            color: "var(--ink-secondary)", cursor: "pointer",
+            marginTop: 8, background: "none", border: "1px solid var(--eph-line-2)",
+            borderRadius: 0, padding: "10px 16px", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.12em",
+            color: "var(--eph-body)", cursor: "pointer",
           }}
         >
-          Cerrar sesión
+          {t('nav.logout')}
         </button>
       </div>
 
@@ -314,8 +326,8 @@ export default function ClientTopbar({ viewKey }: ClientTopbarProps) {
           left: 12px;
           right: 12px;
           bottom: 2px;
-          height: 2px;
-          background: var(--hero-piedra-accent);
+          height: 1px;
+          background: var(--eph-accent);
           width: 0%;
           transition: width 0.18s ease;
         }
@@ -325,21 +337,24 @@ export default function ClientTopbar({ viewKey }: ClientTopbarProps) {
         .client-nav-tab.active::after {
           width: calc(100% - 24px);
         }
+        .client-nav-row::-webkit-scrollbar {
+          display: none;
+        }
         .bell-circle {
           display: flex; align-items: center; justify-content: center;
           width: 32px; height: 32px; border-radius: 50%;
-          border: 1px solid var(--hero-piedra-accent);
-          transition: background 0.2s ease;
+          border: 1px solid var(--eph-line-2);
+          transition: border-color 0.15s ease;
         }
         .bell-circle:hover {
-          background: var(--hero-espresso);
+          border-color: var(--eph-accent);
         }
         .client-drawer {
           transform: translateX(100%);
         }
         .client-drawer.open {
           transform: translateX(0);
-          box-shadow: -8px 0 24px rgba(0, 0, 0, 0.18);
+          box-shadow: -8px 0 24px rgba(0, 0, 0, 0.4);
         }
         @media (max-width: ${COLLAPSE_BREAKPOINT}px) {
           .client-nav-row {

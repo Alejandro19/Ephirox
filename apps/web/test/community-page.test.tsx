@@ -27,6 +27,6 @@ vi.mock('../lib/clients-client', () => ({
 describe('CommunityPage', () => {
   it('renders the community heading for a client', async () => {
     render(<CommunityPage />);
-    expect(await screen.findByRole('heading', { name: 'La tribu esta semana' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'The Circle' })).toBeInTheDocument();
   });
 });

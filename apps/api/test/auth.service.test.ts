@@ -28,8 +28,8 @@ describe('auth.service', () => {
     expect(isPlanExpired(null)).toBe(false);
   });
 
-  it('isPlanExpired returns false for a lead_wellness client (no membership)', () => {
-    expect(isPlanExpired({ clientType: 'lead_wellness', planEndDate: '2000-01-01' })).toBe(false);
+  it('isPlanExpired returns false for a client type outside ACTIVE_PLAN_TYPES', () => {
+    expect(isPlanExpired({ clientType: 'sin_clasificar', planEndDate: '2000-01-01' })).toBe(false);
   });
 
   it('isPlanExpired returns false when plan_end_date is null', () => {
@@ -43,6 +43,6 @@ describe('auth.service', () => {
   it('isPlanExpired returns false for a coaching client before their end date', () => {
     const future = new Date();
     future.setFullYear(future.getFullYear() + 1);
-    expect(isPlanExpired({ clientType: 'coaching_online', planEndDate: future.toISOString().slice(0, 10) })).toBe(false);
+    expect(isPlanExpired({ clientType: 'mentoring', planEndDate: future.toISOString().slice(0, 10) })).toBe(false);
   });
 });

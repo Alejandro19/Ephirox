@@ -28,11 +28,14 @@ import {
  * devuelve el proveedor del lado del cliente.
  */
 
-const INK = "#1A1712";
-const INK_MUTED = "#5A5248";
-const GOLD = "#C9A66B";
-const BORDER = "#E4DDCE";
-const PAGE_BG = "#FAF7F1";
+const INK = "var(--eph-text)";
+const INK_MUTED = "var(--eph-muted)";
+const GOLD = "var(--eph-accent)";
+const BORDER = "var(--eph-line)";
+const BORDER_2 = "var(--eph-line-2)";
+const PAGE_BG = "var(--eph-bg)";
+const SURFACE = "var(--eph-surface)";
+const DANGER_TEXT = "#D99483";
 
 const stripePromise: Promise<Stripe | null> = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || "");
 
@@ -56,15 +59,14 @@ type Plan = {
   clientType: string;
   label: string;
   durations: readonly number[];
-  // Solo Presencial vende por paquete de clases — 3ra dimensión de precio
-  // junto con la duración (6 combinaciones). undefined en el resto de tiers.
+  // Solo 1:1 vende por paquete de clases — 3ra dimensión de precio junto
+  // con la duración (6 combinaciones). undefined para Mentoría.
   packageSizes?: readonly number[];
 };
 
 const PLANS: Plan[] = [
-  { clientType: "coaching_1_1", label: "Club Presencial", durations: [1, 3], packageSizes: [8, 12, 16] },
-  { clientType: "coaching_online", label: "Club Online", durations: [1, 3] },
-  { clientType: "mentoring", label: "Club Elite", durations: [3] },
+  { clientType: "coaching_1_1", label: "Cliente 1:1", durations: [1, 3], packageSizes: [8, 12, 16] },
+  { clientType: "mentoring", label: "Premium", durations: [3] },
 ];
 
 function todayStr(): string {
@@ -121,9 +123,9 @@ function PayButton({ phase, disabled, onClick, label }: { phase: "paying" | "con
       type={onClick ? "button" : "submit"}
       onClick={onClick}
       disabled={disabled || phase === "confirming"}
-      className="w-full mt-4 rounded-full text-[13px] font-medium"
+      className="w-full mt-4 font-mono uppercase tracking-[0.1em] text-[11px]"
       style={{
-        height: 42, background: INK, color: PAGE_BG,
+        height: 42, borderRadius: 0, background: "var(--eph-accent)", color: "var(--eph-ink)",
         opacity: disabled || phase === "confirming" ? 0.6 : 1,
         cursor: disabled || phase === "confirming" ? "not-allowed" : "pointer",
       }}
@@ -172,7 +174,7 @@ function StripeCheckoutForm({
   return (
     <form onSubmit={handleSubmit}>
       <PaymentElement />
-      {error && <p className="text-[12px] mt-3" style={{ color: "#A6533F" }}>{error}</p>}
+      {error && <p className="text-[12px] mt-3" style={{ color: DANGER_TEXT }}>{error}</p>}
       <PayButton phase={phase} disabled={!stripe} label="Pagar" />
     </form>
   );
@@ -233,7 +235,7 @@ function WompiCheckoutForm({
 
   return (
     <div>
-      {error && <p className="text-[12px] mt-3" style={{ color: "#A6533F" }}>{error}</p>}
+      {error && <p className="text-[12px] mt-3" style={{ color: DANGER_TEXT }}>{error}</p>}
       <PayButton phase={phase} disabled={!scriptReady} onClick={handlePay} label={scriptReady ? "Pagar" : "Cargando…"} />
     </div>
   );
@@ -308,43 +310,32 @@ function MembershipCard({
 
   return (
     <div
-      className="rounded-2xl p-6 flex flex-col"
+      className="p-6 flex flex-col"
       style={{
+        borderRadius: 0,
         borderWidth: isElite ? 2 : 1,
         borderStyle: "solid",
         borderColor: isElite ? GOLD : BORDER,
-        background: "#FFFEFB",
+        background: SURFACE,
       }}
     >
-      {isElite ? (
-        <div className="flex items-center justify-between mb-1">
-          <h3 className="font-serif text-[17px]" style={{ color: INK }}>{plan.label}</h3>
-          <span
-            className="inline-block text-[10px] font-medium uppercase tracking-wide rounded-full px-2.5 py-1"
-            style={{ background: "#F5EAD3", color: "#7A5A1E" }}
-          >
-            Mentoría Premium
-          </span>
-        </div>
-      ) : (
-        <h3 className="font-serif text-[17px] mb-1" style={{ color: INK }}>{plan.label}</h3>
-      )}
+      <h3 className="font-display text-[19px] font-normal mb-1" style={{ color: INK }}>{plan.label}</h3>
 
       {justConfirmed ? (
         <div className="mt-3">
-          <p className="text-[13px]" style={{ color: "#6B8055" }}>Pago confirmado — tu membresía ya está activa.</p>
+          <p className="text-[13px]" style={{ color: GOLD }}>Pago confirmado — tu membresía ya está activa.</p>
           <button
             type="button"
             onClick={handleAcceptConfirmation}
-            className="w-full mt-3 rounded-full text-[13px] font-medium"
-            style={{ height: 42, background: INK, color: PAGE_BG, cursor: "pointer" }}
+            className="w-full mt-3 font-mono uppercase tracking-[0.1em] text-[11px]"
+            style={{ height: 42, borderRadius: 0, background: "var(--eph-accent)", color: "var(--eph-ink)", cursor: "pointer" }}
           >
             Aceptar
           </button>
         </div>
       ) : justFailed ? (
         <div className="mt-3">
-          <p className="text-[13px]" style={{ color: "#A6533F" }}>
+          <p className="text-[13px]" style={{ color: DANGER_TEXT }}>
             El pago fue rechazado. Podés intentar de nuevo o probar con otro medio de pago.
           </p>
           <button
@@ -353,8 +344,8 @@ function MembershipCard({
               setJustFailed(false);
               setCheckout(null);
             }}
-            className="w-full mt-3 rounded-full text-[13px] font-medium"
-            style={{ height: 42, background: INK, color: PAGE_BG, cursor: "pointer" }}
+            className="w-full mt-3 font-mono uppercase tracking-[0.1em] text-[11px]"
+            style={{ height: 42, borderRadius: 0, background: "var(--eph-accent)", color: "var(--eph-ink)", cursor: "pointer" }}
           >
             Reintentar
           </button>
@@ -396,11 +387,11 @@ function MembershipCard({
                       key={n}
                       type="button"
                       onClick={() => setPackageSize(n)}
-                      className="px-3.5 py-1.5 rounded-full text-[12px] border"
+                      className="px-3.5 py-1.5 rounded-full font-mono text-[11px] uppercase tracking-wide border"
                       style={
                         packageSize === n
-                          ? { background: INK, borderColor: INK, color: PAGE_BG }
-                          : { background: "transparent", borderColor: BORDER, color: INK_MUTED }
+                          ? { background: "var(--eph-accent)", borderColor: "var(--eph-accent)", color: "var(--eph-ink)" }
+                          : { background: "transparent", borderColor: BORDER_2, color: INK_MUTED }
                       }
                     >
                       {n} clases
@@ -417,11 +408,11 @@ function MembershipCard({
                     key={d}
                     type="button"
                     onClick={() => setDuration(d)}
-                    className="px-3.5 py-1.5 rounded-full text-[12px] border"
+                    className="px-3.5 py-1.5 rounded-full font-mono text-[11px] uppercase tracking-wide border"
                     style={
                       duration === d
-                        ? { background: INK, borderColor: INK, color: PAGE_BG }
-                        : { background: "transparent", borderColor: BORDER, color: INK_MUTED }
+                        ? { background: "var(--eph-accent)", borderColor: "var(--eph-accent)", color: "var(--eph-ink)" }
+                        : { background: "transparent", borderColor: BORDER_2, color: INK_MUTED }
                     }
                   >
                     {d} {d === 1 ? "mes" : "meses"}
@@ -433,7 +424,7 @@ function MembershipCard({
 
           <div style={{ marginTop: "auto" }}>
             <p className="text-[12px]" style={{ color: INK_MUTED }}>Precio</p>
-            <p className="font-serif text-[23px] font-semibold" style={{ color: INK, marginTop: 2 }}>
+            <p className="font-display text-[26px] font-normal" style={{ color: INK, marginTop: 2 }}>
               {price && price.amountCents > 0 ? formatAmount(price.amountCents, price.currency) : "Precio no disponible"}
             </p>
             {isElite && (
@@ -441,14 +432,14 @@ function MembershipCard({
                 Referencia · monto exacto según TRM al pagar
               </p>
             )}
-            {error && <p className="text-[12px] mt-2" style={{ color: "#A6533F" }}>{error}</p>}
+            {error && <p className="text-[12px] mt-2" style={{ color: DANGER_TEXT }}>{error}</p>}
             <button
               type="button"
               onClick={handleStartCheckout}
               disabled={starting || !price || price.amountCents <= 0}
-              className="w-full mt-3 rounded-full text-[13px] font-medium"
+              className="w-full mt-3 font-mono uppercase tracking-[0.1em] text-[11px]"
               style={{
-                height: 42, background: INK, color: PAGE_BG,
+                height: 42, borderRadius: 0, background: "var(--eph-accent)", color: "var(--eph-ink)",
                 opacity: starting || !price || price.amountCents <= 0 ? 0.5 : 1,
                 cursor: starting || !price || price.amountCents <= 0 ? "not-allowed" : "pointer",
               }}
@@ -470,8 +461,8 @@ export default function PanelMembresias({ clientId }: { clientId: string }) {
   return (
     <div className="min-h-[600px]" style={{ background: PAGE_BG }}>
       <div className="max-w-[900px] mx-auto px-5 py-12">
-        <p className="text-[11px] tracking-[0.12em] uppercase mb-2" style={{ color: "#9C7A3C" }}>Tu cuenta</p>
-        <h1 className="font-serif text-[26px] mb-1.5" style={{ color: INK }}>Membresías</h1>
+        <p className="font-mono text-[10px] tracking-[0.14em] uppercase mb-2" style={{ color: INK_MUTED }}>Tu cuenta</p>
+        <h1 className="font-display text-[28px] font-normal mb-1.5" style={{ color: INK }}>Membresías</h1>
         <p className="text-[13.5px] mb-8" style={{ color: INK_MUTED }}>
           Pago único por periodo — sin cobro automático. Al vencerse, vuelves a pagar acá.
         </p>

@@ -9,8 +9,8 @@ export default function AdminCortisolTipsPage() {
       <IdentityHeader title="Tips de cortisol" subtitle="Banco global de tips educativos mostrados al azar en el módulo de Cortisol." />
       <div
         style={{
-          background: 'var(--paper)', border: '1px solid var(--line)',
-          borderRadius: 'var(--radius)', padding: '22px 24px',
+          background: 'var(--eph-surface)', border: '1px solid var(--eph-line)',
+          borderRadius: '0', padding: '22px 24px',
         }}
       >
         <CortisolTipsPanel />

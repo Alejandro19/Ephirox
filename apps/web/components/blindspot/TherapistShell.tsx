@@ -20,32 +20,32 @@ const PLACEHOLDER_COPY: Record<Exclude<TherapistModuleKey, 'casos'>, { title: st
   },
   recursos: {
     title: 'Recursos clínicos',
-    description: 'Material y guías de apoyo para tu práctica dentro de La Tribu.',
+    description: 'Material y guías de apoyo para tu práctica dentro de Ephirox.',
   },
   comunidad: {
-    title: 'Cuerpo terapéutico del Club',
-    description: 'Un espacio para conectar con otros terapeutas de la red de La Tribu.',
+    title: 'Cuerpo terapéutico',
+    description: 'Un espacio para conectar con otros terapeutas de la red de Ephirox.',
   },
   dashboards: {
     title: 'Dashboards',
-    description: 'Métricas de tus casos y tu impacto dentro del programa de Mentoría.',
+    description: 'Métricas de tus casos y tu impacto dentro del programa de Breakthrough Sessions.',
   },
 };
 
 function ComingSoon({ title, description }: { title: string; description: string }) {
   return (
     <div>
-      <h1 style={{ fontFamily: 'Fraunces, Georgia, serif', fontSize: 24, fontWeight: 700, color: 'var(--ink)', margin: '0 0 8px' }}>
+      <h1 className="font-display" style={{ fontSize: 26, fontWeight: 400, color: 'var(--eph-text)', margin: '0 0 8px' }}>
         {title}
       </h1>
-      <p style={{ fontSize: 13, color: 'var(--ink-secondary)', margin: '0 0 24px', maxWidth: 480 }}>{description}</p>
+      <p className="font-body" style={{ fontSize: 13, color: 'var(--eph-body)', margin: '0 0 24px', maxWidth: 480 }}>{description}</p>
       <div
         style={{
-          background: 'var(--paper)', border: '1px solid var(--border-hairline)', borderRadius: 'var(--radius-card)',
+          background: 'var(--eph-surface)', border: '1px solid var(--eph-line)', borderRadius: 0,
           padding: '40px 24px', textAlign: 'center',
         }}
       >
-        <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: 'var(--ink-secondary)' }}>Próximamente</p>
+        <p className="font-mono" style={{ margin: 0, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--eph-muted)' }}>Próximamente</p>
       </div>
     </div>
   );
@@ -57,7 +57,7 @@ export function TherapistShell() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <TherapistTopbar activeModule={activeModule} onNavigate={setActiveModule} />
-      <div className="therapist-main-content" style={{ flex: 1, minWidth: 0, background: 'var(--page-bg)', overflowY: 'auto' }}>
+      <div className="therapist-main-content" style={{ flex: 1, minWidth: 0, background: 'var(--eph-bg)', overflowY: 'auto' }}>
         {activeModule === 'casos' ? (
           <TherapistCasesModule />
         ) : (

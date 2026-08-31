@@ -26,7 +26,7 @@ export default function AdminMembershipPricesPage() {
         subtitle="Montos que se cobran por Stripe al pagar cada plan — no afecta el pago en efectivo."
       />
       {error && (
-        <p role="alert" style={{ color: "var(--danger)", fontSize: 13, marginBottom: 16 }}>
+        <p role="alert" style={{ color: "#D99483", fontSize: 13, marginBottom: 16 }}>
           {error}
         </p>
       )}

@@ -13,14 +13,14 @@ export default function DayTile({ num, label, state, exerciseCount, onClick }: D
     state === "completed"
       ? "rgba(201,166,107,.14)"
       : state === "locked"
-        ? "var(--page-bg)"
-        : "var(--paper)";
+        ? "var(--eph-surface-2)"
+        : "var(--eph-surface)";
   const borderColor =
     state === "active"
-      ? "var(--ring-accent)"
+      ? "var(--eph-accent)"
       : state === "completed"
-        ? "var(--ring-accent)"
-        : "var(--border-hairline)";
+        ? "var(--eph-accent)"
+        : "var(--eph-line)";
   const opacity = state === "locked" ? 0.5 : 1;
 
   return (
@@ -29,7 +29,7 @@ export default function DayTile({ num, label, state, exerciseCount, onClick }: D
       disabled={state === "locked"}
       style={{
         background: bg,
-        border: `2px solid ${state === "completed" ? "var(--ring-accent)" : borderColor}`,
+        border: `2px solid ${state === "completed" ? "var(--eph-accent)" : borderColor}`,
         borderRadius: 16,
         padding: "20px 14px",
         textAlign: "center",
@@ -40,7 +40,7 @@ export default function DayTile({ num, label, state, exerciseCount, onClick }: D
       }}
       onMouseEnter={(e) => {
         if (state !== "locked") {
-          e.currentTarget.style.borderColor = "var(--ring-accent)";
+          e.currentTarget.style.borderColor = "var(--eph-accent)";
           e.currentTarget.style.boxShadow = "0 6px 16px rgba(217,183,126,.18)";
         }
       }}
@@ -54,7 +54,7 @@ export default function DayTile({ num, label, state, exerciseCount, onClick }: D
           fontFamily: "Fraunces, Georgia, serif",
           fontSize: 22,
           fontWeight: 600,
-          color: "var(--ink)",
+          color: "var(--eph-text)",
         }}
       >
         {num}

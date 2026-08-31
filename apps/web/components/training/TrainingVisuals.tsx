@@ -72,14 +72,14 @@ export function ProgressBar({ done, total }: { done: number; total: number }) {
   const barWidth = Math.min(pct, 100);
   return (
     <div className="mt-3.5">
-      <div className="mb-1 flex justify-between text-xs text-[var(--ink-secondary)]">
+      <div className="mb-1.5 flex justify-between font-mono text-[10px] uppercase tracking-[0.14em]" style={{ color: 'var(--eph-muted)' }}>
         <span>Progreso</span>
         <span>
           {done}/{total} · {pct}%
         </span>
       </div>
-      <div className="h-2 overflow-hidden rounded-full bg-[var(--border-hairline)]">
-        <div className="h-full rounded-full bg-[var(--hero-espresso-accent)]" style={{ width: `${barWidth}%` }} />
+      <div className="h-[2px] overflow-hidden" style={{ background: 'rgba(237,230,220,0.14)' }}>
+        <div className="h-full" style={{ width: `${barWidth}%`, background: 'var(--eph-accent)' }} />
       </div>
     </div>
   );
@@ -92,15 +92,15 @@ export function MiniRing({ pct, size = 46 }: { pct: number; size?: number }) {
   return (
     <div className="relative flex-shrink-0" style={{ width: size, height: size }}>
       <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size} className="-rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#E7DFC9" strokeWidth="4" />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(237,230,220,0.14)" strokeWidth="4" />
         <circle
           cx={size / 2}
           cy={size / 2}
           r={r}
           fill="none"
-          stroke="#B8935A"
+          stroke="var(--eph-accent)"
           strokeWidth="4"
-          strokeLinecap="round"
+          strokeLinecap="butt"
           strokeDasharray={`${filled.toFixed(1)} ${circ.toFixed(1)}`}
         />
       </svg>

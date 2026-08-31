@@ -1,8 +1,16 @@
 import { z } from 'zod';
 
-export const CORTISOL_TECHNIQUE_TYPES = ['Respiración', 'Breathwork', 'Meditación', 'Mindfulness'] as const;
+export const CORTISOL_TECHNIQUE_TYPES = [
+  'Respiración', 'Breathwork', 'Meditación', 'Mindfulness',
+  'Respiración Vagal', 'Exposición Controlada', 'Recuperación Activa',
+] as const;
 export const CortisolTechniqueTypeSchema = z.enum(CORTISOL_TECHNIQUE_TYPES);
 export type CortisolTechniqueType = z.infer<typeof CortisolTechniqueTypeSchema>;
+
+// Subsección "Regulación del Sistema Nervioso" (Neurowellness, exclusivo
+// Mentoría) — entrenamiento proactivo de la capacidad de regulación, no
+// respuesta reactiva a un cortisol elevado. Ver ClientCortisolPanel.tsx.
+export const NEUROWELLNESS_TECHNIQUE_TYPES = ['Respiración Vagal', 'Exposición Controlada', 'Recuperación Activa'] as const;
 
 export const CORTISOL_EMOTIONS = ['ansioso', 'irritable', 'cansado', 'abrumado', 'tranquilo', 'energia'] as const;
 export const CortisolEmotionSchema = z.enum(CORTISOL_EMOTIONS);
@@ -19,6 +27,9 @@ export const CortisolTechniqueInputSchema = z.object({
   // Emoción para la que esta técnica es la recomendación del hero en el
   // panel de cliente — null/omitida si no está asignada a ninguna.
   emotion: CortisolEmotionSchema.nullable().optional(),
+  // Aviso visible de precaución/contraindicación — relevante sobre todo para
+  // "Exposición Controlada" (frío/calor), pero disponible para cualquier tipo.
+  precaution_note: z.string().nullable().optional(),
 });
 export type CortisolTechniqueInput = z.infer<typeof CortisolTechniqueInputSchema>;
 

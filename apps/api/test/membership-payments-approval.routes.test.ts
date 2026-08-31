@@ -22,7 +22,7 @@ describe('membership-payments history + approval (admin)', () => {
 
     const [client] = await db
       .insert(clients)
-      .values({ name: 'Approval Client', email: clientEmail, passwordHash: await hashPassword('x'), status: 'active', clientType: 'lead_wellness' })
+      .values({ name: 'Approval Client', email: clientEmail, passwordHash: await hashPassword('x'), status: 'active', clientType: 'coaching_1_1' })
       .returning();
     clientId = client.id;
     clientToken = signToken({ id: clientId, role: 'cliente', name: 'Approval Client', email: clientEmail, clientType: client.clientType });
@@ -42,7 +42,7 @@ describe('membership-payments history + approval (admin)', () => {
   it('lets an admin read the payment history for a client', async () => {
     await db.insert(membershipPayments).values({
       clientId,
-      clientType: 'coaching_online',
+      clientType: 'mentoring',
       durationMonths: 1,
       amountCents: 45000000,
       currency: 'cop',
@@ -61,7 +61,7 @@ describe('membership-payments history + approval (admin)', () => {
       .insert(membershipPayments)
       .values({
         clientId,
-        clientType: 'coaching_online',
+        clientType: 'mentoring',
         durationMonths: 1,
         amountCents: 45000000,
         currency: 'cop',
@@ -118,7 +118,7 @@ describe('membership-payments history + approval (admin)', () => {
       .insert(membershipPayments)
       .values({
         clientId,
-        clientType: 'coaching_online',
+        clientType: 'mentoring',
         durationMonths: 1,
         amountCents: 45000000,
         currency: 'cop',

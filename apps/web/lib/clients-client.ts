@@ -17,6 +17,11 @@ export type ClientSummary = {
   planStartDate?: string | null;
   planDurationDays?: number | null;
   deletionRequestedAt?: string | null;
+  // Indicadores de onboarding Mentoría (ver clients.service.ts::listClients) — solo Mentoría, "-" para Cliente 1:1.
+  baselineComplete?: boolean;
+  wearableDaysConDatos?: number | null;
+  labWeek0Status?: string | null;
+  wearableBaselineReadyAt?: string | null;
 };
 
 export type NotificationPreferences = {
@@ -38,11 +43,22 @@ export type ClientDetail = ClientSummary & {
   appleId?: string | null;
   avatarUrl?: string | null;
   notificationPreferences?: NotificationPreferences;
+  // Idioma de la interfaz fija (Configuración > Idioma) — 'es' | 'en', 'es' por defecto.
+  language?: string;
   deletionRequestedAt?: string | null;
+  // Solo relevante para Mentoría — true mientras el cliente nunca haya
+  // creado su contraseña desde el link de invitación (ver clients.controller.ts::getClient).
+  hasPendingInvitation?: boolean;
   // Saldo de clases del paquete Presencial vigente — null para cualquier
   // otro tipo de cliente (ver activatePaidPlan en apps/api).
   sessionsTotal?: number | null;
   sessionsRemaining?: number | null;
+  // Onboarding obligatorio Mentoría (ver onboarding-approvals.service.ts) — todos null para Cliente 1:1.
+  baselineApprovedAt?: string | null;
+  wearableApprovedAt?: string | null;
+  wearableBaselineReadyAt?: string | null;
+  wearableBaselineStableAt?: string | null;
+  week1ActivatedAt?: string | null;
 };
 
 export type MembershipPayment = {
@@ -87,8 +103,9 @@ export async function fetchClient(id: string): Promise<ClientDetail> {
 export async function createClient(payload: {
   name: string;
   email: string;
-  password: string;
+  password?: string;
   mustChangePassword?: boolean;
+  client_type?: string;
 }): Promise<void> {
   const token = getSessionToken();
   const res = await fetch(`${API_BASE_URL}/api/clients`, {
@@ -154,6 +171,38 @@ export async function updateClientProfile(id: string, patch: { name?: string; em
   });
   const body = await res.json();
   if (!body.success) throw new Error(body.error || 'Error al actualizar tu perfil.');
+  return body.client;
+}
+
+export async function resendInvitation(id: string): Promise<void> {
+  const token = getSessionToken();
+  const res = await fetch(`${API_BASE_URL}/api/clients/${id}/resend-invitation`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const body = await res.json();
+  if (!body.success) throw new Error(body.error || 'Error al reenviar la invitación.');
+}
+
+export async function approveBaseline(id: string): Promise<ClientDetail> {
+  const token = getSessionToken();
+  const res = await fetch(`${API_BASE_URL}/api/clients/${id}/onboarding/approve-baseline`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const body = await res.json();
+  if (!body.success) throw new Error(body.error || 'Error al aprobar el baseline.');
+  return body.client;
+}
+
+export async function approveWearable(id: string): Promise<ClientDetail> {
+  const token = getSessionToken();
+  const res = await fetch(`${API_BASE_URL}/api/clients/${id}/onboarding/approve-wearable`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const body = await res.json();
+  if (!body.success) throw new Error(body.error || 'Error al aprobar el wearable.');
   return body.client;
 }
 

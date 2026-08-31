@@ -18,11 +18,11 @@ export default function EvolutionPage() {
   if (role === 'admin') {
     return (
       <div>
-        <IdentityHeader title="Mi Evolución" subtitle="Revisa el progreso e índice de bienestar de cada cliente." />
+        <IdentityHeader title="Evolution" subtitle="Revisa el progreso e índice de rendimiento de cada cliente." />
         <div
           style={{
-            background: 'var(--paper)', border: '1px solid var(--line)',
-            borderRadius: 'var(--radius)', padding: '22px 24px', marginBottom: 18,
+            background: 'var(--eph-surface)', border: '1px solid var(--eph-line)',
+            borderRadius: 0, padding: '22px 24px', marginBottom: 18,
           }}
         >
           <ClientSwitcher moduleKey="evolution" selectedClientId={adminClientId} onSelect={setAdminClientId} />
@@ -30,7 +30,7 @@ export default function EvolutionPage() {
         {adminClientId ? (
           <AdminEvolutionPanel clientId={adminClientId} />
         ) : (
-          <p style={{ color: 'var(--ink-soft)', fontSize: 13 }}>Selecciona un cliente para ver su evolución.</p>
+          <p className="font-body" style={{ color: 'var(--eph-body)', fontSize: 13 }}>Selecciona un cliente para ver su evolución.</p>
         )}
       </div>
     );

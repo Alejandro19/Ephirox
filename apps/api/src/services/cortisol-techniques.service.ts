@@ -11,7 +11,7 @@ async function unlockModule(clientId: string): Promise<void> {
   const permissions = (client.permissions as Record<string, boolean>) || {};
   if (permissions.cortisol === true) return;
   await db.update(clients).set({ permissions: { ...permissions, cortisol: true } }).where(eq(clients.id, clientId));
-  await db.insert(clientNotifications).values({ clientId, message: 'Ahora tienes acceso a tu módulo de gestión de cortisol.' });
+  await db.insert(clientNotifications).values({ clientId, message: 'Ahora tienes acceso a tu módulo de Stress.' });
 }
 
 function toTechniqueFields(input: CortisolTechniqueInput) {
@@ -24,6 +24,7 @@ function toTechniqueFields(input: CortisolTechniqueInput) {
     description: input.description ?? null,
     youtubeUrl: input.youtube_url ?? null,
     emotion: input.emotion ?? null,
+    precautionNote: input.precaution_note ?? null,
   };
 }
 

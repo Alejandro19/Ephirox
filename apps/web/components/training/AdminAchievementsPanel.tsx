@@ -7,11 +7,11 @@ import RingProgress from '../ui/RingProgress';
 import { IconTrophy, IconMedal } from '../ui/icons';
 
 const cardStyle: React.CSSProperties = {
-  background: 'var(--paper)', border: '1px solid var(--border-hairline)',
-  borderRadius: 'var(--radius-card)', padding: '22px 24px', marginBottom: 20,
+  background: 'var(--eph-surface)', border: '1px solid var(--eph-line)',
+  borderRadius: 0, padding: '22px 24px', marginBottom: 20,
 };
 const cardTitleStyle: React.CSSProperties = {
-  fontSize: 15, fontWeight: 700, color: 'var(--ink)', margin: '0 0 16px',
+  fontFamily: 'var(--font-cormorant), Georgia, serif', fontSize: 18, fontWeight: 400, color: 'var(--eph-text)', margin: '0 0 16px',
 };
 
 function clientTz(): string {
@@ -35,8 +35,8 @@ export function AdminAchievementsPanel({ clientId }: { clientId: string }) {
     return { achievements, streakWeeks: streak?.streakWeeks ?? null };
   });
 
-  if (loading) return <div style={cardStyle}><p style={{ color: 'var(--ink-secondary)', margin: 0 }}>Cargando medallas y trofeos…</p></div>;
-  if (error) return <div style={cardStyle}><p style={{ color: 'var(--danger)', margin: 0 }}>{(error as Error).message}</p></div>;
+  if (loading) return <div style={cardStyle}><p style={{ color: 'var(--eph-muted)', margin: 0 }}>Cargando medallas y trofeos…</p></div>;
+  if (error) return <div style={cardStyle}><p style={{ color: '#D99483', margin: 0 }}>{(error as Error).message}</p></div>;
   if (!data) return null;
 
   const { medalsInCurrentCycle, trophiesEarned } = computeAchievements(data.streakWeeks ?? 0);
@@ -47,23 +47,23 @@ export function AdminAchievementsPanel({ clientId }: { clientId: string }) {
       <h3 style={cardTitleStyle}>Medallas y trofeos</h3>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 24, marginBottom: 20 }}>
-        <RingProgress value={(medalsInCurrentCycle / 4) * 100} size={64} color="piedra">
+        <RingProgress value={(medalsInCurrentCycle / 4) * 100} size={64}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--ink)' }}>{medalsInCurrentCycle}/4</span>
+            <span className="font-mono" style={{ fontSize: 16, fontWeight: 400, color: 'var(--eph-text)' }}>{medalsInCurrentCycle}/4</span>
           </div>
         </RingProgress>
         <div>
-          <p style={{ margin: '0 0 2px', fontSize: 12, fontWeight: 600, color: 'var(--ink-secondary)' }}>
+          <p className="font-mono" style={{ margin: '0 0 4px', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 400, color: 'var(--eph-muted)' }}>
             Medallas del ciclo actual
           </p>
-          <p style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--ink)' }}>
-            <IconTrophy size={14} style={{ color: 'var(--ring-accent)' }} /> {trophiesEarned} copa{trophiesEarned === 1 ? '' : 's'} en total — las copas nunca se resetean.
+          <p className="font-body" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--eph-text)' }}>
+            <IconTrophy size={14} style={{ color: 'var(--eph-accent)' }} /> {trophiesEarned} copa{trophiesEarned === 1 ? '' : 's'} en total — las copas nunca se resetean.
           </p>
         </div>
       </div>
 
       {sorted.length === 0 ? (
-        <p style={{ color: 'var(--ink-secondary)', fontSize: 13, margin: 0 }}>
+        <p className="font-body" style={{ color: 'var(--eph-body)', fontSize: 13, margin: 0 }}>
           Aún no ha ganado medallas ni trofeos.
         </p>
       ) : (
@@ -73,18 +73,18 @@ export function AdminAchievementsPanel({ clientId }: { clientId: string }) {
               key={a.id}
               style={{
                 display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0',
-                borderTop: i === 0 ? 'none' : '1px solid var(--border-hairline)',
+                borderTop: i === 0 ? 'none' : '1px solid var(--eph-line)',
               }}
             >
-              <span style={{ display: 'flex', color: 'var(--ring-accent)' }}>
+              <span style={{ display: 'flex', color: 'var(--eph-accent)' }}>
                 {a.type === 'copa' ? <IconTrophy size={16} /> : <IconMedal size={16} />}
               </span>
               <div style={{ flex: 1 }}>
-                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)' }}>
+                <span className="font-body" style={{ fontSize: 13, fontWeight: 500, color: 'var(--eph-text)' }}>
                   {a.type === 'copa' ? 'Copa' : 'Medalla'} · semana {a.weekNumber}
                 </span>
               </div>
-              <span style={{ fontSize: 12, color: 'var(--ink-secondary)' }}>{formatDate(a.earnedAt)}</span>
+              <span className="font-mono" style={{ fontSize: 10, color: 'var(--eph-muted)' }}>{formatDate(a.earnedAt)}</span>
             </div>
           ))}
         </div>

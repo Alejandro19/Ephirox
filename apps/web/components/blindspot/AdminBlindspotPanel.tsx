@@ -15,32 +15,38 @@ import {
   type Therapist,
 } from '@/lib/blindspot-client';
 import { showToast } from '@/components/layout/AppShell';
+import { InsightsSection } from '@/components/insights/InsightsSection';
 
 type ClientOption = ClientSummary;
 
 const cardStyle: React.CSSProperties = {
-  background: 'var(--paper)', border: '1px solid var(--border-hairline)',
-  borderRadius: 'var(--radius-card)', padding: '22px 24px', marginBottom: 20,
+  background: 'var(--eph-surface)', border: '1px solid var(--eph-line)',
+  borderRadius: '0', padding: '22px 24px', marginBottom: 20,
 };
-const cardTitleStyle: React.CSSProperties = { fontSize: 15, fontWeight: 700, color: 'var(--ink)', margin: '0 0 16px' };
-const labelStyle: React.CSSProperties = { display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--ink-secondary)', marginBottom: 4 };
+const cardTitleStyle: React.CSSProperties = { fontFamily: 'var(--font-cormorant), Georgia, serif', fontSize: 18, fontWeight: 400, color: 'var(--eph-text)', margin: '0 0 16px' };
+const labelStyle: React.CSSProperties = {
+  display: 'block', fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', fontSize: 10,
+  textTransform: 'uppercase', letterSpacing: '0.14em', fontWeight: 400, color: 'var(--eph-muted)', marginBottom: 6,
+};
 const fieldStyle: React.CSSProperties = {
-  width: '100%', height: 32, borderRadius: 0, border: 'none', borderBottom: '1px solid var(--border-input)',
-  padding: '0 2px 6px', fontSize: 14.5, fontWeight: 600, background: 'transparent', color: 'var(--ink)',
+  width: '100%', height: 32, borderRadius: 0, border: 'none', borderBottom: '1px solid var(--eph-line-2)',
+  padding: '0 2px 6px', fontSize: 15, fontWeight: 400, background: 'transparent', color: 'var(--eph-text)',
   outline: 'none', boxSizing: 'border-box',
 };
 const textareaStyle: React.CSSProperties = {
-  width: '100%', borderRadius: 10, border: '1px solid var(--border-hairline)',
-  padding: 10, fontSize: 14.5, fontWeight: 600, background: 'var(--paper)', color: 'var(--ink)',
+  width: '100%', borderRadius: 0, border: '1px solid var(--eph-line)',
+  padding: 10, fontSize: 15, fontWeight: 400, background: 'var(--eph-surface)', color: 'var(--eph-text)',
   outline: 'none', boxSizing: 'border-box', minHeight: 72, resize: 'vertical', fontFamily: 'inherit',
 };
 const primaryButtonStyle: React.CSSProperties = {
-  height: 40, padding: '0 22px', borderRadius: 9999, border: 'none',
-  background: 'var(--ring-accent)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+  height: 40, padding: '0 22px', borderRadius: 0, border: 'none',
+  fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
+  background: 'var(--eph-accent)', color: 'var(--eph-ink)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.14em', cursor: 'pointer',
 };
 const ghostButtonStyle: React.CSSProperties = {
-  height: 32, padding: '0 14px', borderRadius: 9999, border: '1px solid var(--border-hairline)',
-  background: 'transparent', color: 'var(--ink-secondary)', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+  height: 32, padding: '0 14px', borderRadius: 0, border: '1px solid var(--eph-line-2)',
+  fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
+  background: 'transparent', color: 'var(--eph-body)', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', cursor: 'pointer',
 };
 
 const STATUS_OPTIONS: BlindspotCaseStatus[] = ['evaluando', 'referido', 'en_proceso', 'cerrado'];
@@ -75,7 +81,7 @@ export function AdminBlindspotPanel() {
     return clients.find((c) => c.id === id)?.name ?? id;
   }
 
-  if (isLoading) return <p style={{ color: 'var(--ink-secondary)', fontSize: 13 }}>Cargando...</p>;
+  if (isLoading) return <p style={{ color: 'var(--eph-muted)', fontSize: 13 }}>Cargando...</p>;
 
   return (
     <CasesTab
@@ -161,7 +167,7 @@ function CasesTab({
         {showNewCase && (
           <div style={{ marginTop: 16, display: 'grid', gap: 12 }}>
             <div>
-              <label style={labelStyle}>Cliente de Mentoría</label>
+              <label style={labelStyle}>Cliente Premium</label>
               <select style={fieldStyle} value={newClientId} onChange={(e) => setNewClientId(e.target.value)}>
                 <option value="">— selecciona —</option>
                 {clientsWithoutCase.map((c) => (
@@ -193,7 +199,7 @@ function CasesTab({
       </div>
 
       {cases.length === 0 ? (
-        <p style={{ color: 'var(--ink-secondary)', fontSize: 13 }}>Aún no hay casos.</p>
+        <p style={{ color: 'var(--eph-muted)', fontSize: 13 }}>Aún no hay casos.</p>
       ) : (
         <>
           <div style={{ ...cardStyle, display: 'flex', gap: 10, marginBottom: 12 }}>
@@ -214,25 +220,25 @@ function CasesTab({
           </div>
           <div style={cardStyle}>
           {filteredCases.length === 0 ? (
-            <p style={{ color: 'var(--ink-secondary)', fontSize: 13, margin: 0 }}>Ningún caso coincide con la búsqueda.</p>
+            <p style={{ color: 'var(--eph-muted)', fontSize: 13, margin: 0 }}>Ningún caso coincide con la búsqueda.</p>
           ) : filteredCases.map((c) => (
             <div
               key={c.id}
               onClick={() => onSelect(c.id === selectedCaseId ? null : c.id)}
               style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                padding: '12px 4px', borderBottom: '1px solid var(--border-hairline)', cursor: 'pointer',
+                padding: '12px 4px', borderBottom: '1px solid var(--eph-line)', cursor: 'pointer',
               }}
             >
               <div>
-                <p style={{ margin: 0, fontSize: 13.5, fontWeight: 700, color: 'var(--ink)' }}>#{c.caseNumber} · {clientName(c.clientId)}</p>
-                <p style={{ margin: '2px 0 0', fontSize: 11.5, color: 'var(--ink-secondary)' }}>
+                <p style={{ margin: 0, fontSize: 13.5, fontWeight: 700, color: 'var(--eph-text)' }}>#{c.caseNumber} · {clientName(c.clientId)}</p>
+                <p style={{ margin: '2px 0 0', fontSize: 11.5, color: 'var(--eph-muted)' }}>
                   {STATUS_LABEL[c.status]} · {therapistName(c.therapistId)}
                 </p>
               </div>
               {c.crisisFlag && (
-                <span style={{ background: 'var(--danger)', color: '#fff', fontSize: 10.5, fontWeight: 700, padding: '4px 10px', borderRadius: 9999 }}>
-                  CRISIS
+                <span className="font-mono" style={{ background: 'var(--eph-danger)', color: '#F4EFE7', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.08em', padding: '4px 12px', borderRadius: 999 }}>
+                  Crisis
                 </span>
               )}
             </div>
@@ -308,24 +314,27 @@ function CaseDetail({ blindspotCase, therapists, onRefetch }: { blindspotCase: B
   return (
     <div style={cardStyle}>
       {blindspotCase.crisisFlag && (
-        <div style={{ background: 'var(--danger)', color: '#fff', borderRadius: 10, padding: '10px 14px', marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: 13, fontWeight: 700 }}>Alerta de crisis activa — levantada por {blindspotCase.crisisFlaggedBy}</span>
+        <div style={{ background: 'var(--eph-danger)', color: '#F4EFE7', borderRadius: 0, padding: '10px 14px', marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span className="font-body" style={{ fontSize: 13, fontWeight: 500 }}>Alerta de crisis activa — levantada por {blindspotCase.crisisFlaggedBy}</span>
           <button
             onClick={handleAcknowledgeCrisis}
-            style={{ background: '#fff', color: 'var(--danger)', border: 'none', borderRadius: 9999, padding: '6px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+            className="font-mono"
+            style={{ background: '#F4EFE7', color: 'var(--eph-danger)', border: 'none', borderRadius: 0, padding: '6px 16px', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.08em', cursor: 'pointer' }}
           >
             Atender
           </button>
         </div>
       )}
 
+      <InsightsSection clientId={blindspotCase.clientId} moduleKey="puntoCiego" />
+
       <h3 style={cardTitleStyle}>Detalle del caso #{blindspotCase.caseNumber}</h3>
 
       <div style={{ marginBottom: 16 }}>
-        <p style={{ margin: '0 0 4px', fontSize: 12, fontWeight: 600, color: 'var(--ink-secondary)' }}>Motivo de consulta</p>
-        <p style={{ margin: 0, fontSize: 13.5, color: 'var(--ink)' }}>{blindspotCase.initialAssessment.motivoConsulta}</p>
-        <p style={{ margin: '10px 0 4px', fontSize: 12, fontWeight: 600, color: 'var(--ink-secondary)' }}>Área percibida</p>
-        <p style={{ margin: 0, fontSize: 13.5, color: 'var(--ink)' }}>{blindspotCase.initialAssessment.areaPercibida}</p>
+        <p style={{ margin: '0 0 4px', fontSize: 12, fontWeight: 600, color: 'var(--eph-muted)' }}>Motivo de consulta</p>
+        <p style={{ margin: 0, fontSize: 13.5, color: 'var(--eph-text)' }}>{blindspotCase.initialAssessment.motivoConsulta}</p>
+        <p style={{ margin: '10px 0 4px', fontSize: 12, fontWeight: 600, color: 'var(--eph-muted)' }}>Área percibida</p>
+        <p style={{ margin: 0, fontSize: 13.5, color: 'var(--eph-text)' }}>{blindspotCase.initialAssessment.areaPercibida}</p>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 16 }}>
@@ -355,11 +364,11 @@ function CaseDetail({ blindspotCase, therapists, onRefetch }: { blindspotCase: B
       <div style={{ marginBottom: 16 }}>
         <p style={{ ...cardTitleStyle, fontSize: 13, marginBottom: 8 }}>Tareas ({tasks.length})</p>
         {tasks.length === 0 ? (
-          <p style={{ fontSize: 12.5, color: 'var(--ink-secondary)' }}>Sin tareas asignadas todavía.</p>
+          <p style={{ fontSize: 12.5, color: 'var(--eph-muted)' }}>Sin tareas asignadas todavía.</p>
         ) : (
           tasks.map((t) => (
-            <p key={t.id} style={{ fontSize: 12.5, color: 'var(--ink)', margin: '4px 0' }}>
-              • {t.title} — <span style={{ color: 'var(--ink-secondary)' }}>{t.status}</span>
+            <p key={t.id} style={{ fontSize: 12.5, color: 'var(--eph-text)', margin: '4px 0' }}>
+              • {t.title} — <span style={{ color: 'var(--eph-muted)' }}>{t.status}</span>
             </p>
           ))
         )}
@@ -368,14 +377,14 @@ function CaseDetail({ blindspotCase, therapists, onRefetch }: { blindspotCase: B
       <div>
         <p style={{ ...cardTitleStyle, fontSize: 13, marginBottom: 8 }}>Sesiones registradas ({sessionLogs.length})</p>
         {sessionLogs.length === 0 ? (
-          <p style={{ fontSize: 12.5, color: 'var(--ink-secondary)' }}>Sin sesiones registradas todavía.</p>
+          <p style={{ fontSize: 12.5, color: 'var(--eph-muted)' }}>Sin sesiones registradas todavía.</p>
         ) : (
           sessionLogs.map((log) => (
-            <div key={log.id} style={{ borderLeft: '2px solid var(--border-hairline)', paddingLeft: 12, marginBottom: 8 }}>
-              <p style={{ margin: 0, fontSize: 11.5, fontWeight: 700, color: 'var(--ink-secondary)', textTransform: 'uppercase' }}>
+            <div key={log.id} style={{ borderLeft: '2px solid var(--eph-line)', paddingLeft: 12, marginBottom: 8 }}>
+              <p style={{ margin: 0, fontSize: 11.5, fontWeight: 700, color: 'var(--eph-muted)', textTransform: 'uppercase' }}>
                 {log.sessionDate} · {log.progressMarker}
               </p>
-              {log.internalSummary && <p style={{ margin: '2px 0 0', fontSize: 12.5, color: 'var(--ink)' }}>{log.internalSummary}</p>}
+              {log.internalSummary && <p style={{ margin: '2px 0 0', fontSize: 12.5, color: 'var(--eph-text)' }}>{log.internalSummary}</p>}
             </div>
           ))
         )}

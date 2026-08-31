@@ -45,6 +45,15 @@ export const WIZARD_MODULES: WizardModuleConfig[] = [
     { id: 'email', label: 'Correo electrónico', type: 'text', required: true, group: 'Contacto' },
     { id: 'country_picker', label: 'País, ciudad y celular', type: 'country-picker', group: 'Contacto' },
     { id: 'occupation', label: 'Ocupación', type: 'text', required: true, group: 'Ocupación' },
+    // Salud hormonal — P1 visible para todas las clientas (gender=Femenino,
+    // ver CONDITIONAL_RULES), recomendado para todos los tiers. P2/P3 además
+    // requieren onlyVariant: 'mentoring' — solo el motor de insights de
+    // Mentoría hace algo con la fecha/duración de ciclo (ver Baseline en
+    // Matriz_Reglas_Mentoria_BIO360.md).
+    { id: 'hormonal_status', label: '¿Cuál describe mejor tu situación hormonal actual?', type: 'select', options: ['Ciclo menstrual natural y regular', 'Ciclo menstrual natural pero irregular', 'Uso método anticonceptivo hormonal', 'Perimenopausia', 'Posmenopausia', 'Embarazada o en lactancia', 'Prefiero no decir'], required: true, group: 'Salud hormonal' },
+    { id: 'hormonal_status_other', label: '¿Qué método anticonceptivo usas?', type: 'text', required: true, group: 'Salud hormonal' },
+    { id: 'last_period_date', label: 'Fecha de inicio de tu último período menstrual', type: 'date', required: true, group: 'Salud hormonal' },
+    { id: 'cycle_length_days', label: 'Duración promedio de tu ciclo (en días)', type: 'chevron', min: 15, max: 45, required: false, group: 'Salud hormonal' },
   ]},
   { n: 2, title: 'Vida Profesional', fields: [
     { id: 'work_hours', label: '¿Horas de trabajo al día?', type: 'chevron', min: 0, required: true, group: 'Trabajo y horario' },
@@ -113,6 +122,10 @@ export const WIZARD_MODULES: WizardModuleConfig[] = [
     { id: 'wakeup', label: 'Hora de despertar', type: 'time', required: true, group: 'Horario de sueño' },
     { id: 'sleep_quality', label: 'Calidad del sueño (1-10)', type: 'slider', min: 1, max: 10, minLabel: 'Baja', maxLabel: 'Alta', required: true, group: 'Calidad del descanso' },
     { id: 'wakeups', label: 'Despertares nocturnos', type: 'select', options: ['Ninguno', '1-2', '3+'], required: true, group: 'Calidad del descanso' },
+    // Alimentan SUE-07 (alerta de posible apnea) — todos los tiers, se
+    // re-preguntan cada 6-12 meses (no es un dato estático de una sola vez).
+    { id: 'snores', label: '¿Roncas con frecuencia mientras duermes?', type: 'select', options: ['Sí', 'No', 'No sé (duermo solo/a)'], required: true, group: 'Calidad del descanso' },
+    { id: 'sleep_apnea_signs', label: '¿Alguien te ha comentado que dejas de respirar o haces pausas al dormir?', type: 'select', options: ['Sí', 'No', 'No sé'], required: true, group: 'Calidad del descanso' },
   ]},
   { n: 7, title: 'Energía y Cognición', fields: [
     { id: 'energy_am', label: 'Energía en la mañana (1-10)', type: 'slider', min: 1, max: 10, minLabel: 'Baja', maxLabel: 'Alta', required: true, group: 'Niveles de energía' },
@@ -148,6 +161,7 @@ export const WIZARD_GROUP_ICON: Record<string, (props: { size?: number; classNam
   'Datos personales': IconCalendar,
   'Contacto': IconMapPin,
   'Ocupación': IconBriefcase,
+  'Salud hormonal': IconDroplet,
   'Trabajo y horario': IconBriefcase,
   'Exigencia laboral': IconBrain,
   'Condición médica': IconHeartPulse,
@@ -196,4 +210,9 @@ export const CONDITIONAL_RULES: ConditionalRule[] = [
   { id: 'sports_active', value: 'Sí', target: 'sports_detail' },
   { id: 'intervention_surgery', value: 'Sí', target: 'intervention_surgery_detail' },
   { id: 'meds', value: 'Sí', target: 'meds_detail' },
+  // Salud hormonal — ver Matriz_Reglas_Mentoria_BIO360.md, pestaña Baseline.
+  { id: 'gender', value: 'Femenino', target: 'hormonal_status' },
+  { id: 'hormonal_status', value: 'Uso método anticonceptivo hormonal', target: 'hormonal_status_other' },
+  { id: 'hormonal_status', values: ['Ciclo menstrual natural y regular', 'Ciclo menstrual natural pero irregular'], target: 'last_period_date', onlyVariant: 'mentoring' },
+  { id: 'hormonal_status', values: ['Ciclo menstrual natural y regular', 'Ciclo menstrual natural pero irregular'], target: 'cycle_length_days', onlyVariant: 'mentoring' },
 ];

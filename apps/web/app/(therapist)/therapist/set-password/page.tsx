@@ -2,6 +2,8 @@
 
 import { useEffect, useState, type FormEvent } from 'react';
 import { getSessionToken, saveSession, changePasswordRequest } from '@/lib/api-client';
+import BrandRing from '@/components/ui/BrandRing';
+import Button from '@/components/ui/Button';
 
 export default function TherapistSetPasswordPage() {
   const [ready, setReady] = useState(false);
@@ -52,19 +54,22 @@ export default function TherapistSetPasswordPage() {
   if (!ready) return null;
 
   const inputClasses =
-    'block w-full h-11 rounded-xl px-4 text-sm outline-none bg-[var(--lf-input-bg)] border border-[var(--lf-input-border)] text-[var(--lf-input-text)]';
-  const labelClasses = 'block text-sm font-medium text-[var(--lf-label)]';
+    'block w-full h-10 border-0 border-b border-[var(--eph-line-2)] rounded-none bg-transparent px-0.5 py-1.5 font-body text-[18px] font-normal text-[var(--eph-text)] outline-none transition-colors placeholder:text-[var(--eph-muted)] placeholder:opacity-70 focus:border-[var(--eph-accent)]';
+  const labelClasses = 'block font-mono text-[10px] font-normal uppercase tracking-[0.18em] text-[var(--eph-muted)]';
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--cream)', padding: '32px 16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ maxWidth: 420, width: '100%', background: 'var(--paper)', border: '1px solid var(--line)', borderRadius: 'var(--radius)', padding: 32 }}>
-        <h1 className="font-serif text-2xl font-bold text-[var(--ink)] mb-1.5">Crea tu contraseña</h1>
-        <p className="text-sm text-[var(--ink-soft)] mb-6">
+    <div style={{ minHeight: '100vh', background: 'var(--eph-bg)', padding: '32px 16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ maxWidth: 420, width: '100%', background: 'var(--eph-surface)', border: '1px solid var(--eph-line)', borderRadius: 0, padding: 32 }}>
+        <div className="flex justify-center mb-5">
+          <BrandRing size={40} />
+        </div>
+        <h1 className="font-display text-2xl font-normal text-center mb-1.5" style={{ color: 'var(--eph-text)' }}>Crea tu contraseña</h1>
+        <p className="font-body text-sm text-center mb-6" style={{ color: 'var(--eph-body)' }}>
           Tu acceso fue creado con una contraseña temporal. Antes de continuar, define una contraseña definitiva.
         </p>
         <form onSubmit={handleSubmit} className="space-y-4" noValidate>
           {error && (
-            <div role="alert" className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+            <div role="alert" className="rounded-none border px-4 py-3 font-body text-sm" style={{ borderColor: 'var(--eph-danger)', background: 'rgba(138,74,60,0.14)', color: 'var(--eph-text)' }}>
               {error}
             </div>
           )}
@@ -107,13 +112,9 @@ export default function TherapistSetPasswordPage() {
               className={inputClasses}
             />
           </div>
-          <button
-            type="submit"
-            disabled={loading}
-            className="relative inline-flex w-full items-center justify-center h-11 rounded-xl bg-[var(--lf-btn-bg)] text-[var(--lf-btn-text)] font-semibold tracking-wide disabled:cursor-not-allowed disabled:opacity-60"
-          >
+          <Button type="submit" variant="primary" disabled={loading} className="w-full">
             {loading ? 'Guardando…' : 'Guardar y continuar'}
-          </button>
+          </Button>
         </form>
       </div>
     </div>

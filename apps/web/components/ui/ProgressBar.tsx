@@ -12,13 +12,8 @@ export default function ProgressBar({ done, total, label = "Progreso" }: Progres
   return (
     <div style={{ marginTop: 14 }}>
       <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          fontSize: 12,
-          color: "var(--ink-soft)",
-          marginBottom: 4,
-        }}
+        className="mb-1.5 flex justify-between font-mono text-[10px] font-normal uppercase tracking-[0.14em]"
+        style={{ color: "var(--eph-muted)" }}
       >
         <span>{label}</span>
         <span>
@@ -27,9 +22,9 @@ export default function ProgressBar({ done, total, label = "Progreso" }: Progres
       </div>
       <div
         style={{
-          height: 8,
-          background: "var(--line)",
-          borderRadius: "999px",
+          height: 2,
+          background: "rgba(237, 230, 220, 0.14)",
+          borderRadius: 0,
           overflow: "hidden",
         }}
       >
@@ -37,8 +32,8 @@ export default function ProgressBar({ done, total, label = "Progreso" }: Progres
           style={{
             height: "100%",
             width: `${pct}%`,
-            background: "var(--ring-accent)",
-            borderRadius: "999px",
+            background: "var(--eph-accent)",
+            borderRadius: 0,
             transition: "width 0.4s ease",
           }}
         />

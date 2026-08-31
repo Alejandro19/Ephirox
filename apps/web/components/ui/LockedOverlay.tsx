@@ -27,9 +27,9 @@ export default function LockedOverlay({
       </div>
       <div
         style={{
-          background: "var(--paper)",
-          border: "1px solid var(--border-hairline)",
-          borderRadius: "var(--radius-card)",
+          background: "var(--eph-surface)",
+          border: "1px solid var(--eph-line)",
+          borderRadius: 0,
           padding: "26px 24px",
           textAlign: "center",
           marginTop: -14,
@@ -37,33 +37,33 @@ export default function LockedOverlay({
           zIndex: 1,
         }}
       >
-        <div style={{ display: "flex", justifyContent: "center", marginBottom: 10, color: "var(--ring-accent)" }}>
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 10, color: "var(--eph-accent)" }}>
           <IconLock size={26} />
         </div>
         <h3
+          className="font-display"
           style={{
-            fontFamily: "Fraunces, Georgia, serif",
-            fontSize: 17,
+            fontSize: 19,
+            fontWeight: 400,
             margin: "0 0 6px",
-            color: "var(--ink)",
+            color: "var(--eph-text)",
           }}
         >
           {title}
         </h3>
-        <p style={{ fontSize: 13, color: "var(--ink-secondary)", margin: "0 0 16px" }}>
+        <p style={{ fontSize: 13, color: "var(--eph-body)", margin: "0 0 16px" }}>
           {subtitle}
         </p>
         {onCta && (
           <button
             onClick={onCta}
+            className="font-mono text-[11px] font-normal uppercase tracking-[0.22em]"
             style={{
-              padding: "10px 22px",
-              borderRadius: "9999px",
-              background: "var(--ring-accent)",
-              color: "#fff",
+              padding: "12px 26px",
+              borderRadius: 0,
+              background: "var(--eph-accent)",
+              color: "var(--eph-ink)",
               border: "none",
-              fontSize: 13,
-              fontWeight: 600,
               cursor: "pointer",
             }}
           >

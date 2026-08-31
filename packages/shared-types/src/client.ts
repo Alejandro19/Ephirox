@@ -1,13 +1,27 @@
 import { z } from 'zod';
 
+export const CLIENT_TYPES = ['coaching_1_1', 'mentoring'] as const;
+
+// password es obligatoria salvo para altas de Mentoría, que usan invitación
+// por correo en vez de contraseña asignada a mano (ver clients.service.ts::createClient).
 export const ClientCreateInputSchema = z.object({
   name: z.string().min(1),
   email: z.string().email(),
-  password: z.string().min(1),
+  password: z.string().min(1).optional(),
   plan: z.string().optional(),
   mustChangePassword: z.boolean().optional(),
+  client_type: z.enum(CLIENT_TYPES).optional(),
+}).refine((data) => data.client_type === 'mentoring' || !!data.password, {
+  message: 'La contraseña es obligatoria para Cliente 1:1.',
+  path: ['password'],
 });
 export type ClientCreateInput = z.infer<typeof ClientCreateInputSchema>;
+
+export const AcceptInvitationInputSchema = z.object({
+  token: z.string().min(1),
+  password: z.string().min(6),
+});
+export type AcceptInvitationInput = z.infer<typeof AcceptInvitationInputSchema>;
 
 // Campos que el propio dueño del registro o un admin pueden editar por esta
 // ruta. status/permissions/client_type/plan-dates tienen sus propias rutas
@@ -33,7 +47,6 @@ export const StatusPatchSchema = z.object({
 });
 export type StatusPatch = z.infer<typeof StatusPatchSchema>;
 
-export const CLIENT_TYPES = ['coaching_1_1', 'coaching_online', 'lead_wellness', 'mentoring'] as const;
 export const ClientTypePatchSchema = z.object({
   client_type: z.enum(CLIENT_TYPES),
 });
@@ -48,6 +61,11 @@ export const NotificationPreferencesPatchSchema = z.object({
   news: z.boolean().optional(),
 }).strict();
 export type NotificationPreferencesPatch = z.infer<typeof NotificationPreferencesPatchSchema>;
+
+export const LanguagePatchSchema = z.object({
+  language: z.enum(['es', 'en']),
+}).strict();
+export type LanguagePatch = z.infer<typeof LanguagePatchSchema>;
 
 export const RenewPlanPatchSchema = z.union([
   z.object({

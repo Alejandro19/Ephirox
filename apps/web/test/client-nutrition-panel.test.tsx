@@ -149,6 +149,6 @@ describe('ClientNutritionPanel', () => {
     const { PermissionDeniedError } = await import('../lib/api-client');
     vi.mocked(nutritionClient.getNutrition).mockRejectedValue(new PermissionDeniedError('No tienes acceso a este módulo.'));
     render(<ClientNutritionPanel clientId="client-1" />);
-    expect(await screen.findByText('Beneficio exclusivo de una membresía superior')).toBeInTheDocument();
+    expect(await screen.findByText('Disponible en Premium')).toBeInTheDocument();
   });
 });

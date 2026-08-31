@@ -6,10 +6,15 @@ import type { MindsetQuote } from '../../lib/quotes-client';
 import { isDayUnlocked, isDayCompletedThisWeek, calculateDisciplineStats } from '../../lib/training-home-logic';
 import IdentityHeader from '../ui/IdentityHeader';
 import MantraCard from '../ui/MantraCard';
+import Button from '../ui/Button';
 import { ProgressBar } from './TrainingVisuals';
 import { IconFlame, IconShield, IconLock } from '../ui/icons';
+import { ProtocolDisclaimerFooter } from '../ui/ProtocolDisclaimerFooter';
+import { InsightsSection } from '../insights/InsightsSection';
 
 export type TrainingHomeProps = {
+  clientId: string;
+  clientType?: string | null;
   trainingDays: number;
   exercises: Exercise[];
   completions: TrainingCompletion[];
@@ -42,6 +47,8 @@ function nextActionableDay(trainingDays: number, completions: TrainingCompletion
 }
 
 export function TrainingHome({
+  clientId,
+  clientType,
   trainingDays,
   exercises,
   completions,
@@ -61,7 +68,8 @@ export function TrainingHome({
 
   return (
     <div>
-      <IdentityHeader title="Entrenamiento" subtitle={trainingDays ? 'Tu programa de ejercicios personalizado.' : undefined} />
+      <IdentityHeader title="Workout" subtitle={trainingDays ? 'Tu programa de ejercicios personalizado.' : undefined} />
+      {clientType === 'mentoring' && <InsightsSection clientId={clientId} moduleKey="entrenamiento" />}
 
       {quote && (
         <MantraCard mantra={quote.quote} lead={`Hola ${clientName}, repite después de mí:`} author={quote.author} />
@@ -69,52 +77,46 @@ export function TrainingHome({
 
       {heroDay !== null && (
         <div
-          className="relative mt-8 mb-6 overflow-hidden rounded-[var(--radius-hero)] p-7"
-          style={{ background: 'var(--hero-espresso)', color: 'var(--hero-espresso-text)' }}
+          className="relative mt-8 mb-6 overflow-hidden border p-7"
+          style={{ background: 'var(--eph-surface)', borderColor: 'var(--eph-line)', color: 'var(--eph-text)' }}
         >
           <div
             className="pointer-events-none absolute -right-10 -top-10 h-[180px] w-[180px] rounded-full"
-            style={{ background: 'radial-gradient(circle, rgba(217,183,126,.18) 0%, transparent 70%)' }}
+            style={{ background: 'radial-gradient(circle, rgba(201,164,106,.16) 0%, transparent 70%)' }}
           />
           <div className="relative z-10 mb-2.5 flex items-start justify-between gap-3">
-            <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: 'var(--hero-espresso-accent)' }}>
+            <p className="font-mono text-[10px] uppercase tracking-[0.16em]" style={{ color: 'var(--eph-accent)' }}>
               HOY · DÍA {heroDay}
             </p>
             {streak && (
-              <div className="flex flex-shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5" style={{ background: 'rgba(255,255,255,.12)' }}>
+              <div className="flex flex-shrink-0 items-center gap-1.5 rounded-[999px] border px-3 py-1.5" style={{ borderColor: 'var(--eph-line-2)' }}>
                 <IconFlame size={14} />
-                <span className="text-[13px] font-bold">{streak.streakWeeks}</span>
-                <span className="text-[9.5px]" style={{ color: streak.atRisk ? '#F0C68A' : 'var(--hero-espresso-text-muted)' }}>
+                <span className="font-mono text-[13px]">{streak.streakWeeks}</span>
+                <span className="font-mono text-[9px] uppercase tracking-[0.08em]" style={{ color: streak.atRisk ? '#D9A98A' : 'var(--eph-muted)' }}>
                   {streak.atRisk ? 'en riesgo' : streak.streakWeeks === 1 ? 'semana seguida' : 'semanas seguidas'}
                 </span>
               </div>
             )}
           </div>
-          <p className="relative z-10 mb-1.5 font-serif text-xl font-semibold">
+          <p className="relative z-10 mb-1.5 font-display text-xl">
             {heroCount === 0 ? 'Aún no tienes ejercicios asignados' : `${heroCount} ejercicio${heroCount === 1 ? '' : 's'} por entrenar`}
           </p>
           {heroCount > 0 && (
-            <p className="relative z-10 text-[13px]" style={{ color: 'var(--hero-espresso-text-muted)' }}>
+            <p className="relative z-10 font-body text-[13px]" style={{ color: 'var(--eph-body)' }}>
               Asignados por tu mentor
             </p>
           )}
           <div className="relative z-10 mt-5 flex items-center justify-end gap-4">
-            <button
-              type="button"
-              disabled={heroCount === 0}
-              onClick={() => onOpenDay(heroDay)}
-              className="whitespace-nowrap rounded-full px-5 py-2.5 text-[13px] font-bold disabled:cursor-not-allowed disabled:opacity-50"
-              style={{ background: 'var(--hero-espresso-accent)', color: 'var(--hero-espresso)' }}
-            >
+            <Button type="button" variant="primary" disabled={heroCount === 0} onClick={() => onOpenDay(heroDay)}>
               Comenzar sesión
-            </button>
+            </Button>
           </div>
         </div>
       )}
 
       {streak && (
-        <section className="rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--paper)] p-6 mb-5">
-          <div className="mb-1 font-serif text-[15px] font-bold text-[var(--ink)]">Tu semana</div>
+        <section className="border p-6 mb-5" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface)' }}>
+          <div className="mb-3 font-display text-[16px]" style={{ color: 'var(--eph-text)' }}>Tu semana</div>
           <div className="flex items-center gap-2.5">
             {Array.from({ length: streak.sessionsRequiredThisWeek }, (_, i) => i + 1).map((n) => {
               const done = n <= streak.sessionsDoneThisWeek;
@@ -122,20 +124,21 @@ export function TrainingHome({
               return (
                 <div
                   key={n}
-                  className={`flex h-[34px] w-[34px] flex-shrink-0 items-center justify-center rounded-full border text-[13px] transition-colors ${
+                  className="flex h-[34px] w-[34px] flex-shrink-0 items-center justify-center rounded-full border font-mono text-[13px] transition-colors"
+                  style={
                     done
-                      ? 'border-[var(--hero-espresso-accent)] bg-[var(--hero-espresso-accent)] text-white'
+                      ? { borderColor: 'var(--eph-accent)', background: 'var(--eph-accent)', color: 'var(--eph-ink)' }
                       : shielded
-                        ? 'border-[#E1D5EE] bg-[#F1EAF7] text-[#8A5FA0]'
-                        : 'border-[var(--border-input)] font-semibold text-[var(--ink-secondary)]'
-                  }`}
+                        ? { borderColor: 'var(--eph-steel)', color: 'var(--eph-steel)' }
+                        : { borderColor: 'var(--eph-line-2)', color: 'var(--eph-body)' }
+                  }
                 >
                   {done ? '✓' : shielded ? <IconShield size={14} /> : n}
                 </div>
               );
             })}
           </div>
-          <p className="mt-3 text-[13px] text-[var(--ink-secondary)]">
+          <p className="mt-3 font-body text-[13px]" style={{ color: 'var(--eph-body)' }}>
             {streak.protectorUsedThisWeek
               ? 'Semana protegida — no necesitas completar más sesiones para conservar tu racha.'
               : `${streak.sessionsDoneThisWeek} de ${streak.sessionsRequiredThisWeek} sesiones completadas.`}
@@ -144,16 +147,16 @@ export function TrainingHome({
       )}
 
       {streak && (
-        <section className="rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--paper)] p-6 mb-5">
+        <section className="border p-6 mb-5" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface)' }}>
           <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#F1EAF7] text-[#8A5FA0]">
+            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border" style={{ borderColor: 'var(--eph-steel)', color: 'var(--eph-steel)' }}>
               <IconShield size={15} />
             </div>
             <div className="flex-1">
-              <div className="text-xs font-semibold text-[var(--ink)]">
+              <div className="font-body text-xs font-medium" style={{ color: 'var(--eph-text)' }}>
                 {streak.protectorUsedThisWeek ? 'Protector ya usado esta semana' : 'Protector de racha disponible'}
               </div>
-              <div className="mt-0.5 text-[10.5px] text-[var(--ink-secondary)]">
+              <div className="mt-0.5 font-body text-[10.5px]" style={{ color: 'var(--eph-muted)' }}>
                 {streak.protectorUsedThisWeek
                   ? 'Vuelve a estar disponible la próxima semana.'
                   : 'Úsalo si esta semana no puedes completar tus sesiones — tu racha no se rompe.'}
@@ -163,7 +166,8 @@ export function TrainingHome({
               type="button"
               disabled={streak.protectorUsedThisWeek || protectorPending}
               onClick={onUseProtector}
-              className="h-8 flex-shrink-0 rounded-full border border-[#E1D5EE] px-3.5 text-[11px] font-bold text-[#8A5FA0] disabled:cursor-default disabled:opacity-40"
+              className="h-8 flex-shrink-0 rounded-[999px] border px-3.5 font-mono text-[10px] uppercase tracking-[0.08em] disabled:cursor-default disabled:opacity-40"
+              style={{ borderColor: 'var(--eph-steel)', color: 'var(--eph-steel)' }}
             >
               {streak.protectorUsedThisWeek ? 'Usado' : 'Usar protector'}
             </button>
@@ -171,8 +175,8 @@ export function TrainingHome({
         </section>
       )}
 
-      <section className="rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--paper)] p-6 mb-5">
-        <h2 className="mb-4 font-serif text-lg font-bold text-[var(--ink)]">Días de entrenamiento</h2>
+      <section className="border p-6 mb-5" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface)' }}>
+        <h2 className="mb-4 font-display text-lg" style={{ color: 'var(--eph-text)' }}>Días de entrenamiento</h2>
         {days.length ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {days.map((day) => {
@@ -185,10 +189,11 @@ export function TrainingHome({
                   type="button"
                   disabled={!unlocked}
                   onClick={() => onOpenDay(day)}
-                  className="rounded-xl border border-[var(--border-hairline)] bg-[var(--paper)] px-3.5 py-5 text-center transition-colors disabled:cursor-not-allowed disabled:opacity-50 enabled:hover:border-[var(--hero-espresso-accent)] enabled:hover:shadow-[0_6px_16px_rgba(217,183,126,.18)]"
+                  className="border px-3.5 py-5 text-center transition-colors disabled:cursor-not-allowed disabled:opacity-50 enabled:hover:border-[var(--eph-accent)]"
+                  style={{ borderColor: 'var(--eph-line-2)', background: 'transparent' }}
                 >
-                  <div className="font-serif text-[22px] font-semibold text-[var(--ink)]">Día {day}</div>
-                  <div className="mt-1 text-[10px] text-[var(--ink-secondary)]">
+                  <div className="font-display text-[22px]" style={{ color: 'var(--eph-text)' }}>Día {day}</div>
+                  <div className="mt-1 font-mono text-[10px] uppercase tracking-[0.08em]" style={{ color: 'var(--eph-muted)' }}>
                     {!unlocked ? (
                       <span className="inline-flex items-center gap-1">
                         <IconLock size={11} /> Bloqueado
@@ -204,41 +209,42 @@ export function TrainingHome({
             })}
           </div>
         ) : (
-          <div className="py-10 text-center text-[var(--ink-secondary)]">Tu coach aún no configuró tus días de entrenamiento.</div>
+          <div className="py-10 text-center font-body" style={{ color: 'var(--eph-body)' }}>Tu coach aún no configuró tus días de entrenamiento.</div>
         )}
       </section>
 
       {days.length > 0 && (
-        <section className="rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--paper)] p-6 mb-5">
-          <div className="overflow-hidden rounded-xl border border-[var(--border-hairline)]">
+        <section className="border p-6 mb-5" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface)' }}>
+          <div className="overflow-hidden border" style={{ borderColor: 'var(--eph-line)' }}>
             <button
               type="button"
               onClick={() => setDisciplineOpen((v) => !v)}
-              className="flex w-full items-center justify-between bg-[var(--page-bg)] px-[18px] py-4 text-left text-[15px] font-bold text-[var(--ink)]"
+              className="flex w-full items-center justify-between px-[18px] py-4 text-left font-display text-[15px]"
+              style={{ background: 'var(--eph-surface-2)', color: 'var(--eph-text)' }}
             >
               Nivel de disciplina
               <span className="flex items-center gap-2.5">
-                <span className="inline-block h-1.5 w-[70px] overflow-hidden rounded-full bg-[var(--border-hairline)]">
+                <span className="inline-block h-[2px] w-[70px] overflow-hidden" style={{ background: 'rgba(237,230,220,0.14)' }}>
                   <span
-                    className="block h-full rounded-full bg-[var(--hero-espresso-accent)]"
-                    style={{ width: `${Math.min(stats.pct, 100)}%` }}
+                    className="block h-full"
+                    style={{ width: `${Math.min(stats.pct, 100)}%`, background: 'var(--eph-accent)' }}
                   />
                 </span>
-                <span className="text-xs font-bold text-[var(--ink)]">{stats.pct}%</span>
-                <span className="text-sm text-[var(--ink)]">{disciplineOpen ? 'Ocultar' : 'Ver'}</span>
+                <span className="font-mono text-[11px]" style={{ color: 'var(--eph-text)' }}>{stats.pct}%</span>
+                <span className="font-mono text-[10px] uppercase tracking-[0.1em]" style={{ color: 'var(--eph-muted)' }}>{disciplineOpen ? 'Ocultar' : 'Ver'}</span>
               </span>
             </button>
             {disciplineOpen && (
-              <div className="bg-[var(--paper)] px-[18px] pb-3 pt-[18px]">
+              <div className="px-[18px] pb-3 pt-[18px]" style={{ background: 'var(--eph-surface)' }}>
                 <ProgressBar done={stats.doneDays} total={stats.expected} />
                 <div className="mx-auto mt-3.5 grid max-w-[280px] grid-cols-7 gap-[5px]">
                   {calendarCells.map(({ day, completed }) => (
                     <div
                       key={day}
-                      className="flex aspect-square flex-col items-center justify-center rounded-[10px] border text-[11px]"
+                      className="flex aspect-square flex-col items-center justify-center border font-mono text-[11px]"
                       style={completed
-                        ? { borderColor: 'var(--hero-espresso-accent)', background: 'rgba(217,183,126,.18)', color: 'var(--ink)' }
-                        : { borderColor: 'var(--border-hairline)', background: 'var(--page-bg)', color: 'var(--ink-secondary)' }}
+                        ? { borderColor: 'var(--eph-accent)', background: 'rgba(201,164,106,.16)', color: 'var(--eph-text)' }
+                        : { borderColor: 'var(--eph-line)', color: 'var(--eph-faint)' }}
                     >
                       {completed ? <strong>{day}</strong> : <span>{day}</span>}
                     </div>
@@ -249,6 +255,7 @@ export function TrainingHome({
           </div>
         </section>
       )}
+      <ProtocolDisclaimerFooter />
     </div>
   );
 }

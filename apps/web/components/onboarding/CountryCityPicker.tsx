@@ -47,7 +47,7 @@ export function CountryCityPicker({ value, onChange, invalidFieldIds }: CountryC
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-      {loadError && <p role="alert" className="text-sm text-[var(--danger)] sm:col-span-2">{loadError}</p>}
+      {loadError && <p role="alert" className="text-sm text-[#D99483] sm:col-span-2">{loadError}</p>}
 
       <div>
         <SelectField
@@ -58,7 +58,7 @@ export function CountryCityPicker({ value, onChange, invalidFieldIds }: CountryC
           options={[...priority, ...rest].map((c) => ({ value: c.isoCode, label: `${c.flag} ${c.name}` }))}
         />
         {invalidFieldIds?.has('country') && (
-          <p role="alert" className="mt-1.5 text-xs text-[var(--danger)]">Este campo es obligatorio.</p>
+          <p role="alert" className="mt-1.5 font-mono text-[10px] uppercase tracking-[0.1em] text-[#D99483]">Este campo es obligatorio.</p>
         )}
       </div>
 
@@ -77,7 +77,7 @@ export function CountryCityPicker({ value, onChange, invalidFieldIds }: CountryC
           ))}
         </datalist>
         {invalidFieldIds?.has('city') && (
-          <p role="alert" className="mt-1.5 text-xs text-[var(--danger)]">Este campo es obligatorio.</p>
+          <p role="alert" className="mt-1.5 font-mono text-[10px] uppercase tracking-[0.1em] text-[#D99483]">Este campo es obligatorio.</p>
         )}
       </div>
 
@@ -102,7 +102,7 @@ export function CountryCityPicker({ value, onChange, invalidFieldIds }: CountryC
           </div>
         </div>
         {invalidFieldIds?.has('phone_number') && (
-          <p role="alert" className="mt-1.5 text-xs text-[var(--danger)]">Este campo es obligatorio.</p>
+          <p role="alert" className="mt-1.5 font-mono text-[10px] uppercase tracking-[0.1em] text-[#D99483]">Este campo es obligatorio.</p>
         )}
       </div>
     </div>

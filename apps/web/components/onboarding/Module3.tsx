@@ -14,12 +14,12 @@ import { IconClipboardCheck, IconScale, IconActivity, IconCamera, type IconProps
 // eyebrow) que los módulos data-driven, ver WizardShell.
 function Section({ title, icon: Icon, children }: { title: string; icon: (props: IconProps) => React.ReactElement; children: React.ReactNode }) {
   return (
-    <div className="rounded-[14px] border border-[var(--border-hairline)] bg-[var(--paper)] p-5">
+    <div className="border p-5" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface)' }}>
       <div className="mb-4 flex items-center gap-2">
-        <Icon size={16} style={{ color: 'var(--hero-piedra-accent)' }} />
+        <Icon size={16} style={{ color: 'var(--eph-accent)' }} />
         <span
-          className="text-[10.5px] font-bold uppercase tracking-[0.05em]"
-          style={{ color: 'var(--hero-piedra-accent)' }}
+          className="font-mono text-[10px] uppercase tracking-[0.14em]"
+          style={{ color: 'var(--eph-accent)' }}
         >
           {title}
         </span>
@@ -248,12 +248,12 @@ export function Module3({ clientId, draft, onChange, invalidFields }: Module3Pro
                 onFileChange={(file) => { if (file) void handleInbodyFile(file); }}
               />
               {ocrStatus && (
-                <p role={ocrStatus.isError ? 'alert' : 'status'} className={`text-sm ${ocrStatus.isError ? 'text-[var(--danger)]' : 'text-[var(--ink-secondary)]'}`}>
+                <p role={ocrStatus.isError ? 'alert' : 'status'} className={`font-body text-sm ${ocrStatus.isError ? 'text-[#D99483]' : ''}`} style={ocrStatus.isError ? undefined : { color: 'var(--eph-body)' }}>
                   {ocrStatus.message}
                 </p>
               )}
               {draft.inbody.version && (
-                <p className="text-xs text-[var(--ink-secondary)]">Versión detectada: {draft.inbody.version}</p>
+                <p className="font-mono text-[10px] uppercase tracking-[0.1em]" style={{ color: 'var(--eph-muted)' }}>Versión detectada: {draft.inbody.version}</p>
               )}
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -282,7 +282,7 @@ export function Module3({ clientId, draft, onChange, invalidFields }: Module3Pro
 
       <Section title="Composición corporal" icon={IconScale}>
         <div className="space-y-5">
-              <p className="m-0 font-serif text-[14.5px] font-semibold text-[var(--ink)]">
+              <p className="m-0 font-display text-[17px]" style={{ color: 'var(--eph-text)' }}>
                 Tus objetivos de composición corporal
               </p>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -297,7 +297,7 @@ export function Module3({ clientId, draft, onChange, invalidFields }: Module3Pro
                       options={objetivoOptions}
                     />
                     {invalidFields.has(`objetivo_${metrica}`) && (
-                      <p role="alert" className="mt-1.5 text-xs text-[var(--danger)]">Este campo es obligatorio.</p>
+                      <p role="alert" className="mt-1.5 font-mono text-[10px] uppercase tracking-[0.1em] text-[#D99483]">Este campo es obligatorio.</p>
                     )}
                   </div>
                 ))}

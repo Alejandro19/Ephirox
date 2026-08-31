@@ -9,7 +9,6 @@ describe('type-module-access.service', () => {
     // Sembrado por 2026-08-10-roles-and-profiles-matrix.sql — coaching_1_1
     // siempre tiene training en true.
     expect(await isModuleAllowedForType('coaching_1_1', 'training')).toBe(true);
-    expect(await isModuleAllowedForType('lead_wellness', 'training')).toBe(false);
   });
 
   it('defaults to false for an (type, module) pair not present in the matrix', async () => {
@@ -44,8 +43,8 @@ describe('type-module-access.service', () => {
 });
 
 describe('getResolvedModuleAccess', () => {
-  it('resuelve un módulo bloqueado por la matriz (lead_wellness/training, sembrado en false)', async () => {
-    const access = await getResolvedModuleAccess('lead_wellness', {});
+  it('resuelve un módulo bloqueado por la matriz (tipo ausente de la matriz → cerrado por defecto)', async () => {
+    const access = await getResolvedModuleAccess('un_tipo_que_no_existe', {});
     expect(access.training).toBe(false);
   });
 

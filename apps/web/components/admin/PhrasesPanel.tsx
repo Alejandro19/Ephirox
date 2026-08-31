@@ -19,47 +19,52 @@ const CONTEXT_FILTERS: { key: string; label: string }[] = [
 ];
 
 const cardStyle: React.CSSProperties = {
-  background: 'var(--paper)', border: '1px solid var(--border-hairline)',
-  borderRadius: 'var(--radius-card)', padding: '22px 24px', marginBottom: 20,
+  background: 'var(--eph-surface)', border: '1px solid var(--eph-line)',
+  borderRadius: '0', padding: '22px 24px', marginBottom: 20,
 };
 const cardTitleStyle: React.CSSProperties = {
-  fontSize: 15, fontWeight: 700, color: 'var(--ink)', margin: '0 0 16px',
+  fontFamily: 'var(--font-cormorant), Georgia, serif', fontSize: 18, fontWeight: 400, color: 'var(--eph-text)', margin: '0 0 16px',
 };
 const labelStyle: React.CSSProperties = {
-  display: 'block', fontSize: 12, fontWeight: 400, color: 'var(--ink-secondary)', marginBottom: 4,
+  display: 'block', fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', fontSize: 10,
+  textTransform: 'uppercase', letterSpacing: '0.14em', fontWeight: 400, color: 'var(--eph-muted)', marginBottom: 6,
 };
 const fieldStyle: React.CSSProperties = {
-  width: '100%', height: 32, borderRadius: 0, border: 'none', borderBottom: '1px solid var(--border-input)',
-  padding: '0 2px 6px', fontSize: 14.5, fontWeight: 600, background: 'transparent', color: 'var(--ink)',
+  width: '100%', height: 32, borderRadius: 0, border: 'none', borderBottom: '1px solid var(--eph-line-2)',
+  padding: '0 2px 6px', fontSize: 15, fontWeight: 400, background: 'transparent', color: 'var(--eph-text)',
   outline: 'none', boxSizing: 'border-box',
 };
 const selectStyle: React.CSSProperties = { ...fieldStyle, height: 36 };
 const textareaStyle: React.CSSProperties = {
-  width: '100%', borderRadius: 10, border: '1px solid var(--border-hairline)',
-  padding: 10, fontSize: 14.5, fontWeight: 600, background: 'var(--page-bg)', color: 'var(--ink)',
+  width: '100%', borderRadius: 0, border: '1px solid var(--eph-line)',
+  padding: 10, fontSize: 15, fontWeight: 400, background: 'var(--eph-surface-2)', color: 'var(--eph-text)',
   outline: 'none', boxSizing: 'border-box', minHeight: 60, resize: 'vertical', fontFamily: 'inherit',
 };
 const draftCardStyle: React.CSSProperties = {
-  background: 'var(--page-bg)', border: '1px solid var(--border-hairline)', borderRadius: 14, padding: 16, marginBottom: 10,
+  background: 'var(--eph-surface-2)', border: '1px solid var(--eph-line)', borderRadius: 0, padding: 16, marginBottom: 10,
 };
 const ghostButtonStyle: React.CSSProperties = {
-  height: 32, padding: '0 14px', borderRadius: 9999, border: '1px solid var(--border-hairline)',
-  background: 'transparent', color: 'var(--ink-secondary)', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+  height: 32, padding: '0 14px', borderRadius: 0, border: '1px solid var(--eph-line-2)',
+  fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
+  background: 'transparent', color: 'var(--eph-body)', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', cursor: 'pointer',
 };
 const dangerButtonStyle: React.CSSProperties = {
-  height: 32, padding: '0 14px', borderRadius: 9999, border: '1px solid var(--danger)',
-  background: 'transparent', color: 'var(--danger)', fontSize: 12, fontWeight: 600, cursor: 'pointer', flexShrink: 0,
+  height: 32, padding: '0 14px', borderRadius: 0, border: '1px solid var(--eph-danger)',
+  fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
+  background: 'transparent', color: '#D99483', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', cursor: 'pointer', flexShrink: 0,
 };
 const primaryButtonStyle: React.CSSProperties = {
-  height: 40, padding: '0 22px', borderRadius: 9999, border: 'none',
-  background: 'var(--ring-accent)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+  height: 40, padding: '0 22px', borderRadius: 0, border: 'none',
+  fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
+  background: 'var(--eph-accent)', color: 'var(--eph-ink)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.14em', cursor: 'pointer',
 };
 const filterPillStyle = (active: boolean): React.CSSProperties => ({
   height: 30, padding: '0 14px', borderRadius: 9999,
-  border: active ? '1px solid var(--ring-accent)' : '1px solid var(--border-hairline)',
+  fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
+  border: active ? '1px solid var(--eph-accent)' : '1px solid var(--eph-line-2)',
   background: active ? 'rgba(201,166,107,.14)' : 'transparent',
-  color: active ? 'var(--ring-accent)' : 'var(--ink-secondary)',
-  fontSize: 12, fontWeight: 600, cursor: 'pointer', marginRight: 8,
+  color: active ? 'var(--eph-accent)' : 'var(--eph-muted)',
+  fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.08em', cursor: 'pointer', marginRight: 8,
 });
 
 export function PhrasesPanel() {
@@ -143,7 +148,7 @@ export function PhrasesPanel() {
   return (
     <div style={cardStyle}>
       <h3 style={cardTitleStyle}>Frases Card RR.SS</h3>
-      {error && <p role="alert" style={{ color: 'var(--danger)', fontSize: 13 }}>{error}</p>}
+      {error && <p role="alert" style={{ color: '#D99483', fontSize: 13 }}>{error}</p>}
 
       <div style={{ marginBottom: 16 }}>
         {CONTEXT_FILTERS.map(({ key, label }) => (
@@ -171,7 +176,7 @@ export function PhrasesPanel() {
         </div>
       </div>
 
-      {list.length === 0 && <p style={{ color: 'var(--ink-secondary)', fontSize: 13 }}>No hay frases para este filtro.</p>}
+      {list.length === 0 && <p style={{ color: 'var(--eph-muted)', fontSize: 13 }}>No hay frases para este filtro.</p>}
       {list.map((phrase) =>
         editingId === phrase.id ? (
           <div key={phrase.id} style={draftCardStyle}>
@@ -195,10 +200,10 @@ export function PhrasesPanel() {
             </div>
           </div>
         ) : (
-          <div key={phrase.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '12px 0', borderBottom: '1px solid var(--border-hairline)' }}>
+          <div key={phrase.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '12px 0', borderBottom: '1px solid var(--eph-line)' }}>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ fontSize: 14, color: 'var(--ink)', margin: 0 }}>{phrase.text}</p>
-              <span style={{ fontSize: 11, color: 'var(--ink-secondary)', textTransform: 'uppercase', letterSpacing: '.04em' }}>{phrase.context}</span>
+              <p style={{ fontSize: 14, color: 'var(--eph-text)', margin: 0 }}>{phrase.text}</p>
+              <span style={{ fontSize: 11, color: 'var(--eph-muted)', textTransform: 'uppercase', letterSpacing: '.04em' }}>{phrase.context}</span>
             </div>
             <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
               <button
@@ -206,8 +211,8 @@ export function PhrasesPanel() {
                 onClick={() => handleToggleActive(phrase)}
                 style={{
                   ...ghostButtonStyle,
-                  borderColor: phrase.active ? 'var(--ring-accent)' : 'var(--border-hairline)',
-                  color: phrase.active ? 'var(--ring-accent)' : 'var(--ink-secondary)',
+                  borderColor: phrase.active ? 'var(--eph-accent)' : 'var(--eph-line)',
+                  color: phrase.active ? 'var(--eph-accent)' : 'var(--eph-muted)',
                 }}
               >
                 {phrase.active ? '● Activa' : '○ Inactiva'}
@@ -225,8 +230,8 @@ export function PhrasesPanel() {
 
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginTop: 20 }}>
         <div style={{ ...draftCardStyle, flex: 1, minWidth: 220, marginBottom: 0 }}>
-          <h4 style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)', margin: '0 0 8px' }}>Pantalla de confirmación</h4>
-          <p style={{ fontSize: 13, color: 'var(--ink-secondary)', margin: '0 0 12px' }}>
+          <h4 style={{ fontFamily: 'var(--font-cormorant), Georgia, serif', fontSize: 16, fontWeight: 400, color: 'var(--eph-text)', margin: '0 0 8px' }}>Pantalla de confirmación</h4>
+          <p style={{ fontSize: 13, color: 'var(--eph-muted)', margin: '0 0 12px' }}>
             {preview.confirmacion ? preview.confirmacion.text : 'No hay frases activas para este contexto.'}
           </p>
           <button type="button" onClick={() => handlePreview('confirmacion')} style={{ ...ghostButtonStyle, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
@@ -234,8 +239,8 @@ export function PhrasesPanel() {
           </button>
         </div>
         <div style={{ ...draftCardStyle, flex: 1, minWidth: 220, marginBottom: 0 }}>
-          <h4 style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)', margin: '0 0 8px' }}>Tarjeta de Instagram</h4>
-          <p style={{ fontSize: 13, color: 'var(--ink-secondary)', margin: '0 0 12px' }}>
+          <h4 style={{ fontFamily: 'var(--font-cormorant), Georgia, serif', fontSize: 16, fontWeight: 400, color: 'var(--eph-text)', margin: '0 0 8px' }}>Tarjeta de Instagram</h4>
+          <p style={{ fontSize: 13, color: 'var(--eph-muted)', margin: '0 0 12px' }}>
             {preview.instagram ? preview.instagram.text : 'No hay frases activas para este contexto.'}
           </p>
           <button type="button" onClick={() => handlePreview('instagram')} style={{ ...ghostButtonStyle, display: 'inline-flex', alignItems: 'center', gap: 6 }}>

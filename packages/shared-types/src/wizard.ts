@@ -34,6 +34,10 @@ export type ConditionalRule = {
   value?: string;
   values?: string[];
   notValue?: string;
+  // Restringe el target a una variante del wizard además de la condición de
+  // valor (ej. P2/P3 de salud hormonal solo aplican a clientas Mentoría,
+  // aunque P1 que las dispara es visible para todos los tiers).
+  onlyVariant?: 'mentoring';
 };
 
 const RequiredTextSchema = z.string().min(1);
@@ -43,16 +47,21 @@ const RequiredChipsSchema = z.array(z.string()).min(1);
 // validación) dado el valor actual de los campos que los controlan — puerto
 // fiel de la función `show` en `initFieldDependencies` del legacy
 // (index.html). Un campo sin regla nunca se oculta.
-export function computeHiddenFieldIds(rules: ConditionalRule[], data: Record<string, unknown>): Set<string> {
+export function computeHiddenFieldIds(
+  rules: ConditionalRule[],
+  data: Record<string, unknown>,
+  variant?: 'standard' | 'mentoring'
+): Set<string> {
   const hidden = new Set<string>();
   for (const rule of rules) {
     const val = data[rule.id];
-    const show = rule.values
+    const showByValue = rule.values
       ? typeof val === 'string' && rule.values.includes(val)
       : rule.notValue
         ? val !== rule.notValue && val !== undefined && val !== ''
         : val === rule.value;
-    if (!show) hidden.add(rule.target);
+    const showByVariant = !rule.onlyVariant || rule.onlyVariant === variant;
+    if (!showByValue || !showByVariant) hidden.add(rule.target);
   }
   return hidden;
 }

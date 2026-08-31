@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { CrownBadge } from "../ui/CrownBadge";
+import Button from "../ui/Button";
 
 export function ModuleExpiredModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const router = useRouter();
@@ -12,7 +13,7 @@ export function ModuleExpiredModal({ open, onClose }: { open: boolean; onClose: 
       onClick={onClose}
       style={{
         position: "fixed", inset: 0, zIndex: 2500,
-        background: "rgba(26,23,18,.45)",
+        background: "rgba(0,0,0,.6)",
         display: "flex", alignItems: "center", justifyContent: "center",
         padding: 24,
       }}
@@ -20,39 +21,28 @@ export function ModuleExpiredModal({ open, onClose }: { open: boolean; onClose: 
       <div
         onClick={(e) => e.stopPropagation()}
         style={{
-          maxWidth: 380, width: "100%", background: "var(--paper)",
-          border: "1px solid var(--border-hairline)", borderRadius: "20px",
+          maxWidth: 380, width: "100%", background: "var(--eph-surface)",
+          border: "1px solid var(--eph-line)", borderRadius: 0,
           padding: "32px 28px", textAlign: "center",
         }}
       >
         <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
           <CrownBadge circleSize={44} iconSize={22} />
         </div>
-        <p style={{ fontSize: 14, color: "var(--ink)", lineHeight: 1.6, margin: "0 0 24px" }}>
+        <p className="font-body" style={{ fontSize: 14, color: "var(--eph-text)", lineHeight: 1.6, margin: "0 0 24px" }}>
           Este módulo está incluido en tu membresía. Renueva tu pago para volver a acceder.
         </p>
-        <button
+        <Button
           type="button"
+          variant="primary"
           onClick={() => router.push("/configuracion/membresias")}
-          style={{
-            width: "100%", height: 44, borderRadius: "9999px", border: "none",
-            background: "var(--ink)", color: "var(--page-bg)",
-            fontSize: 13.5, fontWeight: 600, cursor: "pointer", marginBottom: 8,
-          }}
+          className="w-full mb-2"
         >
           Renovar membresía
-        </button>
-        <button
-          type="button"
-          onClick={onClose}
-          style={{
-            width: "100%", height: 40, borderRadius: "9999px", border: "none",
-            background: "transparent", color: "var(--ink-secondary)",
-            fontSize: 13, fontWeight: 500, cursor: "pointer",
-          }}
-        >
+        </Button>
+        <Button type="button" variant="tertiary" onClick={onClose} className="w-full justify-center">
           Cerrar
-        </button>
+        </Button>
       </div>
     </div>
   );

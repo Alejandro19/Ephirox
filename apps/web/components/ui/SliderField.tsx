@@ -21,13 +21,17 @@ export default function SliderField({
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between",
-        alignItems: "center", lineHeight: "16px", marginBottom: 4 }}>
+        alignItems: "center", lineHeight: "16px", marginBottom: 6 }}>
         {label && (
-          <div style={{ display: "inline-flex", alignItems: "center", fontSize: 12, lineHeight: "16px", fontWeight: 400, color: "var(--ink-secondary)" }}>
-            <label htmlFor={sliderId} style={{ cursor: "pointer" }}>{label}</label>
-          </div>
+          <label
+            htmlFor={sliderId}
+            className="cursor-pointer font-mono text-[10px] font-normal uppercase tracking-[0.16em]"
+            style={{ color: "var(--eph-muted)" }}
+          >
+            {label}
+          </label>
         )}
-        <span style={{ fontSize: 14.5, lineHeight: "16px", fontWeight: 600, color: "var(--ink)" }}>{value}</span>
+        <span className="font-mono text-[13px] font-normal" style={{ color: "var(--eph-text)" }}>{value}</span>
       </div>
       <div style={{ height: 36, display: "flex", alignItems: "center", boxSizing: "border-box" }}>
         <input
@@ -35,12 +39,14 @@ export default function SliderField({
           id={sliderId}
           min={min} max={max} value={value}
           onChange={(e) => onChange(Number(e.target.value))}
-          style={{ width: "100%", accentColor: "var(--ring-accent)" }}
+          style={{ width: "100%", accentColor: "var(--eph-accent)" }}
         />
       </div>
       {(minLabel || maxLabel) && (
-        <div style={{ display: "flex", justifyContent: "space-between",
-          fontSize: 9, color: "var(--ink-secondary)", marginTop: 4 }}>
+        <div
+          className="flex justify-between font-mono text-[9px] uppercase tracking-[0.1em]"
+          style={{ color: "var(--eph-faint)", marginTop: 4 }}
+        >
           <span>{minLabel || min}</span>
           <span>{maxLabel || max}</span>
         </div>

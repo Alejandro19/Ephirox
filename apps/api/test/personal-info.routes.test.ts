@@ -9,9 +9,9 @@ import { signToken } from '../src/services/auth.service.js';
 describe('personal-info routes', () => {
   const app = createApp();
   let coachingClientId: string;
-  let leadWellnessClientId: string;
+  let unclassifiedClientId: string;
   let coachingToken: string;
-  let leadWellnessToken: string;
+  let unclassifiedToken: string;
 
   beforeAll(async () => {
     const [coachingClient] = await db
@@ -21,25 +21,29 @@ describe('personal-info routes', () => {
     coachingClientId = coachingClient.id;
     coachingToken = signToken({ id: coachingClientId, role: 'cliente', name: 'Coaching Client', email: coachingClient.email });
 
-    const [leadClient] = await db
+    // Tipo inexistente en la matriz — ni personal_info ni
+    // personal_info_mentoring quedan permitidos (cerrado por defecto),
+    // insertado directo porque el enum de CLIENT_TYPES solo se valida en la
+    // ruta PATCH, no a nivel de columna.
+    const [unclassifiedClient] = await db
       .insert(clients)
-      .values({ name: 'Lead Client', email: `lead-${Date.now()}@example.com`, passwordHash: 'x', clientType: 'lead_wellness' })
+      .values({ name: 'Unclassified Client', email: `unclassified-${Date.now()}@example.com`, passwordHash: 'x', clientType: 'sin_clasificar' })
       .returning();
-    leadWellnessClientId = leadClient.id;
-    leadWellnessToken = signToken({ id: leadWellnessClientId, role: 'cliente', name: 'Lead Client', email: leadClient.email });
+    unclassifiedClientId = unclassifiedClient.id;
+    unclassifiedToken = signToken({ id: unclassifiedClientId, role: 'cliente', name: 'Unclassified Client', email: unclassifiedClient.email });
   });
 
   afterAll(async () => {
     await db.delete(adminNotifications).where(eq(adminNotifications.clientId, coachingClientId));
     await db.delete(personalInfo).where(eq(personalInfo.clientId, coachingClientId));
     await db.delete(clients).where(eq(clients.id, coachingClientId));
-    await db.delete(clients).where(eq(clients.id, leadWellnessClientId));
+    await db.delete(clients).where(eq(clients.id, unclassifiedClientId));
   });
 
-  it('blocks a lead_wellness client from reading personal-info', async () => {
+  it('blocks a client whose type is not in the matrix from reading personal-info', async () => {
     const res = await request(app)
-      .get(`/api/clients/${leadWellnessClientId}/personal-info`)
-      .set('Authorization', `Bearer ${leadWellnessToken}`);
+      .get(`/api/clients/${unclassifiedClientId}/personal-info`)
+      .set('Authorization', `Bearer ${unclassifiedToken}`);
     expect(res.status).toBe(403);
   });
 
@@ -87,6 +91,24 @@ describe('personal-info routes', () => {
 
     const [info] = await db.select().from(personalInfo).where(eq(personalInfo.clientId, coachingClientId));
     expect((info.onboardingReport as Record<string, unknown>).checkup_file_url).toBe(res.body.file_url);
+  });
+
+  it('saves cargo_type and sector (segmentación de Mentoría, la llena un admin)', async () => {
+    const res = await request(app)
+      .put(`/api/clients/${coachingClientId}/personal-info`)
+      .set('Authorization', `Bearer ${coachingToken}`)
+      .send({ cargo_type: 'C-level', sector: 'Tecnología' });
+    expect(res.status).toBe(200);
+    expect(res.body.personalInfo.cargoType).toBe('C-level');
+    expect(res.body.personalInfo.sector).toBe('Tecnología');
+  });
+
+  it('rejects an invalid cargo_type/sector value', async () => {
+    const res = await request(app)
+      .put(`/api/clients/${coachingClientId}/personal-info`)
+      .set('Authorization', `Bearer ${coachingToken}`)
+      .send({ cargo_type: 'no-existe' });
+    expect(res.status).toBe(400);
   });
 
   it('rejects a checkup file with an invalid mimetype', async () => {

@@ -25,7 +25,7 @@ export default function TrainingPage() {
   // AppShell ya bloquea el render de esta página hasta que useAuth() termina
   // de cargar (ver components/layout/AppShell.tsx) — leer directo de acá evita
   // el doble-render que causaba decodificar el JWT de nuevo en cada page.tsx.
-  const { role, user } = useAuth();
+  const { role, user, clientType } = useAuth();
   const clientId = user?.id ?? null;
   // Un admin no tiene ficha de cliente propia, así que para él no hace falta
   // resolver el deep-link/NFC — solo aplica al flujo de auto-servicio de un
@@ -87,11 +87,11 @@ export default function TrainingPage() {
   if (role === 'admin') {
     return (
       <div>
-        <IdentityHeader title="Entrenamiento" subtitle="Configura la rutina y el ritmo semanal de cada cliente." />
+        <IdentityHeader title="Workout" subtitle="Configura la rutina y el ritmo semanal de cada cliente." />
         <div
           style={{
-            background: 'var(--paper)', border: '1px solid var(--line)',
-            borderRadius: 'var(--radius)', padding: '22px 24px', marginBottom: 18,
+            background: 'var(--eph-surface)', border: '1px solid var(--eph-line)',
+            borderRadius: 0, padding: '22px 24px', marginBottom: 18,
           }}
         >
           <ClientSwitcher moduleKey="training" selectedClientId={adminClientId} onSelect={setAdminClientId} />
@@ -99,7 +99,7 @@ export default function TrainingPage() {
         {adminClientId ? (
           <AdminTrainingPanel clientId={adminClientId} />
         ) : (
-          <p style={{ color: 'var(--ink-soft)', fontSize: 13 }}>Selecciona un cliente para gestionar su entrenamiento.</p>
+          <p className="font-body" style={{ color: 'var(--eph-body)', fontSize: 13 }}>Selecciona un cliente para gestionar su entrenamiento.</p>
         )}
       </div>
     );
@@ -116,5 +116,5 @@ export default function TrainingPage() {
     );
   }
 
-  return <TrainingShell clientId={clientId ?? ''} />;
+  return <TrainingShell clientId={clientId ?? ''} clientType={clientType} />;
 }

@@ -1,21 +1,32 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { callOcr } from '../../lib/onboarding-client';
-import { parseLabOcrText, OCR_FIELD_MAP } from '../../lib/parse-lab-ocr-text';
+import { extractLabPanel, type ExtractedMarker } from '../../lib/lab-panels-client';
+import { OCR_FIELD_MAP } from '../../lib/parse-lab-ocr-text';
 import { getWearableEstado, getWearableConnectUrl, syncWearable, disconnectWearable, type Dispositivo, type WearableEstado } from '../../lib/wearable-client';
 import SegmentedControl from '../ui/SegmentedControl';
 import FloatingField from '../ui/FloatingField';
 import FileField from '../ui/FileField';
 import { IconActivity, IconClipboardCheck } from '../ui/icons';
 
+// Metadata de nombre/unidad/rango solo para mostrar en el grid — el parseo
+// real (OCR + IA) ahora vive enteramente en el backend (ver
+// lab-ai-extraction.service.ts). OCR_FIELD_MAP se reusa aquí únicamente como
+// diccionario de labels, nunca para parsear texto.
+const MARKER_LABELS = new Map(OCR_FIELD_MAP.map((f) => [f.field, f]));
+
 export type Module10Draft = {
   wearable: string | null;
   appleHealth: { hrv: string; fcReposo: string; spo2: string; vo2max: string };
   labSemana: number;
   labFecha: string;
-  labDatos: Record<string, string>;
+  labMarkers: ExtractedMarker[];
+  labFileUrl: string | null;
   labFileName: string | null;
+  labSourceFileHash: string | null;
+  // Día del ciclo menstrual en la fecha del panel (P6) — solo se pide/usa
+  // para clientas Mentoría con ciclo natural, ver props hormonalStatus/etc.
+  labDiaCiclo: string;
 };
 
 export const EMPTY_MODULE10_DRAFT: Module10Draft = {
@@ -23,20 +34,27 @@ export const EMPTY_MODULE10_DRAFT: Module10Draft = {
   appleHealth: { hrv: '', fcReposo: '', spo2: '', vo2max: '' },
   labSemana: 0,
   labFecha: new Date().toISOString().slice(0, 10),
-  labDatos: {},
+  labMarkers: [],
+  labFileUrl: null,
   labFileName: null,
+  labSourceFileHash: null,
+  labDiaCiclo: '',
 };
 
-function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = reader.result as string;
-      resolve(result.includes(',') ? result.split(',')[1] : result);
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
+const NATURAL_CYCLE_STATUSES = ['Ciclo menstrual natural y regular', 'Ciclo menstrual natural pero irregular'];
+
+// Auto-cálculo de P6 desde P2/P3 (ver Matriz_Reglas_Mentoria_BIO360.md,
+// pestaña "Fase de Ciclo"): día_actual = (fecha_panel - último_período) mod
+// duración_ciclo, 1-indexado. Devuelve null si falta algún dato — el campo
+// queda vacío para que la clienta lo complete a mano.
+function computeDiaCiclo(labFecha: string, lastPeriodDate: string | null, cycleLengthDays: number | null): number | null {
+  if (!lastPeriodDate || !cycleLengthDays || cycleLengthDays <= 0) return null;
+  const panel = new Date(labFecha);
+  const ultimo = new Date(lastPeriodDate);
+  if (Number.isNaN(panel.getTime()) || Number.isNaN(ultimo.getTime())) return null;
+  const diffDays = Math.floor((panel.getTime() - ultimo.getTime()) / (1000 * 60 * 60 * 24));
+  if (diffDays < 0) return null;
+  return (diffDays % cycleLengthDays) + 1;
 }
 
 const WEARABLE_OPTIONS = [
@@ -61,15 +79,17 @@ const SEMANA_OPTIONS = [
   { value: '12', label: 'Semana 12' },
 ];
 
-const LAB_BIOMARKER_COUNT = OCR_FIELD_MAP.length;
-
 export type Module10Props = {
   clientId: string;
   draft: Module10Draft;
   onChange: (draft: Module10Draft) => void;
+  hormonalStatus?: string | null;
+  lastPeriodDate?: string | null;
+  cycleLengthDays?: number | null;
 };
 
-export function Module10({ clientId, draft, onChange }: Module10Props) {
+export function Module10({ clientId, draft, onChange, hormonalStatus, lastPeriodDate, cycleLengthDays }: Module10Props) {
+  const isNaturalCycle = !!hormonalStatus && NATURAL_CYCLE_STATUSES.includes(hormonalStatus);
   const [ocrStatus, setOcrStatus] = useState<{ message: string; isError: boolean } | null>(null);
   const [ocrBusy, setOcrBusy] = useState(false);
   const [wearableEstado, setWearableEstado] = useState<WearableEstado[]>([]);
@@ -83,6 +103,15 @@ export function Module10({ clientId, draft, onChange }: Module10Props) {
   useEffect(() => {
     getWearableEstado(clientId).then(setWearableEstado).catch(() => {});
   }, [clientId]);
+
+  // Sugiere P6 automáticamente al cambiar la fecha del panel — la clienta
+  // puede corregirlo a mano después (draft.labDiaCiclo queda editable).
+  useEffect(() => {
+    if (!isNaturalCycle) return;
+    const sugerido = computeDiaCiclo(draft.labFecha, lastPeriodDate ?? null, cycleLengthDays ?? null);
+    if (sugerido !== null) onChange({ ...draft, labDiaCiclo: String(sugerido) });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draft.labFecha, isNaturalCycle, lastPeriodDate, cycleLengthDays]);
 
   async function handleSync() {
     if (!dispositivo) return;
@@ -114,19 +143,28 @@ export function Module10({ clientId, draft, onChange }: Module10Props) {
       return;
     }
     setOcrBusy(true);
-    setOcrStatus({ message: 'Procesando archivo…', isError: false });
+    setOcrStatus({ message: 'Procesando archivo (OCR + IA)…', isError: false });
     try {
-      const base64 = await fileToBase64(file);
-      const { text } = await callOcr(clientId, base64);
-      if (!text.trim()) throw new Error('No se pudo extraer texto. Exporta el reporte como JPG/PNG e intenta de nuevo.');
-      const parsed = parseLabOcrText(text);
-      const count = Object.keys(parsed).length;
-      if (count === 0) throw new Error('No se detectaron biomarcadores. Verifica que el PDF sea legible.');
-
-      const labDatos: Record<string, string> = {};
-      Object.entries(parsed).forEach(([k, v]) => { labDatos[k] = String(v); });
-      onChange({ ...draft, labDatos, labFileName: file.name });
-      setOcrStatus({ message: `✓ ${count} biomarcadores detectados.`, isError: false });
+      const result = await extractLabPanel(clientId, draft.labSemana, file);
+      const detectedCount = result.markers.filter((m) => m.detected).length;
+      onChange({
+        ...draft,
+        labMarkers: result.markers,
+        labFileUrl: result.fileUrl,
+        labFileName: result.fileName,
+        labSourceFileHash: result.sourceFileHash,
+      });
+      if (detectedCount === 0) {
+        setOcrStatus({ message: 'No se detectó ningún biomarcador. Verifica que el archivo sea legible.', isError: true });
+      } else {
+        const missing = result.markers.length - detectedCount;
+        setOcrStatus({
+          message: missing > 0
+            ? `✓ ${detectedCount} biomarcadores detectados · ${missing} no detectados (el equipo los revisará contra el documento original).`
+            : `✓ ${detectedCount} biomarcadores detectados.`,
+          isError: false,
+        });
+      }
     } catch (e) {
       setOcrStatus({ message: e instanceof Error ? e.message : 'Error al procesar el archivo.', isError: true });
     } finally {
@@ -134,24 +172,16 @@ export function Module10({ clientId, draft, onChange }: Module10Props) {
     }
   }
 
-  const groups = OCR_FIELD_MAP.reduce<Record<string, typeof OCR_FIELD_MAP>>((acc, f) => {
-    if (draft.labDatos[f.field] === undefined) return acc;
-    // Agrupar por la primera palabra del comentario de sección original no
-    // aplica en runtime — se listan en el orden del mapa, sin subtítulos.
-    (acc.__all__ ??= []).push(f);
-    return acc;
-  }, {});
-
   return (
     <div className="space-y-5">
-      <div className="rounded-[14px] border border-[var(--border-hairline)] bg-[var(--paper)] p-5">
+      <div className="border p-5" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface)' }}>
         <div className="mb-4 flex items-center gap-2">
-          <IconActivity size={16} style={{ color: 'var(--hero-piedra-accent)' }} />
-          <span className="text-[10.5px] font-bold uppercase tracking-[0.05em]" style={{ color: 'var(--hero-piedra-accent)' }}>
+          <IconActivity size={16} style={{ color: 'var(--eph-accent)' }} />
+          <span className="font-mono text-[10px] uppercase tracking-[0.14em]" style={{ color: 'var(--eph-accent)' }}>
             Wearables
           </span>
         </div>
-        <p className="m-0 mb-2 text-xs font-normal text-[var(--ink-secondary)]">Wearables que utilizas</p>
+        <p className="m-0 mb-2 font-mono text-[10px] uppercase tracking-[0.14em]" style={{ color: 'var(--eph-muted)' }}>Wearables que utilizas</p>
         <div className="flex flex-wrap gap-2" role="group" aria-label="Wearables que utilizas">
           {WEARABLE_OPTIONS.map((opt) => {
             const selected = draft.wearable === opt.value;
@@ -161,11 +191,11 @@ export function Module10({ clientId, draft, onChange }: Module10Props) {
                 type="button"
                 aria-pressed={selected}
                 onClick={() => onChange({ ...draft, wearable: opt.value })}
-                className="rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors"
+                className="rounded-[999px] px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.1em] transition-colors"
                 style={{
-                  border: selected ? '1px solid var(--ink)' : '1px solid var(--border-input)',
-                  background: selected ? 'var(--ink)' : 'transparent',
-                  color: selected ? '#F5EFE2' : 'var(--ink)',
+                  border: selected ? '1px solid var(--eph-accent)' : '1px solid var(--eph-line-2)',
+                  background: selected ? 'var(--eph-accent)' : 'transparent',
+                  color: selected ? 'var(--eph-ink)' : 'var(--eph-body)',
                 }}
               >
                 {opt.label}
@@ -188,46 +218,46 @@ export function Module10({ clientId, draft, onChange }: Module10Props) {
         )}
 
         {dispositivo && dispositivo !== 'garmin' && (
-          <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-[var(--border-hairline)] bg-[var(--page-bg)] p-4">
+          <div className="mt-4 flex flex-wrap items-center gap-3 border p-4" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface-2)' }}>
             {conectado ? (
               <>
-                <span className="text-sm text-[var(--hero-espresso-accent)]">
+                <span className="font-body text-sm" style={{ color: 'var(--eph-accent)' }}>
                   ✓ Conectado {estadoActual?.ultimaSync ? `· última sincronización ${new Date(estadoActual.ultimaSync).toLocaleDateString('es-CO')}` : ''}
                 </span>
                 <button type="button" onClick={handleSync} disabled={syncing}
-                  className="rounded-full border border-[var(--hero-espresso-accent)] px-4 py-1.5 text-xs font-semibold text-[var(--hero-espresso-accent)] disabled:opacity-60">
+                  className="rounded-[999px] border px-4 py-1.5 font-mono text-[10px] uppercase tracking-[0.1em] disabled:opacity-60" style={{ borderColor: 'var(--eph-accent)', color: 'var(--eph-accent)' }}>
                   {syncing ? 'Sincronizando…' : 'Sincronizar ahora'}
                 </button>
                 <button type="button" onClick={handleDisconnect}
-                  className="rounded-full border border-[var(--border-hairline)] px-4 py-1.5 text-xs font-semibold text-[var(--ink-secondary)]">
+                  className="rounded-[999px] border px-4 py-1.5 font-mono text-[10px] uppercase tracking-[0.1em]" style={{ borderColor: 'var(--eph-line-2)', color: 'var(--eph-body)' }}>
                   Desconectar
                 </button>
               </>
             ) : (
               <a href={getWearableConnectUrl(dispositivo, clientId)}
-                className="rounded-full bg-[var(--ink)] px-4 py-2 text-xs font-semibold text-white">
+                className="rounded-[999px] px-4 py-2 font-mono text-[10px] uppercase tracking-[0.1em]" style={{ background: 'var(--eph-accent)', color: 'var(--eph-ink)' }}>
                 Conectar {draft.wearable}
               </a>
             )}
-            {syncMsg && <span className="w-full text-xs text-[var(--ink-secondary)]">{syncMsg}</span>}
+            {syncMsg && <span className="w-full font-body text-xs" style={{ color: 'var(--eph-body)' }}>{syncMsg}</span>}
           </div>
         )}
 
         {dispositivo === 'garmin' && (
-          <p className="mt-4 rounded-xl border border-dashed border-[var(--border-hairline)] p-3 text-xs text-[var(--ink-secondary)]">
+          <p className="mt-4 border border-dashed p-3 font-body text-xs" style={{ borderColor: 'var(--eph-line-2)', color: 'var(--eph-body)' }}>
             La integración con Garmin todavía no está disponible — próximamente.
           </p>
         )}
       </div>
 
-      <div className="rounded-[14px] border border-[var(--border-hairline)] bg-[var(--paper)] p-5">
+      <div className="border p-5" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface)' }}>
         <div className="mb-1 flex items-center gap-2">
-          <IconClipboardCheck size={16} style={{ color: 'var(--hero-piedra-accent)' }} />
-          <span className="text-[10.5px] font-bold uppercase tracking-[0.05em]" style={{ color: 'var(--hero-piedra-accent)' }}>
+          <IconClipboardCheck size={16} style={{ color: 'var(--eph-accent)' }} />
+          <span className="font-mono text-[10px] uppercase tracking-[0.14em]" style={{ color: 'var(--eph-accent)' }}>
             Laboratorios clínicos
           </span>
         </div>
-        <p className="m-0 mb-4 text-xs text-[var(--ink-secondary)]">Importación automática de biomarcadores vía PDF</p>
+        <p className="m-0 mb-4 font-body text-xs" style={{ color: 'var(--eph-body)' }}>Importación automática de biomarcadores vía PDF</p>
 
         <div className="mb-4">
           <SegmentedControl
@@ -243,42 +273,49 @@ export function Module10({ clientId, draft, onChange }: Module10Props) {
             onChange={(v) => onChange({ ...draft, labFecha: v })} />
           <FileField id="m10-lab-file" label="Subir PDF o imagen de laboratorio" accept=".pdf,.jpg,.jpeg,.png"
             disabled={ocrBusy} uploading={ocrBusy} fileName={draft.labFileName}
-            helper={`Extraemos ${LAB_BIOMARKER_COUNT} biomarcadores automáticamente · PDF, JPG, PNG`}
+            helper="Extraemos los biomarcadores automáticamente con OCR + IA · PDF, JPG, PNG"
             onFileChange={(file) => { if (file) void handleLabFile(file); }} />
+          {isNaturalCycle && (
+            <FloatingField id="m10-lab-dia-ciclo" label="Día del ciclo en que te hiciste este panel" type="number"
+              value={draft.labDiaCiclo} onChange={(v) => onChange({ ...draft, labDiaCiclo: v })} />
+          )}
         </div>
 
         {ocrStatus && (
-          <p role={ocrStatus.isError ? 'alert' : 'status'} className={`mb-4 text-sm ${ocrStatus.isError ? 'text-[var(--danger)]' : 'text-[var(--hero-espresso-accent)]'}`}>
+          <p role={ocrStatus.isError ? 'alert' : 'status'} className="mb-4 font-body text-sm" style={{ color: ocrStatus.isError ? '#D99483' : 'var(--eph-accent)' }}>
             {ocrStatus.message}
           </p>
         )}
 
-        {groups.__all__ && groups.__all__.length > 0 && (
-          <div className="overflow-x-auto rounded-xl border border-[var(--border-hairline)]">
-            <table className="w-full border-collapse text-sm">
+        {draft.labMarkers.length > 0 && (
+          <div className="overflow-x-auto border" style={{ borderColor: 'var(--eph-line)' }}>
+            <table className="w-full border-collapse font-body text-sm">
               <thead>
-                <tr className="border-b border-[var(--border-hairline)] bg-[var(--page-bg)] text-left text-xs text-[var(--ink-secondary)]">
+                <tr className="border-b text-left font-mono text-[10px] uppercase tracking-[0.1em]" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface-2)', color: 'var(--eph-muted)' }}>
                   <th className="p-2.5">Biomarcador</th>
                   <th className="p-2.5 text-right">Valor</th>
                   <th className="p-2.5">Unidad</th>
-                  <th className="p-2.5">Rango óptimo</th>
                 </tr>
               </thead>
               <tbody>
-                {groups.__all__.map((f) => (
-                  <tr key={f.field} className="border-b border-[var(--border-hairline)] last:border-0">
-                    <td className="p-2.5 text-[var(--ink)]">{f.lbl}</td>
-                    <td className="p-2.5 text-right font-semibold text-[var(--hero-espresso-accent)]">{draft.labDatos[f.field]}</td>
-                    <td className="p-2.5 text-[var(--ink-secondary)]">{f.unit}</td>
-                    <td className="p-2.5 text-[var(--ink-secondary)]">{f.opt[0]}–{f.opt[1]}</td>
-                  </tr>
-                ))}
+                {draft.labMarkers.map((m) => {
+                  const meta = MARKER_LABELS.get(m.marker_id);
+                  return (
+                    <tr key={m.marker_id} className="border-b last:border-0" style={{ borderColor: 'var(--eph-line)' }}>
+                      <td className="p-2.5" style={{ color: 'var(--eph-text)' }}>{meta?.lbl || m.marker_id}</td>
+                      <td className="p-2.5 text-right font-medium" style={{ color: m.detected ? 'var(--eph-accent)' : 'var(--eph-muted)' }}>
+                        {m.detected ? m.value : 'No detectado'}
+                      </td>
+                      <td className="p-2.5" style={{ color: 'var(--eph-muted)' }}>{m.detected ? m.unit || meta?.unit : '—'}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         )}
-        {(!groups.__all__ || groups.__all__.length === 0) && (
-          <p className="rounded-xl border border-dashed border-[var(--border-hairline)] p-6 text-center text-sm text-[var(--ink-secondary)]">
+        {draft.labMarkers.length === 0 && (
+          <p className="border border-dashed p-6 text-center font-body text-sm" style={{ borderColor: 'var(--eph-line-2)', color: 'var(--eph-body)' }}>
             Los valores aparecerán aquí tras importar el PDF.
           </p>
         )}

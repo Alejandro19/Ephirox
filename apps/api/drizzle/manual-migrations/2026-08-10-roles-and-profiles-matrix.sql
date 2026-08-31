@@ -27,16 +27,20 @@ CREATE TABLE IF NOT EXISTS client_type_module_permissions (
   CONSTRAINT client_type_module_unique UNIQUE (client_type, module_key)
 );
 
+-- Labels actualizados al rebranding Ephirox (ver
+-- 2026-08-28-ephirox-rebrand-labels.sql para el UPDATE aplicado a filas ya
+-- sembradas en bases existentes) — nuevos entornos ya siembran con los
+-- nombres correctos directamente.
 INSERT INTO permission_modules (key, label, note, sort_order, is_custom) VALUES
-  ('personal_info', 'Información personal', 'sin dispositivos y laboratorios', 0, false),
-  ('personal_info_mentoring', 'Información personal Mentoring', 'incluye módulo 10 · dispositivos y laboratorios', 1, false),
-  ('training', 'Entrenamiento', NULL, 2, false),
-  ('nutrition', 'Nutrición', NULL, 3, false),
-  ('cortisol', 'Gestión de cortisol', NULL, 4, false),
-  ('rest', 'Hackeando el sueño', NULL, 5, false),
-  ('blindspot', 'Punto ciego', NULL, 6, false),
-  ('community', 'Comunidad wellness', NULL, 7, false),
-  ('evolution', 'Mi evolución', NULL, 8, false)
+  ('personal_info', 'Baseline', 'sin dispositivos y laboratorios', 0, false),
+  ('personal_info_mentoring', 'Baseline (Breakthrough Sessions)', 'incluye módulo 10 · dispositivos y laboratorios', 1, false),
+  ('training', 'Workout', NULL, 2, false),
+  ('nutrition', 'Nutrition', NULL, 3, false),
+  ('cortisol', 'Stress', NULL, 4, false),
+  ('rest', 'Sleep', NULL, 5, false),
+  ('blindspot', 'Breakthrough Sessions', NULL, 6, false),
+  ('community', 'The Circle', NULL, 7, false),
+  ('evolution', 'Evolution', NULL, 8, false)
 ON CONFLICT (key) DO NOTHING;
 
 INSERT INTO client_type_module_permissions (client_type, module_key, allowed) VALUES

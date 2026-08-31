@@ -63,10 +63,10 @@ describe('ClientEvolutionPanel', () => {
   it('shows the wellness index hero and the general wellbeing summary', async () => {
     mockFetches();
     render(<ClientEvolutionPanel clientId="client-1" />);
-    expect(await screen.findByText('Índice de bienestar')).toBeInTheDocument();
-    expect(screen.getByText('Bienestar general')).toBeInTheDocument();
-    expect(screen.getByText('Hackeando el sueño')).toBeInTheDocument();
-    expect(screen.getByText('Gestión de Cortisol')).toBeInTheDocument();
+    expect(await screen.findByText('Índice de rendimiento')).toBeInTheDocument();
+    expect(screen.getByText('Panorama general')).toBeInTheDocument();
+    expect(screen.getByText('Sleep')).toBeInTheDocument();
+    expect(screen.getByText('Stress')).toBeInTheDocument();
   });
 
   it('shows the physical evolution KPIs computed from the latest measurement', async () => {
@@ -75,12 +75,6 @@ describe('ClientEvolutionPanel', () => {
     expect(await screen.findByText('Tu evolución física')).toBeInTheDocument();
     expect(screen.getAllByText('70 kg').length).toBeGreaterThan(0);
     expect(screen.getAllByText('22%').length).toBeGreaterThan(0);
-  });
-
-  it('locks the physical evolution section for a lead_wellness client', async () => {
-    mockFetches({ clientType: 'lead_wellness' });
-    render(<ClientEvolutionPanel clientId="client-1" />);
-    expect(await screen.findByText('Tu evolución física se mide en sesión')).toBeInTheDocument();
   });
 
   it('submits a monthly check-in through the accordion form', async () => {
@@ -110,6 +104,6 @@ describe('ClientEvolutionPanel', () => {
     mockFetches();
     vi.mocked(evolutionClient.getEvolutionData).mockRejectedValue(new PermissionDeniedError('Este módulo no está disponible para tu tipo de cuenta.'));
     render(<ClientEvolutionPanel clientId="client-1" />);
-    expect(await screen.findByText('Beneficio exclusivo de una membresía superior')).toBeInTheDocument();
+    expect(await screen.findByText('Disponible en Premium')).toBeInTheDocument();
   });
 });

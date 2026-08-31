@@ -10,7 +10,7 @@ async function unlockModule(clientId: string, moduleKey: string): Promise<void> 
   const permissions = (client.permissions as Record<string, boolean>) || {};
   if (permissions[moduleKey] === true) return;
   await db.update(clients).set({ permissions: { ...permissions, [moduleKey]: true } }).where(eq(clients.id, clientId));
-  await db.insert(clientNotifications).values({ clientId, message: 'Ahora tienes acceso a tu módulo de nutrición.' });
+  await db.insert(clientNotifications).values({ clientId, message: 'Ahora tienes acceso a tu módulo de Nutrition.' });
 }
 
 export async function getPlanAndMeals(clientId: string): Promise<{ plan: NutritionPlan | Record<string, never>; meals: Meal[] }> {

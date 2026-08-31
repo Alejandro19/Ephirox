@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import multer from 'multer';
-import { LegalAcceptanceInputSchema, NotificationPreferencesPatchSchema, MembershipCheckoutInputSchema } from '@latribu/shared-types';
+import { LegalAcceptanceInputSchema, NotificationPreferencesPatchSchema, LanguagePatchSchema, MembershipCheckoutInputSchema } from '@latribu/shared-types';
 import { validateBody } from '../middleware/validate.js';
 import { asyncHandler } from '../middleware/async-handler.js';
 import { authMiddleware, clientOnly } from '../middleware/auth.middleware.js';
@@ -26,6 +26,11 @@ accountRouter.patch(
   '/notification-preferences',
   validateBody(NotificationPreferencesPatchSchema),
   asyncHandler(accountController.patchNotificationPreferences)
+);
+accountRouter.patch(
+  '/language',
+  validateBody(LanguagePatchSchema),
+  asyncHandler(accountController.patchLanguage)
 );
 accountRouter.post('/deletion-request', asyncHandler(accountController.postDeletionRequest));
 accountRouter.get('/export', asyncHandler(accountController.getExport));

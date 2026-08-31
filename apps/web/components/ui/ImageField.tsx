@@ -8,13 +8,6 @@ type ImageFieldProps = {
   onFileChange: (file: File | null) => void;
 };
 
-const helperStyle: React.CSSProperties = {
-  marginTop: 6,
-  fontSize: 11,
-  lineHeight: 1.5,
-  color: "var(--ink-secondary)",
-};
-
 export default function ImageField({ id, label, onFileChange }: ImageFieldProps) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
@@ -33,16 +26,21 @@ export default function ImageField({ id, label, onFileChange }: ImageFieldProps)
 
   return (
     <div style={{ position: "relative" }}>
-      <label htmlFor={id} style={{ display: "block", fontSize: 12, fontWeight: 400, color: "var(--ink-secondary)", marginBottom: 4 }}>
+      <label
+        htmlFor={id}
+        className="mb-1.5 block font-mono text-[10px] font-normal uppercase tracking-[0.16em]"
+        style={{ color: "var(--eph-muted)" }}
+      >
         {label}
       </label>
       {previewUrl ? (
-        <label htmlFor={id} style={{ position: "relative", display: "block", borderRadius: 10, overflow: "hidden", aspectRatio: "16 / 9", cursor: "pointer" }}>
+        <label htmlFor={id} style={{ position: "relative", display: "block", borderRadius: 0, border: "1px solid var(--eph-line)", overflow: "hidden", aspectRatio: "16 / 9", cursor: "pointer" }}>
           <img src={previewUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
           <span
+            className="font-mono text-[10px] font-normal uppercase tracking-[0.1em]"
             style={{
-              position: "absolute", bottom: 8, right: 8, borderRadius: 9999, padding: "4px 10px",
-              background: "rgba(0,0,0,.55)", color: "#fff", fontSize: 11, fontWeight: 600,
+              position: "absolute", bottom: 8, right: 8, borderRadius: "999px", padding: "4px 12px",
+              background: "rgba(8,8,7,.7)", color: "var(--eph-text)",
             }}
           >
             Cambiar foto
@@ -51,17 +49,18 @@ export default function ImageField({ id, label, onFileChange }: ImageFieldProps)
       ) : (
         <label
           htmlFor={id}
+          className="flex items-center justify-center font-mono text-[10px] font-normal uppercase tracking-[0.16em]"
           style={{
-            display: "flex", alignItems: "center", justifyContent: "center",
-            aspectRatio: "16 / 9", borderRadius: 10, border: "1.5px dashed rgba(138,134,124,.4)",
-            background: "var(--page-bg)", color: "var(--ink-secondary)", fontSize: 13, cursor: "pointer",
+            aspectRatio: "16 / 9", borderRadius: 0, border: "1px solid var(--eph-line-2)",
+            backgroundImage: "repeating-linear-gradient(135deg, #121110 0 8px, #181614 8px 16px)",
+            color: "var(--eph-muted)", cursor: "pointer",
           }}
         >
           Elegir foto…
         </label>
       )}
       <input id={id} type="file" accept="image/jpeg,image/png" onChange={handleChange} style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0 0 0 0)" }} />
-      <p style={helperStyle}>
+      <p className="mt-1.5 text-[11px] leading-relaxed" style={{ color: "var(--eph-faint)" }}>
         JPG o PNG · relación 16:9 (horizontal) · mínimo 1200×675px · máx. 5MB. Evitá fotos verticales (se recortan mal)
         y texto superpuesto (el título ya se muestra debajo).
       </p>

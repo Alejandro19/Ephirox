@@ -14,11 +14,6 @@ describe('resolveProviderForTier', () => {
     expect(resolveProviderForTier('coaching_1_1')).toBe('wompi');
   });
 
-  it('Online (coaching_online) hoy siempre resuelve a wompi, sin importar si Stripe está disponible', () => {
-    process.env.STRIPE_SECRET_KEY = 'sk_test_whatever';
-    expect(resolveProviderForTier('coaching_online')).toBe('wompi');
-  });
-
   it('Elite (mentoring) resuelve a wompi (puente TRM) cuando Stripe no está configurado', () => {
     delete process.env.STRIPE_SECRET_KEY;
     expect(resolveProviderForTier('mentoring')).toBe('wompi');

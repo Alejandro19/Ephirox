@@ -37,7 +37,7 @@ export default function AdminRolesPage() {
       />
       <RolesCountCards counts={counts} />
       {error && (
-        <p role="alert" style={{ color: "var(--danger)", fontSize: 13, marginBottom: 16 }}>
+        <p role="alert" style={{ color: "#D99483", fontSize: 13, marginBottom: 16 }}>
           {error}
         </p>
       )}

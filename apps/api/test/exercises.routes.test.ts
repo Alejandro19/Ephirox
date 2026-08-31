@@ -11,8 +11,8 @@ describe('exercises routes', () => {
   let adminToken: string;
   let clientId: string;
   let clientToken: string;
-  let leadClientId: string;
-  let leadToken: string;
+  let unclassifiedClientId: string;
+  let unclassifiedToken: string;
   let exerciseId: string;
 
   beforeAll(async () => {
@@ -25,23 +25,27 @@ describe('exercises routes', () => {
     clientId = client.id;
     clientToken = signToken({ id: clientId, role: 'cliente', name: client.name, email: client.email });
 
-    const [leadClient] = await db
+    // Tipo inexistente en la matriz — el mismo caso "cerrado por defecto" que
+    // un cliente sin clasificar todavía (ver AdminClientDetail "Sin
+    // clasificar"), insertado directo porque el enum de CLIENT_TYPES solo se
+    // valida en la ruta PATCH, no a nivel de columna.
+    const [unclassifiedClient] = await db
       .insert(clients)
-      .values({ name: 'Lead Client', email: `lead-${Date.now()}@example.com`, passwordHash: 'x', clientType: 'lead_wellness' })
+      .values({ name: 'Unclassified Client', email: `unclassified-${Date.now()}@example.com`, passwordHash: 'x', clientType: 'sin_clasificar' })
       .returning();
-    leadClientId = leadClient.id;
-    leadToken = signToken({ id: leadClientId, role: 'cliente', name: leadClient.name, email: leadClient.email });
+    unclassifiedClientId = unclassifiedClient.id;
+    unclassifiedToken = signToken({ id: unclassifiedClientId, role: 'cliente', name: unclassifiedClient.name, email: unclassifiedClient.email });
   });
 
   afterAll(async () => {
     await db.delete(exercises).where(eq(exercises.clientId, clientId));
     await db.delete(clientNotifications).where(eq(clientNotifications.clientId, clientId));
     await db.delete(clients).where(eq(clients.id, clientId));
-    await db.delete(clients).where(eq(clients.id, leadClientId));
+    await db.delete(clients).where(eq(clients.id, unclassifiedClientId));
   });
 
-  it('rejects lead_wellness clients from listing exercises', async () => {
-    const res = await request(app).get(`/api/clients/${leadClientId}/exercises`).set('Authorization', `Bearer ${leadToken}`);
+  it('rejects a client whose type is not in the matrix from listing exercises', async () => {
+    const res = await request(app).get(`/api/clients/${unclassifiedClientId}/exercises`).set('Authorization', `Bearer ${unclassifiedToken}`);
     expect(res.status).toBe(403);
   });
 
@@ -60,7 +64,7 @@ describe('exercises routes', () => {
 
     const notifications = await db.select().from(clientNotifications).where(eq(clientNotifications.clientId, clientId));
     expect(notifications).toHaveLength(1);
-    expect(notifications[0].message).toContain('entrenamiento');
+    expect(notifications[0].message).toContain('Workout');
   });
 
   it('does not duplicate the unlock notification on a second exercise', async () => {

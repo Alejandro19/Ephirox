@@ -6,19 +6,19 @@ import { MEMBERSHIP_LABELS } from "../../../lib/constants";
 import { showToast } from "../../layout/AppShell";
 
 const thStyle: React.CSSProperties = {
-  textAlign: "left", padding: "12px 16px", fontSize: 11, fontWeight: 600,
-  color: "var(--ink-secondary)", textTransform: "uppercase",
-  letterSpacing: "0.04em", borderBottom: "1px solid var(--border-hairline)",
+  textAlign: "left", padding: "12px 16px", fontFamily: "var(--font-jetbrains-mono), ui-monospace, monospace", fontSize: 10, fontWeight: 400,
+  color: "var(--eph-muted)", textTransform: "uppercase",
+  letterSpacing: "0.1em", borderBottom: "1px solid var(--eph-line)",
 };
 
 const tdStyle: React.CSSProperties = {
-  padding: "12px 16px", fontSize: 13, color: "var(--ink)", verticalAlign: "middle",
+  padding: "12px 16px", fontSize: 13, color: "var(--eph-text)", verticalAlign: "middle",
 };
 
 const inputStyle: React.CSSProperties = {
   width: 120, height: 32, borderRadius: 0, border: "none",
-  borderBottom: "1px solid var(--border-input)", padding: "0 2px 4px",
-  fontSize: 14, fontWeight: 600, background: "transparent", color: "var(--ink)",
+  borderBottom: "1px solid var(--eph-line-2)", padding: "0 2px 4px",
+  fontSize: 14, fontWeight: 600, background: "transparent", color: "var(--eph-text)",
   outline: "none", boxSizing: "border-box",
 };
 
@@ -57,7 +57,7 @@ export default function PricingTable({ prices, onSaved }: { prices: MembershipPr
   );
 
   return (
-    <div style={{ background: "var(--paper)", border: "1px solid var(--border-hairline)", borderRadius: "var(--radius-card)", overflow: "hidden" }}>
+    <div style={{ background: "var(--eph-surface)", border: "1px solid var(--eph-line)", borderRadius: "0", overflow: "hidden" }}>
       <table style={{ width: "100%", borderCollapse: "collapse" }}>
         <thead>
           <tr>
@@ -68,7 +68,7 @@ export default function PricingTable({ prices, onSaved }: { prices: MembershipPr
         </thead>
         <tbody>
           {sorted.map((price) => (
-            <tr key={price.id} style={{ borderBottom: "1px solid var(--border-hairline)" }}>
+            <tr key={price.id} style={{ borderBottom: "1px solid var(--eph-line)" }}>
               <td style={tdStyle}>{MEMBERSHIP_LABELS[price.clientType] || price.clientType}</td>
               <td style={tdStyle}>{price.durationMonths} {price.durationMonths === 1 ? "mes" : "meses"}</td>
               <td style={tdStyle}>
@@ -86,8 +86,9 @@ export default function PricingTable({ prices, onSaved }: { prices: MembershipPr
                   onClick={() => handleSave(price)}
                   disabled={saving === price.id}
                   style={{
-                    padding: "6px 16px", borderRadius: "9999px", border: "1px solid var(--border-hairline)",
-                    background: "transparent", color: "var(--ink-secondary)", fontSize: 12, fontWeight: 600,
+                    padding: "8px 18px", borderRadius: 0, border: "1px solid var(--eph-line-2)",
+                    fontFamily: "var(--font-jetbrains-mono), ui-monospace, monospace",
+                    background: "transparent", color: "var(--eph-body)", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.1em",
                     cursor: saving === price.id ? "not-allowed" : "pointer", opacity: saving === price.id ? 0.6 : 1,
                   }}
                 >

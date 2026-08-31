@@ -48,6 +48,30 @@
   --radius-hero: 16px;
   --radius-card: 14px;
   --radius-control: 9px;
+
+  /* ─── Identidad Ephirox (reskin en curso) ───
+     Conviven con la paleta anterior hasta que cada pantalla migre — no la
+     reemplazan todavía (ver plan de reskin). El "body" global sigue con el
+     fondo claro legacy; cada pantalla migrada setea su propio fondo oscuro
+     en su contenedor raíz, igual que ya hace /login. Cuando el árbol entero
+     esté migrado, la paleta legacy de arriba se retira en un solo paso. */
+  --eph-bg: #080807;
+  --eph-surface: #0E0C0B;
+  --eph-surface-2: #161311;
+  --eph-line: rgba(237, 230, 220, 0.12);
+  --eph-line-2: rgba(237, 230, 220, 0.20);
+  --eph-text: #F4EFE7;
+  --eph-body: #B7ADA2;
+  --eph-muted: #8C8177;
+  --eph-faint: #5F574F;
+  --eph-accent: #C9A46A;
+  --eph-accent-hi: #E3C795;
+  --eph-steel: #7E8A93;
+  --eph-danger: #8A4A3C;
+  --eph-ink: #0B0A09;
+  /* Documentos imprimibles/informes (PDF): únicos que usan claro */
+  --eph-paper-bg: #EDE6DC;
+  --eph-paper-text: #1C1613;
 }
 
 /* ─── Base ─── */
@@ -84,21 +108,4 @@ input, select, textarea {
 
 .fade-anim {
   animation: module-in .45s ease;
-}
-
-/* ─── Login: tema día/noche por hora del dispositivo ───
-   La clase se aplica en <html> vía un script inline que corre antes del
-   primer pintado (ver LoginThemeScript), así no hay flash de tema
-   incorrecto ni salto de color al refrescar. */
-html.theme-login-light {
-  --lh-bg: #F5EFDF; --lh-word: #2B2621; --lh-slogan: #6B6459;
-  --lf-bg: #211B17; --lf-title: #F3EFE6; --lf-label: #B0A599; --lf-input-border: #3A2F27;
-  --lf-input-bg: #2B231E; --lf-input-text: #F3EFE6; --lf-btn-bg: #D9BE8C; --lf-btn-text: #241A08;
-  --lf-foot: #B0A599; --lf-link: #D9BE8C;
-}
-html.theme-login-dark {
-  --lh-bg: #211B17; --lh-word: #F3EFE6; --lh-slogan: #C9C2B4;
-  --lf-bg: #FFFDF8; --lf-title: #2B2621; --lf-label: #8A8377; --lf-input-border: #E7DFC9;
-  --lf-input-bg: #FBF7EC; --lf-input-text: #2B2621; --lf-btn-bg: #2B2621; --lf-btn-text: #F3EFE6;
-  --lf-foot: #8A8377; --lf-link: #B8935A;
 }

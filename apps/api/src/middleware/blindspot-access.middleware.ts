@@ -34,7 +34,7 @@ export async function caseAccessOnly(req: Request, res: Response, next: NextFunc
 export function mentoringOnly(req: Request, res: Response, next: NextFunction) {
   if (req.user?.role === 'admin' || req.user?.role === 'terapeuta') return next();
   if (req.client?.clientType !== 'mentoring') {
-    return unauthorized(res, 'Este módulo es exclusivo para clientes de Mentoría.');
+    return unauthorized(res, 'Este módulo es exclusivo para clientes Premium.');
   }
   next();
 }

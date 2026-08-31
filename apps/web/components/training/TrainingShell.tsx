@@ -24,6 +24,7 @@ import LockedBenefit from '../ui/LockedBenefit';
 
 export type TrainingShellProps = {
   clientId: string;
+  clientType?: string | null;
 };
 
 function clientTz(): string {
@@ -47,7 +48,7 @@ async function fetchTrainingBundle(clientId: string) {
   return { trainingDays, clientName, exercises, completions, streak, quote };
 }
 
-export function TrainingShell({ clientId }: TrainingShellProps) {
+export function TrainingShell({ clientId, clientType }: TrainingShellProps) {
   const { data, error: loadError, isLoading: loading, mutate } = useSWR(['training-bundle', clientId], () =>
     fetchTrainingBundle(clientId),
   );
@@ -114,12 +115,12 @@ export function TrainingShell({ clientId }: TrainingShellProps) {
     setCompletedIds((prev) => new Set(prev).add(exerciseId));
   }
 
-  if (loading) return <p style={{ color: 'var(--ink-soft)', fontSize: 14 }}>Cargando tu rutina…</p>;
+  if (loading) return <p className="font-body" style={{ color: 'var(--eph-body)', fontSize: 14 }}>Cargando tu rutina…</p>;
   if (loadError instanceof PermissionDeniedError) {
-    return <LockedBenefit variant="upgrade" benefit="tu plan de entrenamiento" />;
+    return <LockedBenefit benefit="tu plan de entrenamiento" />;
   }
   const error = actionError || (loadError ? (loadError as Error).message : null);
-  if (error) return <p role="alert">{error}</p>;
+  if (error) return <p role="alert" className="font-body" style={{ color: '#D99483' }}>{error}</p>;
   if (!data) return null;
 
   const { trainingDays, exercises, completions, streak, quote, clientName } = data;
@@ -164,6 +165,8 @@ export function TrainingShell({ clientId }: TrainingShellProps) {
   return (
     <>
       <TrainingHome
+        clientId={clientId}
+        clientType={clientType}
         trainingDays={trainingDays}
         exercises={exercises}
         completions={completions}

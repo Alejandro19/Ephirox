@@ -66,7 +66,7 @@ describe('roles (Roles y Perfiles) admin routes', () => {
       .select()
       .from(clientTypeModulePermissions)
       .where(eq(clientTypeModulePermissions.moduleKey, 'nutricion_deportiva'));
-    expect(rows).toHaveLength(4);
+    expect(rows).toHaveLength(2);
     expect(rows.every((r) => r.allowed === false)).toBe(true);
   });
 
@@ -99,8 +99,8 @@ describe('roles (Roles y Perfiles) admin routes', () => {
     const before = await db
       .select()
       .from(clientTypeModulePermissions)
-      .where(and(eq(clientTypeModulePermissions.clientType, 'coaching_online'), eq(clientTypeModulePermissions.moduleKey, 'rest')));
-    const beforeOnline = before[0]?.allowed;
+      .where(and(eq(clientTypeModulePermissions.clientType, 'mentoring'), eq(clientTypeModulePermissions.moduleKey, 'rest')));
+    const beforeMentoring = before[0]?.allowed;
 
     const res = await request(app)
       .put('/api/admin/roles/matrix/coaching_1_1')
@@ -111,8 +111,8 @@ describe('roles (Roles y Perfiles) admin routes', () => {
     const after = await db
       .select()
       .from(clientTypeModulePermissions)
-      .where(and(eq(clientTypeModulePermissions.clientType, 'coaching_online'), eq(clientTypeModulePermissions.moduleKey, 'rest')));
-    expect(after[0]?.allowed).toBe(beforeOnline);
+      .where(and(eq(clientTypeModulePermissions.clientType, 'mentoring'), eq(clientTypeModulePermissions.moduleKey, 'rest')));
+    expect(after[0]?.allowed).toBe(beforeMentoring);
 
     // Restaura el seed original (rest=true para coaching_1_1).
     await request(app)
@@ -145,12 +145,10 @@ describe('roles (Roles y Perfiles) admin routes', () => {
       .send({ permissions: { personal_info: false, personal_info_mentoring: true } });
   });
 
-  it('returns counts for the 4 client types plus therapist', async () => {
+  it('returns counts for the 2 client types plus therapist', async () => {
     const res = await request(app).get('/api/admin/roles/counts').set('Authorization', `Bearer ${adminToken}`);
     expect(res.status).toBe(200);
     expect(res.body.counts).toHaveProperty('coaching_1_1');
-    expect(res.body.counts).toHaveProperty('coaching_online');
-    expect(res.body.counts).toHaveProperty('lead_wellness');
     expect(res.body.counts).toHaveProperty('mentoring');
     expect(res.body.counts).toHaveProperty('therapist');
     expect(res.body.counts.coaching_1_1).toBeGreaterThanOrEqual(1); // el cliente creado en beforeAll

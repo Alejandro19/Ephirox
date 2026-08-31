@@ -3,29 +3,15 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { getSessionToken, saveSession, changePasswordRequest } from '@/lib/api-client';
 import { getSafeRedirectTarget } from '@/lib/login-redirect';
+import BrandRing from '@/components/ui/BrandRing';
+import Button from '@/components/ui/Button';
 
-// Mismo patrón visual que (auth)/login: paleta fija (sin variante día/noche)
-// — el panel izquierdo usa el café oscuro exclusivo de las pantallas de
-// login/contraseña (#2A2015), el derecho siempre claro (--page-bg). A esta
-// página llega un cliente al que el admin le asignó una contraseña temporal
-// (ver AdminClientList → checkbox "Contraseña temporal"), redirigido acá
-// desde (auth)/login justo después de autenticarse con esa contraseña.
-const PANEL_BG = '#2A2015';
-
-function BrandRing({ size = 64 }: { size?: number }) {
-  const thickness = Math.round(size * 0.125);
-  return (
-    <div className="relative z-[1]" style={{ width: size, height: size }}>
-      <div
-        style={{
-          position: 'absolute', inset: 0, borderRadius: '50%',
-          background: 'conic-gradient(from 0deg, #D9B77E, #D97E5F, #8A5FA0, #5B8F6B, #D9B77E)',
-        }}
-      />
-      <div style={{ position: 'absolute', inset: thickness, borderRadius: '50%', background: PANEL_BG }} />
-    </div>
-  );
-}
+// Mismo patrón visual que (auth)/login: identidad Ephirox, ambos paneles
+// oscuros (--eph-bg), sin variante día/noche. A esta página llega un
+// cliente al que el admin le asignó una contraseña temporal (ver
+// AdminClientList → checkbox "Contraseña temporal"), redirigido acá desde
+// (auth)/login justo después de autenticarse con esa contraseña.
+const PANEL_BG = 'var(--eph-bg)';
 
 export default function SetPasswordPage() {
   const [ready, setReady] = useState(false);
@@ -73,33 +59,30 @@ export default function SetPasswordPage() {
   if (!ready) return null;
 
   const inputClasses =
-    'block w-full h-9 border-0 border-b border-[var(--border-input)] rounded-none bg-transparent px-0.5 py-1.5 text-[14px] text-[var(--ink)] outline-none transition-colors placeholder:text-[var(--ink-secondary)] placeholder:opacity-60 focus:border-[var(--ink)]';
-  const labelClasses = 'block text-[11px] font-semibold uppercase tracking-wide text-[var(--ink-secondary)]';
-  const primaryButtonClasses =
-    'relative inline-flex w-full items-center justify-center h-11 rounded-[9px] font-semibold tracking-wide transition-all duration-200 ease-out active:scale-[0.98] active:brightness-95 disabled:cursor-not-allowed disabled:opacity-60 gap-2';
-  const primaryButtonStyle = { background: PANEL_BG, color: '#F5EFE2' };
+    'block w-full h-10 border-0 border-b border-[var(--eph-line-2)] rounded-none bg-transparent px-0.5 py-1.5 font-body text-[18px] font-normal text-[var(--eph-text)] outline-none transition-colors placeholder:text-[var(--eph-muted)] placeholder:opacity-70 focus:border-[var(--eph-accent)]';
+  const labelClasses = 'block font-mono text-[10px] font-normal uppercase tracking-[0.18em] text-[var(--eph-muted)]';
 
   return (
-    <div className="min-h-screen w-full bg-[var(--page-bg)] flex items-center justify-center p-4">
-      <div className="max-w-4xl w-full md:min-h-[600px] grid grid-cols-1 md:grid-cols-2 rounded-[20px] overflow-hidden shadow-[0_20px_50px_rgba(26,23,18,0.12)]">
+    <div className="min-h-screen w-full flex items-center justify-center p-4" style={{ background: PANEL_BG }}>
+      <div className="max-w-4xl w-full md:min-h-[600px] grid grid-cols-1 md:grid-cols-2 rounded-none border overflow-hidden" style={{ borderColor: 'var(--eph-line)' }}>
         <div className="relative overflow-hidden p-12 flex flex-col items-center justify-center text-center" style={{ background: PANEL_BG }}>
           <div
             className="pointer-events-none absolute rounded-full"
-            style={{ width: 260, height: 260, background: 'radial-gradient(circle, rgba(217,183,126,.22) 0%, transparent 70%)' }}
+            style={{ width: 260, height: 260, background: 'radial-gradient(circle, rgba(201,164,106,.18) 0%, transparent 70%)' }}
           />
           <BrandRing size={64} />
-          <h1 className="relative z-[1] font-serif text-2xl font-bold mt-[18px] mb-1.5" style={{ color: '#F5EFE2' }}>La Tribu</h1>
-          <p className="relative z-[1] font-serif italic text-[12.5px]" style={{ color: '#B0A296' }}>Comunidad de bienestar y alto rendimiento.</p>
+          <h1 className="relative z-[1] font-display text-2xl font-normal uppercase tracking-[0.16em] mt-[18px] mb-1.5" style={{ color: 'var(--eph-text)' }}>Ephirox</h1>
+          <p className="relative z-[1] font-display italic text-[12.5px]" style={{ color: 'var(--eph-accent)' }}>Redefining limits.</p>
         </div>
 
-        <div className="p-12 flex flex-col justify-center" style={{ background: 'var(--page-bg)' }}>
-          <h2 className="font-serif text-[19px] font-semibold mb-1.5" style={{ color: 'var(--ink)' }}>Crea tu contraseña</h2>
-          <p className="text-sm mb-6" style={{ color: 'var(--ink-secondary)' }}>
+        <div className="p-12 flex flex-col justify-center" style={{ background: PANEL_BG }}>
+          <h2 className="font-display text-[22px] font-normal mb-1.5" style={{ color: 'var(--eph-text)' }}>Crea tu contraseña</h2>
+          <p className="font-body text-sm mb-6" style={{ color: 'var(--eph-body)' }}>
             Tu acceso fue creado con una contraseña temporal. Antes de continuar, define una definitiva.
           </p>
           <form onSubmit={handleSubmit} className="w-full space-y-4" noValidate>
             {error && (
-              <div role="alert" className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+              <div role="alert" className="rounded-none border px-4 py-3 font-body text-sm" style={{ borderColor: 'var(--eph-danger)', background: 'rgba(138,74,60,0.14)', color: 'var(--eph-text)' }}>
                 {error}
               </div>
             )}
@@ -142,9 +125,9 @@ export default function SetPasswordPage() {
                 className={inputClasses}
               />
             </div>
-            <button type="submit" disabled={loading} className={primaryButtonClasses} style={primaryButtonStyle}>
+            <Button type="submit" variant="primary" disabled={loading} className="w-full">
               {loading ? 'Guardando…' : 'Guardar y continuar'}
-            </button>
+            </Button>
           </form>
         </div>
       </div>

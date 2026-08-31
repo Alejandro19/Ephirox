@@ -14,12 +14,9 @@ import {
   clearSession,
   fetchAuthMe,
   loginRequest,
-  registerRequest,
   decodeTokenPayload,
   AuthInvalidError,
   type LoginResult,
-  type RegisterResult,
-  type LegalAcceptancePayload,
 } from "./api-client";
 
 type AuthUser = {
@@ -38,18 +35,22 @@ type AuthState = {
   onboardingComplete: boolean;
   planExpired: boolean;
   planEndDate: string | null;
+  // Idioma de la interfaz fija (Configuración > Idioma) — 'es' | 'en', 'es' por defecto.
+  language: string;
   isLoading: boolean;
   isAuthLoading: boolean;
 };
 
 type AuthContextValue = AuthState & {
   login: (email: string, password: string) => Promise<LoginResult>;
-  register: (name: string, email: string, legalAcceptance: LegalAcceptancePayload) => Promise<RegisterResult>;
-  googleLogin: (credential: string) => Promise<LoginResult>;
   logout: () => void;
   refreshAuth: () => Promise<void>;
   showAuthLoading: () => void;
   hideAuthLoading: () => void;
+  // Actualiza el estado en memoria de inmediato (toda la app cambia de
+  // idioma sin recargar) — quien llame a esto es responsable de persistirlo
+  // en el backend (ver PanelConfiguracion.jsx).
+  setLanguage: (language: string) => void;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -64,6 +65,7 @@ const initialState: AuthState = {
   onboardingComplete: false,
   planExpired: false,
   planEndDate: null,
+  language: "es",
   isLoading: true,
   isAuthLoading: false,
 };
@@ -117,6 +119,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           onboardingComplete: !!data.onboardingComplete,
           planExpired: !!data.planExpired,
           planEndDate: data.planEndDate ?? null,
+          language: data.language ?? "es",
           isLoading: false,
           isAuthLoading: false,
         });
@@ -156,6 +159,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         onboardingComplete: !!result.onboardingComplete,
         planExpired: !!result.planExpired,
         planEndDate: result.planEndDate ?? null,
+        language: result.language ?? "es",
         isLoading: false,
         isAuthLoading: false,
       });
@@ -163,46 +167,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return result;
   }, []);
 
-  // La solicitud de membresía ("Solicita tu membresía") no crea sesión —
-  // el cliente queda "inactive" hasta que un admin lo active, así que acá
-  // no hay token/estado de auth que setear, solo se propaga el resultado.
-  const register = useCallback(async (name: string, email: string, legalAcceptance: LegalAcceptancePayload) => {
-    return registerRequest(name, email, 'membership_request', legalAcceptance);
-  }, []);
-
-  // Google login — conservado para cuando se reactive, pero no usado por la UI de Fase 0
-  const googleLogin = useCallback(async (credential: string) => {
-    const res = await fetch(`http://localhost:3003/api/auth/google`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ credential }),
-    });
-    const result: LoginResult = await res.json();
-    if (result.success && result.token) {
-      saveSession(result.token);
-      setState({
-        token: result.token,
-        role: result.role ?? null,
-        user: result.user ?? decodeUserFromToken(result.token),
-        permissions: result.permissions ?? {},
-        moduleAccess: result.moduleAccess ?? {},
-        clientType: result.clientType ?? null,
-        onboardingComplete: !!result.onboardingComplete,
-        planExpired: !!result.planExpired,
-        planEndDate: result.planEndDate ?? null,
-        isLoading: false,
-        isAuthLoading: false,
-      });
-    }
-    return result;
+  const setLanguage = useCallback((language: string) => {
+    setState((prev) => ({ ...prev, language }));
   }, []);
 
   useEffect(() => { refreshAuth(); }, [refreshAuth]);
 
   const value: AuthContextValue = {
-    ...state, login, register, googleLogin, logout, refreshAuth,
-    showAuthLoading, hideAuthLoading,
+    ...state, login, logout, refreshAuth,
+    showAuthLoading, hideAuthLoading, setLanguage,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

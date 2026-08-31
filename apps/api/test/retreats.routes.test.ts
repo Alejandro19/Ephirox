@@ -11,8 +11,6 @@ describe('retreats routes', () => {
   const adminToken = signToken({ id: 'admin-1', role: 'admin', name: 'Admin', email: 'admin@example.com' });
   let clientId: string;
   let clientToken: string;
-  let leadWellnessId: string;
-  let leadWellnessToken: string;
 
   beforeAll(async () => {
     const [client] = await db
@@ -23,19 +21,11 @@ describe('retreats routes', () => {
     clientToken = signToken({ id: clientId, role: 'cliente', name: client.name, email: client.email });
     // requireCommunityAccess needs completed onboarding for a coaching client.
     await db.insert(personalInfo).values({ clientId, completedAt: new Date() });
-
-    const [leadWellness] = await db
-      .insert(clients)
-      .values({ name: 'Lead Wellness Client', email: `retreats-lw-${Date.now()}@example.com`, status: 'active', clientType: 'lead_wellness' })
-      .returning();
-    leadWellnessId = leadWellness.id;
-    leadWellnessToken = signToken({ id: leadWellnessId, role: 'cliente', name: leadWellness.name, email: leadWellness.email });
   });
 
   afterAll(async () => {
     await db.delete(personalInfo).where(eq(personalInfo.clientId, clientId));
     await db.delete(clients).where(eq(clients.id, clientId));
-    await db.delete(clients).where(eq(clients.id, leadWellnessId));
   });
 
   afterEach(async () => {
@@ -92,9 +82,9 @@ describe('retreats routes', () => {
     expect(res.status).toBe(400);
   });
 
-  it('lists active retreats, open to any authenticated client including lead_wellness', async () => {
+  it('lists active retreats for any authenticated client', async () => {
     await request(app).post('/api/community/retreats').set('Authorization', `Bearer ${adminToken}`).send({ title: 'Retiro sin reservas' });
-    const res = await request(app).get('/api/community/retreats').set('Authorization', `Bearer ${leadWellnessToken}`);
+    const res = await request(app).get('/api/community/retreats').set('Authorization', `Bearer ${clientToken}`);
     expect(res.status).toBe(200);
     expect(res.body.retreats[0].confirmed_count).toBe(0);
   });
@@ -137,14 +127,6 @@ describe('retreats routes', () => {
     const res = await request(app).get(`/api/clients/${clientId}/retreat-reservations`).set('Authorization', `Bearer ${clientToken}`);
     expect(res.status).toBe(200);
     expect(res.body.reservations).toHaveLength(1);
-  });
-
-  it('blocks a lead_wellness client from reserving a retreat (premium experience, gated like Terapias)', async () => {
-    const createRes = await request(app).post('/api/community/retreats').set('Authorization', `Bearer ${adminToken}`).send({ title: 'Retiro premium' });
-    const retreatId = createRes.body.retreat.id;
-
-    const res = await request(app).post(`/api/community/retreats/${retreatId}/reserve`).set('Authorization', `Bearer ${leadWellnessToken}`);
-    expect(res.status).toBe(403);
   });
 
   it('admin uploads a photo for a retreat without wiping its other fields (start_date/end_date)', async () => {

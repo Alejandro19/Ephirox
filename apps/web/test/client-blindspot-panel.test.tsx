@@ -4,17 +4,20 @@ import userEvent from '@testing-library/user-event';
 import { renderWithSWR as render } from './swr-test-utils';
 import { ClientBlindspotPanel } from '@/components/blindspot/ClientBlindspotPanel';
 import * as blindspotClient from '@/lib/blindspot-client';
+import * as insightsClient from '@/lib/insights-client';
 
 vi.mock('@/lib/blindspot-client');
+vi.mock('@/lib/insights-client');
 
 describe('ClientBlindspotPanel', () => {
   beforeEach(() => {
     vi.mocked(blindspotClient.clientGetMyCase).mockResolvedValue({ case: null, tasks: [], sessionLogs: [] });
+    vi.mocked(insightsClient.getInsights).mockResolvedValue({ applicable: false });
   });
 
   it('shows a locked state for a non-mentoring client, never calling the API', () => {
-    render(<ClientBlindspotPanel clientType="coaching_online" />);
-    expect(screen.getByText('Beneficio exclusivo de Club Elite')).toBeInTheDocument();
+    render(<ClientBlindspotPanel clientType="coaching_1_1" clientId="client-1" />);
+    expect(screen.getByText('Disponible en Premium')).toBeInTheDocument();
     // Regression: la versión anterior pasaba <BlindspotBody/> vivo como fondo
     // desenfocado del candado, que hacía su propio fetch y mostraba su
     // propio candado fantasma por debajo — ver ClientBlindspotPanel.tsx.
@@ -22,7 +25,7 @@ describe('ClientBlindspotPanel', () => {
   });
 
   it('shows an empty state for a mentoring client with no case yet', async () => {
-    render(<ClientBlindspotPanel clientType="mentoring" />);
+    render(<ClientBlindspotPanel clientType="mentoring" clientId="client-1" />);
     expect(await screen.findByText(/aún no ha iniciado tu evaluación/i)).toBeInTheDocument();
   });
 
@@ -39,7 +42,7 @@ describe('ClientBlindspotPanel', () => {
       ],
     });
 
-    render(<ClientBlindspotPanel clientType="mentoring" />);
+    render(<ClientBlindspotPanel clientType="mentoring" clientId="client-1" />);
 
     expect(await screen.findByText('Escribir 3 patrones')).toBeInTheDocument();
     expect(screen.getByText('Dra. Ríos', { exact: false })).toBeInTheDocument();
@@ -56,7 +59,7 @@ describe('ClientBlindspotPanel', () => {
     });
     vi.mocked(blindspotClient.clientCompleteTask).mockResolvedValue({ id: 't1', caseId: 'case-1', title: 'Meditar 10 min', description: null, dueDate: null, status: 'completada', createdBy: 'th-1', completedAt: '2026-08-06', createdAt: '2026-08-01' });
 
-    render(<ClientBlindspotPanel clientType="mentoring" />);
+    render(<ClientBlindspotPanel clientType="mentoring" clientId="client-1" />);
     await user.click(await screen.findByRole('button', { name: 'Marcar hecha' }));
 
     await waitFor(() => expect(blindspotClient.clientCompleteTask).toHaveBeenCalledWith('t1'));
@@ -71,7 +74,7 @@ describe('ClientBlindspotPanel', () => {
     });
     vi.mocked(blindspotClient.clientRequestHelp).mockResolvedValue('Le avisamos a Alejandro.');
 
-    render(<ClientBlindspotPanel clientType="mentoring" />);
+    render(<ClientBlindspotPanel clientType="mentoring" clientId="client-1" />);
     await user.click(await screen.findByRole('button', { name: 'Avisar a Alejandro ahora' }));
 
     expect(await screen.findByText(/le avisamos a alejandro/i)).toBeInTheDocument();

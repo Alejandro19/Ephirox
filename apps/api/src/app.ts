@@ -26,6 +26,8 @@ import { retreatsRouter } from './routes/retreats.routes.js';
 import { evolutionRouter } from './routes/evolution.routes.js';
 import { wellnessIndexRouter } from './routes/wellness-index.routes.js';
 import { labPanelsRouter } from './routes/lab-panels.routes.js';
+import { insightsRouter } from './routes/insights.routes.js';
+import { checkinsRouter } from './routes/checkins.routes.js';
 import { wearableRouter, wearableOAuthRouter } from './routes/wearable.routes.js';
 import { blindspotRouter } from './routes/blindspot.routes.js';
 import { rolesRouter } from './routes/roles.routes.js';
@@ -34,6 +36,7 @@ import { accountRouter } from './routes/account.routes.js';
 import { membershipPricesRouter } from './routes/membership-prices.routes.js';
 import { stripeWebhookRouter } from './routes/stripe-webhook.routes.js';
 import { wompiWebhookRouter } from './routes/wompi-webhook.routes.js';
+import { wearableWebhookRouter } from './routes/wearable-webhook.routes.js';
 
 export function createApp() {
   const app = express();
@@ -52,6 +55,7 @@ export function createApp() {
   // propio express.raw()).
   app.use('/api/stripe', stripeWebhookRouter);
   app.use('/api/wompi', wompiWebhookRouter);
+  app.use('/api/webhooks/wearable', wearableWebhookRouter);
 
   app.use(express.json({ limit: '10mb' }));
 
@@ -84,6 +88,8 @@ export function createApp() {
   app.use('/api/clients', cortisolLogsRouter);
   app.use('/api/clients', sleepRouter);
   app.use('/api/clients', labPanelsRouter);
+  app.use('/api/clients', insightsRouter);
+  app.use('/api/clients', checkinsRouter);
   app.use('/api/clients', wearableRouter);
   app.use('/api/wearable', wearableOAuthRouter);
   app.use('/api/blindspot', blindspotRouter);

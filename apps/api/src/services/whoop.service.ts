@@ -2,6 +2,7 @@
 // de métricas WHOOP. Traducido de axios a fetch nativo (convención de
 // ocr.service.ts en este backend), misma lógica y mismos endpoints.
 import * as wearableService from './wearable.service.js';
+import { updateBaselineTimestampsIfNeeded } from './wearable-baseline.service.js';
 
 const WHOOP_BASE_URL = 'https://api.prod.whoop.com/developer';
 const WHOOP_AUTH_URL = 'https://api.prod.whoop.com/oauth/oauth2/auth';
@@ -144,6 +145,7 @@ export async function sincronizarWhoop(clienteId: string): Promise<{ sincronizad
   const metricas = Object.values(metricasPorFecha);
   if (metricas.length > 0) await wearableService.guardarMetricas(metricas);
   await wearableService.actualizarUltimaSync(clienteId, 'whoop');
+  await updateBaselineTimestampsIfNeeded(clienteId);
 
   return { sincronizados: metricas.length };
 }

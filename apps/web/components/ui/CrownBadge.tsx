@@ -1,8 +1,8 @@
 import { IconCrown } from "./icons";
 
-// Insignia de "módulo incluido en tu membresía pero vencido" — círculo dorado
-// con la corona adentro. Versión definitiva: topbar en 14px/8px, cards del
-// home en 26px/15px — mismo componente, solo cambia el tamaño vía props.
+// Insignia de "módulo incluido en tu membresía pero vencido" — círculo bronce
+// con la corona adentro. Sin sombra (ver spec de reskin §1/§7): la jerarquía
+// se hace con hairlines y superficie, no con box-shadow.
 export function CrownBadge({ circleSize, iconSize }: { circleSize: number; iconSize: number }) {
   return (
     <span
@@ -13,9 +13,8 @@ export function CrownBadge({ circleSize, iconSize }: { circleSize: number; iconS
         width: circleSize,
         height: circleSize,
         borderRadius: "50%",
-        background: "#C9A66B",
-        color: "#1A1712",
-        boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
+        background: "var(--eph-accent)",
+        color: "var(--eph-ink)",
         flexShrink: 0,
       }}
     >

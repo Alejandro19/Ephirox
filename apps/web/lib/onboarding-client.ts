@@ -33,13 +33,45 @@ export type PersonalInfoUpdatePayload = {
   weight?: number | null;
   height?: number | null;
   body_fat?: number | null;
-  onboarding_report: Record<string, unknown>;
-  complete: true;
+  hormonal_status?: string;
+  hormonal_status_other?: string;
+  last_period_date?: string;
+  cycle_length_days?: number | null;
+  snores?: string;
+  sleep_apnea_signs?: string;
+  // Segmentación para el benchmark comparativo de Mentoría — la llena un
+  // admin a mano desde la ficha del cliente (AdminClientDetail), nunca el
+  // wizard de onboarding.
+  cargo_type?: string;
+  sector?: string;
+  // true si el cliente llenó los campos manuales de Apple Health en Módulo
+  // 10 — única señal server-side de "wearable conectado" para ese caso
+  // (Apple Watch no tiene OAuth real, ver onboarding.service.ts).
+  apple_health_connected?: boolean;
+  // Requeridos al finalizar el wizard de onboarding; opcionales para
+  // actualizaciones puntuales fuera del wizard (ej. check-ins de Fase C
+  // confirmando período o duración de ciclo) — omitirlos no dispara ningún
+  // efecto secundario de "onboarding completo" (ver personal-info.service.ts).
+  onboarding_report?: Record<string, unknown>;
+  complete?: true;
 };
 
 export async function putPersonalInfo(clientId: string, payload: PersonalInfoUpdatePayload): Promise<void> {
   const body = await authorizedRequest<{ success: boolean; error?: string }>(`/api/clients/${clientId}/personal-info`, 'PUT', payload);
   if (!body.success) throw new Error(body.error || 'Error al guardar tu información personal.');
+}
+
+export type FinalizeOnboardingMissingItem = 'wearable' | 'lab_week0' | 'inbody';
+export type FinalizeOnboardingResult =
+  | { success: true }
+  | { success: false; error?: string; missing?: FinalizeOnboardingMissingItem[] };
+
+// Único punto que marca el onboarding como completo — para Mentoría exige
+// wearable + laboratorio semana 0 + InBody ya guardados (ver
+// onboarding.service.ts). Llamar solo después de haber guardado todos los
+// datos del wizard (personal-info sin `complete`, InBody, laboratorio).
+export async function finalizeOnboarding(clientId: string): Promise<FinalizeOnboardingResult> {
+  return authorizedRequest<FinalizeOnboardingResult>(`/api/clients/${clientId}/onboarding/finalize`, 'POST');
 }
 
 export async function uploadPersonalInfoFile(

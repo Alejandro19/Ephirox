@@ -8,20 +8,23 @@ import FileField from '../ui/FileField';
 import { IconFileDownload } from '../ui/icons';
 
 const labelStyle: React.CSSProperties = {
-  display: 'block', fontSize: 12, fontWeight: 400, color: 'var(--ink-secondary)', marginBottom: 4,
+  display: 'block', fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', fontSize: 10,
+  textTransform: 'uppercase', letterSpacing: '0.14em', fontWeight: 400, color: 'var(--eph-muted)', marginBottom: 6,
 };
 const inputStyle: React.CSSProperties = {
-  width: '100%', height: 36, borderRadius: 10, border: '1px solid var(--border-hairline)',
-  padding: '0 10px', fontSize: 14, fontWeight: 600, background: 'var(--paper)', color: 'var(--ink)',
+  width: '100%', height: 36, borderRadius: 0, border: '1px solid var(--eph-line-2)',
+  padding: '0 10px', fontSize: 15, fontWeight: 400, background: 'transparent', color: 'var(--eph-text)',
   outline: 'none', boxSizing: 'border-box',
 };
 const dangerButtonStyle: React.CSSProperties = {
-  height: 32, padding: '0 14px', borderRadius: 9999, border: '1px solid var(--danger)',
-  background: 'transparent', color: 'var(--danger)', fontSize: 12, fontWeight: 600, cursor: 'pointer', flexShrink: 0,
+  height: 32, padding: '0 14px', borderRadius: 0, border: '1px solid var(--eph-danger)',
+  fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
+  background: 'transparent', color: '#D99483', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', cursor: 'pointer', flexShrink: 0,
 };
 const primaryButtonStyle: React.CSSProperties = {
-  height: 36, padding: '0 18px', borderRadius: 9999, border: 'none',
-  background: 'var(--ring-accent)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+  height: 36, padding: '0 18px', borderRadius: 0, border: 'none',
+  fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
+  background: 'var(--eph-accent)', color: 'var(--eph-ink)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.14em', cursor: 'pointer',
 };
 
 export function AdminRecipesPanel() {
@@ -68,7 +71,7 @@ export function AdminRecipesPanel() {
     }
   }
 
-  if (loading) return <p style={{ color: 'var(--ink-secondary)', fontSize: 14 }}>Cargando recetas…</p>;
+  if (loading) return <p style={{ color: 'var(--eph-muted)', fontSize: 14 }}>Cargando recetas…</p>;
 
   return (
     <div>
@@ -101,14 +104,14 @@ export function AdminRecipesPanel() {
           recipes.map((recipe) => (
             <div
               key={recipe.id}
-              style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 0', borderBottom: '0.5px solid var(--border-hairline)' }}
+              style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 0', borderBottom: '0.5px solid var(--eph-line)' }}
             >
-              <span aria-hidden style={{ color: 'var(--ring-accent)', flexShrink: 0, display: 'inline-flex' }}>
+              <span aria-hidden style={{ color: 'var(--eph-accent)', flexShrink: 0, display: 'inline-flex' }}>
                 <IconFileDownload size={18} />
               </span>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: 'var(--ink)' }}>{recipe.name}</p>
-                {recipe.category && <p style={{ margin: '2px 0 0', fontSize: 11, color: 'var(--ink-secondary)' }}>{recipe.category}</p>}
+                <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: 'var(--eph-text)' }}>{recipe.name}</p>
+                {recipe.category && <p style={{ margin: '2px 0 0', fontSize: 11, color: 'var(--eph-muted)' }}>{recipe.category}</p>}
               </div>
               <button type="button" style={dangerButtonStyle} onClick={() => handleDelete(recipe.id)}>Eliminar</button>
             </div>

@@ -19,6 +19,10 @@ export type PersonalInfo = {
   weight: number | null;
   height: number | null;
   bodyFat: number | null;
+  // Segmentación para el benchmark comparativo de Mentoría — solo la llena
+  // un admin desde AdminClientDetail, nunca el wizard de onboarding.
+  cargoType: string | null;
+  sector: string | null;
   onboardingReport: Record<string, unknown> | null;
   completedAt: string | null;
 };

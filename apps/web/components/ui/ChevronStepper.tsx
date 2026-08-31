@@ -20,15 +20,18 @@ export default function ChevronStepper({
   return (
     <div>
       {label && (
-        <div style={{ display: "flex", alignItems: "center", fontSize: 12, lineHeight: "16px", fontWeight: 400,
-          color: "var(--ink-secondary)", marginBottom: 4 }}>
-          <label htmlFor={outputId}>{label}</label>
-        </div>
+        <label
+          htmlFor={outputId}
+          className="mb-1.5 block font-mono text-[10px] font-normal uppercase tracking-[0.16em]"
+          style={{ color: "var(--eph-muted)" }}
+        >
+          {label}
+        </label>
       )}
-      <div style={{ height: 36, display: "flex", alignItems: "center",
-        justifyContent: "space-between", borderBottom: "1px solid var(--border-input)",
+      <div style={{ height: 40, display: "flex", alignItems: "center",
+        justifyContent: "space-between", borderBottom: "1px solid var(--eph-line-2)",
         padding: "0 2px", boxSizing: "border-box" }}>
-        <output id={outputId} style={{ fontSize: 14.5, fontWeight: 600, color: "var(--ink)" }}>{value}</output>
+        <output id={outputId} className="font-mono" style={{ fontSize: 18, fontWeight: 400, color: "var(--eph-text)" }}>{value}</output>
         <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
           <button type="button" aria-label={label ? `Aumentar ${label}` : "Aumentar"} onClick={() => {
             const n = value + step;
@@ -36,7 +39,7 @@ export default function ChevronStepper({
             onChange(n);
           }}
             style={{ border: "none", background: "none", padding: 0, lineHeight: 1,
-              fontSize: 11, color: "var(--ink-secondary)", cursor: "pointer" }}>
+              fontSize: 11, color: "var(--eph-muted)", cursor: "pointer" }}>
             ▲
           </button>
           <button type="button" aria-label={label ? `Disminuir ${label}` : "Disminuir"} onClick={() => {
@@ -45,7 +48,7 @@ export default function ChevronStepper({
             onChange(n);
           }}
             style={{ border: "none", background: "none", padding: 0, lineHeight: 1,
-              fontSize: 11, color: "var(--ink-secondary)", cursor: "pointer" }}>
+              fontSize: 11, color: "var(--eph-muted)", cursor: "pointer" }}>
             ▼
           </button>
         </div>

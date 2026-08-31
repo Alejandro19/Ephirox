@@ -12,8 +12,8 @@ describe('blindspot (Punto Ciego) routes', () => {
 
   let mentoringClientId: string;
   let mentoringClientToken: string;
-  let onlineClientId: string;
-  let onlineClientToken: string;
+  let nonMentoringClientId: string;
+  let nonMentoringClientToken: string;
   let therapistAId: string;
   let therapistAToken: string;
   let therapistBId: string;
@@ -27,12 +27,12 @@ describe('blindspot (Punto Ciego) routes', () => {
     mentoringClientId = mentoringClient.id;
     mentoringClientToken = signToken({ id: mentoringClientId, role: 'cliente', name: mentoringClient.name, email: mentoringClient.email, clientType: 'mentoring' });
 
-    const [onlineClient] = await db
+    const [nonMentoringClient] = await db
       .insert(clients)
-      .values({ name: 'Online Client', email: `online-${Date.now()}@example.com`, status: 'active', clientType: 'coaching_online' })
+      .values({ name: 'Non Mentoring Client', email: `non-mentoring-${Date.now()}@example.com`, status: 'active', clientType: 'coaching_1_1' })
       .returning();
-    onlineClientId = onlineClient.id;
-    onlineClientToken = signToken({ id: onlineClientId, role: 'cliente', name: onlineClient.name, email: onlineClient.email, clientType: 'coaching_online' });
+    nonMentoringClientId = nonMentoringClient.id;
+    nonMentoringClientToken = signToken({ id: nonMentoringClientId, role: 'cliente', name: nonMentoringClient.name, email: nonMentoringClient.email, clientType: 'coaching_1_1' });
 
     const passwordHash = await hashPassword('supersecret123');
     const [therapistA] = await db
@@ -52,7 +52,7 @@ describe('blindspot (Punto Ciego) routes', () => {
 
   afterAll(async () => {
     await db.delete(clients).where(eq(clients.id, mentoringClientId));
-    await db.delete(clients).where(eq(clients.id, onlineClientId));
+    await db.delete(clients).where(eq(clients.id, nonMentoringClientId));
     await db.delete(therapists).where(eq(therapists.id, therapistAId));
     await db.delete(therapists).where(eq(therapists.id, therapistBId));
   });
@@ -85,7 +85,7 @@ describe('blindspot (Punto Ciego) routes', () => {
   }
 
   it('a non-mentoring client is blocked from every my-case route (403)', async () => {
-    const res = await request(app).get('/api/blindspot/my-case').set('Authorization', `Bearer ${onlineClientToken}`);
+    const res = await request(app).get('/api/blindspot/my-case').set('Authorization', `Bearer ${nonMentoringClientToken}`);
     expect(res.status).toBe(403);
   });
 

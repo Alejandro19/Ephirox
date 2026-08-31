@@ -20,7 +20,7 @@ async function sendClientNotification(clientId: string, info: Pick<PersonalInfo,
   const EMAIL_FROM = process.env.NOTIFICATION_FROM || 'no-reply@latribu.com';
   const EMAIL_TO = process.env.ADMIN_NOTIFICATION_EMAIL || process.env.NOTIFICATION_TO || 'g619alejandro@gmail.com';
 
-  const subject = `La Tribu: onboarding completado cliente ${clientId}`;
+  const subject = `Ephirox: onboarding completado cliente ${clientId}`;
   const summary = [`<strong>ID:</strong> ${clientId}`];
   if (info.country) summary.push(`<strong>País:</strong> ${info.country}`);
   if (info.city) summary.push(`<strong>Ciudad:</strong> ${info.city}`);
@@ -71,6 +71,21 @@ export async function upsertPersonalInfo(clientId: string, input: PersonalInfoUp
   if (input.weight !== undefined) patch.weight = input.weight;
   if (input.height !== undefined) patch.height = input.height;
   if (input.body_fat !== undefined) patch.bodyFat = input.body_fat;
+  if (input.hormonal_status !== undefined) patch.hormonalStatus = input.hormonal_status;
+  if (input.hormonal_status_other !== undefined) patch.hormonalStatusOther = input.hormonal_status_other;
+  if (input.last_period_date !== undefined) patch.lastPeriodDate = input.last_period_date;
+  // cycleLengthConfirmedAt se pisa automáticamente cada vez que se guarda un
+  // cycle_length_days — onboarding y la revisión periódica de Fase C usan el
+  // mismo campo, sin que el caller tenga que acordarse de mandarlo aparte.
+  if (input.cycle_length_days !== undefined) {
+    patch.cycleLengthDays = input.cycle_length_days;
+    patch.cycleLengthConfirmedAt = new Date();
+  }
+  if (input.snores !== undefined) patch.snores = input.snores;
+  if (input.sleep_apnea_signs !== undefined) patch.sleepApneaSigns = input.sleep_apnea_signs;
+  if (input.cargo_type !== undefined) patch.cargoType = input.cargo_type;
+  if (input.sector !== undefined) patch.sector = input.sector;
+  if (input.apple_health_connected !== undefined) patch.appleHealthConnected = input.apple_health_connected;
   if (input.onboarding_report !== undefined) patch.onboardingReport = input.onboarding_report;
   if (input.complete) patch.completedAt = new Date();
 

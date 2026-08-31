@@ -5,9 +5,10 @@ import { useRouter } from "next/navigation";
 import useSWR, { useSWRConfig } from "swr";
 import {
   User, ShieldCheck, Watch, Bell, Lock, LogOut,
-  ChevronRight, Check,
+  ChevronRight, Check, Globe,
 } from "lucide-react";
 import { useAuth } from "../../lib/auth-context";
+import { useTranslation } from "../../lib/i18n/useTranslation";
 import { MEMBERSHIP_LABELS } from "../../lib/constants";
 import { fetchClient, updateClientProfile } from "../../lib/clients-client";
 import {
@@ -15,6 +16,7 @@ import {
   submitLegalAcceptance,
   uploadAvatar,
   updateNotificationPreferences,
+  updateLanguage,
   requestAccountDeletion,
   getAccountExport,
 } from "../../lib/account-client";
@@ -31,11 +33,14 @@ import AceptacionRegistro from "../auth/AceptacionRegistro";
  * que ya existía (Oura, cambio de contraseña).
  */
 
-const INK = "#1A1712";
-const INK_MUTED = "#5A5248";
-const GOLD = "#C9A66B";
-const BORDER = "#E4DDCE";
-const PAGE_BG = "#FAF7F1";
+const INK = "var(--eph-text)";
+const INK_MUTED = "var(--eph-muted)";
+const GOLD = "var(--eph-accent)";
+const BORDER = "var(--eph-line)";
+const BORDER_2 = "var(--eph-line-2)";
+const PAGE_BG = "var(--eph-bg)";
+const SURFACE_2 = "var(--eph-surface-2)";
+const DANGER_TEXT = "#D99483";
 
 function formatMemberNumber(n) {
   return String(n).padStart(5, "0");
@@ -58,7 +63,7 @@ function SectionHeader({ Icon, title }) {
   return (
     <div className="flex items-center gap-2 mb-4">
       <Icon size={15} color={GOLD} />
-      <h2 className="font-serif text-[16px]" style={{ color: INK }}>{title}</h2>
+      <h2 className="font-display font-normal text-[18px]" style={{ color: INK }}>{title}</h2>
     </div>
   );
 }
@@ -97,11 +102,11 @@ function Toggle({ checked, onChange, disabled }) {
       disabled={disabled}
       onClick={() => onChange(!checked)}
       className="relative flex-shrink-0 rounded-full transition-colors"
-      style={{ width: 38, height: 22, background: checked ? INK : "#E4DDCE", opacity: disabled ? 0.5 : 1, cursor: disabled ? "not-allowed" : "pointer" }}
+      style={{ width: 38, height: 22, background: checked ? GOLD : BORDER, opacity: disabled ? 0.5 : 1, cursor: disabled ? "not-allowed" : "pointer" }}
     >
       <span
-        className="absolute top-[3px] rounded-full bg-white transition-all"
-        style={{ width: 16, height: 16, left: checked ? 19 : 3 }}
+        className="absolute top-[3px] rounded-full transition-all"
+        style={{ width: 16, height: 16, left: checked ? 19 : 3, background: "var(--eph-text)" }}
       />
     </button>
   );
@@ -121,13 +126,13 @@ function Row({ title, sub, right }) {
 
 function Pill({ children, tone = "neutral" }) {
   const styles = {
-    neutral: { background: "transparent", border: `1px solid ${BORDER}`, color: INK_MUTED },
-    gold: { background: INK, border: `1px solid ${INK}`, color: "#FAF7F1" },
-    ok: { background: "transparent", border: "1px solid #A8B89A", color: "#6B8055" },
+    neutral: { background: "transparent", border: `1px solid ${BORDER_2}`, color: INK_MUTED },
+    gold: { background: GOLD, border: `1px solid ${GOLD}`, color: "var(--eph-ink)" },
+    ok: { background: "rgba(201,164,106,.14)", border: `1px solid ${GOLD}`, color: GOLD },
   };
   return (
     <span
-      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px]"
+      className="font-mono inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] uppercase tracking-wide"
       style={styles[tone]}
     >
       {children}
@@ -137,7 +142,8 @@ function Pill({ children, tone = "neutral" }) {
 
 export default function PanelConfiguracion({ clientId }) {
   const router = useRouter();
-  const { logout } = useAuth();
+  const { logout, language, setLanguage: setAuthLanguage } = useAuth();
+  const { t } = useTranslation();
   const { mutate } = useSWRConfig();
   const clientKey = ["client-detail-for-member-card", clientId];
   const { data: client } = useSWR(clientKey, () => fetchClient(clientId));
@@ -228,6 +234,23 @@ export default function PanelConfiguracion({ clientId }) {
     }
   };
 
+  // --- Idioma ---
+  const [savingLanguage, setSavingLanguage] = useState(false);
+
+  const handleChangeLanguage = async (next) => {
+    if (next === language || savingLanguage) return;
+    const previous = language;
+    setAuthLanguage(next); // toda la app cambia de inmediato, sin esperar la red
+    setSavingLanguage(true);
+    try {
+      await updateLanguage(next);
+    } catch {
+      setAuthLanguage(previous); // sin toast propio acá — se ve al instante en la propia UI
+    } finally {
+      setSavingLanguage(false);
+    }
+  };
+
   // --- Dispositivos ---
   const oura = wearables?.find((w) => w.dispositivo === "oura");
 
@@ -285,19 +308,19 @@ export default function PanelConfiguracion({ clientId }) {
   return (
     <div className="min-h-[800px]" style={{ background: PAGE_BG }}>
       <div className="max-w-[640px] mx-auto px-5 py-12">
-        <p className="text-[11px] tracking-[0.12em] uppercase mb-2" style={{ color: "#9C7A3C" }}>Tu cuenta</p>
-        <h1 className="font-serif text-[26px] mb-1.5" style={{ color: INK }}>Configuración</h1>
+        <p className="font-mono text-[10px] tracking-[0.14em] uppercase mb-2" style={{ color: INK_MUTED }}>{t('settings.eyebrow')}</p>
+        <h1 className="font-display font-normal text-[28px] mb-1.5" style={{ color: INK }}>{t('settings.title')}</h1>
         <p className="text-[13.5px] mb-2" style={{ color: INK_MUTED }}>
-          Tu perfil, tu membresía y tus datos en La Tribu.
+          {t('settings.subtitle')}
         </p>
 
         {/* Perfil */}
         <Section first>
-          <SectionHeader Icon={User} title="Mi perfil" />
+          <SectionHeader Icon={User} title={t('settings.profile.title')} />
           <div className="flex items-center gap-4 mb-6">
             <div
-              className="w-14 h-14 rounded-full flex items-center justify-center font-serif text-[18px] overflow-hidden"
-              style={{ background: "#EDE7D9", color: INK }}
+              className="w-14 h-14 rounded-full flex items-center justify-center font-display font-normal text-[18px] overflow-hidden"
+              style={{ background: SURFACE_2, color: INK }}
             >
               {client?.avatarUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -305,26 +328,53 @@ export default function PanelConfiguracion({ clientId }) {
               ) : initials}
             </div>
             <label className="text-[12.5px] underline cursor-pointer" style={{ color: INK_MUTED }}>
-              {avatarUploading ? "Subiendo…" : "Cambiar foto"}
+              {avatarUploading ? t('settings.profile.uploading') : t('settings.profile.changePhoto')}
               <input type="file" accept="image/jpeg,image/png" className="hidden" onChange={handlePhotoChange} disabled={avatarUploading} />
             </label>
           </div>
-          <Field label="Nombre completo" value={nombre} onChange={setNombre} />
-          <Field label="Correo electrónico" value={email} onChange={setEmail} />
-          {profileError && <p className="text-[12px] mb-2" style={{ color: "#A6533F" }}>{profileError}</p>}
+          <Field label={t('settings.profile.name')} value={nombre} onChange={setNombre} />
+          <Field label={t('settings.profile.email')} value={email} onChange={setEmail} />
+          {profileError && <p className="text-[12px] mb-2" style={{ color: DANGER_TEXT }}>{profileError}</p>}
           <button
             onClick={handleSaveProfile}
             disabled={savingProfile}
-            className="rounded-full text-[13px] font-medium px-5 mt-2"
-            style={{ height: 42, background: INK, color: PAGE_BG, opacity: savingProfile ? 0.6 : 1, cursor: savingProfile ? "not-allowed" : "pointer" }}
+            className="font-mono text-[11px] uppercase tracking-[0.1em] px-5 mt-2"
+            style={{ height: 42, borderRadius: 0, background: GOLD, color: "var(--eph-ink)", opacity: savingProfile ? 0.6 : 1, cursor: savingProfile ? "not-allowed" : "pointer" }}
           >
-            {savingProfile ? "Guardando…" : "Guardar cambios"}
+            {savingProfile ? t('settings.profile.saving') : t('settings.profile.save')}
           </button>
+        </Section>
+
+        {/* Idioma */}
+        <Section>
+          <SectionHeader Icon={Globe} title={t('settings.language.title')} />
+          <p className="text-[12.5px] mb-4" style={{ color: INK_MUTED }}>{t('settings.language.subtitle')}</p>
+          <div className="flex gap-2">
+            {[
+              { key: 'es', label: t('settings.language.es') },
+              { key: 'en', label: t('settings.language.en') },
+            ].map((opt) => (
+              <button
+                key={opt.key}
+                type="button"
+                onClick={() => handleChangeLanguage(opt.key)}
+                disabled={savingLanguage}
+                className="font-mono text-[10px] uppercase tracking-wide px-4 py-2"
+                style={
+                  language === opt.key
+                    ? { borderRadius: 0, border: `1px solid ${GOLD}`, background: GOLD, color: "var(--eph-ink)", cursor: "pointer" }
+                    : { borderRadius: 0, border: `1px solid ${BORDER_2}`, background: "transparent", color: INK_MUTED, cursor: savingLanguage ? "not-allowed" : "pointer" }
+                }
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
         </Section>
 
         {/* Membresía */}
         <Section>
-          <SectionHeader Icon={ShieldCheck} title="Membresía" />
+          <SectionHeader Icon={ShieldCheck} title={t('settings.membership.title')} />
           {client && (
             <>
               <Row
@@ -339,7 +389,7 @@ export default function PanelConfiguracion({ clientId }) {
                     ? `${new Date().toISOString().slice(0, 10) > client.planEndDate ? "Venció" : "Vence"} el ${formatPlanDate(client.planEndDate)}`
                     : null,
                 ].filter(Boolean).join(" · ")}
-                right={<Pill tone={client.status === "active" ? "gold" : "neutral"}>{client.status === "active" ? "Activa" : "Inactiva"}</Pill>}
+                right={<Pill tone={client.status === "active" ? "gold" : "neutral"}>{client.status === "active" ? t('settings.membership.active') : t('settings.membership.inactive')}</Pill>}
               />
               <button
                 type="button"
@@ -347,8 +397,8 @@ export default function PanelConfiguracion({ clientId }) {
                 className="w-full flex items-center justify-between py-2.5 text-left"
               >
                 <div>
-                  <p className="text-[13.5px]" style={{ color: INK }}>Gestionar membresía</p>
-                  <p className="text-[12px] mt-0.5" style={{ color: INK_MUTED }}>Renovar, cambiar de plan o subir a Club Elite</p>
+                  <p className="text-[13.5px]" style={{ color: INK }}>{t('settings.membership.manage')}</p>
+                  <p className="text-[12px] mt-0.5" style={{ color: INK_MUTED }}>{t('settings.membership.manageSub')}</p>
                 </div>
                 <ChevronRight size={16} color={INK_MUTED} />
               </button>
@@ -358,21 +408,21 @@ export default function PanelConfiguracion({ clientId }) {
 
         {/* Privacidad y datos */}
         <Section>
-          <SectionHeader Icon={Lock} title="Privacidad y datos" />
+          <SectionHeader Icon={Lock} title={t('settings.privacy.title')} />
           {acceptance ? (
             <>
               <p className="text-[12.5px] mb-4" style={{ color: INK_MUTED }}>
-                Aceptaste estos documentos el {formatDate(acceptance.acceptedAt)}.
+                {t('settings.privacy.acceptedOn')} {formatDate(acceptance.acceptedAt)}.
               </p>
-              <Row title="Política de Tratamiento de Datos" sub={acceptance.dataPolicyVersion} right={null} />
-              <Row title="Términos y Condiciones de Uso" sub={acceptance.termsVersion} right={null} />
+              <Row title={t('settings.privacy.dataPolicy')} sub={acceptance.dataPolicyVersion} right={null} />
+              <Row title={t('settings.privacy.terms')} sub={acceptance.termsVersion} right={null} />
             </>
           ) : (
-            <p className="text-[12.5px] mb-4" style={{ color: INK_MUTED }}>Cargando tu consentimiento…</p>
+            <p className="text-[12.5px] mb-4" style={{ color: INK_MUTED }}>{t('settings.privacy.loadingConsent')}</p>
           )}
           <div className="mt-4 pt-4 border-t" style={{ borderColor: BORDER }}>
             <p className="text-[11px] mb-3" style={{ color: INK_MUTED }}>
-              Tus derechos según la Ley 1581 de 2012:
+              {t('settings.privacy.rightsIntro')}
             </p>
             <div className="flex flex-wrap gap-2">
               <button
@@ -382,64 +432,64 @@ export default function PanelConfiguracion({ clientId }) {
                 className="text-[12px] underline"
                 style={{ color: INK, cursor: exporting ? "not-allowed" : "pointer" }}
               >
-                {exporting ? "Generando…" : "Descargar mis datos"}
+                {exporting ? t('settings.privacy.downloadDataGenerating') : t('settings.privacy.downloadData')}
               </button>
               <span style={{ color: BORDER }}>·</span>
               <button type="button" className="text-[12px] underline" style={{ color: INK }} onClick={() => setReacceptOpen(true)}>
-                Actualizar mi autorización
+                {t('settings.privacy.updateConsent')}
               </button>
               <span style={{ color: BORDER }}>·</span>
               {deleteStep === "idle" && (
                 <button
                   type="button"
                   className="text-[12px] underline"
-                  style={{ color: "#A6533F" }}
+                  style={{ color: DANGER_TEXT }}
                   onClick={() => setDeleteStep("confirming")}
                 >
-                  Solicitar eliminación de mi cuenta
+                  {t('settings.privacy.requestDeletion')}
                 </button>
               )}
             </div>
 
             {deleteStep === "confirming" && (
-              <div className="mt-3 rounded-lg p-4" style={{ background: "#FBEFEA", border: "1px solid #E8CFC2" }}>
-                <p className="text-[12.5px] mb-2 font-medium" style={{ color: "#7A3B26" }}>
-                  Antes de confirmar, esto es lo que pasa:
+              <div className="p-4" style={{ borderRadius: 0, background: "rgba(138,74,60,.14)", border: "1px solid var(--eph-danger)" }}>
+                <p className="text-[12.5px] mb-2 font-medium" style={{ color: DANGER_TEXT }}>
+                  {t('settings.privacy.deletionWarningTitle')}
                 </p>
-                <ul className="text-[12px] mb-3 space-y-1 list-none pl-0" style={{ color: "#7A3B26" }}>
-                  <li>· Tu membresía se pausa de inmediato.</li>
-                  <li>· Tu mentor o terapeuta pierde acceso a tu historial.</li>
-                  <li>· Tus datos se eliminan dentro de los 15 días hábiles siguientes, conforme a la ley.</li>
+                <ul className="text-[12px] mb-3 space-y-1 list-none pl-0" style={{ color: DANGER_TEXT }}>
+                  <li>· {t('settings.privacy.deletionPoint1')}</li>
+                  <li>· {t('settings.privacy.deletionPoint2')}</li>
+                  <li>· {t('settings.privacy.deletionPoint3')}</li>
                 </ul>
-                <p className="text-[12px] mb-3" style={{ color: "#7A3B26" }}>
-                  Esto no borra nada al instante — le llega a nuestro equipo, que puede contactarte antes de procesarlo.
+                <p className="text-[12px] mb-3" style={{ color: DANGER_TEXT }}>
+                  {t('settings.privacy.deletionNotice')}
                 </p>
                 <div className="flex gap-2">
                   <button
                     type="button"
-                    className="text-[12.5px] px-4 py-2 rounded-full"
-                    style={{ background: "#A6533F", color: "#FFF8F5" }}
+                    className="font-mono text-[10px] uppercase tracking-wide px-4 py-2"
+                    style={{ borderRadius: 0, border: "1px solid var(--eph-danger)", background: "transparent", color: DANGER_TEXT }}
                     onClick={handleSendDeletionRequest}
                   >
-                    Enviar solicitud
+                    {t('settings.privacy.deletionSend')}
                   </button>
                   <button
                     type="button"
-                    className="text-[12.5px] px-4 py-2 rounded-full"
-                    style={{ border: `1px solid ${BORDER}`, color: INK_MUTED }}
+                    className="font-mono text-[10px] uppercase tracking-wide px-4 py-2"
+                    style={{ borderRadius: 0, border: `1px solid ${BORDER_2}`, color: INK_MUTED }}
                     onClick={() => setDeleteStep("idle")}
                   >
-                    Cancelar
+                    {t('settings.privacy.deletionCancel')}
                   </button>
                 </div>
               </div>
             )}
 
             {deleteStep === "sent" && (
-              <div className="mt-3 rounded-lg p-4 flex items-start gap-2" style={{ background: "#F3F6EE", border: "1px solid #D3E0C4" }}>
-                <Check size={14} color="#5B7A3E" style={{ marginTop: 2, flexShrink: 0 }} />
-                <p className="text-[12px]" style={{ color: "#4A6231" }}>
-                  Solicitud enviada. Un asesor te contactará antes de los 15 días hábiles.
+              <div className="p-4 flex items-start gap-2" style={{ borderRadius: 0, background: "rgba(201,164,106,.14)", border: `1px solid ${GOLD}` }}>
+                <Check size={14} color={GOLD} style={{ marginTop: 2, flexShrink: 0 }} />
+                <p className="text-[12px]" style={{ color: GOLD }}>
+                  {t('settings.privacy.deletionSent')}
                 </p>
               </div>
             )}
@@ -448,21 +498,21 @@ export default function PanelConfiguracion({ clientId }) {
 
         {/* Dispositivos */}
         <Section>
-          <SectionHeader Icon={Watch} title="Dispositivos conectados" />
+          <SectionHeader Icon={Watch} title={t('settings.devices.title')} />
           <Row
             title="Oura Ring"
-            sub={oura?.conectado ? "Sincronizando sueño y recuperación" : "No conectado"}
+            sub={oura?.conectado ? t('settings.devices.ouraSyncing') : t('settings.devices.ouraDisconnected')}
             right={
               oura?.conectado ? (
                 <div className="flex items-center gap-2">
-                  <Pill tone="ok"><Check size={11} /> Conectado</Pill>
+                  <Pill tone="ok"><Check size={11} /> {t('settings.devices.connected')}</Pill>
                   <button type="button" onClick={handleDisconnectOura} className="text-[11.5px] underline" style={{ color: INK_MUTED }}>
-                    Desconectar
+                    {t('settings.devices.disconnect')}
                   </button>
                 </div>
               ) : (
                 <a href={getWearableConnectUrl("oura", clientId)} className="text-[12.5px] underline" style={{ color: INK }}>
-                  Conectar
+                  {t('settings.devices.connect')}
                 </a>
               )
             }
@@ -471,77 +521,77 @@ export default function PanelConfiguracion({ clientId }) {
 
         {/* Notificaciones */}
         <Section>
-          <SectionHeader Icon={Bell} title="Notificaciones" />
+          <SectionHeader Icon={Bell} title={t('settings.notifications.title')} />
           <Row
-            title="Recordatorios de racha"
-            sub="Cuando tu racha está en riesgo"
+            title={t('settings.notifications.streak')}
+            sub={t('settings.notifications.streakSub')}
             right={<Toggle checked={prefs.streakReminders} disabled={savingPref === "streakReminders"} onChange={(v) => handleTogglePref("streakReminders", v)} />}
           />
           <Row
-            title="Eventos y retiros del Club"
-            sub="Nuevas fechas disponibles"
+            title={t('settings.notifications.events')}
+            sub={t('settings.notifications.eventsSub')}
             right={<Toggle checked={prefs.events} disabled={savingPref === "events"} onChange={(v) => handleTogglePref("events", v)} />}
           />
           <Row
-            title="Novedades de La Tribu"
-            sub="Anuncios generales"
+            title={t('settings.notifications.news')}
+            sub={t('settings.notifications.newsSub')}
             right={<Toggle checked={prefs.news} disabled={savingPref === "news"} onChange={(v) => handleTogglePref("news", v)} />}
           />
         </Section>
 
         {/* Seguridad */}
         <Section>
-          <SectionHeader Icon={Lock} title="Seguridad" />
+          <SectionHeader Icon={Lock} title={t('settings.security.title')} />
           <Row
-            title="Contraseña"
-            sub={pwDone ? "Actualizada" : "Cámbiala cuando quieras"}
+            title={t('settings.security.password')}
+            sub={pwDone ? t('settings.security.passwordUpdated') : t('settings.security.passwordChangeAnytime')}
             right={
               <button type="button" className="text-[12.5px] underline" style={{ color: INK }} onClick={() => setPwOpen((v) => !v)}>
-                {pwOpen ? "Cerrar" : "Cambiar"}
+                {pwOpen ? t('settings.security.close') : t('settings.security.change')}
               </button>
             }
           />
           {pwOpen && (
             <div className="mt-2 mb-4 pl-0">
-              <Field label="Contraseña actual" value={pwCurrent} onChange={setPwCurrent} />
-              <Field label="Nueva contraseña" value={pwNew} onChange={setPwNew} />
-              {pwError && <p className="text-[12px] mb-2" style={{ color: "#A6533F" }}>{pwError}</p>}
+              <Field label={t('settings.security.currentPassword')} value={pwCurrent} onChange={setPwCurrent} />
+              <Field label={t('settings.security.newPassword')} value={pwNew} onChange={setPwNew} />
+              {pwError && <p className="text-[12px] mb-2" style={{ color: DANGER_TEXT }}>{pwError}</p>}
               <button
                 type="button"
                 onClick={handleChangePassword}
                 disabled={pwSaving || !pwCurrent || !pwNew}
-                className="rounded-full text-[12.5px] font-medium px-4"
-                style={{ height: 38, background: INK, color: PAGE_BG, opacity: pwSaving || !pwCurrent || !pwNew ? 0.6 : 1 }}
+                className="font-mono text-[11px] uppercase tracking-[0.1em] px-4"
+                style={{ height: 38, borderRadius: 0, background: GOLD, color: "var(--eph-ink)", opacity: pwSaving || !pwCurrent || !pwNew ? 0.6 : 1 }}
               >
-                {pwSaving ? "Guardando…" : "Confirmar cambio"}
+                {pwSaving ? t('settings.profile.saving') : t('settings.security.confirmChange')}
               </button>
             </div>
           )}
           <Row
-            title="Cuentas vinculadas"
-            sub={linkedProvider || "Ninguna"}
-            right={linkedProvider ? <Pill tone="ok"><Check size={11} /> Conectada</Pill> : null}
+            title={t('settings.security.linkedAccounts')}
+            sub={linkedProvider || t('settings.security.none')}
+            right={linkedProvider ? <Pill tone="ok"><Check size={11} /> {t('settings.devices.connected')}</Pill> : null}
           />
         </Section>
 
         {/* Zona de cuenta */}
         <Section>
           <button className="flex items-center gap-2 text-[13.5px]" style={{ color: INK }} onClick={logout}>
-            <LogOut size={15} /> Cerrar sesión
+            <LogOut size={15} /> {t('settings.logout')}
           </button>
         </Section>
       </div>
 
       {reacceptOpen && (
-        <div className="fixed inset-0 z-[200] overflow-y-auto" style={{ background: "rgba(26,23,18,0.55)" }}>
+        <div className="fixed inset-0 z-[200] overflow-y-auto" style={{ background: "rgba(8,8,7,0.75)" }}>
           <div className="max-w-[560px] mx-auto pt-6 px-4">
             <button
               type="button"
               onClick={() => setReacceptOpen(false)}
               className="text-[12.5px] underline mb-3"
-              style={{ color: "#FAF7F1" }}
+              style={{ color: "var(--eph-text)" }}
             >
-              ← Volver a Configuración
+              {t('settings.privacy.backToSettings')}
             </button>
             <AceptacionRegistro onComplete={handleReacceptComplete} />
           </div>

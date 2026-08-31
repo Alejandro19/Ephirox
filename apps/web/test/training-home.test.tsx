@@ -26,6 +26,7 @@ describe('TrainingHome', () => {
     const onOpenDay = vi.fn();
     render(
       <TrainingHome
+        clientId="client-1"
         trainingDays={2}
         exercises={[exercise('e1', 1), exercise('e2', 2)]}
         completions={[]}
@@ -45,6 +46,7 @@ describe('TrainingHome', () => {
   it('disables a locked day', () => {
     render(
       <TrainingHome
+        clientId="client-1"
         trainingDays={2}
         exercises={[exercise('e1', 1), exercise('e2', 2)]}
         completions={[]}
@@ -62,6 +64,7 @@ describe('TrainingHome', () => {
   it('shows the discipline calendar section', () => {
     render(
       <TrainingHome
+        clientId="client-1"
         trainingDays={1}
         exercises={[]}
         completions={[]}
@@ -86,6 +89,7 @@ describe('TrainingHome', () => {
 
     render(
       <TrainingHome
+        clientId="client-1"
         trainingDays={1}
         exercises={[]}
         completions={[completion]}
@@ -111,6 +115,7 @@ describe('TrainingHome', () => {
     const onOpenDay = vi.fn();
     render(
       <TrainingHome
+        clientId="client-1"
         trainingDays={2}
         exercises={[exercise('e1', 1), exercise('e2', 2)]}
         completions={[]}
@@ -129,6 +134,7 @@ describe('TrainingHome', () => {
   it('does not render the hero button when there is no next actionable day', () => {
     render(
       <TrainingHome
+        clientId="client-1"
         trainingDays={0}
         exercises={[]}
         completions={[]}
@@ -146,6 +152,7 @@ describe('TrainingHome', () => {
   it('renders the streak badge with the current streakWeeks', () => {
     render(
       <TrainingHome
+        clientId="client-1"
         trainingDays={2}
         exercises={[]}
         completions={[]}
@@ -167,6 +174,7 @@ describe('TrainingHome', () => {
   it('shows an "en riesgo" label when atRisk is true', () => {
     render(
       <TrainingHome
+        clientId="client-1"
         trainingDays={2}
         exercises={[]}
         completions={[]}
@@ -185,6 +193,7 @@ describe('TrainingHome', () => {
     const onUseProtector = vi.fn();
     const { rerender } = render(
       <TrainingHome
+        clientId="client-1"
         trainingDays={2}
         exercises={[]}
         completions={[]}
@@ -201,6 +210,7 @@ describe('TrainingHome', () => {
 
     rerender(
       <TrainingHome
+        clientId="client-1"
         trainingDays={2}
         exercises={[]}
         completions={[]}
@@ -218,6 +228,7 @@ describe('TrainingHome', () => {
   it('renders the affirmation banner when a quote is present', () => {
     render(
       <TrainingHome
+        clientId="client-1"
         trainingDays={2}
         exercises={[]}
         completions={[]}
@@ -237,6 +248,7 @@ describe('TrainingHome', () => {
   it('renders the affirmation banner with the quote but no author line when the quote has no author', () => {
     render(
       <TrainingHome
+        clientId="client-1"
         trainingDays={2}
         exercises={[]}
         completions={[]}
@@ -257,6 +269,7 @@ describe('TrainingHome', () => {
   it('renders no banner when quote is null', () => {
     render(
       <TrainingHome
+        clientId="client-1"
         trainingDays={2}
         exercises={[]}
         completions={[]}

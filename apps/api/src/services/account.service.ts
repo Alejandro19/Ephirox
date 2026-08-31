@@ -38,6 +38,10 @@ export async function updateNotificationPreferences(
   return clientsService.updateClient(clientId, { notificationPreferences: { ...current, ...patch } });
 }
 
+export async function updateLanguage(clientId: string, language: 'es' | 'en'): Promise<Client | null> {
+  return clientsService.updateClient(clientId, { language });
+}
+
 export async function requestDeletion(clientId: string): Promise<Client | null> {
   return clientsService.requestAccountDeletion(clientId);
 }

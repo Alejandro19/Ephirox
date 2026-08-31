@@ -42,14 +42,14 @@ describe('requirePermission', () => {
 
   it('blocks a client whose type the matrix does not allow for this module', async () => {
     vi.mocked(typeModuleAccess.isModuleAllowedForType).mockResolvedValue(false);
-    const req = { user: { role: 'cliente' }, client: { clientType: 'lead_wellness', permissions: {} } } as unknown as Request;
+    const req = { user: { role: 'cliente' }, client: { clientType: 'coaching_1_1', permissions: {} } } as unknown as Request;
     const res = mockRes();
     const next = vi.fn();
     requirePermission('training')(req, res, next);
     await flushPromises();
     expect(next).not.toHaveBeenCalled();
     expect(res.status).toHaveBeenCalledWith(403);
-    expect(typeModuleAccess.isModuleAllowedForType).toHaveBeenCalledWith('lead_wellness', 'training');
+    expect(typeModuleAccess.isModuleAllowedForType).toHaveBeenCalledWith('coaching_1_1', 'training');
   });
 
   it('allows a client whose type the matrix allows, with no explicit individual permissions.training key', async () => {

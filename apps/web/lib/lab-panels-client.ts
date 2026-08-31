@@ -12,7 +12,25 @@ async function authorizedRequest<T>(path: string, method: string, body?: unknown
   return res.json();
 }
 
-export type LabPanel = { id: string; semanaNumero: number; fecha: string | null; datos: Record<string, number> };
+export type LabPanelStatus = 'pendiente' | 'en_revision' | 'aprobado';
+
+export type LabPanel = {
+  id: string;
+  semanaNumero: number;
+  fecha: string | null;
+  datos: Record<string, number>;
+  status: LabPanelStatus;
+  fileUrl: string | null;
+  fileName: string | null;
+  approvedAt: string | null;
+};
+
+export type ExtractedMarker = {
+  marker_id: string;
+  value: number | null;
+  unit: string | null;
+  detected: boolean;
+};
 
 export async function listLabPanels(clientId: string): Promise<LabPanel[]> {
   const body = await authorizedRequest<{ success: boolean; panels: LabPanel[]; error?: string }>(`/api/clients/${clientId}/lab-panels`, 'GET');
@@ -22,9 +40,50 @@ export async function listLabPanels(clientId: string): Promise<LabPanel[]> {
 
 export async function upsertLabPanel(
   clientId: string,
-  input: { semana: number; fecha: string; datos: Record<string, number> }
+  input: {
+    semana: number;
+    fecha: string;
+    datos: Record<string, number>;
+    diaCicloPanel?: number | null;
+    fileUrl?: string;
+    fileName?: string;
+    sourceFileHash?: string;
+  }
 ): Promise<LabPanel> {
   const body = await authorizedRequest<{ success: boolean; panel: LabPanel; error?: string }>(`/api/clients/${clientId}/lab-panels`, 'PUT', input);
   if (!body.success) throw new Error(body.error || 'Error al guardar el panel de laboratorio.');
+  return body.panel;
+}
+
+// Sube el PDF/imagen, corre OCR + extracción por IA en el backend, y
+// devuelve el grid estructurado — todavía sin guardar (ver upsertLabPanel,
+// que persiste lo que el cliente confirme/corrija).
+export async function extractLabPanel(
+  clientId: string,
+  semana: number,
+  file: File
+): Promise<{ markers: ExtractedMarker[]; fileUrl: string; fileName: string; sourceFileHash: string; reused: boolean }> {
+  const token = getSessionToken();
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('semana', String(semana));
+  const res = await fetch(`${API_BASE_URL}/api/clients/${clientId}/lab-panels/extract`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body: formData,
+  });
+  const body = await res.json();
+  if (!body.success) throw new Error(body.error || 'Error al procesar el laboratorio.');
+  return body;
+}
+
+// Aprobación del admin — datos es opcional, solo se manda si corrigió algo.
+export async function approveLabPanel(clientId: string, semana: number, datos?: Record<string, number>): Promise<LabPanel> {
+  const body = await authorizedRequest<{ success: boolean; panel: LabPanel; error?: string }>(
+    `/api/clients/${clientId}/lab-panels/${semana}/approve`,
+    'POST',
+    { datos }
+  );
+  if (!body.success) throw new Error(body.error || 'Error al aprobar el panel de laboratorio.');
   return body.panel;
 }

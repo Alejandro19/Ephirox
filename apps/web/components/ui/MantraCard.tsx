@@ -9,31 +9,32 @@ type MantraCardProps = {
 export default function MantraCard({ mantra, lead, author }: MantraCardProps) {
   return (
     <div
+      className="font-display"
       style={{
-        background: "var(--paper)",
-        border: "1px solid var(--line)",
-        borderRadius: "var(--radius)",
-        padding: "18px 22px",
+        background: "var(--eph-surface)",
+        border: "1px solid var(--eph-line)",
+        borderRadius: 0,
+        padding: "20px 24px",
         marginBottom: 20,
         fontStyle: "italic",
-        fontFamily: "Fraunces, Georgia, serif",
-        fontSize: 16,
-        fontWeight: 500,
-        color: "var(--ink)",
+        fontSize: 17,
+        fontWeight: 400,
+        color: "var(--eph-text)",
         lineHeight: 1.5,
       }}
     >
       {lead && (
         <span
+          className="font-mono"
           style={{
             display: "block",
             fontSize: 10,
             textTransform: "uppercase",
-            letterSpacing: "0.08em",
+            letterSpacing: "0.16em",
             fontStyle: "normal",
-            fontWeight: 600,
-            color: "var(--ink-soft)",
-            marginBottom: 4,
+            fontWeight: 400,
+            color: "var(--eph-accent)",
+            marginBottom: 6,
           }}
         >
           {lead}
@@ -42,14 +43,16 @@ export default function MantraCard({ mantra, lead, author }: MantraCardProps) {
       &ldquo;{mantra}&rdquo;
       {author && (
         <span
+          className="font-mono"
           style={{
             display: "block",
-            marginTop: 6,
-            fontSize: 12,
+            marginTop: 8,
+            fontSize: 10,
+            textTransform: "uppercase",
+            letterSpacing: "0.12em",
             fontStyle: "normal",
-            fontFamily: "inherit",
             fontWeight: 400,
-            color: "var(--ink-secondary)",
+            color: "var(--eph-muted)",
           }}
         >
           — {author}

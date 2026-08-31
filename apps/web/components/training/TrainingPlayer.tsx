@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import type { Exercise } from '../../lib/training-client';
 import { parseTimeToSeconds, youtubeEmbedUrl } from '../../lib/training-timer-logic';
 import { CATEGORY_LABELS, ProgressBar } from './TrainingVisuals';
+import Button from '../ui/Button';
 
 export type TrainingPlayerProps = {
   exercises: Exercise[];
@@ -14,9 +15,9 @@ export type TrainingPlayerProps = {
 
 function KpiTile({ value, label }: { value: string | number; label: string }) {
   return (
-    <div className="rounded-xl bg-[var(--page-bg)] p-[18px] text-center">
-      <div className="font-serif text-2xl font-semibold text-[var(--ink)]">{value}</div>
-      <div className="mt-1 text-xs text-[var(--ink-secondary)]">{label}</div>
+    <div className="border p-[18px] text-center" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface-2)' }}>
+      <div className="font-display text-2xl" style={{ color: 'var(--eph-text)' }}>{value}</div>
+      <div className="mt-1 font-mono text-[10px] uppercase tracking-[0.08em]" style={{ color: 'var(--eph-muted)' }}>{label}</div>
     </div>
   );
 }
@@ -108,23 +109,24 @@ export function TrainingPlayer({ exercises, completedIds, onMarkComplete, onExit
         <button
           type="button"
           onClick={onExit}
-          className="mb-3 inline-block bg-transparent p-0 text-xs font-semibold text-[#5C574E] hover:underline"
+          className="mb-3 inline-block bg-transparent p-0 font-mono text-[10px] uppercase tracking-[0.1em] hover:underline"
+          style={{ color: 'var(--eph-muted)' }}
         >
           Volver al día
         </button>
-        <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-[var(--ink-secondary)]">
+        <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.12em]" style={{ color: 'var(--eph-muted)' }}>
           Día {current.dayNumber} · {CATEGORY_LABELS[current.category]}
         </p>
-        <h1 className="mb-1.5 font-serif text-[28px] font-bold text-[var(--ink)]">{current.title}</h1>
-        <p className="m-0 text-[var(--ink-secondary)]">
+        <h1 className="mb-1.5 font-display text-[28px]" style={{ color: 'var(--eph-text)' }}>{current.title}</h1>
+        <p className="m-0 font-body" style={{ color: 'var(--eph-body)' }}>
           Ejercicio {index + 1} de {exercises.length}
         </p>
         <ProgressBar done={doneInCategory} total={exercises.length} />
       </div>
 
-      <div className="rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--paper)] p-[26px]">
+      <div className="border p-[26px]" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface)' }}>
         {embedUrl ? (
-          <div className="relative overflow-hidden rounded-[14px] bg-black pt-[56.25%]">
+          <div className="relative overflow-hidden bg-black pt-[56.25%]">
             <iframe
               src={embedUrl}
               title={current.title}
@@ -134,7 +136,7 @@ export function TrainingPlayer({ exercises, completedIds, onMarkComplete, onExit
             />
           </div>
         ) : (
-          <div className="py-10 text-center text-[var(--ink-secondary)]">Sin video asignado.</div>
+          <div className="py-10 text-center font-body" style={{ color: 'var(--eph-body)' }}>Sin video asignado.</div>
         )}
 
         <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
@@ -152,73 +154,45 @@ export function TrainingPlayer({ exercises, completedIds, onMarkComplete, onExit
           )}
         </div>
 
-        {current.description && <p className="mt-4 text-[var(--ink)]">{current.description}</p>}
+        {current.description && <p className="mt-4 font-body" style={{ color: 'var(--eph-text)' }}>{current.description}</p>}
 
         {restRemaining !== null ? (
-          <div className="mt-4 rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--page-bg)] p-4 text-center">
-            <p className="font-serif text-lg font-semibold text-[var(--ink)]">Descanso: {restRemaining}s</p>
-            <button
-              type="button"
-              onClick={handleSkipRest}
-              className="mt-2 rounded-full border border-[var(--border-hairline)] bg-transparent px-4 py-2 text-sm text-[var(--ink-secondary)]"
-            >
+          <div className="mt-4 border p-4 text-center" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface-2)' }}>
+            <p className="font-display text-lg" style={{ color: 'var(--eph-text)' }}>Descanso: {restRemaining}s</p>
+            <Button type="button" variant="secondary" onClick={handleSkipRest} className="mt-2">
               Saltar descanso
-            </button>
+            </Button>
           </div>
         ) : isCardio ? (
           durationRemaining !== null ? (
-            <p className="mt-4 text-center font-serif text-lg font-semibold text-[var(--ink)]">Duración: {durationRemaining}s</p>
+            <p className="mt-4 text-center font-display text-lg" style={{ color: 'var(--eph-text)' }}>Duración: {durationRemaining}s</p>
           ) : (
             <div className="mt-5 text-center">
-              <button
-                type="button"
-                disabled={isCurrentDone}
-                onClick={handleStartDuration}
-                className="rounded-full bg-[var(--hero-espresso-accent)] px-[22px] py-3 font-semibold text-white transition-transform active:scale-[.97] disabled:cursor-not-allowed disabled:opacity-50"
-              >
+              <Button type="button" variant="primary" disabled={isCurrentDone} onClick={handleStartDuration}>
                 Iniciar
-              </button>
+              </Button>
             </div>
           )
         ) : (
           <div className="mt-5 text-center">
-            <button
-              type="button"
-              disabled={isCurrentDone}
-              onClick={handleMarkComplete}
-              className="rounded-full bg-[var(--hero-espresso-accent)] px-[22px] py-3 font-semibold text-white transition-transform active:scale-[.97] disabled:cursor-not-allowed disabled:opacity-50"
-            >
+            <Button type="button" variant="primary" disabled={isCurrentDone} onClick={handleMarkComplete}>
               Marcar completado
-            </button>
+            </Button>
           </div>
         )}
 
         <div className="mt-5 flex justify-between gap-2">
-          <button
-            type="button"
-            disabled={index === 0}
-            onClick={() => goTo(index - 1)}
-            className="rounded-full border border-[var(--border-hairline)] bg-transparent px-[22px] py-3 font-semibold text-[var(--ink-secondary)] disabled:cursor-not-allowed disabled:opacity-40"
-          >
+          <Button type="button" variant="secondary" disabled={index === 0} onClick={() => goTo(index - 1)}>
             Anterior
-          </button>
+          </Button>
           {isLast && isCurrentDone ? (
-            <button
-              type="button"
-              onClick={onExit}
-              className="rounded-full bg-[var(--hero-espresso-accent)] px-[22px] py-3 font-semibold text-white"
-            >
+            <Button type="button" variant="primary" onClick={onExit}>
               Finalizar
-            </button>
+            </Button>
           ) : (
-            <button
-              type="button"
-              disabled={isLast}
-              onClick={() => goTo(index + 1)}
-              className="rounded-full border border-[var(--border-hairline)] bg-transparent px-[22px] py-3 font-semibold text-[var(--ink-secondary)] disabled:cursor-not-allowed disabled:opacity-40"
-            >
+            <Button type="button" variant="secondary" disabled={isLast} onClick={() => goTo(index + 1)}>
               Siguiente
-            </button>
+            </Button>
           )}
         </div>
       </div>

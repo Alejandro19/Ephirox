@@ -25,7 +25,7 @@ export default function CategoryTile({
       onClick={onClick}
       disabled={locked}
       style={{
-        background: done ? "#F4F8EF" : locked ? "#F0EBE0" : "var(--paper)",
+        background: done ? "#F4F8EF" : locked ? "#F0EBE0" : "var(--eph-surface)",
         border: done || active ? "2px solid #5B7A4E" : "1px solid #E7DFC9",
         borderRadius: 16,
         padding: "20px 14px",
@@ -54,7 +54,7 @@ export default function CategoryTile({
           fontFamily: "Fraunces, Georgia, serif",
           fontSize: 15,
           fontWeight: 600,
-          color: "var(--ink)",
+          color: "var(--eph-text)",
           marginTop: 8,
         }}
       >

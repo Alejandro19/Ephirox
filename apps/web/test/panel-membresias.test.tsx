@@ -25,15 +25,13 @@ const CLIENT_ID = 'client-1';
 const PRICES: membershipClient.MembershipPrice[] = [
   { id: 'p0', clientType: 'coaching_1_1', durationMonths: 1, packageSize: 8, amountCents: 78000000, currency: 'cop' },
   { id: 'p1', clientType: 'coaching_1_1', durationMonths: 3, packageSize: 8, amountCents: 225000000, currency: 'cop' },
-  { id: 'p3', clientType: 'coaching_online', durationMonths: 1, packageSize: null, amountCents: 45000000, currency: 'cop' },
-  { id: 'p4', clientType: 'coaching_online', durationMonths: 3, packageSize: null, amountCents: 129000000, currency: 'cop' },
   { id: 'p5', clientType: 'mentoring', durationMonths: 3, packageSize: null, amountCents: 400000, currency: 'usd' },
 ];
 
 function baseClient(overrides: Partial<clientsClient.ClientDetail> = {}): clientsClient.ClientDetail {
   return {
     id: CLIENT_ID, name: 'Ana', email: 'ana@example.com', plan: 'Miembro',
-    status: 'active', clientType: 'coaching_online', planEndDate: '2099-01-01',
+    status: 'active', clientType: 'coaching_1_1', planEndDate: '2099-01-01',
     ...overrides,
   } as clientsClient.ClientDetail;
 }
@@ -45,53 +43,52 @@ beforeEach(() => {
 
 describe('PanelMembresias', () => {
   it('shows "Vigente hasta" (no payment form) only for the tier the client already has active and unexpired', async () => {
-    vi.mocked(clientsClient.fetchClient).mockResolvedValue(baseClient({ clientType: 'coaching_online', planEndDate: '2099-01-01' }));
+    vi.mocked(clientsClient.fetchClient).mockResolvedValue(baseClient({ clientType: 'coaching_1_1', planEndDate: '2099-01-01' }));
     render(<PanelMembresias clientId={CLIENT_ID} />);
 
     expect(await screen.findByText(/Vigente hasta/)).toBeInTheDocument();
-    // Presencial y Elite no coinciden con el tier activo → deben mostrar "Pagar".
+    // Mentoría no coincide con el tier activo → debe mostrar "Pagar".
     const payButtons = screen.getAllByText('Pagar');
-    expect(payButtons).toHaveLength(2);
+    expect(payButtons).toHaveLength(1);
   });
 
   it('shows the payment form for a tier whose plan already expired, even if it matches the client type', async () => {
-    vi.mocked(clientsClient.fetchClient).mockResolvedValue(baseClient({ clientType: 'coaching_online', planEndDate: '2020-01-01' }));
+    vi.mocked(clientsClient.fetchClient).mockResolvedValue(baseClient({ clientType: 'coaching_1_1', planEndDate: '2020-01-01' }));
     render(<PanelMembresias clientId={CLIENT_ID} />);
 
     await waitFor(() => expect(screen.queryByText(/Vigente hasta/)).not.toBeInTheDocument());
-    expect(screen.getAllByText('Pagar')).toHaveLength(3);
+    expect(screen.getAllByText('Pagar')).toHaveLength(2);
   });
 
-  it('shows a "Duración" selector for Elite with "3 meses" pre-selected (single option), and its USD reference price always visible', async () => {
-    vi.mocked(clientsClient.fetchClient).mockResolvedValue(baseClient({ clientType: 'lead_wellness', planEndDate: undefined }));
+  it('shows a "Duración" selector for Premium with "3 meses" pre-selected (single option), and its USD reference price always visible', async () => {
+    vi.mocked(clientsClient.fetchClient).mockResolvedValue(baseClient({ planEndDate: undefined }));
     render(<PanelMembresias clientId={CLIENT_ID} />);
 
     await screen.findAllByText('Pagar');
-    const eliteHeading = screen.getByText('Club Elite');
-    // El título de Elite vive en su propia fila (junto al badge "Mentoría
-    // Premium"), así que la card completa es el abuelo, no el padre directo.
-    const eliteCard = eliteHeading.closest('div')!.parentElement!;
-    expect(within(eliteCard).getByText('Mentoría Premium')).toBeInTheDocument();
-    // Elite tiene una sola duración posible, pero se muestra como selector
-    // (mismo patrón visual que Presencial/Online), ya seleccionada.
+    const eliteHeading = screen.getByText('Premium');
+    // El título de Premium es hijo directo de la card completa (borde
+    // resaltado) — sin badge aparte, esa distinción ya la da el propio nombre.
+    const eliteCard = eliteHeading.closest('div')!;
+    // Premium tiene una sola duración posible, pero se muestra como
+    // selector (mismo patrón visual que Cliente 1:1), ya seleccionada.
     expect(within(eliteCard).getByText('Duración')).toBeInTheDocument();
     expect(within(eliteCard).getByRole('button', { name: '3 meses' })).toBeInTheDocument();
     expect(within(eliteCard).getByText(/US\$?\s?4[.,]000/)).toBeInTheDocument();
   });
 
-  it('shows a package selector (8/12/16 clases) for Presencial, and updates the price when a different package is picked', async () => {
-    vi.mocked(clientsClient.fetchClient).mockResolvedValue(baseClient({ clientType: 'lead_wellness', planEndDate: undefined }));
+  it('shows a package selector (8/12/16 clases) for Cliente 1:1, and updates the price when a different package is picked', async () => {
+    vi.mocked(clientsClient.fetchClient).mockResolvedValue(baseClient({ planEndDate: undefined }));
     render(<PanelMembresias clientId={CLIENT_ID} />);
 
     await screen.findAllByText('Pagar');
-    const presencialCard = screen.getByText('Club Presencial').closest('div')!;
+    const presencialCard = screen.getByText('Cliente 1:1').closest('div')!;
     expect(within(presencialCard).getByText('8 clases')).toBeInTheDocument();
     expect(within(presencialCard).getByText('12 clases')).toBeInTheDocument();
     expect(within(presencialCard).getByText('16 clases')).toBeInTheDocument();
   });
 
   it('does not mark the plan as active until the backend confirms the payment (never trusts confirmPayment alone) — Stripe branch', async () => {
-    vi.mocked(clientsClient.fetchClient).mockResolvedValue(baseClient({ clientType: 'lead_wellness', planEndDate: undefined }));
+    vi.mocked(clientsClient.fetchClient).mockResolvedValue(baseClient({ planEndDate: undefined }));
     vi.mocked(membershipClient.createMembershipCheckout).mockResolvedValue({
       provider: 'stripe', clientSecret: 'secret_x', membershipPaymentId: 'pay_1', providerReference: 'pi_1',
     });
@@ -122,7 +119,7 @@ describe('PanelMembresias', () => {
   });
 
   it('confirms a Wompi payment only after the backend polling reports succeeded, never by the widget callback alone', async () => {
-    vi.mocked(clientsClient.fetchClient).mockResolvedValue(baseClient({ clientType: 'lead_wellness', planEndDate: undefined }));
+    vi.mocked(clientsClient.fetchClient).mockResolvedValue(baseClient({ planEndDate: undefined }));
     vi.mocked(membershipClient.createMembershipCheckout).mockResolvedValue({
       provider: 'wompi',
       membershipPaymentId: 'pay_2',
@@ -147,7 +144,7 @@ describe('PanelMembresias', () => {
     const payButtons = await screen.findAllByText('Pagar');
     fireEvent.click(payButtons[0]); // Presencial (primer card)
 
-    const presencialCard = screen.getByText('Club Presencial').closest('div')!;
+    const presencialCard = screen.getByText('Cliente 1:1').closest('div')!;
     const widgetPayButton = await within(presencialCard).findByRole('button', { name: 'Pagar' });
     fireEvent.click(widgetPayButton);
 
@@ -170,7 +167,7 @@ describe('PanelMembresias', () => {
   });
 
   it('shows a dedicated "rejected" message (with a Reintentar button) when the backend polling reports failed, instead of silently resetting the form', async () => {
-    vi.mocked(clientsClient.fetchClient).mockResolvedValue(baseClient({ clientType: 'lead_wellness', planEndDate: undefined }));
+    vi.mocked(clientsClient.fetchClient).mockResolvedValue(baseClient({ planEndDate: undefined }));
     vi.mocked(membershipClient.createMembershipCheckout).mockResolvedValue({
       provider: 'stripe', clientSecret: 'secret_x', membershipPaymentId: 'pay_3', providerReference: 'pi_3',
     });
@@ -200,7 +197,7 @@ describe('PanelMembresias', () => {
   });
 
   it('keeps the "Pago confirmado" message on screen (with an Aceptar button) until the client dismisses it themselves — never on a timer', async () => {
-    vi.mocked(clientsClient.fetchClient).mockResolvedValue(baseClient({ clientType: 'lead_wellness', planEndDate: undefined }));
+    vi.mocked(clientsClient.fetchClient).mockResolvedValue(baseClient({ planEndDate: undefined }));
     vi.mocked(membershipClient.createMembershipCheckout).mockResolvedValue({
       provider: 'stripe', clientSecret: 'secret_x', membershipPaymentId: 'pay_4', providerReference: 'pi_4',
     });

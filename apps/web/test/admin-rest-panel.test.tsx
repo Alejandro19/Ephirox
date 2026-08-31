@@ -20,7 +20,7 @@ describe('AdminRestPanel', () => {
     vi.mocked(restToolsClient.listAllRestTools).mockResolvedValue([]);
 
     render(<AdminRestPanel clientId="c1" />);
-    expect(await screen.findByText(/no tiene el plan Mentoring/)).toBeInTheDocument();
+    expect(await screen.findByText(/no tiene el plan Premium/)).toBeInTheDocument();
     expect(screen.queryByLabelText(/Protocolo — una línea/)).not.toBeInTheDocument();
   });
 
@@ -50,7 +50,7 @@ describe('AdminRestPanel', () => {
   it('always renders the global rest tools bank below the protocol section', async () => {
     vi.mocked(sleepClient.getProtocol).mockResolvedValue(null);
     vi.mocked(clientsClient.fetchClient).mockResolvedValue({
-      id: 'c1', name: 'Ana', email: 'a@x.com', plan: '', status: 'active', clientType: 'lead_wellness',
+      id: 'c1', name: 'Ana', email: 'a@x.com', plan: '', status: 'active', clientType: 'coaching_1_1',
     });
     vi.mocked(restToolsClient.listAllRestTools).mockResolvedValue([
       { id: 't1', name: 'Sonidos para dormir', meta: null, action: 'play', minutes: 5, seconds: 0, audioUrl: null, audioName: null, active: true, sortOrder: 0 },

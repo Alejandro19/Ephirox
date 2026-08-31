@@ -10,16 +10,10 @@ function unauthorized(res: Response, message: string, status = 403) {
 /**
  * Middleware to check if user has completed onboarding (personal info).
  * Admins pass automatically.
- * lead_wellness clients pass without onboarding check (they can self-serve Mi Evolución check-ins).
  * Everyone else must have a personal_info row with non-null completed_at, else 403.
  */
 export async function requireOnboardingComplete(req: Request, res: Response, next: NextFunction) {
   if (req.user?.role === 'admin') return next();
-  // lead_wellness sí puede hacer su check-in del día en Mi Evolución (el
-  // front le oculta el historial/gráficas, pero el registro básico es
-  // autoservicio, igual que Cortisol/Descanso) — no se le exige onboarding
-  // completo ni se le bloquea aquí.
-  if (req.client && req.client.clientType === 'lead_wellness') return next();
   try {
     const rows = await db.select().from(personalInfo).where(eq(personalInfo.clientId, req.user!.id)).limit(1);
     const info = rows[0];
@@ -45,14 +39,11 @@ export function requireEventsAccess(req: Request, res: Response, next: NextFunct
 
 /**
  * Middleware for therapies reserve/cancel only (NOT events routes).
- * Admins pass; lead_wellness clients blocked with 403; expired-plan clients blocked with 402;
- * otherwise delegates to requireOnboardingComplete.
+ * Admins pass; expired-plan clients blocked with 402; otherwise delegates to
+ * requireOnboardingComplete.
  */
 export async function requireCommunityAccess(req: Request, res: Response, next: NextFunction) {
   if (req.user?.role === 'admin') return next();
-  if (req.client && req.client.clientType === 'lead_wellness') {
-    return unauthorized(res, 'No tienes acceso a este módulo.');
-  }
   if (req.planExpired) return unauthorized(res, 'Tu plan ha vencido. Contacta a tu coach para renovarlo.', 402);
   return requireOnboardingComplete(req, res, next);
 }

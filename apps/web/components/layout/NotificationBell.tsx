@@ -99,45 +99,44 @@ export default function NotificationBell() {
           border: "none",
           cursor: "pointer",
           display: "inline-flex",
-          color: "var(--ink-secondary)",
+          color: "var(--eph-text)",
           padding: "4px 6px",
-          opacity: 0.75,
-          transition: "opacity 0.2s ease",
+          opacity: 0.85,
+          transition: "opacity 0.15s ease",
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.opacity = "1";
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.opacity = "0.75";
+          e.currentTarget.style.opacity = "0.85";
         }}
       >
         <IconBell size={18} />
-        {/* Unread dot — Oura-style gold indicator */}
+        {/* Punto de no leído */}
         {hasUnread && (
           <span
             style={{
               position: "absolute",
               top: 2,
               right: 4,
-              width: 7,
-              height: 7,
+              width: 6,
+              height: 6,
               borderRadius: "50%",
-              background: "var(--danger)",
+              background: "var(--eph-accent)",
             }}
           />
         )}
       </button>
 
-      {/* Dropdown panel — Oura card style: no shadow, subtle border, pill-radius.
-          Fixed + inset en mobile (en vez de absolute/right:0 anclado al ícono)
+      {/* Fixed + inset en mobile (en vez de absolute/right:0 anclado al ícono)
           para que nunca se salga de la pantalla en viewports angostos. */}
       {open && (
         <div
           className="notif-dropdown"
           style={{
-            background: "var(--paper)",
-            border: "1px solid var(--border-hairline)",
-            borderRadius: "var(--radius-card)",
+            background: "var(--eph-surface)",
+            border: "1px solid var(--eph-line)",
+            borderRadius: 0,
             padding: 6,
             zIndex: 50,
             maxHeight: 360,
@@ -146,10 +145,13 @@ export default function NotificationBell() {
         >
           {notifications.length === 0 ? (
             <div
+              className="font-mono"
               style={{
-                fontSize: 12,
-                color: "var(--ink-secondary)",
-                padding: "16px 10px",
+                fontSize: 10,
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+                color: "var(--eph-muted)",
+                padding: "18px 10px",
                 textAlign: "center",
               }}
             >
@@ -159,19 +161,20 @@ export default function NotificationBell() {
             notifications.map((n) => (
               <div
                 key={n.id}
+                className="font-body"
                 style={{
-                  fontSize: 12,
-                  color: "var(--ink)",
+                  fontSize: 12.5,
+                  color: "var(--eph-text)",
                   padding: "9px 8px",
-                  borderBottom: "1px solid var(--border-hairline)",
+                  borderBottom: "1px solid var(--eph-line)",
                   lineHeight: 1.4,
-                  background: n.read ? "transparent" : "var(--page-bg)",
-                  borderRadius: n.read ? "0" : "8px",
+                  background: n.read ? "transparent" : "var(--eph-surface-2)",
+                  borderRadius: 0,
                 }}
               >
                 <div>{n.message}</div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 4 }}>
-                  <span style={{ fontSize: 10, color: "var(--ink-secondary)" }}>
+                  <span className="font-mono" style={{ fontSize: 9, color: "var(--eph-muted)" }}>
                     {new Date(n.createdAt).toLocaleDateString("es-ES", {
                       day: "numeric",
                       month: "short",
@@ -184,9 +187,10 @@ export default function NotificationBell() {
                       <button
                         type="button"
                         onClick={() => { setOpen(false); router.push(`/admin/clients/${n.clientId}`); }}
+                        className="font-mono"
                         style={{
                           background: "none", border: "none", padding: 0, cursor: "pointer",
-                          fontSize: 10, fontWeight: 600, color: "var(--ring-accent)", textDecoration: "none",
+                          fontSize: 9, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--eph-accent)",
                         }}
                       >
                         Ver cliente
@@ -195,9 +199,10 @@ export default function NotificationBell() {
                     {!n.read && (
                       <button
                         onClick={() => markRead(n.id)}
+                        className="font-mono"
                         style={{
                           background: "none", border: "none", padding: 0, cursor: "pointer",
-                          fontSize: 10, fontWeight: 600, color: "var(--ring-accent)",
+                          fontSize: 9, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--eph-accent)",
                         }}
                       >
                         Marcar leída

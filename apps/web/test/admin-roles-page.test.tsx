@@ -14,12 +14,10 @@ const MODULES: PermissionModuleDto[] = [
 
 const MATRIX: ModuleAccessMatrix = {
   coaching_1_1: { personal_info: true, personal_info_mentoring: false, training: true },
-  coaching_online: { personal_info: true, personal_info_mentoring: false, training: true },
-  lead_wellness: { personal_info: false, personal_info_mentoring: false, training: false },
   mentoring: { personal_info: false, personal_info_mentoring: true, training: true },
 };
 
-const COUNTS: ClientTypeCounts = { coaching_1_1: 3, coaching_online: 2, lead_wellness: 5, mentoring: 1, therapist: 4 };
+const COUNTS: ClientTypeCounts = { coaching_1_1: 3, mentoring: 1, therapist: 4 };
 
 describe('AdminRolesPage', () => {
   beforeEach(() => {
@@ -43,7 +41,7 @@ describe('AdminRolesPage', () => {
     await screen.findByText('Entrenamiento');
 
     // Primera columna es coaching_1_1 — desmarca "Entrenamiento" ahí.
-    fireEvent.click(screen.getByLabelText('Entrenamiento — Coaching 1:1'));
+    fireEvent.click(screen.getByLabelText('Entrenamiento — Cliente 1:1'));
     fireEvent.click(screen.getAllByRole('button', { name: 'Guardar' })[0]);
 
     await waitFor(() =>
@@ -62,8 +60,8 @@ describe('AdminRolesPage', () => {
 
     // Mentoring ya tiene personal_info_mentoring en true — marcar también
     // personal_info dispara el conflicto.
-    fireEvent.click(screen.getByLabelText('Información personal — Mentoring'));
-    fireEvent.click(screen.getAllByRole('button', { name: 'Guardar' })[3]);
+    fireEvent.click(screen.getByLabelText('Información personal — Premium'));
+    fireEvent.click(screen.getAllByRole('button', { name: 'Guardar' })[1]);
 
     await waitFor(() => expect(window.confirm).toHaveBeenCalled());
     expect(rolesClient.saveMatrixColumn).not.toHaveBeenCalled();
@@ -75,8 +73,8 @@ describe('AdminRolesPage', () => {
     render(<AdminRolesPage />);
     await screen.findByText('Entrenamiento');
 
-    fireEvent.click(screen.getByLabelText('Información personal — Mentoring'));
-    fireEvent.click(screen.getAllByRole('button', { name: 'Guardar' })[3]);
+    fireEvent.click(screen.getByLabelText('Información personal — Premium'));
+    fireEvent.click(screen.getAllByRole('button', { name: 'Guardar' })[1]);
 
     await waitFor(() =>
       expect(rolesClient.saveMatrixColumn).toHaveBeenCalledWith('mentoring', {

@@ -126,7 +126,7 @@ describe('TrainingShell', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Marcar completado' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Volver al día' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Completar Entrenamiento Día 1' }));
-    expect(await screen.findByText('¡Sesión confirmada!')).toBeInTheDocument();
+    expect(await screen.findByText('Sesión confirmada.')).toBeInTheDocument();
     expect(screen.getByText('"Vas muy bien."')).toBeInTheDocument();
   });
 
@@ -159,7 +159,7 @@ describe('TrainingShell', () => {
     await waitFor(() =>
       expect(showToast).toHaveBeenCalledWith('Ya confirmaste tu sesión de hoy — vuelve mañana para el siguiente día.', 'info'),
     );
-    expect(screen.queryByText('¡Sesión confirmada!')).not.toBeInTheDocument();
+    expect(screen.queryByText('Sesión confirmada.')).not.toBeInTheDocument();
   });
 
   it('calls useProtector and updates the displayed streak', async () => {
@@ -180,7 +180,7 @@ describe('TrainingShell', () => {
   it('fetches the quote of the day and passes it to TrainingHome, non-fatally on failure', async () => {
     vi.mocked(quotesClient.getQuoteOfTheDay).mockRejectedValueOnce(new Error('network'));
     render(<TrainingShell clientId="c1" />);
-    expect(await screen.findByText('Entrenamiento')).toBeInTheDocument();
+    expect(await screen.findByText('Workout')).toBeInTheDocument();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
@@ -188,6 +188,6 @@ describe('TrainingShell', () => {
     const { PermissionDeniedError } = await import('../lib/api-client');
     vi.mocked(trainingClient.getClientTrainingDays).mockRejectedValueOnce(new PermissionDeniedError('No tienes acceso a este módulo.'));
     render(<TrainingShell clientId="c1" />);
-    expect(await screen.findByText('Beneficio exclusivo de una membresía superior')).toBeInTheDocument();
+    expect(await screen.findByText('Disponible en Premium')).toBeInTheDocument();
   });
 });

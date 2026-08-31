@@ -1,6 +1,7 @@
 import { eq, desc } from 'drizzle-orm';
 import nodemailer from 'nodemailer';
 import { db } from '../db/index.js';
+import { renderEmailHtml } from './email-template.js';
 import {
   blindspotCases,
   blindspotTasks,
@@ -116,11 +117,14 @@ async function sendCrisisEmail(clientName: string, raisedBy: string, caseId: str
   const EMAIL_TO = process.env.ADMIN_NOTIFICATION_EMAIL || process.env.NOTIFICATION_TO || 'g619alejandro@gmail.com';
 
   const subject = `URGENTE — Alerta de crisis en Punto Ciego: ${clientName}`;
-  const html = `<p><strong>Se levantó una alerta de crisis</strong> en el módulo Punto Ciego.</p>
-<p><strong>Cliente:</strong> ${clientName}<br>
+  const html = renderEmailHtml({
+    preheader: `Alerta de crisis: ${clientName}`,
+    bodyHtml: `<p style="margin:0 0 12px;"><strong>Se levantó una alerta de crisis</strong> en el módulo Punto Ciego.</p>
+<p style="margin:0 0 12px;"><strong>Cliente:</strong> ${clientName}<br>
 <strong>Levantada por:</strong> ${raisedBy}<br>
 <strong>Caso:</strong> ${caseId}</p>
-<p>Entra al panel admin para atender el caso lo antes posible.</p>`;
+<p style="margin:0;">Entra al panel admin para atender el caso lo antes posible.</p>`,
+  });
 
   if (!EMAIL_HOST || !EMAIL_PORT || !EMAIL_USER || !EMAIL_PASS || !EMAIL_TO) {
     console.log('sendCrisisEmail: email config no disponible, se omite el envío.', { caseId });

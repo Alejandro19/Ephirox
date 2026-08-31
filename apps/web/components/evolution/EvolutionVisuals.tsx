@@ -2,7 +2,6 @@
 
 import type { AnthropometricRecord, InbodyRecord } from '../../lib/evolution-client';
 import { getKpiStatus, comparisonLabelByCadence, type KpiStatus } from '../../lib/evolution-logic';
-import LockedOverlay from '../ui/LockedOverlay';
 import EmptyState from '../ui/EmptyState';
 import RingProgress from '../ui/RingProgress';
 
@@ -11,18 +10,18 @@ import RingProgress from '../ui/RingProgress';
 export function WellnessIndexHero({ index }: { index: number | null }) {
   return (
     <div
-      className="mt-8 mb-5 flex items-center gap-5 rounded-[var(--radius-hero)] p-6"
-      style={{ background: 'linear-gradient(135deg, var(--hero-piedra-start), var(--hero-piedra-end))', color: 'var(--hero-piedra-text)' }}
+      className="mt-8 mb-5 flex items-center gap-5 border p-6"
+      style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface)', color: 'var(--eph-text)' }}
     >
-      <RingProgress value={index ?? 0} size={88} strokeWidth={8} color="gradient">
+      <RingProgress value={index ?? 0} size={88} strokeWidth={2}>
         <div className="flex flex-col items-center justify-center">
-          <span className="font-serif text-[26px] font-bold leading-none">{index != null ? index : '—'}</span>
-          <span className="text-[9px]" style={{ color: 'var(--hero-piedra-text-muted)' }}>/ 100</span>
+          <span className="font-display text-[28px] font-normal leading-none">{index != null ? index : '—'}</span>
+          <span className="font-mono text-[9px]" style={{ color: 'var(--eph-muted)' }}>/ 100</span>
         </div>
       </RingProgress>
       <div>
-        <p className="mb-1 font-serif text-base font-bold">Índice de bienestar</p>
-        <p className="text-[11.5px] leading-relaxed" style={{ color: 'var(--hero-piedra-text-muted)' }}>
+        <p className="mb-1 font-display text-base font-normal">Índice de rendimiento</p>
+        <p className="font-body text-[11.5px] leading-relaxed" style={{ color: 'var(--eph-muted)' }}>
           Promedio ponderado de tus módulos activos (entrenamiento, sueño, cortisol y tu evolución física). Los
           componentes sin datos aún se excluyen del cálculo, en vez de contar como cero.
         </p>
@@ -32,11 +31,13 @@ export function WellnessIndexHero({ index }: { index: number | null }) {
 }
 
 // ─── Chip de tendencia (reutilizado por Bienestar general y KPIs) ─
+// Paleta reducida a los tokens Ephirox: bronce = mejora, un tono cálido
+// derivado del danger = revisar, gris tenue = sin cambios.
 
-const TREND_STYLES: Record<KpiStatus, { bg: string; color: string; text: string }> = {
-  good: { bg: 'rgba(107,92,66,.12)', color: 'var(--hero-piedra-accent)', text: 'Mejorando' },
-  watch: { bg: '#FBEFE4', color: '#B8794A', text: 'Revisar' },
-  neutral: { bg: 'var(--border-hairline)', color: 'var(--ink-secondary)', text: 'Sin cambios' },
+const TREND_STYLES: Record<KpiStatus, { color: string; text: string }> = {
+  good: { color: 'var(--eph-accent)', text: 'Mejorando' },
+  watch: { color: '#C99A6E', text: 'Revisar' },
+  neutral: { color: 'var(--eph-faint)', text: 'Sin cambios' },
 };
 
 export function TrendChip({
@@ -51,19 +52,19 @@ export function TrendChip({
   comparisonLabel: string;
 }) {
   if (delta == null || status == null) {
-    return <p className="mt-1.5 text-[10.5px] italic text-[var(--ink-secondary)]">Primera medición</p>;
+    return <p className="mt-1.5 font-body text-[10.5px] italic" style={{ color: 'var(--eph-muted)' }}>Primera medición</p>;
   }
   const styles = TREND_STYLES[status];
   const arrow = status === 'neutral' && delta === 0 ? '→' : delta > 0 ? '↑' : '↓';
   return (
     <>
       <span
-        className="mt-1.5 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10.5px] font-bold"
-        style={{ background: styles.bg, color: styles.color }}
+        className="mt-1.5 inline-flex items-center gap-1 rounded-[999px] border px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.06em]"
+        style={{ borderColor: styles.color, color: styles.color }}
       >
         {arrow} {styles.text}
       </span>
-      <p className="mt-1 text-[10px] text-[var(--ink-secondary)]">
+      <p className="mt-1 font-mono text-[10px]" style={{ color: 'var(--eph-muted)' }}>
         {delta > 0 ? '+' : ''}
         {delta.toFixed(1)}
         {unit} {comparisonLabel}
@@ -90,26 +91,26 @@ export function BienestarGeneral({
   cortisolStatus: KpiStatus | null;
 }) {
   return (
-    <div className="mb-5 rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--paper)] p-6">
-      <p className="mb-0.5 font-serif text-base font-bold text-[var(--ink)]">Bienestar general</p>
-      <p className="mb-3.5 text-[11px] text-[var(--ink-secondary)]">Un resumen rápido — el detalle completo vive en sus propios módulos.</p>
+    <div className="mb-5 border p-6" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface)' }}>
+      <p className="mb-0.5 font-display text-base font-normal" style={{ color: 'var(--eph-text)' }}>Panorama general</p>
+      <p className="mb-3.5 font-body text-[11px]" style={{ color: 'var(--eph-muted)' }}>Un resumen rápido — el detalle completo vive en sus propios módulos.</p>
       <div className="flex flex-wrap gap-3.5">
-        <div className="min-w-[150px] flex-1 rounded-xl bg-[var(--page-bg)] p-4">
-          <p className="mb-1.5 flex items-center gap-1.5 text-[9.5px] font-bold uppercase text-[var(--ink-secondary)]">
-            <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: '#8A5FA0' }} />
-            Hackeando el sueño
+        <div className="min-w-[150px] flex-1 border p-4" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface-2)' }}>
+          <p className="mb-1.5 flex items-center gap-1.5 font-mono text-[9.5px] uppercase tracking-[0.08em]" style={{ color: 'var(--eph-muted)' }}>
+            <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: 'var(--eph-steel)' }} />
+            Sleep
           </p>
-          <p className="font-serif text-2xl font-bold text-[var(--ink)]">{sleepAvg ?? '—'}</p>
-          <p className="mt-0.5 text-[10.5px] text-[var(--ink-secondary)]">Calidad de sueño promedio</p>
+          <p className="font-display text-2xl font-normal" style={{ color: 'var(--eph-text)' }}>{sleepAvg ?? '—'}</p>
+          <p className="mt-0.5 font-body text-[10.5px]" style={{ color: 'var(--eph-muted)' }}>Calidad de sueño promedio</p>
           <TrendChip delta={sleepDelta} unit="" status={sleepStatus} comparisonLabel="vs mes pasado" />
         </div>
-        <div className="min-w-[150px] flex-1 rounded-xl bg-[var(--page-bg)] p-4">
-          <p className="mb-1.5 flex items-center gap-1.5 text-[9.5px] font-bold uppercase text-[var(--ink-secondary)]">
-            <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: 'var(--hero-espresso-accent)' }} />
-            Gestión de Cortisol
+        <div className="min-w-[150px] flex-1 border p-4" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface-2)' }}>
+          <p className="mb-1.5 flex items-center gap-1.5 font-mono text-[9.5px] uppercase tracking-[0.08em]" style={{ color: 'var(--eph-muted)' }}>
+            <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: 'var(--eph-accent)' }} />
+            Stress
           </p>
-          <p className="font-serif text-2xl font-bold text-[var(--ink)]">{weeklyRegulation ?? '—'}</p>
-          <p className="mt-0.5 text-[10.5px] text-[var(--ink-secondary)]">Momentos de regulación esta semana</p>
+          <p className="font-display text-2xl font-normal" style={{ color: 'var(--eph-text)' }}>{weeklyRegulation ?? '—'}</p>
+          <p className="mt-0.5 font-body text-[10.5px]" style={{ color: 'var(--eph-muted)' }}>Momentos de regulación esta semana</p>
           <TrendChip delta={cortisolDelta} unit="" status={cortisolStatus} comparisonLabel="vs mes pasado" />
         </div>
       </div>
@@ -128,7 +129,7 @@ const KPI_ICON_PATHS: Record<KpiMetrica, string> = {
     'M9 21c-1-6 1-10 5-12 3-1.5 6-1 7 1 1 2-1 3.5-3 3.5h-1.5c2 1 2.5 3 1.5 5-1.5 3-5.5 3.5-8.5 2.5-2-.7-2.5-.2-2.5 2v1H5v-3c0-1.5 1-2 2-2z',
 };
 
-const KPI_COLORS: Record<KpiMetrica, string> = { peso: '#D9A441', grasa_corporal: '#5B7A4E', masa_muscular: '#8A5FA0' };
+const KPI_COLORS: Record<KpiMetrica, string> = { peso: 'var(--eph-accent)', grasa_corporal: 'var(--eph-steel)', masa_muscular: '#8C8177' };
 
 function KpiIcon({ metrica }: { metrica: KpiMetrica }) {
   const color = KPI_COLORS[metrica];
@@ -163,10 +164,10 @@ export function EvolutionKpiCard({
 }) {
   const status = getKpiStatus(delta, metrica, objetivos);
   return (
-    <div className="rounded-xl bg-[var(--page-bg)] p-4 text-center">
+    <div className="border p-4 text-center" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface-2)' }}>
       <KpiIcon metrica={metrica} />
-      <p className="font-serif text-[22px] font-bold text-[var(--ink)]">{value != null ? `${value}${unit}` : '—'}</p>
-      <p className="my-1 text-[9.5px] font-bold uppercase tracking-wide text-[var(--ink-secondary)]">{label}</p>
+      <p className="font-display text-[22px] font-normal" style={{ color: 'var(--eph-text)' }}>{value != null ? `${value}${unit}` : '—'}</p>
+      <p className="my-1 font-mono text-[9.5px] uppercase tracking-[0.08em]" style={{ color: 'var(--eph-muted)' }}>{label}</p>
       <TrendChip delta={delta} unit={unit} status={status} comparisonLabel={comparisonLabel} />
     </div>
   );
@@ -191,16 +192,16 @@ export function AdherenciaKpiCard({
   const pct = hasSessions ? Math.max(0, Math.min(100, Math.round((doneDays / expected) * 100))) : 0;
 
   return (
-    <div className="mb-5 flex items-center gap-4 rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--paper)] p-6">
-      <RingProgress value={hasSessions ? pct : 0} size={64} strokeWidth={7} color="piedra">
+    <div className="mb-5 flex items-center gap-4 border p-6" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface)' }}>
+      <RingProgress value={hasSessions ? pct : 0} size={64} strokeWidth={2}>
         <div className="flex flex-col items-center justify-center">
-          <span className="font-serif text-base font-bold leading-none">{hasSessions ? `${pct}%` : '—'}</span>
-          <span className="text-[7px] text-[var(--ink-secondary)]">ESTE MES</span>
+          <span className="font-display text-base font-normal leading-none">{hasSessions ? `${pct}%` : '—'}</span>
+          <span className="font-mono text-[7px]" style={{ color: 'var(--eph-muted)' }}>ESTE MES</span>
         </div>
       </RingProgress>
       <div>
-        <p className="mb-1 font-serif text-[14.5px] font-bold text-[var(--ink)]">Adherencia de entrenamiento</p>
-        <p className="text-[11px] text-[var(--ink-secondary)]">
+        <p className="mb-1 font-display text-[16px] font-normal" style={{ color: 'var(--eph-text)' }}>Adherencia de entrenamiento</p>
+        <p className="font-body text-[11px]" style={{ color: 'var(--eph-muted)' }}>
           {hasSessions
             ? `${doneDays} de ${expected} sesiones programadas completadas este mes${
                 streakWeeks != null ? ` · racha actual: ${streakWeeks} semana${streakWeeks === 1 ? '' : 's'}` : ''
@@ -217,11 +218,11 @@ export function AdherenciaKpiCard({
 export function MedidaTile({ label, value, firstValue }: { label: string; value: number | null; firstValue: number | null }) {
   const delta = value != null && firstValue != null ? Number(value) - Number(firstValue) : null;
   return (
-    <div className="rounded-xl bg-[var(--page-bg)] p-3 text-center">
-      <p className="font-serif text-base font-bold text-[var(--ink)]">{value ?? '—'}</p>
-      <p className="my-0.5 text-[9px] font-bold uppercase text-[var(--ink-secondary)]">{label}</p>
+    <div className="border p-3 text-center" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface-2)' }}>
+      <p className="font-display text-base font-normal" style={{ color: 'var(--eph-text)' }}>{value ?? '—'}</p>
+      <p className="my-0.5 font-mono text-[9px] uppercase tracking-[0.06em]" style={{ color: 'var(--eph-muted)' }}>{label}</p>
       {delta != null && (
-        <span className="text-[10px] text-[var(--ink-secondary)]">
+        <span className="font-mono text-[10px]" style={{ color: 'var(--eph-muted)' }}>
           {delta > 0 ? '+' : ''}
           {delta.toFixed(1)}
         </span>
@@ -248,9 +249,9 @@ export function CompositionDonut({
   const muscularKg = smm != null ? Number(smm) : 0;
   const magraKg = Math.max(0, peso - grasaKg - muscularKg);
   const segments = [
-    { label: 'Masa magra (estimada)', kg: magraKg, unit: '%', color: '#B8935A' },
-    { label: 'Masa muscular', kg: muscularKg, unit: 'kg', color: '#5B7A4E' },
-    { label: 'Grasa corporal', kg: grasaKg, unit: '%', color: '#8A5FA0' },
+    { label: 'Masa magra (estimada)', kg: magraKg, unit: '%', color: '#8C8177' },
+    { label: 'Masa muscular', kg: muscularKg, unit: 'kg', color: 'var(--eph-steel)' },
+    { label: 'Grasa corporal', kg: grasaKg, unit: '%', color: 'var(--eph-accent)' },
   ];
   const size = 120;
   const strokeWidth = 18;
@@ -284,18 +285,18 @@ export function CompositionDonut({
           })}
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="font-serif text-[17px] font-bold text-[var(--ink)]">{peso}kg</span>
-          <span className="text-[8px] uppercase text-[var(--ink-secondary)]">Total</span>
+          <span className="font-display text-[17px] font-normal text-[var(--eph-text)]">{peso}kg</span>
+          <span className="text-[8px] uppercase text-[var(--eph-muted)]">Total</span>
         </div>
       </div>
       <div className="min-w-[180px] flex-1">
         {segments.map((s) => (
           <div key={s.label} className="flex items-center justify-between py-1 text-xs">
-            <span className="flex items-center gap-1.5 text-[var(--ink)]">
+            <span className="flex items-center gap-1.5 text-[var(--eph-text)]">
               <span className="inline-block h-2.5 w-2.5 rounded-sm" style={{ background: s.color }} />
               {s.label}
             </span>
-            <strong className="text-[var(--ink)]">
+            <strong className="text-[var(--eph-text)]">
               {s.unit === 'kg' ? `${s.kg.toFixed(1)}kg` : `${peso > 0 ? ((s.kg / peso) * 100).toFixed(1) : '0.0'}%`}
             </strong>
           </div>
@@ -347,7 +348,7 @@ export function EvolutionLineChart({ series }: { series: EvolutionSeries[] }) {
           );
         })}
         {allMonths.map((m) => (
-          <text key={m} x={xFor(m).toFixed(1)} y={h - 4} fontSize={8} textAnchor="middle" fill="var(--ink-secondary)">
+          <text key={m} x={xFor(m).toFixed(1)} y={h - 4} fontSize={8} textAnchor="middle" fill="var(--eph-muted)">
             M{m}
           </text>
         ))}
@@ -357,9 +358,9 @@ export function EvolutionLineChart({ series }: { series: EvolutionSeries[] }) {
           const pts = allMonths.map((m) => s.points.find((p) => p.month === m)).filter(Boolean);
           const latest = pts.length ? pts[pts.length - 1]!.value : null;
           return (
-            <div key={s.name} className="flex items-center gap-1.5 text-[11px] text-[var(--ink-secondary)]">
+            <div key={s.name} className="flex items-center gap-1.5 text-[11px] text-[var(--eph-muted)]">
               <span className="inline-block h-2 w-2 rounded-full" style={{ background: s.color }} />
-              {s.name}: <strong className="text-[var(--ink)]">{latest != null ? `${latest}${s.unit}` : '—'}</strong>
+              {s.name}: <strong className="text-[var(--eph-text)]">{latest != null ? `${latest}${s.unit}` : '—'}</strong>
             </div>
           );
         })}
@@ -407,45 +408,45 @@ export function EvolucionFisicaSection({
 
   return (
     <>
-      <div className="mb-5 rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--paper)] p-6">
-        <p className="font-serif text-base font-bold text-[var(--ink)]">Tu evolución física</p>
-        <p className="mb-4 mt-6 font-serif text-[15px] font-bold text-[var(--ink)]">KPIs principales</p>
+      <div className="mb-5 rounded-[0] border border-[var(--eph-line)] bg-[var(--eph-surface)] p-6">
+        <p className="font-display text-base font-normal text-[var(--eph-text)]">Tu evolución física</p>
+        <p className="mb-4 mt-6 font-display text-[16px] font-normal text-[var(--eph-text)]">KPIs principales</p>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <EvolutionKpiCard label="Peso" value={pesoVal} unit=" kg" delta={pesoDelta} metrica="peso" objetivos={objetivos} comparisonLabel={comparisonLabel} />
           <EvolutionKpiCard label="Grasa corporal" value={lastInbody?.grasaPct ?? null} unit="%" delta={grasaDelta} metrica="grasa_corporal" objetivos={objetivos} comparisonLabel={comparisonLabel} />
           <EvolutionKpiCard label="Masa muscular" value={lastInbody?.smm ?? null} unit=" kg" delta={smmDelta} metrica="masa_muscular" objetivos={objetivos} comparisonLabel={comparisonLabel} />
         </div>
-        <p className="mt-3 text-center text-[10.5px] text-[var(--ink-secondary)]">
+        <p className="mt-3 text-center text-[10.5px] text-[var(--eph-muted)]">
           {lastMeasurementDate ? `Última medición: ${lastMeasurementDate}` : 'Sin mediciones aún'}
         </p>
       </div>
       <AdherenciaKpiCard doneDays={disciplineStats?.doneDays ?? 0} expected={disciplineStats?.expected ?? 0} streakWeeks={streakWeeks} />
-      <div className="mb-5 rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--paper)] p-6">
-        <p className="mb-4 font-serif text-[15px] font-bold text-[var(--ink)]">Composición corporal</p>
+      <div className="mb-5 rounded-[0] border border-[var(--eph-line)] bg-[var(--eph-surface)] p-6">
+        <p className="mb-4 font-display text-[16px] font-normal text-[var(--eph-text)]">Composición corporal</p>
         <CompositionDonut pesoTotal={lastInbody?.pesoTotal ?? lastAnthro?.peso ?? null} smm={lastInbody?.smm ?? null} grasaPct={lastInbody?.grasaPct ?? null} />
       </div>
-      <div className="mb-5 rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--paper)] p-6">
-        <p className="mb-1 font-serif text-[15px] font-bold text-[var(--ink)]">Evolución en el tiempo</p>
-        <p className="mb-3 text-[11px] text-[var(--ink-secondary)]">Una gráfica por métrica, con fechas reales — aparece con tu segunda medición.</p>
+      <div className="mb-5 rounded-[0] border border-[var(--eph-line)] bg-[var(--eph-surface)] p-6">
+        <p className="mb-1 font-display text-[16px] font-normal text-[var(--eph-text)]">Evolución en el tiempo</p>
+        <p className="mb-3 text-[11px] text-[var(--eph-muted)]">Una gráfica por métrica, con fechas reales — aparece con tu segunda medición.</p>
         {hasEnoughForChart ? (
           <EvolutionLineChart
             series={[
-              { name: 'Peso', color: '#2B2621', unit: ' kg', points: inbody.filter((r) => r.mesNum != null && r.pesoTotal != null).map((r) => ({ month: r.mesNum!, value: Number(r.pesoTotal) })) },
-              { name: 'Grasa', color: '#5B7A4E', unit: '%', points: inbody.filter((r) => r.mesNum != null && r.grasaPct != null).map((r) => ({ month: r.mesNum!, value: Number(r.grasaPct) })) },
-              { name: 'Masa muscular', color: '#B8935A', unit: ' kg', points: inbody.filter((r) => r.mesNum != null && r.smm != null).map((r) => ({ month: r.mesNum!, value: Number(r.smm) })) },
+              { name: 'Peso', color: '#8C8177', unit: ' kg', points: inbody.filter((r) => r.mesNum != null && r.pesoTotal != null).map((r) => ({ month: r.mesNum!, value: Number(r.pesoTotal) })) },
+              { name: 'Grasa', color: 'var(--eph-accent)', unit: '%', points: inbody.filter((r) => r.mesNum != null && r.grasaPct != null).map((r) => ({ month: r.mesNum!, value: Number(r.grasaPct) })) },
+              { name: 'Masa muscular', color: 'var(--eph-steel)', unit: ' kg', points: inbody.filter((r) => r.mesNum != null && r.smm != null).map((r) => ({ month: r.mesNum!, value: Number(r.smm) })) },
             ]}
           />
         ) : (
           <div className="px-2.5 py-5 text-center">
-            <p className="mb-2 font-serif text-[15px] font-bold text-[var(--ink)]">Necesitas al menos 2 mediciones para ver tu evolución</p>
-            <p className="mx-auto max-w-[320px] text-xs text-[var(--ink-secondary)]">
+            <p className="mb-2 font-display text-[16px] font-normal text-[var(--eph-text)]">Necesitas al menos 2 mediciones para ver tu evolución</p>
+            <p className="mx-auto max-w-[320px] text-xs text-[var(--eph-muted)]">
               Tu mentor registrará tu próxima medición en tu siguiente sesión de seguimiento — ahí empezará a aparecer tu gráfica de tendencia.
             </p>
           </div>
         )}
       </div>
-      <div className="mb-5 rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--paper)] p-6">
-        <p className="mb-4 font-serif text-[15px] font-bold text-[var(--ink)]">Medidas corporales</p>
+      <div className="mb-5 rounded-[0] border border-[var(--eph-line)] bg-[var(--eph-surface)] p-6">
+        <p className="mb-4 font-display text-[16px] font-normal text-[var(--eph-text)]">Medidas corporales</p>
         <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
           <MedidaTile label="Cintura" value={lastAnthro?.cintura ?? null} firstValue={firstAnthro?.cintura ?? null} />
           <MedidaTile label="Cadera" value={lastAnthro?.gluteo ?? null} firstValue={firstAnthro?.gluteo ?? null} />
@@ -457,41 +458,3 @@ export function EvolucionFisicaSection({
   );
 }
 
-// ─── "Tu evolución física" bloqueada (lead_wellness) ───────────────
-
-const DEMO_OBJETIVOS = { peso: 'bajar', grasa_corporal: 'bajar', masa_muscular: 'subir' };
-
-export function EvolucionFisicaLocked({ onCta }: { onCta?: () => void }) {
-  return (
-    <>
-      <div className="mb-1 mt-5">
-        <p className="font-serif text-base font-bold text-[var(--ink)]">Tu evolución física</p>
-      </div>
-      <LockedOverlay
-        title="Tu evolución física se mide en sesión"
-        subtitle="Peso, medidas, % de grasa y masa muscular los registra tu mentor en cada seguimiento — actívate con un coach para empezar a verlos aquí."
-        ctaLabel="Ver planes"
-        onCta={onCta}
-      >
-        <div className="pb-6">
-          <p className="mb-4 font-serif text-[15px] font-bold text-[var(--ink)]">KPIs principales</p>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <EvolutionKpiCard label="Peso" value={68} unit=" kg" delta={-1.2} metrica="peso" objetivos={DEMO_OBJETIVOS} comparisonLabel="vs mes pasado" />
-            <EvolutionKpiCard label="Grasa corporal" value={22} unit="%" delta={-2.1} metrica="grasa_corporal" objetivos={DEMO_OBJETIVOS} comparisonLabel="vs mes pasado" />
-            <EvolutionKpiCard label="Masa muscular" value={28} unit=" kg" delta={0.8} metrica="masa_muscular" objetivos={DEMO_OBJETIVOS} comparisonLabel="vs mes pasado" />
-          </div>
-        </div>
-        <AdherenciaKpiCard doneDays={9} expected={12} streakWeeks={3} />
-        <div className="mb-5 rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--paper)] p-6">
-          <p className="mb-4 font-serif text-[15px] font-bold text-[var(--ink)]">Medidas corporales</p>
-          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-            <MedidaTile label="Cintura" value={78} firstValue={80} />
-            <MedidaTile label="Cadera" value={96} firstValue={98} />
-            <MedidaTile label="Brazo" value={32} firstValue={31} />
-            <MedidaTile label="Pierna" value={54} firstValue={53} />
-          </div>
-        </div>
-      </LockedOverlay>
-    </>
-  );
-}

@@ -10,6 +10,7 @@ import { Module3, EMPTY_MODULE3_DRAFT, validateModule3, type Module3Draft } from
 import { Module10, EMPTY_MODULE10_DRAFT, type Module10Draft } from './Module10';
 import IdentityHeader from '../ui/IdentityHeader';
 import RingProgress from '../ui/RingProgress';
+import Button from '../ui/Button';
 import { upsertLabPanel } from '../../lib/lab-panels-client';
 import {
   putPersonalInfo,
@@ -17,7 +18,15 @@ import {
   createAnthropometric,
   createPhoto,
   createInbodyRecord,
+  finalizeOnboarding,
+  type FinalizeOnboardingMissingItem,
 } from '../../lib/onboarding-client';
+
+const MISSING_ITEM_LABELS: Record<FinalizeOnboardingMissingItem, string> = {
+  wearable: 'conectar un wearable (o completar los campos de Apple Health)',
+  lab_week0: 'cargar tu laboratorio de Semana 0',
+  inbody: 'cargar tu InBody',
+};
 
 type WizardData = Record<string, string | string[]>;
 
@@ -110,7 +119,7 @@ export function WizardShell({ clientId, variant }: WizardShellProps) {
   const modules = variant === 'mentoring' ? [...WIZARD_MODULES, WIZARD_MODULE_10] : WIZARD_MODULES;
   const totalModules = modules.length;
   const mod = modules.find((m) => m.n === step)!;
-  const hiddenFieldIds = computeHiddenFieldIds(CONDITIONAL_RULES, wizardData);
+  const hiddenFieldIds = computeHiddenFieldIds(CONDITIONAL_RULES, wizardData, variant);
 
   // Revalida en vivo SOLO cuando ya hay errores visibles (el usuario intentó
   // avanzar con el paso incompleto) — así un campo deja de verse en rojo en
@@ -119,7 +128,7 @@ export function WizardShell({ clientId, variant }: WizardShellProps) {
   // validar de más mientras el usuario recién está llenando el formulario.
   function revalidateWizardData(next: WizardData) {
     if (invalidFieldIds.size === 0) return;
-    const nextHidden = computeHiddenFieldIds(CONDITIONAL_RULES, next);
+    const nextHidden = computeHiddenFieldIds(CONDITIONAL_RULES, next, variant);
     if (mod.custom === 'country') {
       const invalid: string[] = [];
       if (!next.country) invalid.push('country');
@@ -186,6 +195,20 @@ export function WizardShell({ clientId, variant }: WizardShellProps) {
         };
       }
 
+      // apple_health_connected es la única señal server-side de "wearable
+      // conectado" para Apple Watch (sin OAuth real) — se exige completo
+      // (los 4 campos) para contar, mismo criterio que Module3 exige la
+      // mayoría de los campos InBody antes de aceptar ese registro.
+      const appleHealthConnected =
+        module10Draft.wearable === 'Apple Watch' &&
+        !!module10Draft.appleHealth.hrv &&
+        !!module10Draft.appleHealth.fcReposo &&
+        !!module10Draft.appleHealth.spo2 &&
+        !!module10Draft.appleHealth.vo2max;
+
+      // `complete: true` se pide al final, en finalizeOnboarding() — recién
+      // ahí, tras guardar InBody y laboratorio semana 0, el backend puede
+      // validar que Mentoría tenga los 3 elementos obligatorios completos.
       await putPersonalInfo(clientId, {
         name: wizardData.name as string,
         age: wizardData.age ? Number(wizardData.age) : null,
@@ -203,8 +226,14 @@ export function WizardShell({ clientId, variant }: WizardShellProps) {
         weight: module3Draft.inbody.pesoTotal ? Number(module3Draft.inbody.pesoTotal) : null,
         height: module3Draft.inbody.altura ? Number(module3Draft.inbody.altura) : null,
         body_fat: module3Draft.inbody.grasaPct ? Number(module3Draft.inbody.grasaPct) : null,
+        hormonal_status: wizardData.hormonal_status as string,
+        hormonal_status_other: wizardData.hormonal_status_other as string,
+        last_period_date: wizardData.last_period_date as string,
+        cycle_length_days: wizardData.cycle_length_days ? Number(wizardData.cycle_length_days) : null,
+        snores: wizardData.snores as string,
+        sleep_apnea_signs: wizardData.sleep_apnea_signs as string,
         onboarding_report: onboardingReport,
-        complete: true,
+        apple_health_connected: appleHealthConnected,
       });
 
       const monthNum = 1; // primer registro del onboarding — siempre mes 1
@@ -255,15 +284,33 @@ export function WizardShell({ clientId, variant }: WizardShellProps) {
         onboardingReport.m10_aw_spo2 = module10Draft.appleHealth.spo2;
         onboardingReport.m10_aw_vo2max = module10Draft.appleHealth.vo2max;
 
-        const labDatos = Object.entries(module10Draft.labDatos).reduce<Record<string, number>>((acc, [k, v]) => {
-          if (v) acc[k] = Number(v);
+        const labDatos = module10Draft.labMarkers.reduce<Record<string, number>>((acc, m) => {
+          if (m.detected && m.value != null) acc[m.marker_id] = m.value;
           return acc;
         }, {});
         if (Object.keys(labDatos).length > 0) {
-          await upsertLabPanel(clientId, { semana: module10Draft.labSemana, fecha: module10Draft.labFecha, datos: labDatos });
+          await upsertLabPanel(clientId, {
+            semana: module10Draft.labSemana,
+            fecha: module10Draft.labFecha,
+            datos: labDatos,
+            diaCicloPanel: module10Draft.labDiaCiclo ? Number(module10Draft.labDiaCiclo) : null,
+            fileUrl: module10Draft.labFileUrl ?? undefined,
+            fileName: module10Draft.labFileName ?? undefined,
+            sourceFileHash: module10Draft.labSourceFileHash ?? undefined,
+          });
         }
       }
 
+      const result = await finalizeOnboarding(clientId);
+      if (!result.success) {
+        const missingLabels = (result.missing ?? []).map((m) => MISSING_ITEM_LABELS[m]);
+        setFinalizeError(
+          missingLabels.length > 0
+            ? `Antes de terminar, necesitas ${missingLabels.join(', ')}.`
+            : result.error || 'No se pudo completar el onboarding.'
+        );
+        return;
+      }
       setComplete(true);
     } catch (e) {
       setFinalizeError(e instanceof Error ? e.message : 'Error al guardar.');
@@ -306,29 +353,27 @@ export function WizardShell({ clientId, variant }: WizardShellProps) {
       <div className="flex min-h-[60vh] flex-col items-center justify-center px-4">
         {/* Tarjeta estilo notificación push (icono + nombre de app + "ahora"),
             en vez del check genérico centrado — pedido explícito del usuario. */}
-        <div className="w-full max-w-sm rounded-[var(--radius-card)] border border-[var(--border-hairline)] bg-[var(--paper)] p-4 shadow-[0_10px_35px_rgba(43,38,33,0.12)]">
+        <div className="w-full max-w-sm border p-4" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface)' }}>
           <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-lg" style={{ background: 'rgba(217,183,126,.18)', color: 'var(--hero-espresso-accent)' }}>
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center text-lg" style={{ background: 'rgba(201,164,106,.16)', color: 'var(--eph-accent)' }}>
               ✓
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center justify-between gap-2">
-                <p className="m-0 text-[11px] font-bold uppercase tracking-wider text-[var(--ink-secondary)]">La Tribu</p>
-                <p className="m-0 text-[11px] text-[var(--ink-secondary)]">ahora</p>
+                <p className="m-0 font-mono text-[10px] uppercase tracking-[0.14em]" style={{ color: 'var(--eph-muted)' }}>Ephirox</p>
+                <p className="m-0 font-mono text-[10px] uppercase tracking-[0.1em]" style={{ color: 'var(--eph-muted)' }}>ahora</p>
               </div>
-              <p className="m-0 mt-0.5 font-serif text-base font-bold text-[var(--ink)]">¡Listo!</p>
-              <p className="m-0 mt-1 text-sm leading-snug text-[var(--ink-secondary)]">
-                Datos guardados. Tu coach te contactará lo antes posible.
+              <p className="m-0 mt-1 font-display text-lg" style={{ color: 'var(--eph-text)' }}>Listo.</p>
+              <p className="m-0 mt-1 font-body text-sm leading-snug" style={{ color: 'var(--eph-body)' }}>
+                {variant === 'mentoring'
+                  ? 'Datos guardados. Tu programa arranca oficialmente en Semana 1 una vez que el equipo confirme tus datos de laboratorio, wearable y baseline.'
+                  : 'Datos guardados. Tu coach te contactará lo antes posible.'}
               </p>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={() => router.push('/training')}
-            className="mt-4 w-full rounded-full bg-[var(--ink)] px-6 py-3 text-sm font-semibold text-white transition hover:brightness-95"
-          >
+          <Button type="button" variant="primary" onClick={() => router.push('/training')} className="mt-4 w-full">
             Aceptar
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -339,20 +384,20 @@ export function WizardShell({ clientId, variant }: WizardShellProps) {
   return (
     <div>
       <IdentityHeader
-        title="Información Personal"
-        subtitle="Conocerte nos permite diseñar tu experiencia dentro de La Tribu."
+        title="Baseline"
+        subtitle="El punto de partida exacto. Cada dato aquí calibra tu protocolo de optimización."
       />
 
       {/* Progreso del formulario — sin bloque de color, RingProgress como único acento */}
-      <div className="mb-6 flex items-center justify-between gap-5 border-t border-[var(--border-input)] pt-5">
+      <div className="mb-6 flex items-center justify-between gap-5 border-t pt-5" style={{ borderColor: 'var(--eph-line)' }}>
         <div className="flex-1">
-          <p className="m-0 mb-2.5 text-[11px] font-bold uppercase tracking-wider" style={{ color: 'var(--ring-accent)' }}>
+          <p className="m-0 mb-2.5 font-mono text-[10px] uppercase tracking-[0.16em]" style={{ color: 'var(--eph-accent)' }}>
             Módulo {step} de {totalModules}
           </p>
-          <p className="m-0 mb-1 font-serif text-[21px] font-semibold text-[var(--ink)]">{mod.title}</p>
-          <p className="m-0 text-[13px] text-[var(--ink-secondary)]">{formPct}% de tu formulario completado</p>
+          <p className="m-0 mb-1 font-display text-[22px]" style={{ color: 'var(--eph-text)' }}>{mod.title}</p>
+          <p className="m-0 font-mono text-[10px] uppercase tracking-[0.12em]" style={{ color: 'var(--eph-muted)' }}>{formPct}% de tu formulario completado</p>
         </div>
-        <RingProgress value={formPct} size={70} strokeWidth={6} color="espresso" />
+        <RingProgress value={formPct} size={70} strokeWidth={6} />
       </div>
 
       {/* Punticos de módulo */}
@@ -367,11 +412,11 @@ export function WizardShell({ clientId, variant }: WizardShellProps) {
               onClick={() => setStep(m.n)}
               aria-current={current ? 'step' : undefined}
               aria-label={`Ir al módulo ${m.n}: ${m.title}`}
-              className="flex h-8 w-8 items-center justify-center rounded-full border text-[13px] font-bold transition-colors"
+              className="flex h-8 w-8 items-center justify-center rounded-full border font-mono text-[12px] transition-colors"
               style={{
-                background: current ? "var(--ring-accent)" : "transparent",
-                borderColor: current || done ? "var(--ring-accent)" : "var(--border-input)",
-                color: current ? "#fff" : done ? "var(--ring-accent)" : "var(--ink-secondary)",
+                background: current ? "var(--eph-accent)" : "transparent",
+                borderColor: current || done ? "var(--eph-accent)" : "var(--eph-line)",
+                color: current ? "var(--eph-ink)" : done ? "var(--eph-accent)" : "var(--eph-faint)",
               }}
             >
               {m.n}
@@ -381,8 +426,8 @@ export function WizardShell({ clientId, variant }: WizardShellProps) {
       </div>
 
       {/* Módulo actual — sección abierta, sin fondo de color propio */}
-      <div className="border-t border-[var(--border-hairline)] py-6">
-        <h2 className="m-0 mb-4 text-lg font-bold text-[var(--ink)]">
+      <div className="border-t py-6" style={{ borderColor: 'var(--eph-line)' }}>
+        <h2 className="m-0 mb-4 font-display text-xl" style={{ color: 'var(--eph-text)' }}>
           Módulo {mod.n} · {mod.title}
         </h2>
 
@@ -441,13 +486,14 @@ export function WizardShell({ clientId, variant }: WizardShellProps) {
             return (
               <div
                 key={card.fields[0].id}
-                className="rounded-[14px] border border-[var(--border-hairline)] bg-[var(--paper)] p-5"
+                className="border p-5"
+                style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface)' }}
               >
                 <div className="mb-4 flex items-center gap-2">
-                  {GroupIcon && <GroupIcon size={16} style={{ color: 'var(--hero-piedra-accent)' }} />}
+                  {GroupIcon && <GroupIcon size={16} style={{ color: 'var(--eph-accent)' }} />}
                   <span
-                    className="text-[10.5px] font-bold uppercase tracking-[0.05em]"
-                    style={{ color: 'var(--hero-piedra-accent)' }}
+                    className="font-mono text-[10px] uppercase tracking-[0.14em]"
+                    style={{ color: 'var(--eph-accent)' }}
                   >
                     {card.group}
                   </span>
@@ -466,33 +512,40 @@ export function WizardShell({ clientId, variant }: WizardShellProps) {
 
         {mod.custom === 'devices' && (
           <div className="mt-4">
-            <Module10 clientId={clientId} draft={module10Draft} onChange={setModule10Draft} />
+            <Module10
+              clientId={clientId}
+              draft={module10Draft}
+              onChange={setModule10Draft}
+              hormonalStatus={(wizardData.hormonal_status as string) ?? null}
+              lastPeriodDate={(wizardData.last_period_date as string) ?? null}
+              cycleLengthDays={wizardData.cycle_length_days ? Number(wizardData.cycle_length_days) : null}
+            />
           </div>
         )}
 
         {finalizeError && (
-          <p role="alert" className="mt-4 rounded-xl border border-[var(--danger)] bg-[rgba(193,70,47,.08)] px-4 py-3 text-sm text-[var(--danger)]">
+          <p role="alert" className="mt-4 border px-4 py-3 font-body text-sm" style={{ borderColor: 'var(--eph-danger)', background: 'rgba(138,74,60,.14)', color: 'var(--eph-text)' }}>
             {finalizeError}
           </p>
         )}
 
         <div className="mt-6 flex justify-between">
-          <button
+          <Button
             type="button"
+            variant="secondary"
             disabled={step === 1}
             onClick={() => setStep(step - 1)}
-            className="rounded-full border border-[var(--border-input)] bg-transparent px-6 py-3 text-sm font-semibold text-[var(--ink-secondary)] transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
           >
             Anterior
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="primary"
             disabled={finalizing}
             onClick={handleContinue}
-            className="rounded-full bg-[var(--ink)] px-6 py-3 text-sm font-semibold text-white transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {finalizing ? 'Guardando…' : step === totalModules ? 'Finalizar' : 'Continuar'}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

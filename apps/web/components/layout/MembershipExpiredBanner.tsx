@@ -18,27 +18,28 @@ export function MembershipExpiredBanner() {
   const router = useRouter();
   return (
     <div
+      className="font-body"
       style={{
         position: "relative",
         zIndex: 81,
         marginTop: -8,
         display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
         padding: "10px 16px",
-        background: "rgba(181,132,58,0.22)",
+        background: "rgba(201,164,106,0.16)",
         backdropFilter: "blur(6px)",
         WebkitBackdropFilter: "blur(6px)",
-        borderTop: "1px solid rgba(181,132,58,0.4)",
-        fontSize: 13, fontWeight: 600,
+        borderTop: "1px solid rgba(201,164,106,0.35)",
+        fontSize: 13, fontWeight: 500,
       }}
     >
-      <IconAlertTriangleFilled size={15} style={{ color: "#5C3D0E" }} />
-      <span style={{ color: "#4A2F08" }}>Tu membresía está inactiva</span>
+      <IconAlertTriangleFilled size={15} style={{ color: "var(--eph-accent)" }} />
+      <span style={{ color: "var(--eph-text)" }}>Tu membresía está inactiva</span>
       <button
         type="button"
         onClick={() => router.push("/configuracion/membresias")}
         style={{
           background: "none", border: "none", padding: 0,
-          color: "#5C3D0E", fontWeight: 600, textDecoration: "underline",
+          color: "var(--eph-accent)", fontWeight: 500, textDecoration: "underline",
           cursor: "pointer", fontSize: 13,
         }}
       >

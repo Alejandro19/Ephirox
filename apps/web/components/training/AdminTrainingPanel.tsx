@@ -18,6 +18,7 @@ import { CATEGORY_LABELS } from './TrainingVisuals';
 import { AdminAchievementsPanel } from './AdminAchievementsPanel';
 import { showToast } from '../layout/AppShell';
 import { IconEdit, IconTrash, IconX } from '../ui/icons';
+import { InsightsSection } from '../insights/InsightsSection';
 
 export type AdminTrainingPanelProps = { clientId: string };
 
@@ -74,38 +75,39 @@ function toExerciseInput(row: RowDraft): ExerciseInput {
 }
 
 const cardStyle: React.CSSProperties = {
-  background: 'var(--paper)', border: '1px solid var(--border-hairline)',
-  borderRadius: 'var(--radius-card)', padding: '22px 24px', marginBottom: 20,
+  background: 'var(--eph-surface)', border: '1px solid var(--eph-line)',
+  borderRadius: 0, padding: '22px 24px', marginBottom: 20,
 };
 const cardTitleStyle: React.CSSProperties = {
-  fontSize: 15, fontWeight: 700, color: 'var(--ink)', margin: '0 0 16px',
+  fontFamily: 'var(--font-cormorant), Georgia, serif', fontSize: 18, fontWeight: 400, color: 'var(--eph-text)', margin: '0 0 16px',
 };
 const labelStyle: React.CSSProperties = {
-  display: 'block', fontSize: 12, fontWeight: 400, color: 'var(--ink-secondary)', marginBottom: 4,
+  display: 'block', fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', fontSize: 10,
+  textTransform: 'uppercase', letterSpacing: '0.14em', fontWeight: 400, color: 'var(--eph-muted)', marginBottom: 6,
 };
 const fieldStyle: React.CSSProperties = {
-  width: '100%', height: 32, borderRadius: 0, border: 'none', borderBottom: '1px solid var(--border-input)',
-  padding: '0 2px 6px', fontSize: 13, background: 'transparent', color: 'var(--ink)',
+  width: '100%', height: 32, borderRadius: 0, border: 'none', borderBottom: '1px solid var(--eph-line-2)',
+  padding: '0 2px 6px', fontSize: 13, background: 'transparent', color: 'var(--eph-text)',
   outline: 'none', boxSizing: 'border-box',
 };
 const textareaStyle: React.CSSProperties = {
-  width: '100%', borderRadius: 10, border: '1px solid var(--border-hairline)',
-  padding: 10, fontSize: 14.5, fontWeight: 600, background: 'var(--paper)', color: 'var(--ink)',
+  width: '100%', borderRadius: 0, border: '1px solid var(--eph-line)',
+  padding: 10, fontSize: 14.5, fontWeight: 400, background: 'var(--eph-surface)', color: 'var(--eph-text)',
   outline: 'none', boxSizing: 'border-box', minHeight: 72, resize: 'vertical', fontFamily: 'inherit',
 };
 const thStyle: React.CSSProperties = {
-  textAlign: 'left', fontSize: 11, fontWeight: 700, color: 'var(--ink-secondary)',
-  textTransform: 'uppercase', letterSpacing: '0.04em', padding: '0 10px 10px', whiteSpace: 'nowrap',
+  textAlign: 'left', fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', fontSize: 10, fontWeight: 400, color: 'var(--eph-muted)',
+  textTransform: 'uppercase', letterSpacing: '0.1em', padding: '0 10px 10px', whiteSpace: 'nowrap',
 };
 const tdStyle: React.CSSProperties = {
-  padding: '8px 10px', fontSize: 13, color: 'var(--ink)', verticalAlign: 'middle',
-  borderTop: '1px solid var(--border-hairline)',
+  padding: '8px 10px', fontSize: 13, color: 'var(--eph-text)', verticalAlign: 'middle',
+  borderTop: '1px solid var(--eph-line)',
 };
 
 function iconButtonStyle(color: string): React.CSSProperties {
   return {
     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-    width: 30, height: 30, borderRadius: 8, border: '1px solid var(--border-hairline)',
+    width: 30, height: 30, borderRadius: 0, border: '1px solid var(--eph-line-2)',
     background: 'transparent', color, cursor: 'pointer', fontSize: 14, lineHeight: 1,
   };
 }
@@ -136,7 +138,7 @@ function RowView({ row, onChange, onEdit, onConfirm, onCancel, onDelete }: RowVi
         <td style={tdStyle}>{row.restTime || '—'}</td>
         <td style={tdStyle}>
           {row.youtubeUrl ? (
-            <a href={row.youtubeUrl} target="_blank" rel="noreferrer" style={{ color: 'var(--ring-accent)' }}>
+            <a href={row.youtubeUrl} target="_blank" rel="noreferrer" style={{ color: 'var(--eph-accent)' }}>
               Ver video
             </a>
           ) : (
@@ -151,10 +153,10 @@ function RowView({ row, onChange, onEdit, onConfirm, onCancel, onDelete }: RowVi
         </td>
         <td style={tdStyle}>
           <div style={{ display: 'flex', gap: 6 }}>
-            <button type="button" aria-label="Editar" onClick={onEdit} style={iconButtonStyle('var(--ink-secondary)')}>
+            <button type="button" aria-label="Editar" onClick={onEdit} style={iconButtonStyle('var(--eph-muted)')}>
               <IconEdit size={13} />
             </button>
-            <button type="button" aria-label="Eliminar" onClick={onDelete} style={iconButtonStyle('var(--danger)')}>
+            <button type="button" aria-label="Eliminar" onClick={onDelete} style={iconButtonStyle('#D99483')}>
               <IconTrash size={13} />
             </button>
           </div>
@@ -164,7 +166,7 @@ function RowView({ row, onChange, onEdit, onConfirm, onCancel, onDelete }: RowVi
   }
 
   return (
-    <tr style={{ background: 'var(--page-bg)' }}>
+    <tr style={{ background: 'var(--eph-surface-2)' }}>
       <td style={tdStyle}>
         <select style={fieldStyle} value={row.dayNumber} onChange={(e) => onChange({ dayNumber: Number(e.target.value) })}>
           {DAY_OPTIONS.map((d) => (
@@ -222,10 +224,10 @@ function RowView({ row, onChange, onEdit, onConfirm, onCancel, onDelete }: RowVi
       </td>
       <td style={tdStyle}>
         <div style={{ display: 'flex', gap: 6 }}>
-          <button type="button" aria-label="Guardar fila" onClick={onConfirm} style={iconButtonStyle('var(--ring-accent)')}>
+          <button type="button" aria-label="Guardar fila" onClick={onConfirm} style={iconButtonStyle('var(--eph-accent)')}>
             ✓
           </button>
-          <button type="button" aria-label="Cancelar" onClick={onCancel} style={iconButtonStyle('var(--danger)')}>
+          <button type="button" aria-label="Cancelar" onClick={onCancel} style={iconButtonStyle('#D99483')}>
             <IconX size={13} />
           </button>
         </div>
@@ -366,11 +368,12 @@ export function AdminTrainingPanel({ clientId }: AdminTrainingPanelProps) {
     }
   }
 
-  if (loading) return <p style={{ color: 'var(--ink-secondary)' }}>Cargando…</p>;
-  if (error) return <p style={{ color: 'var(--danger)' }}>{(error as Error).message}</p>;
+  if (loading) return <p style={{ color: 'var(--eph-muted)' }}>Cargando…</p>;
+  if (error) return <p style={{ color: '#D99483' }}>{(error as Error).message}</p>;
 
   return (
     <div>
+      <InsightsSection clientId={clientId} moduleKey="entrenamiento" />
       <div style={cardStyle}>
         <h3 style={cardTitleStyle}>Configuración del cliente</h3>
         <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
@@ -424,8 +427,9 @@ export function AdminTrainingPanel({ clientId }: AdminTrainingPanelProps) {
             type="button"
             onClick={handleAddRow}
             style={{
-              height: 36, padding: '0 16px', borderRadius: 9999, border: 'none',
-              background: 'var(--ring-accent)', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+              height: 36, padding: '0 18px', borderRadius: 0, border: 'none',
+              fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
+              background: 'var(--eph-accent)', color: 'var(--eph-ink)', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.14em', cursor: 'pointer',
             }}
           >
             + Agregar ejercicio
@@ -433,7 +437,7 @@ export function AdminTrainingPanel({ clientId }: AdminTrainingPanelProps) {
         </div>
 
         {rows.length === 0 ? (
-          <p style={{ color: 'var(--ink-secondary)', fontSize: 13 }}>Sin ejercicios asignados todavía.</p>
+          <p style={{ color: 'var(--eph-muted)', fontSize: 13 }}>Sin ejercicios asignados todavía.</p>
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ borderCollapse: 'collapse', width: '100%', minWidth: 1100 }}>
@@ -477,8 +481,9 @@ export function AdminTrainingPanel({ clientId }: AdminTrainingPanelProps) {
           disabled={saving}
           onClick={handleSaveAll}
           style={{
-            height: 44, padding: '0 28px', borderRadius: 9999, border: 'none',
-            background: 'var(--ring-accent)', color: '#fff', fontSize: 14, fontWeight: 700,
+            height: 44, padding: '0 32px', borderRadius: 0, border: 'none',
+            fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
+            background: 'var(--eph-accent)', color: 'var(--eph-ink)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.18em',
             cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.6 : 1,
           }}
         >

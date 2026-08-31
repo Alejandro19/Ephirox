@@ -53,12 +53,15 @@ export default function ClientSwitcher({
   return (
     <div style={{ marginBottom: 18 }}>
       <label
+        className="font-mono"
         style={{
           display: "block",
-          fontSize: 12,
+          fontSize: 10,
+          textTransform: "uppercase",
+          letterSpacing: "0.14em",
           fontWeight: 400,
-          color: "var(--ink-secondary)",
-          marginBottom: 6,
+          color: "var(--eph-muted)",
+          marginBottom: 8,
         }}
       >
         Cliente
@@ -75,38 +78,41 @@ export default function ClientSwitcher({
             }
           }}
           placeholder="Escribe un nombre..."
+          className="font-body"
           style={{
             flex: 1,
             height: 36,
             borderRadius: 0,
             border: "none",
-            borderBottom: "1px solid var(--border-input)",
+            borderBottom: "1px solid var(--eph-line-2)",
             padding: "0 2px 6px",
-            fontSize: 14.5,
-            fontWeight: 600,
+            fontSize: 16,
+            fontWeight: 400,
             background: "transparent",
-            color: "var(--ink)",
+            color: "var(--eph-text)",
             outline: "none",
           }}
           onFocus={(e) => {
-            e.currentTarget.style.borderBottomColor = "var(--ink)";
+            e.currentTarget.style.borderBottomColor = "var(--eph-accent)";
           }}
           onBlur={(e) => {
-            e.currentTarget.style.borderBottomColor = "var(--border-input)";
+            e.currentTarget.style.borderBottomColor = "var(--eph-line-2)";
           }}
         />
         <button
           type="button"
           onClick={() => handlePick(search)}
+          className="font-mono"
           style={{
             height: 44,
-            padding: "0 16px",
-            borderRadius: "9999px",
-            border: "1px solid var(--border-hairline)",
-            background: "var(--paper)",
-            color: "var(--ink-secondary)",
-            fontSize: 13,
-            fontWeight: 500,
+            padding: "0 18px",
+            borderRadius: 0,
+            border: "1px solid var(--eph-line-2)",
+            background: "transparent",
+            color: "var(--eph-body)",
+            fontSize: 10,
+            textTransform: "uppercase",
+            letterSpacing: "0.12em",
             cursor: "pointer",
             whiteSpace: "nowrap",
           }}
@@ -121,11 +127,14 @@ export default function ClientSwitcher({
       </datalist>
       {selectedClientId && (
         <p
+          className="font-mono"
           style={{
-            fontSize: 11,
-            color: "var(--ring-accent)",
-            marginTop: 6,
-            fontWeight: 500,
+            fontSize: 10,
+            textTransform: "uppercase",
+            letterSpacing: "0.08em",
+            color: "var(--eph-accent)",
+            marginTop: 8,
+            fontWeight: 400,
           }}
         >
           ✓ Cliente seleccionado

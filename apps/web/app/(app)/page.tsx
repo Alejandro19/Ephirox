@@ -9,6 +9,7 @@ import { MemberCard } from "@/components/member/MemberCard";
 import { WellnessIndexCard } from "@/components/home/WellnessIndexCard";
 import { CrownBadge } from "@/components/ui/CrownBadge";
 import { ModuleExpiredModal } from "@/components/layout/ModuleExpiredModal";
+import { CheckinCard } from "@/components/checkins/CheckinCard";
 import { fetchClient } from "@/lib/clients-client";
 import { getNutrition } from "@/lib/nutrition-client";
 import { getWearableEstado } from "@/lib/wearable-client";
@@ -20,18 +21,18 @@ import { listRetreats } from "@/lib/retreats-client";
 import Link from "next/link";
 
 const ALL_CLIENT_QUICK_LINKS = [
-  { key: "training", label: "Entrenamiento", desc: "Tu plan de entrenamiento diario" },
-  { key: "nutrition", label: "Nutrición", desc: "Plan alimenticio y comidas" },
-  { key: "community", label: "Club Wellness", desc: "Eventos y terapias grupales" },
-  { key: "rest", label: "Hackea tu Sueño", desc: "Tu recuperación nocturna, medida por tu wearable" },
-  { key: "evolution", label: "Mi Evolución", desc: "Tu proceso, en cifras" },
+  { key: "training", label: "Workout", desc: "Tu plan de entrenamiento diario" },
+  { key: "nutrition", label: "Nutrition", desc: "Plan alimenticio y comidas" },
+  { key: "community", label: "The Circle", desc: "Eventos y terapias grupales" },
+  { key: "rest", label: "Sleep", desc: "Tu recuperación nocturna, medida por tu wearable" },
+  { key: "evolution", label: "Evolution", desc: "Tu proceso, en cifras" },
 ] as const;
 
 type QuickLinkKey = (typeof ALL_CLIENT_QUICK_LINKS)[number]["key"];
 
-// Nutrición, Descanso, Mi Evolución y Club Wellness — chequeo "¿hay algo
+// Nutrición, Descanso, Mi Evolución y Comunidad — chequeo "¿hay algo
 // cargado?" reusando los mismos fetchers que ya usa cada panel, en vez de
-// duplicar lógica de negocio acá. Club Wellness es distinto a los otros:
+// duplicar lógica de negocio acá. Comunidad es distinta a los otros:
 // sus eventos/terapias/retiros son de toda la plataforma, no por cliente —
 // "tiene datos" acá significa "hay al menos uno activo publicado ahora".
 async function fetchQuickAccessSignals(clientId: string): Promise<Record<Exclude<QuickLinkKey, "training">, boolean>> {
@@ -57,11 +58,9 @@ export default function InicioPage() {
   const [expiredModalOpen, setExpiredModalOpen] = useState(false);
 
   const isAdmin = role === "admin";
-  // lead_wellness no ve accesos rápidos en absoluto (esos módulos están
-  // bloqueados para ese tipo, ver ClientTopbar/moduleAccess); el resto de
-  // los tipos de cliente sí, pero solo la card de cada módulo que ya
-  // tenga datos cargados para este cliente específico.
-  const showQuickAccessGate = !isAdmin && clientType !== null && clientType !== "lead_wellness";
+  // Solo la card de cada módulo que ya tenga datos cargados para este
+  // cliente específico.
+  const showQuickAccessGate = !isAdmin && clientType !== null;
 
   // Misma key que MemberCard.tsx — SWR la reusa sin pedirla dos veces.
   const { data: clientDetail } = useSWR(
@@ -85,7 +84,7 @@ export default function InicioPage() {
     ? [
         { key: "admin-clients", label: "Clientes", desc: "Gestionar clientes y permisos" },
         { key: "admin-quotes", label: "Frases", desc: "Administrar frases motivacionales" },
-        { key: "community", label: "Club Wellness", desc: "Gestionar eventos y terapias" },
+        { key: "community", label: "The Circle", desc: "Gestionar eventos y terapias" },
       ]
     : signals
       ? ALL_CLIENT_QUICK_LINKS.filter(
@@ -99,24 +98,25 @@ export default function InicioPage() {
       <div style={{ marginBottom: 32 }}>
         <h1
           style={{
-            fontFamily: "Fraunces, Georgia, serif",
-            fontSize: 28,
-            fontWeight: 700,
-            color: "var(--ink)",
-            margin: "0 0 6px",
+            fontFamily: "var(--font-cormorant), Georgia, serif",
+            fontSize: 32,
+            fontWeight: 400,
+            color: "var(--eph-text)",
+            margin: "0 0 8px",
           }}
         >
-          ¡Hola{user?.name ? `, ${user.name.split(" ")[0]}` : ""}!
+          Bienvenido{user?.name ? `, ${user.name.split(" ")[0]}` : ""}.
         </h1>
-        <p style={{ fontSize: 14, color: "var(--ink-soft)", margin: 0 }}>
+        <p className="font-mono" style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--eph-muted)", margin: 0 }}>
           {isAdmin
-            ? "Panel de administración de La Tribu"
-            : "Tu espacio de bienestar y alto rendimiento"}
+            ? "Panel de administración de Ephirox"
+            : "Tu sistema de optimización ejecutiva."}
         </p>
       </div>
 
-      {!isAdmin && user?.id && clientType !== "lead_wellness" && <WellnessIndexCard clientId={user.id} />}
+      {!isAdmin && user?.id && <WellnessIndexCard clientId={user.id} />}
       {!isAdmin && user?.id && <MemberCard clientId={user.id} />}
+      {!isAdmin && user?.id && clientType === "mentoring" && <CheckinCard clientId={user.id} />}
 
       {/* Quick-access cards grid — Oura style: no shadow, subtle border, pill-radius */}
       {quickLinks.length > 0 && (
@@ -144,18 +144,18 @@ export default function InicioPage() {
               style={{
                 display: "block",
                 position: "relative",
-                background: "var(--paper)",
-                border: "1px solid var(--line)",
-                borderRadius: "var(--radius)",
+                background: "var(--eph-surface)",
+                border: "1px solid var(--eph-line)",
+                borderRadius: "0",
                 padding: "20px 20px",
                 textDecoration: "none",
                 transition: "border-color 0.2s ease",
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = "var(--gold)";
+                e.currentTarget.style.borderColor = "var(--eph-accent)";
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = "var(--line)";
+                e.currentTarget.style.borderColor = "var(--eph-line)";
               }}
             >
               {expired && (
@@ -164,16 +164,17 @@ export default function InicioPage() {
                 </div>
               )}
               <div
+                className="font-display"
                 style={{
-                  fontSize: 15,
-                  fontWeight: 600,
-                  color: "var(--ink)",
+                  fontSize: 17,
+                  fontWeight: 400,
+                  color: "var(--eph-text)",
                   marginBottom: 4,
                 }}
               >
                 {link.label}
               </div>
-              <div style={{ fontSize: 12, color: "var(--ink-soft)" }}>
+              <div className="font-body" style={{ fontSize: 12, color: "var(--eph-body)" }}>
                 {expired ? "Renueva para continuar" : link.desc}
               </div>
             </Link>

@@ -103,7 +103,7 @@ export type WellnessIndexResult = {
 // habilitado en la matriz de Roles y Perfiles (client_type_module_permissions).
 export async function computeWellnessIndexForClient(clientId: string): Promise<WellnessIndexResult | null> {
   const [client] = await db.select({ clientType: clients.clientType }).from(clients).where(eq(clients.id, clientId)).limit(1);
-  if (!client || client.clientType === 'lead_wellness') return null;
+  if (!client) return null;
 
   const [trainingAllowed, cortisolAllowed, sleepAllowed, evolutionAllowed] = await Promise.all([
     isModuleAllowedForType(client.clientType, 'training'),

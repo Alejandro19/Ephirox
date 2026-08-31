@@ -144,7 +144,7 @@ describe('POST /api/stripe/webhook', () => {
     beforeAll(async () => {
       const [client] = await db
         .insert(clients)
-        .values({ name: 'Newcomer Webhook Client', email: clientEmail, passwordHash: await hashPassword('x'), status: 'active', clientType: 'lead_wellness' })
+        .values({ name: 'Newcomer Webhook Client', email: clientEmail, passwordHash: await hashPassword('x'), status: 'inactive', clientType: 'coaching_1_1' })
         .returning();
       clientId = client.id;
     });
@@ -179,7 +179,7 @@ describe('POST /api/stripe/webhook', () => {
       expect(res.status).toBe(200);
 
       const [client] = await db.select().from(clients).where(eq(clients.id, clientId));
-      expect(client.clientType).toBe('lead_wellness');
+      expect(client.status).toBe('inactive'); // sin cambios — no se activó
       expect(client.planEndDate).toBeNull();
 
       const [updatedPayment] = await db.select().from(membershipPayments).where(eq(membershipPayments.id, payment.id));

@@ -31,6 +31,6 @@ vi.mock('../lib/clients-client', () => ({
 describe('EvolutionPage', () => {
   it('renders the evolution heading for a client', async () => {
     render(<EvolutionPage />);
-    expect(await screen.findByRole('heading', { name: 'Mi Evolución' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Evolution' })).toBeInTheDocument();
   });
 });

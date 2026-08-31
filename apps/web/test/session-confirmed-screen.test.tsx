@@ -17,7 +17,7 @@ const baseStreak = {
 describe('SessionConfirmedScreen', () => {
   it('shows the title, week fraction, and streak count', () => {
     render(<SessionConfirmedScreen streak={baseStreak} phrase={null} clientId="client-1" onClose={vi.fn()} />);
-    expect(screen.getByText('¡Sesión confirmada!')).toBeInTheDocument();
+    expect(screen.getByText('Sesión confirmada.')).toBeInTheDocument();
     expect(screen.getByText('2/2 esta semana')).toBeInTheDocument();
     expect(screen.getByText(/3 semanas seguidas/)).toBeInTheDocument();
   });
@@ -73,7 +73,7 @@ describe('SessionConfirmedScreen — Compartir', () => {
     expect(button).toBeDisabled();
 
     await waitFor(() => expect(button).toBeEnabled());
-    expect(shareCard.shareCanvasAsImage).toHaveBeenCalledWith(expect.any(HTMLCanvasElement), 'la-tribu-racha.png');
+    expect(shareCard.shareCanvasAsImage).toHaveBeenCalledWith(expect.any(HTMLCanvasElement), 'ephirox-racha.png');
     expect(trainingCard.drawInstagramCard).toHaveBeenCalledWith(expect.anything(), { streakWeeks: 2, phrase: 'Vamos con todo' });
     expect(trainingClient.getPhraseByContext).toHaveBeenCalledWith('client-1', 'instagram');
   });

@@ -48,7 +48,7 @@ describe('ClientTopbar — acceso no restrictivo (módulo vencido)', () => {
     mockAuth({ moduleAccess: { training: true }, planExpired: true });
     render(<ClientTopbar viewKey="training" />);
 
-    fireEvent.click(screen.getAllByText('Entrenamiento')[0]);
+    fireEvent.click(screen.getAllByText('Workout')[0]);
 
     expect(pushMock).not.toHaveBeenCalled();
     expect(screen.getByText('Este módulo está incluido en tu membresía. Renueva tu pago para volver a acceder.')).toBeInTheDocument();
@@ -58,7 +58,7 @@ describe('ClientTopbar — acceso no restrictivo (módulo vencido)', () => {
     mockAuth({ moduleAccess: { training: false }, planExpired: true });
     render(<ClientTopbar viewKey="training" />);
 
-    fireEvent.click(screen.getAllByText('Entrenamiento')[0]);
+    fireEvent.click(screen.getAllByText('Workout')[0]);
 
     // 'not_included' no abre el modal de vencimiento — sigue navegando igual que hoy.
     expect(screen.queryByText('Este módulo está incluido en tu membresía. Renueva tu pago para volver a acceder.')).not.toBeInTheDocument();

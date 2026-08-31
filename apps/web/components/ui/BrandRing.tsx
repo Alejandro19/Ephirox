@@ -2,25 +2,59 @@
 
 type BrandRingProps = {
   size?: number;
-  background: string;
+  // Ya no se usa para recortar un "donut" (el sello es un trazo abierto,
+  // no una banda rellena) — se mantiene opcional para no forzar editar los
+  // ~8 call sites existentes (topbars, MemberCard, pantallas de auth).
+  background?: string;
 };
 
-// Mismo anillo degradado que BrandRing en las pantallas de login (y el
-// spinner de carga de AppShell) — acá como marca estática junto al wordmark
-// "La Tribu" en los topbars. `background` debe matchear el fondo detrás del
-// anillo (el topbar, no el panel oscuro del login) para que el círculo
-// interior se vea como un "donut" recortado en vez de un cuadrado visible.
-export default function BrandRing({ size = 24, background }: BrandRingProps) {
-  const thickness = Math.round(size * 0.12);
+const EPH_ACCENT = "#C9A46A";
+
+// Sello "anillo abierto": dos arcos concéntricos desalineados (cada uno con
+// un hueco propio vía stroke-dasharray) + un punto central bronce — la marca
+// Ephirox definitiva. Sin degradados ni relleno: solo trazo fino monocromo,
+// acorde a la identidad reservada/precisa (nunca el anillo multicolor de
+// wellness genérico de la marca anterior).
+export default function BrandRing({ size = 24 }: BrandRingProps) {
+  const c = size / 2;
+  const strokeOuter = Math.max(1, size * 0.045);
+  const strokeInner = Math.max(1, size * 0.035);
+  const rOuter = c - strokeOuter * 1.4;
+  const rInner = rOuter - size * 0.16;
+  const circOuter = 2 * Math.PI * rOuter;
+  const circInner = 2 * Math.PI * rInner;
+  const dotRadius = size * 0.05;
+
   return (
-    <div aria-hidden style={{ position: "relative", width: size, height: size, flexShrink: 0 }}>
-      <div
-        style={{
-          position: "absolute", inset: 0, borderRadius: "50%",
-          background: "conic-gradient(from 0deg, #D9B77E, #D97E5F, #8A5FA0, #5B8F6B, #D9B77E)",
-        }}
+    <svg
+      width={size}
+      height={size}
+      viewBox={`0 0 ${size} ${size}`}
+      aria-hidden="true"
+      focusable="false"
+      style={{ flexShrink: 0 }}
+    >
+      <circle
+        cx={c}
+        cy={c}
+        r={rOuter}
+        fill="none"
+        stroke={EPH_ACCENT}
+        strokeWidth={strokeOuter}
+        strokeDasharray={`${circOuter * 0.86} ${circOuter * 0.14}`}
+        transform={`rotate(-90 ${c} ${c})`}
       />
-      <div style={{ position: "absolute", inset: thickness, borderRadius: "50%", background }} />
-    </div>
+      <circle
+        cx={c}
+        cy={c}
+        r={rInner}
+        fill="none"
+        stroke={EPH_ACCENT}
+        strokeWidth={strokeInner}
+        strokeDasharray={`${circInner * 0.78} ${circInner * 0.22}`}
+        transform={`rotate(70 ${c} ${c})`}
+      />
+      <circle cx={c} cy={c} r={dotRadius} fill={EPH_ACCENT} />
+    </svg>
   );
 }

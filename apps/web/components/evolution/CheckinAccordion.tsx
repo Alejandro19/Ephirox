@@ -6,8 +6,8 @@ import { showToast } from '../layout/AppShell';
 import Accordion from '../ui/Accordion';
 
 const fieldStyle =
-  'h-8 w-full border-0 border-b border-[var(--border-input)] rounded-none bg-transparent px-0.5 py-1.5 text-[14.5px] font-semibold text-[var(--ink)] outline-none focus-visible:border-[var(--ink)] focus-visible:ring-0';
-const labelStyle = 'mb-1 block text-xs font-normal text-[var(--ink-secondary)]';
+  'h-8 w-full border-0 border-b border-[var(--eph-line-2)] rounded-none bg-transparent px-0.5 py-1.5 text-[14.5px] font-semibold text-[var(--eph-text)] outline-none focus-visible:border-[var(--eph-text)] focus-visible:ring-0';
+const labelStyle = 'mb-1 block text-xs font-normal text-[var(--eph-muted)]';
 
 export function CheckinAccordion({ clientId, onSaved }: { clientId: string; onSaved?: () => void }) {
   const [sleepHours, setSleepHours] = useState('');
@@ -46,7 +46,7 @@ export function CheckinAccordion({ clientId, onSaved }: { clientId: string; onSa
     <Accordion
       items={[
         {
-          header: <span className="font-serif text-[14.5px] font-semibold text-[var(--ink)]">Check-in rápido del mes</span>,
+          header: <span className="font-display text-[16px] font-normal text-[var(--eph-text)]">Check-in rápido del mes</span>,
           content: (
             <div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -81,7 +81,7 @@ export function CheckinAccordion({ clientId, onSaved }: { clientId: string; onSa
                 type="button"
                 disabled={saving}
                 onClick={handleSave}
-                className="mt-4 h-10 rounded-full bg-[var(--hero-piedra-accent)] px-6 text-[13px] font-bold text-white disabled:opacity-60"
+                className="mt-4 h-10 rounded-[999px] bg-[var(--eph-accent)] px-6 font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--eph-ink)] disabled:opacity-60"
               >
                 {saving ? 'Guardando…' : 'Guardar check-in'}
               </button>

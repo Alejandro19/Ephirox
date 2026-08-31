@@ -55,7 +55,7 @@ export default function RolesMatrixTable({ modules, matrix, onSaved }: RolesMatr
     // efectiva (superset) si el admin confirma.
     if (columnEdits.personal_info && columnEdits.personal_info_mentoring) {
       const confirmed = window.confirm(
-        'Este tipo de cliente tendría ambas variantes de Información Personal activas — el sistema aplicará la variante Mentoring por defecto si ambas están marcadas, ya que incluye el acceso base más Dispositivos y Laboratorios. ¿Confirmas?'
+        'Este tipo de cliente tendría ambas variantes de Baseline activas — el sistema aplicará la variante Premium por defecto si ambas están marcadas, ya que incluye el acceso base más Dispositivos y Laboratorios. ¿Confirmas?'
       );
       if (!confirmed) return;
     }
@@ -73,21 +73,21 @@ export default function RolesMatrixTable({ modules, matrix, onSaved }: RolesMatr
 
   return (
     <div style={{
-      background: "var(--paper)", border: "1px solid var(--border-hairline)",
-      borderRadius: "var(--radius-card)", padding: "22px 24px",
+      background: "var(--eph-surface)", border: "1px solid var(--eph-line)",
+      borderRadius: "0", padding: "22px 24px",
     }}>
       <div style={{ overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
           <thead>
-            <tr style={{ borderBottom: "0.5px solid var(--border-hairline)" }}>
-              <th style={{ ...cellStyle, textAlign: "left", color: "var(--ink-secondary)", fontWeight: 600 }}>Módulo</th>
+            <tr style={{ borderBottom: "0.5px solid var(--eph-line)" }}>
+              <th style={{ ...cellStyle, textAlign: "left", color: "var(--eph-muted)", fontWeight: 600 }}>Módulo</th>
               {CLIENT_TYPES.map((clientType) => (
                 <th
                   key={clientType}
                   style={{
                     ...cellStyle,
                     fontWeight: 700,
-                    color: "var(--ink)",
+                    color: "var(--eph-text)",
                     background: clientType === "mentoring" ? "rgba(201,166,107,.14)" : undefined,
                   }}
                 >
@@ -98,18 +98,19 @@ export default function RolesMatrixTable({ modules, matrix, onSaved }: RolesMatr
           </thead>
           <tbody>
             {modules.map((module, i) => (
-              <tr key={module.key} style={{ borderBottom: i < modules.length - 1 ? "0.5px solid var(--border-hairline)" : "none" }}>
+              <tr key={module.key} style={{ borderBottom: i < modules.length - 1 ? "0.5px solid var(--eph-line)" : "none" }}>
                 <td style={{ ...cellStyle, textAlign: "left" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <div style={{ fontWeight: 600, color: "var(--ink)" }}>{module.label}</div>
+                    <div style={{ fontWeight: 600, color: "var(--eph-text)" }}>{module.label}</div>
                     {module.isCustom && (
                       <button
                         type="button"
                         onClick={() => handleDelete(module)}
                         disabled={deletingKey === module.key}
+                        className="font-mono"
                         style={{
-                          background: "none", border: "1px solid var(--danger)", borderRadius: 9999,
-                          padding: "2px 10px", fontSize: 10.5, fontWeight: 600, color: "var(--danger)",
+                          background: "none", border: "1px solid var(--eph-danger)", borderRadius: 999,
+                          padding: "3px 12px", fontSize: 9.5, textTransform: "uppercase", letterSpacing: "0.06em", color: "#D99483",
                           cursor: deletingKey === module.key ? "not-allowed" : "pointer",
                           opacity: deletingKey === module.key ? 0.6 : 1, flexShrink: 0,
                         }}
@@ -118,7 +119,7 @@ export default function RolesMatrixTable({ modules, matrix, onSaved }: RolesMatr
                       </button>
                     )}
                   </div>
-                  {module.note && <div style={{ fontSize: 11, color: "var(--ink-secondary)", marginTop: 2 }}>{module.note}</div>}
+                  {module.note && <div style={{ fontSize: 11, color: "var(--eph-muted)", marginTop: 2 }}>{module.note}</div>}
                 </td>
                 {CLIENT_TYPES.map((clientType) => (
                   <td
@@ -147,16 +148,18 @@ export default function RolesMatrixTable({ modules, matrix, onSaved }: RolesMatr
                       type="button"
                       disabled={savingType === clientType}
                       onClick={() => handleSave(clientType)}
+                      className="font-mono"
                       style={{
-                        borderRadius: "9999px",
-                        padding: "6px 16px",
-                        fontSize: 12,
-                        fontWeight: 600,
+                        borderRadius: 0,
+                        padding: "7px 18px",
+                        fontSize: 10,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.08em",
                         cursor: savingType === clientType ? "not-allowed" : "pointer",
                         opacity: savingType === clientType ? 0.6 : 1,
-                        border: isMentoring ? "none" : "1px solid var(--border-hairline)",
-                        background: isMentoring ? "var(--ring-accent)" : "transparent",
-                        color: isMentoring ? "#fff" : "var(--ink)",
+                        border: isMentoring ? "none" : "1px solid var(--eph-line-2)",
+                        background: isMentoring ? "var(--eph-accent)" : "transparent",
+                        color: isMentoring ? "var(--eph-ink)" : "var(--eph-body)",
                       }}
                     >
                       {savingType === clientType ? "Guardando…" : "Guardar"}

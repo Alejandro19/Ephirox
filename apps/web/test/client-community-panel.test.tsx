@@ -6,13 +6,11 @@ import { ClientCommunityPanel } from '../components/community/ClientCommunityPan
 import * as eventsClient from '../lib/events-client';
 import * as therapiesClient from '../lib/therapies-client';
 import * as retreatsClient from '../lib/retreats-client';
-import * as clientsClient from '../lib/clients-client';
 import { PermissionDeniedError } from '../lib/api-client';
 
 vi.mock('../lib/events-client');
 vi.mock('../lib/therapies-client');
 vi.mock('../lib/retreats-client');
-vi.mock('../lib/clients-client');
 
 const sampleEvent: eventsClient.CommunityEvent = {
   id: 'e1', title: 'Ice Bath', description: 'Llevar ropa cómoda.', eventDate: '2026-07-21T16:30:00Z',
@@ -33,7 +31,6 @@ function mockFetches({
   myEventReservations = [] as Array<{ eventId: string; status: string }>,
   myTherapyReservations = [] as Array<{ therapyId: string; status: string }>,
   myRetreatReservations = [] as Array<{ retreatId: string; status: string }>,
-  clientType = 'coaching_1_1',
 } = {}) {
   vi.mocked(eventsClient.listEvents).mockResolvedValue(events);
   vi.mocked(therapiesClient.listTherapies).mockResolvedValue(therapies);
@@ -41,9 +38,6 @@ function mockFetches({
   vi.mocked(eventsClient.listMyEventReservations).mockResolvedValue(myEventReservations);
   vi.mocked(therapiesClient.listMyTherapyReservations).mockResolvedValue(myTherapyReservations);
   vi.mocked(retreatsClient.listMyRetreatReservations).mockResolvedValue(myRetreatReservations);
-  vi.mocked(clientsClient.fetchClient).mockResolvedValue({
-    id: 'client-1', name: 'Ana', email: 'a@x.com', plan: '', status: 'active', clientType,
-  });
 }
 
 describe('ClientCommunityPanel', () => {
@@ -64,16 +58,6 @@ describe('ClientCommunityPanel', () => {
     await user.click(screen.getByRole('button', { name: 'Terapias' }));
     expect(await screen.findByText('Biodescodificación')).toBeInTheDocument();
     expect(screen.getAllByText('-20%').length).toBeGreaterThan(0);
-  });
-
-  it('locks the Terapias tab behind an overlay for a lead_wellness client', async () => {
-    const user = userEvent.setup();
-    mockFetches({ clientType: 'lead_wellness' });
-    render(<ClientCommunityPanel clientId="client-1" />);
-    await screen.findByRole('button', { name: 'Terapias' });
-
-    await user.click(screen.getByRole('button', { name: 'Terapias' }));
-    expect(await screen.findByText('Beneficio exclusivo de una membresía superior')).toBeInTheDocument();
   });
 
   it('switches to the Retiros tab and shows retreat cards for an active client', async () => {
@@ -101,16 +85,6 @@ describe('ClientCommunityPanel', () => {
     await user.click(await screen.findByRole('button', { name: 'Retiros' }));
     await screen.findByText('Retiro de montaña');
     expect(screen.queryByRole('img', { name: 'Retiro de montaña' })).not.toBeInTheDocument();
-  });
-
-  it('locks the Retiros tab behind an overlay for a lead_wellness client (premium experience, gated like Terapias)', async () => {
-    const user = userEvent.setup();
-    mockFetches({ clientType: 'lead_wellness' });
-    render(<ClientCommunityPanel clientId="client-1" />);
-    await screen.findByRole('button', { name: 'Retiros' });
-
-    await user.click(screen.getByRole('button', { name: 'Retiros' }));
-    expect(await screen.findByText('Beneficio exclusivo de una membresía superior')).toBeInTheDocument();
   });
 
   it('reserves a retreat and flips the button to cancel', async () => {
@@ -155,6 +129,6 @@ describe('ClientCommunityPanel', () => {
     mockFetches();
     vi.mocked(eventsClient.listEvents).mockRejectedValue(new PermissionDeniedError('Este módulo no está disponible para tu tipo de cuenta.'));
     render(<ClientCommunityPanel clientId="client-1" />);
-    expect(await screen.findByText('Beneficio exclusivo de una membresía superior')).toBeInTheDocument();
+    expect(await screen.findByText('Disponible en Premium')).toBeInTheDocument();
   });
 });

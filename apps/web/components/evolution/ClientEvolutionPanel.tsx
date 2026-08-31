@@ -16,7 +16,6 @@ import { calculateDisciplineStats } from '../../lib/training-home-logic';
 import { fetchClient, type ClientDetail } from '../../lib/clients-client';
 import { PermissionDeniedError } from '../../lib/api-client';
 import { pickMantra } from '../../lib/mantra-bank';
-import { COACH_WHATSAPP_NUMBER } from '../../lib/constants';
 import { getWellnessIndex } from '../../lib/wellness-index-client';
 import {
   calculateSleepQualityAvg,
@@ -28,8 +27,10 @@ import {
 import IdentityHeader from '../ui/IdentityHeader';
 import MantraCard from '../ui/MantraCard';
 import LockedBenefit from '../ui/LockedBenefit';
-import { WellnessIndexHero, BienestarGeneral, EvolucionFisicaSection, EvolucionFisicaLocked } from './EvolutionVisuals';
+import { WellnessIndexHero, BienestarGeneral, EvolucionFisicaSection } from './EvolutionVisuals';
 import { CheckinAccordion } from './CheckinAccordion';
+import { InsightsSection } from '../insights/InsightsSection';
+import { ClientLabCheckpoints } from './ClientLabCheckpoints';
 
 function clientTz(): string {
   try {
@@ -61,7 +62,7 @@ export function ClientEvolutionPanel({ clientId }: { clientId: string }) {
 
   const header = (
     <>
-      <IdentityHeader title="Mi Evolución" subtitle="Tu proceso, en cifras." />
+      <IdentityHeader title="Evolution" subtitle="Tu trayectoria medible hacia el máximo rendimiento sostenible." />
       {mantra && <MantraCard mantra={mantra} />}
     </>
   );
@@ -70,7 +71,7 @@ export function ClientEvolutionPanel({ clientId }: { clientId: string }) {
     return (
       <div>
         {header}
-        <p className="text-sm text-[var(--ink-secondary)]">Cargando tu evolución…</p>
+        <p className="text-sm text-[var(--eph-muted)]">Cargando tu evolución…</p>
       </div>
     );
   }
@@ -78,7 +79,7 @@ export function ClientEvolutionPanel({ clientId }: { clientId: string }) {
     return (
       <div>
         {header}
-        <LockedBenefit variant="upgrade" benefit="tu Índice de Bienestar y tu evolución" />
+        <LockedBenefit benefit="tu Índice de Rendimiento y tu evolución" />
       </div>
     );
   }
@@ -86,7 +87,7 @@ export function ClientEvolutionPanel({ clientId }: { clientId: string }) {
     return (
       <div>
         {header}
-        <p role="alert" className="text-[var(--danger)]">{(error as Error).message}</p>
+        <p role="alert" className="text-[#D99483]">{(error as Error).message}</p>
       </div>
     );
   }
@@ -113,11 +114,10 @@ export function ClientEvolutionPanel({ clientId }: { clientId: string }) {
   const disciplineStats = client?.trainingDays ? calculateDisciplineStats(trainingCompletions, client.trainingDays) : null;
   const streakWeeks = streak?.streakWeeks ?? null;
 
-  const accesoEvolucionFisica = client?.clientType !== 'lead_wellness';
-
   return (
     <div>
       {header}
+      {client?.clientType === 'mentoring' && <InsightsSection clientId={clientId} moduleKey="miEvolucion" />}
       <WellnessIndexHero index={wellnessIndex?.value ?? null} />
       <BienestarGeneral
         sleepAvg={sleepAvg != null ? formatSleepHours(sleepAvg) : null}
@@ -127,19 +127,16 @@ export function ClientEvolutionPanel({ clientId }: { clientId: string }) {
         cortisolDelta={cortisolDelta}
         cortisolStatus={getWellnessTrendStatus(cortisolDelta)}
       />
-      {accesoEvolucionFisica ? (
-        <EvolucionFisicaSection
-          anthropometrics={evo?.anthropometrics ?? []}
-          inbody={evo?.inbody ?? []}
-          objetivos={client?.objetivos}
-          inbodyCadenceType={client?.inbodyCadenceType}
-          disciplineStats={disciplineStats}
-          streakWeeks={streakWeeks}
-        />
-      ) : (
-        <EvolucionFisicaLocked onCta={() => window.open(`https://wa.me/${COACH_WHATSAPP_NUMBER}`, '_blank')} />
-      )}
+      <EvolucionFisicaSection
+        anthropometrics={evo?.anthropometrics ?? []}
+        inbody={evo?.inbody ?? []}
+        objetivos={client?.objetivos}
+        inbodyCadenceType={client?.inbodyCadenceType}
+        disciplineStats={disciplineStats}
+        streakWeeks={streakWeeks}
+      />
       <CheckinAccordion clientId={clientId} onSaved={() => mutate()} />
+      {client?.clientType === 'mentoring' && <ClientLabCheckpoints clientId={clientId} />}
     </div>
   );
 }

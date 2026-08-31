@@ -98,8 +98,8 @@ describe('ClientRestPanel', () => {
     mockFetches({ clientType: 'coaching_1_1' });
     render(<ClientRestPanel clientId="client-1" />);
 
-    expect(await screen.findByText('Beneficio exclusivo de Club Elite')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Sube de categoría' }));
+    expect(await screen.findByText('Disponible en Premium')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Hablar con tu coach' }));
     expect(openSpy).toHaveBeenCalledWith(expect.stringContaining('wa.me'), '_blank');
   });
 
@@ -108,6 +108,6 @@ describe('ClientRestPanel', () => {
     vi.mocked(sleepClient.getProtocol).mockRejectedValue(new PermissionDeniedError('Este módulo no está disponible para tu tipo de cuenta.'));
     render(<ClientRestPanel clientId="client-1" />);
 
-    expect(await screen.findByText('Beneficio exclusivo de una membresía superior')).toBeInTheDocument();
+    expect(await screen.findByText('Disponible en Premium')).toBeInTheDocument();
   });
 });

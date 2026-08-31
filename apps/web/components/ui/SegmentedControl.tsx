@@ -11,13 +11,15 @@ export default function SegmentedControl({ options, value, onChange, label }: Se
   return (
     <div>
       {label && (
-        <div style={{ display: "flex", alignItems: "center", fontSize: 12, fontWeight: 400,
-          color: "var(--ink-secondary)", marginBottom: 8 }}>
+        <div
+          className="mb-2 font-mono text-[10px] font-normal uppercase tracking-[0.16em]"
+          style={{ color: "var(--eph-muted)" }}
+        >
           {label}
         </div>
       )}
-      <div role="group" aria-label={label} style={{ display: "flex", height: 48, gap: 6 }}>
-        {options.map((opt) => {
+      <div role="group" aria-label={label} style={{ display: "flex", height: 44, gap: 0 }}>
+        {options.map((opt, i) => {
           const selected = value === opt.value;
           return (
             <button
@@ -25,13 +27,14 @@ export default function SegmentedControl({ options, value, onChange, label }: Se
               type="button"
               aria-pressed={selected}
               onClick={() => onChange(opt.value)}
+              className="font-mono text-[11px] font-normal uppercase tracking-[0.14em] transition-colors duration-150"
               style={{
-                flex: 1, height: "100%", borderRadius: 12,
-                border: selected ? "1px solid var(--ink)" : "1px solid var(--border-input)",
-                background: selected ? "var(--ink)" : "transparent",
-                fontFamily: "Fraunces, Georgia, serif", fontWeight: 600,
-                fontSize: 14, color: selected ? "#F5EFE2" : "var(--ink-secondary)",
-                cursor: "pointer", transition: "all .15s ease",
+                flex: 1, height: "100%", borderRadius: 0,
+                border: selected ? "1px solid var(--eph-accent)" : "1px solid var(--eph-line-2)",
+                marginLeft: i > 0 ? -1 : 0,
+                background: selected ? "var(--eph-accent)" : "transparent",
+                color: selected ? "var(--eph-ink)" : "var(--eph-body)",
+                cursor: "pointer",
               }}
             >
               {opt.label}

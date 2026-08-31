@@ -18,11 +18,11 @@ export default function RestPage() {
   if (role === 'admin') {
     return (
       <div>
-        <IdentityHeader title="Hackeando el sueño" subtitle="Escribe el protocolo de sueño y gestiona el banco de herramientas." />
+        <IdentityHeader title="Sleep" subtitle="Escribe el protocolo de sueño y gestiona el banco de herramientas." />
         <div
           style={{
-            background: 'var(--paper)', border: '1px solid var(--line)',
-            borderRadius: 'var(--radius)', padding: '22px 24px', marginBottom: 18,
+            background: 'var(--eph-surface)', border: '1px solid var(--eph-line)',
+            borderRadius: '0', padding: '22px 24px', marginBottom: 18,
           }}
         >
           <ClientSwitcher moduleKey="rest" selectedClientId={adminClientId} onSelect={setAdminClientId} />
@@ -30,7 +30,7 @@ export default function RestPage() {
         {adminClientId ? (
           <AdminRestPanel clientId={adminClientId} />
         ) : (
-          <p style={{ color: 'var(--ink-soft)', fontSize: 13 }}>Selecciona un cliente para gestionar su protocolo.</p>
+          <p style={{ color: 'var(--eph-body)', fontSize: 13 }}>Selecciona un cliente para gestionar su protocolo.</p>
         )}
       </div>
     );

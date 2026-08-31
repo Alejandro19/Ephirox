@@ -54,7 +54,7 @@ describe('drawInstagramCard', () => {
     expect(ctx.fillRect).toHaveBeenCalledWith(0, 0, 1080, 1920);
     expect(ctx.fillText).toHaveBeenCalledWith('3', expect.any(Number), expect.any(Number));
     expect(ctx.fillText).toHaveBeenCalledWith('SEMANAS SEGUIDAS', expect.any(Number), expect.any(Number));
-    expect(ctx.fillText).toHaveBeenCalledWith('La Tribu', expect.any(Number), expect.any(Number));
+    expect(ctx.fillText).toHaveBeenCalledWith('Ephirox', expect.any(Number), expect.any(Number));
   });
 
   it('uses singular "SEMANA SEGUIDA" for a streak of exactly 1', () => {

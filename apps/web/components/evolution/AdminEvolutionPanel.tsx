@@ -10,6 +10,8 @@ import { listTrainingCompletions, type TrainingCompletion } from '../../lib/trai
 import { calculateDisciplineStats } from '../../lib/training-home-logic';
 import { fetchClient, type ClientDetail } from '../../lib/clients-client';
 import { getWellnessIndex } from '../../lib/wellness-index-client';
+import { listLabPanels, type LabPanel } from '../../lib/lab-panels-client';
+import { AdminLabPanelReview } from '../admin/AdminLabPanelReview';
 import {
   calculateSleepQualityAvg,
   formatSleepHours,
@@ -20,25 +22,28 @@ import {
 import { showToast } from '../layout/AppShell';
 import { WellnessIndexHero, BienestarGeneral, EvolucionFisicaSection } from './EvolutionVisuals';
 import { CheckinAccordion } from './CheckinAccordion';
+import { InsightsSection } from '../insights/InsightsSection';
 
 const cardStyle: React.CSSProperties = {
-  background: 'var(--paper)', border: '1px solid var(--border-hairline)',
-  borderRadius: 'var(--radius-card)', padding: '22px 24px', marginBottom: 20,
+  background: 'var(--eph-surface)', border: '1px solid var(--eph-line)',
+  borderRadius: '0', padding: '22px 24px', marginBottom: 20,
 };
 const cardTitleStyle: React.CSSProperties = {
-  fontSize: 15, fontWeight: 700, color: 'var(--ink)', margin: '0 0 16px',
+  fontFamily: 'var(--font-cormorant), Georgia, serif', fontSize: 18, fontWeight: 400, color: 'var(--eph-text)', margin: '0 0 16px',
 };
 const labelStyle: React.CSSProperties = {
-  display: 'block', fontSize: 12, fontWeight: 400, color: 'var(--ink-secondary)', marginBottom: 4,
+  display: 'block', fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', fontSize: 10,
+  textTransform: 'uppercase', letterSpacing: '0.14em', fontWeight: 400, color: 'var(--eph-muted)', marginBottom: 6,
 };
 const fieldStyle: React.CSSProperties = {
-  width: 220, height: 32, borderRadius: 0, border: 'none', borderBottom: '1px solid var(--border-input)',
-  padding: '0 2px 6px', fontSize: 14.5, fontWeight: 600, background: 'transparent', color: 'var(--ink)',
+  width: 220, height: 32, borderRadius: 0, border: 'none', borderBottom: '1px solid var(--eph-line-2)',
+  padding: '0 2px 6px', fontSize: 15, fontWeight: 400, background: 'transparent', color: 'var(--eph-text)',
   outline: 'none', boxSizing: 'border-box',
 };
 const primaryButtonStyle: React.CSSProperties = {
-  height: 40, padding: '0 22px', borderRadius: 9999, border: 'none', marginTop: 12,
-  background: 'var(--ring-accent)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+  height: 40, padding: '0 22px', borderRadius: 0, border: 'none', marginTop: 12,
+  fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
+  background: 'var(--eph-accent)', color: 'var(--eph-ink)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.14em', cursor: 'pointer',
 };
 
 function clientTz(): string {
@@ -50,7 +55,7 @@ function clientTz(): string {
 }
 
 async function fetchEvolutionBundle(clientId: string) {
-  const [evo, cortisolCompletions, cortisolCheckins, fullClient, sleepLogs, trainingCompletions, wellnessIndex] = await Promise.all([
+  const [evo, cortisolCompletions, cortisolCheckins, fullClient, sleepLogs, trainingCompletions, wellnessIndex, labPanels] = await Promise.all([
     getEvolutionData(clientId),
     listCortisolCompletions(clientId).catch(() => [] as CortisolCompletion[]),
     listCortisolCheckins(clientId).catch(() => [] as CortisolCheckinRecord[]),
@@ -58,8 +63,9 @@ async function fetchEvolutionBundle(clientId: string) {
     listSleepLogs(clientId).catch(() => [] as SleepLog[]),
     listTrainingCompletions(clientId).catch(() => [] as TrainingCompletion[]),
     getWellnessIndex(clientId).catch(() => null),
+    listLabPanels(clientId).catch(() => [] as LabPanel[]),
   ]);
-  return { evo, cortisolCompletions, cortisolCheckins, fullClient, sleepLogs, trainingCompletions, wellnessIndex };
+  return { evo, cortisolCompletions, cortisolCheckins, fullClient, sleepLogs, trainingCompletions, wellnessIndex, labPanels };
 }
 
 export function AdminEvolutionPanel({ clientId }: { clientId: string }) {
@@ -86,11 +92,11 @@ export function AdminEvolutionPanel({ clientId }: { clientId: string }) {
     }
   }
 
-  if (isLoading) return <p style={{ color: 'var(--ink-secondary)', fontSize: 14 }}>Cargando evolución del cliente…</p>;
-  if (error) return <p role="alert" style={{ color: 'var(--danger)' }}>{(error as Error).message}</p>;
+  if (isLoading) return <p style={{ color: 'var(--eph-muted)', fontSize: 14 }}>Cargando evolución del cliente…</p>;
+  if (error) return <p role="alert" style={{ color: '#D99483' }}>{(error as Error).message}</p>;
   if (!data) return null;
 
-  const { evo, cortisolCompletions, cortisolCheckins, fullClient: client, sleepLogs, trainingCompletions, wellnessIndex } = data;
+  const { evo, cortisolCompletions, cortisolCheckins, fullClient: client, sleepLogs, trainingCompletions, wellnessIndex, labPanels } = data;
 
   const sleepAvg = calculateSleepQualityAvg(evo.checkins);
   const weeklyRegulation = calculateCortisolWeeklyStats(cortisolCompletions).count;
@@ -110,10 +116,9 @@ export function AdminEvolutionPanel({ clientId }: { clientId: string }) {
 
   const disciplineStats = client?.trainingDays ? calculateDisciplineStats(trainingCompletions, client.trainingDays) : null;
 
-  const accesoEvolucionFisica = client?.clientType !== 'lead_wellness';
-
   return (
     <div>
+      {client?.clientType === 'mentoring' && <InsightsSection clientId={clientId} moduleKey="miEvolucion" />}
       <div style={cardStyle}>
         <h3 style={cardTitleStyle}>Próxima medición (admin)</h3>
         <label style={labelStyle} htmlFor="ev-next-checkin">Fecha de la próxima medición</label>
@@ -134,25 +139,35 @@ export function AdminEvolutionPanel({ clientId }: { clientId: string }) {
         cortisolDelta={cortisolDelta}
         cortisolStatus={getWellnessTrendStatus(cortisolDelta)}
       />
-      {accesoEvolucionFisica ? (
-        <EvolucionFisicaSection
-          anthropometrics={evo?.anthropometrics ?? []}
-          inbody={evo?.inbody ?? []}
-          objetivos={client?.objetivos}
-          inbodyCadenceType={client?.inbodyCadenceType}
-          disciplineStats={disciplineStats}
-          streakWeeks={null}
-        />
-      ) : (
-        <div style={cardStyle}>
-          <h3 style={cardTitleStyle}>Tu evolución física</h3>
-          <p style={{ fontSize: 13, color: 'var(--ink-secondary)', margin: 0 }}>
-            Este cliente es Lead Wellness — la evolución física se le muestra bloqueada hasta que se active con un coach.
-          </p>
-        </div>
-      )}
+      <EvolucionFisicaSection
+        anthropometrics={evo?.anthropometrics ?? []}
+        inbody={evo?.inbody ?? []}
+        objetivos={client?.objetivos}
+        inbodyCadenceType={client?.inbodyCadenceType}
+        disciplineStats={disciplineStats}
+        streakWeeks={null}
+      />
 
       <CheckinAccordion clientId={clientId} onSaved={() => mutate()} />
+
+      {client?.clientType === 'mentoring' && (
+        <div style={cardStyle}>
+          <h3 style={cardTitleStyle}>Laboratorios de seguimiento</h3>
+          {[6, 12].map((semana) => (
+            <div key={semana} style={{ marginBottom: 20 }}>
+              <span style={labelStyle}>Semana {semana}</span>
+              <div style={{ marginTop: 6 }}>
+                <AdminLabPanelReview
+                  clientId={clientId}
+                  semana={semana}
+                  panel={labPanels.find((p) => p.semanaNumero === semana)}
+                  onApproved={() => { void mutate(); }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

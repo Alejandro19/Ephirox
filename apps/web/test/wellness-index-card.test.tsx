@@ -35,7 +35,7 @@ describe('WellnessIndexCard', () => {
     expect(screen.queryByText(/vs\. semana pasada/)).not.toBeInTheDocument();
   });
 
-  it('renders nothing when the client has no wellness index (e.g. lead_wellness)', async () => {
+  it('renders nothing when the client has no wellness index yet', async () => {
     vi.mocked(wellnessIndexClient.getWellnessIndex).mockResolvedValue(null);
     const { container } = render(<WellnessIndexCard clientId="client-1" />);
     await waitFor(() => expect(wellnessIndexClient.getWellnessIndex).toHaveBeenCalled());

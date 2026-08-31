@@ -30,7 +30,7 @@ describe('account membership checkout', () => {
   beforeAll(async () => {
     const [client] = await db
       .insert(clients)
-      .values({ name: 'Checkout Client', email: clientEmail, passwordHash: await hashPassword('x'), status: 'active', clientType: 'coaching_online' })
+      .values({ name: 'Checkout Client', email: clientEmail, passwordHash: await hashPassword('x'), status: 'active', clientType: 'coaching_1_1' })
       .returning();
     clientId = client.id;
     clientToken = signToken({ id: clientId, role: 'cliente', name: 'Checkout Client', email: clientEmail, clientType: client.clientType });
@@ -76,14 +76,14 @@ describe('account membership checkout', () => {
     }
   });
 
-  it('creates a Wompi charge for Online with the real seeded price (no mocking needed), and lets the client poll its own status', async () => {
+  it('creates a Wompi charge for Presencial with the real seeded price (no mocking needed), and lets the client poll its own status', async () => {
     const res = await request(app)
       .post('/api/account/membership/checkout')
       .set('Authorization', `Bearer ${clientToken}`)
-      .send({ client_type: 'coaching_online', duration_months: 1 });
+      .send({ client_type: 'coaching_1_1', duration_months: 1, package_size: 12 });
     expect(res.status).toBe(201);
     expect(res.body.provider).toBe('wompi');
-    expect(res.body.amountInCents).toBe(45000000); // 450.000 COP
+    expect(res.body.amountInCents).toBe(87000000); // 870.000 COP
     expect(res.body.currency).toBe('COP'); // Wompi exige la moneda en mayúscula
     const { membershipPaymentId } = res.body;
 
@@ -102,7 +102,7 @@ describe('account membership checkout', () => {
     const checkoutRes = await request(app)
       .post('/api/account/membership/checkout')
       .set('Authorization', `Bearer ${clientToken}`)
-      .send({ client_type: 'coaching_online', duration_months: 1 });
+      .send({ client_type: 'coaching_1_1', duration_months: 1, package_size: 12 });
     const { membershipPaymentId } = checkoutRes.body;
 
     const [otherClient] = await db
