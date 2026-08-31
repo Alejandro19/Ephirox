@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Fraunces, Inter, Cormorant_Garamond, Jost, JetBrains_Mono } from "next/font/google";
 import Script from "next/script";
 import Providers from "./providers";
+import ThemeRoot from "../components/layout/ThemeRoot";
 import "./globals.css";
 
 const fraunces = Fraunces({
@@ -71,11 +72,11 @@ export default function RootLayout({
         <Script src="https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js" strategy="beforeInteractive" />
         {/* Contenedor raíz del sistema de temas Ephirox — data-theme vive acá,
             no en <body>, para que toda la app (incluida la barra superior)
-            herede los tokens por cascada. Valor estático por ahora; el paso
-            siguiente (resolución de tema + toggle) lo vuelve dinámico. */}
-        <div className="eph-root" data-theme="dark-carbon">
+            herede los tokens por cascada. Resolución dinámica por pantalla y
+            preferencia del usuario en ThemeRoot (lib/theme.ts). */}
+        <ThemeRoot>
           <Providers>{children}</Providers>
-        </div>
+        </ThemeRoot>
       </body>
     </html>
   );
