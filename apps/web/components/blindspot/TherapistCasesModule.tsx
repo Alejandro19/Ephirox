@@ -68,10 +68,15 @@ function relativeTime(dateStr: string | null): string {
   return months <= 1 ? 'Última sesión: hace 1 mes' : `Última sesión: hace ${months} meses`;
 }
 
+// 'white' (no var(--eph-*)): la spec de temas no define un token "texto
+// sobre fondo de peligro sólido" (sí existe --on-ac para el acento). Blanco
+// fijo da contraste seguro en los 3 temas porque --eph-danger es siempre un
+// rojo medio-oscuro — a diferencia de --eph-accent, que se invierte entre
+// oscuro y claro. Marcado como gap de la spec, no como decisión definitiva.
 function caseBadge(c: TherapistCaseListItem): { label: string; bg: string; color: string } {
-  if (c.crisisFlag) return { label: 'En crisis', bg: 'var(--eph-danger)', color: '#F4EFE7' };
+  if (c.crisisFlag) return { label: 'En crisis', bg: 'var(--eph-danger)', color: 'white' };
   if (c.status === 'cerrado') return { label: 'Cerrado', bg: 'transparent', color: 'var(--eph-muted)' };
-  return { label: STATUS_LABEL[c.status], bg: 'rgba(201,166,107,.18)', color: 'var(--eph-accent)' };
+  return { label: STATUS_LABEL[c.status], bg: 'var(--eph-accent-soft)', color: 'var(--eph-accent)' };
 }
 
 function AlertIcon() {
@@ -158,7 +163,7 @@ export function TherapistCasesModule() {
         </div>
       </div>
 
-      {error && <p className="font-body" style={{ color: '#D99483', fontSize: 13 }}>{error}</p>}
+      {error && <p className="font-body" style={{ color: 'var(--eph-danger)', fontSize: 13 }}>{error}</p>}
 
       <div style={{ display: 'flex', gap: 10, marginBottom: 18 }}>
         <button style={tabButtonStyle(statusTab === 'activos')} onClick={() => setStatusTab('activos')}>
@@ -204,7 +209,7 @@ export function TherapistCasesModule() {
                   className="font-mono"
                   style={{
                     width: 38, height: 38, borderRadius: '50%', flexShrink: 0,
-                    background: 'rgba(201,166,107,.18)', color: 'var(--eph-accent)',
+                    background: 'var(--eph-accent-soft)', color: 'var(--eph-accent)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: 15, fontWeight: 400,
                   }}
@@ -339,7 +344,7 @@ function CaseDetail({ blindspotCase, onRefetch }: { blindspotCase: TherapistCase
           style={{
             ...primaryButtonStyle,
             background: 'var(--eph-danger)',
-            color: '#F4EFE7',
+            color: 'white',
             display: 'inline-flex', alignItems: 'center', gap: 8,
             opacity: blindspotCase.crisisFlag ? 0.6 : 1,
             cursor: blindspotCase.crisisFlag ? 'not-allowed' : 'pointer',
@@ -384,7 +389,7 @@ function CaseDetail({ blindspotCase, onRefetch }: { blindspotCase: TherapistCase
           <input style={fieldStyle} placeholder="Nueva tarea" value={newTaskTitle} onChange={(e) => setNewTaskTitle(e.target.value)} />
           <button
             onClick={handleAddTask}
-            style={{ ...primaryButtonStyle, height: 40, flexShrink: 0, background: 'rgba(201,166,107,.18)', color: 'var(--eph-accent)' }}
+            style={{ ...primaryButtonStyle, height: 40, flexShrink: 0, background: 'var(--eph-accent-soft)', color: 'var(--eph-accent)' }}
           >
             Agregar
           </button>

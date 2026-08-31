@@ -237,7 +237,7 @@ function CasesTab({
                 </p>
               </div>
               {c.crisisFlag && (
-                <span className="font-mono" style={{ background: 'var(--eph-danger)', color: '#F4EFE7', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.08em', padding: '4px 12px', borderRadius: 999 }}>
+                <span className="font-mono" style={{ background: 'var(--eph-danger)', color: 'white', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.08em', padding: '4px 12px', borderRadius: 999 }}>
                   Crisis
                 </span>
               )}
@@ -314,12 +314,12 @@ function CaseDetail({ blindspotCase, therapists, onRefetch }: { blindspotCase: B
   return (
     <div style={cardStyle}>
       {blindspotCase.crisisFlag && (
-        <div style={{ background: 'var(--eph-danger)', color: '#F4EFE7', borderRadius: 0, padding: '10px 14px', marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ background: 'var(--eph-danger)', color: 'white', borderRadius: 0, padding: '10px 14px', marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span className="font-body" style={{ fontSize: 13, fontWeight: 500 }}>Alerta de crisis activa — levantada por {blindspotCase.crisisFlaggedBy}</span>
           <button
             onClick={handleAcknowledgeCrisis}
             className="font-mono"
-            style={{ background: '#F4EFE7', color: 'var(--eph-danger)', border: 'none', borderRadius: 0, padding: '6px 16px', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.08em', cursor: 'pointer' }}
+            style={{ background: 'white', color: 'var(--eph-danger)', border: 'none', borderRadius: 0, padding: '6px 16px', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.08em', cursor: 'pointer' }}
           >
             Atender
           </button>

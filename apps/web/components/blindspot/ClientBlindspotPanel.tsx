@@ -85,7 +85,7 @@ function BlindspotBody({ clientId }: { clientId: string }) {
 
   const error = actionError || (fetchError ? (fetchError instanceof Error ? fetchError.message : 'Error al cargar tu Punto Ciego.') : null);
   if (error) {
-    return <p className="font-body text-[13px]" style={{ color: '#D99483' }}>{error}</p>;
+    return <p className="font-body text-[13px]" style={{ color: 'var(--eph-danger)' }}>{error}</p>;
   }
 
   const caseData = data?.case ?? null;
