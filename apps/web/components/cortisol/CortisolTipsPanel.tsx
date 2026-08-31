@@ -22,7 +22,7 @@ const ghostButtonStyle: React.CSSProperties = {
 const dangerButtonStyle: React.CSSProperties = {
   height: 32, padding: '0 14px', borderRadius: 0, border: '1px solid var(--eph-danger)',
   fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
-  background: 'transparent', color: '#D99483', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', cursor: 'pointer', flexShrink: 0,
+  background: 'transparent', color: 'var(--eph-danger)', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', cursor: 'pointer', flexShrink: 0,
 };
 const primaryButtonStyle: React.CSSProperties = {
   height: 36, padding: '0 18px', borderRadius: 0, border: 'none',

@@ -104,7 +104,7 @@ function CortisolPlayer({
 
         {technique.description && <p className="mt-4 font-body text-sm leading-relaxed" style={{ color: 'var(--eph-text)' }}>{technique.description}</p>}
         {technique.precautionNote && (
-          <div className="mt-4 border px-4 py-3 font-body text-sm" style={{ borderColor: 'var(--eph-danger)', background: 'rgba(138,74,60,.14)', color: '#D99483' }}>
+          <div className="mt-4 border px-4 py-3 font-body text-sm" style={{ borderColor: 'var(--eph-danger)', background: 'color-mix(in srgb, var(--eph-danger) 14%, transparent)', color: 'var(--eph-danger)' }}>
             <strong>Precaución:</strong> {technique.precautionNote}
           </div>
         )}
@@ -167,7 +167,7 @@ function TechniqueList({
               )}
             </div>
             {t.precautionNote && (
-              <div className="mt-2 border px-3 py-2 font-body text-xs" style={{ borderColor: 'var(--eph-danger)', background: 'rgba(138,74,60,.14)', color: '#D99483' }}>
+              <div className="mt-2 border px-3 py-2 font-body text-xs" style={{ borderColor: 'var(--eph-danger)', background: 'color-mix(in srgb, var(--eph-danger) 14%, transparent)', color: 'var(--eph-danger)' }}>
                 <strong>Precaución:</strong> {t.precautionNote}
               </div>
             )}
@@ -242,7 +242,7 @@ export function ClientCortisolPanel({ clientId, clientType }: { clientId: string
     return (
       <div>
         {header}
-        <p role="alert" className="font-body" style={{ color: '#D99483' }}>{errorMessage}</p>
+        <p role="alert" className="font-body" style={{ color: 'var(--eph-danger)' }}>{errorMessage}</p>
       </div>
     );
   }

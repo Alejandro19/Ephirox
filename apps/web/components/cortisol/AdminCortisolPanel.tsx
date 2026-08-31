@@ -51,7 +51,7 @@ const ghostButtonStyle: React.CSSProperties = {
 const dangerButtonStyle: React.CSSProperties = {
   height: 32, padding: '0 14px', borderRadius: 0, border: '1px solid var(--eph-danger)',
   fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
-  background: 'transparent', color: '#D99483', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', cursor: 'pointer', flexShrink: 0,
+  background: 'transparent', color: 'var(--eph-danger)', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', cursor: 'pointer', flexShrink: 0,
 };
 const primaryButtonStyle: React.CSSProperties = {
   height: 40, padding: '0 22px', borderRadius: 0, border: 'none',
@@ -344,7 +344,7 @@ export function AdminCortisolPanel({ clientId }: { clientId: string }) {
                             )}
                             <div style={{ color: 'var(--eph-body)', fontSize: 13, marginTop: 4 }}>{t.duration}</div>
                             {t.precautionNote && (
-                              <div style={{ color: '#D99483', fontSize: 12, marginTop: 4 }}>⚠ {t.precautionNote}</div>
+                              <div style={{ color: 'var(--eph-danger)', fontSize: 12, marginTop: 4 }}>⚠ {t.precautionNote}</div>
                             )}
                           </div>
                           <label style={{ ...ghostButtonStyle, display: 'inline-flex', alignItems: 'center' }}>
