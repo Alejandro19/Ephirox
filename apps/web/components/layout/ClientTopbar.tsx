@@ -7,6 +7,7 @@ import { useTranslation } from "../../lib/i18n/useTranslation";
 import { CLIENT_NAV, VIEW_TO_PATH, type AppState } from "../../lib/constants";
 import { getModuleAccessState } from "../../lib/module-access";
 import NotificationBell from "./NotificationBell";
+import ThemeToggle from "./ThemeToggle";
 import BrandRing from "../ui/BrandRing";
 import { CrownBadge } from "../ui/CrownBadge";
 import { ModuleExpiredModal } from "./ModuleExpiredModal";
@@ -117,7 +118,7 @@ export default function ClientTopbar({ viewKey }: ClientTopbarProps) {
           alignItems: "center",
           gap: 32,
           height: 74,
-          padding: "0 32px",
+          padding: "0 clamp(20px, 4vw, 52px)",
           background: "var(--eph-bg)",
           borderBottom: "1px solid var(--eph-line)",
         }}
@@ -180,6 +181,7 @@ export default function ClientTopbar({ viewKey }: ClientTopbarProps) {
         </nav>
 
         <div className="client-topbar-actions" style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0, marginLeft: "auto" }}>
+          <ThemeToggle />
           <span className="bell-circle">
             <NotificationBell />
           </span>

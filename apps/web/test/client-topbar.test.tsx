@@ -2,12 +2,14 @@ import { describe, it, expect, vi } from 'vitest';
 import { screen, fireEvent } from '@testing-library/react';
 import { render } from '@testing-library/react';
 import ClientTopbar from '../components/layout/ClientTopbar';
+import ThemeRoot from '../components/layout/ThemeRoot';
 import { useAuth } from '../lib/auth-context';
 
 const pushMock = vi.fn();
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: pushMock, prefetch: vi.fn() }),
+  usePathname: () => '/training',
 }));
 vi.mock('../lib/auth-context', () => ({ useAuth: vi.fn() }));
 vi.mock('../components/layout/NotificationBell', () => ({ default: () => null }));
@@ -27,7 +29,11 @@ function mockAuth(overrides: { moduleAccess?: Record<string, boolean>; planExpir
 describe('ClientTopbar — account dropdown', () => {
   it('shows a "Configuración" item that navigates to /configuracion, separate from "Cerrar sesión"', () => {
     mockAuth();
-    render(<ClientTopbar viewKey="training" />);
+    render(
+      <ThemeRoot>
+        <ClientTopbar viewKey="training" />
+      </ThemeRoot>,
+    );
 
     fireEvent.click(screen.getByLabelText('Membresía'));
 
@@ -46,7 +52,11 @@ describe('ClientTopbar — acceso no restrictivo (módulo vencido)', () => {
   it('shows a crown badge (not the lock) for a module included in the plan but expired, and opens the modal on click instead of navigating', () => {
     pushMock.mockClear();
     mockAuth({ moduleAccess: { training: true }, planExpired: true });
-    render(<ClientTopbar viewKey="training" />);
+    render(
+      <ThemeRoot>
+        <ClientTopbar viewKey="training" />
+      </ThemeRoot>,
+    );
 
     fireEvent.click(screen.getAllByText('Workout')[0]);
 
@@ -56,7 +66,11 @@ describe('ClientTopbar — acceso no restrictivo (módulo vencido)', () => {
 
   it('still shows the lock (not a crown) for a module never included in the plan, even if expired', () => {
     mockAuth({ moduleAccess: { training: false }, planExpired: true });
-    render(<ClientTopbar viewKey="training" />);
+    render(
+      <ThemeRoot>
+        <ClientTopbar viewKey="training" />
+      </ThemeRoot>,
+    );
 
     fireEvent.click(screen.getAllByText('Workout')[0]);
 

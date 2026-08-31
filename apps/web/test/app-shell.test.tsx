@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import AppShell from '../components/layout/AppShell';
+import ThemeRoot from '../components/layout/ThemeRoot';
 import { useAuth } from '../lib/auth-context';
 import { getLegalAcceptance } from '../lib/account-client';
 
@@ -59,7 +60,11 @@ describe('AppShell', () => {
       token: null,
     } as ReturnType<typeof useAuth>);
 
-    render(<AppShell>{null}</AppShell>);
+    render(
+      <ThemeRoot>
+        <AppShell>{null}</AppShell>
+      </ThemeRoot>,
+    );
 
     expect(pushMock).toHaveBeenCalledWith('/login');
   });
@@ -71,7 +76,11 @@ describe('AppShell', () => {
     usePathnameMock.mockReturnValue('/training');
     mockExpiredClient();
 
-    render(<AppShell><p>Contenido real</p></AppShell>);
+    render(
+      <ThemeRoot>
+        <AppShell><p>Contenido real</p></AppShell>
+      </ThemeRoot>,
+    );
 
     expect(await screen.findByText('Tu membresía está inactiva', {}, { timeout: 3000 })).toBeInTheDocument();
     expect(screen.getByText('Contenido real')).toBeInTheDocument();
@@ -85,7 +94,11 @@ describe('AppShell', () => {
       clientType: 'coaching_1_1', onboardingComplete: true, moduleAccess: {}, logout: vi.fn(),
     } as unknown as ReturnType<typeof useAuth>);
 
-    render(<AppShell><p>Contenido real</p></AppShell>);
+    render(
+      <ThemeRoot>
+        <AppShell><p>Contenido real</p></AppShell>
+      </ThemeRoot>,
+    );
 
     expect(await screen.findByText('Contenido real', {}, { timeout: 3000 })).toBeInTheDocument();
     expect(screen.queryByText('Tu membresía está inactiva')).not.toBeInTheDocument();
@@ -95,7 +108,11 @@ describe('AppShell', () => {
     usePathnameMock.mockReturnValue('/training');
     mockExpiredClient();
 
-    render(<AppShell><p>Contenido real</p></AppShell>);
+    render(
+      <ThemeRoot>
+        <AppShell><p>Contenido real</p></AppShell>
+      </ThemeRoot>,
+    );
     (await screen.findByText('Renovar', {}, { timeout: 3000 })).click();
 
     expect(pushMock).toHaveBeenCalledWith('/configuracion/membresias');
@@ -109,7 +126,11 @@ describe('AppShell', () => {
       clientType: 'coaching_1_1', onboardingComplete: true, moduleAccess: {}, logout: vi.fn(),
     } as unknown as ReturnType<typeof useAuth>);
 
-    render(<AppShell><p>Contenido real</p></AppShell>);
+    render(
+      <ThemeRoot>
+        <AppShell><p>Contenido real</p></AppShell>
+      </ThemeRoot>,
+    );
 
     expect(await screen.findByText('AceptacionRegistro mock', {}, { timeout: 3000 })).toBeInTheDocument();
     expect(screen.queryByText('Contenido real')).not.toBeInTheDocument();
@@ -121,7 +142,11 @@ describe('AppShell', () => {
       user: { id: 'admin-1', name: 'Admin', email: 'admin@example.com' },
     } as unknown as ReturnType<typeof useAuth>);
 
-    render(<AppShell><p>Contenido real</p></AppShell>);
+    render(
+      <ThemeRoot>
+        <AppShell><p>Contenido real</p></AppShell>
+      </ThemeRoot>,
+    );
 
     expect(await screen.findByText('Contenido real', {}, { timeout: 3000 })).toBeInTheDocument();
     expect(getLegalAcceptance).not.toHaveBeenCalled();
