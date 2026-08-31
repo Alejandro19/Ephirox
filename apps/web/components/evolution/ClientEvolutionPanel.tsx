@@ -87,7 +87,7 @@ export function ClientEvolutionPanel({ clientId }: { clientId: string }) {
     return (
       <div>
         {header}
-        <p role="alert" className="text-[#D99483]">{(error as Error).message}</p>
+        <p role="alert" className="text-[var(--eph-danger)]">{(error as Error).message}</p>
       </div>
     );
   }

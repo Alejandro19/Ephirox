@@ -93,7 +93,7 @@ export function AdminEvolutionPanel({ clientId }: { clientId: string }) {
   }
 
   if (isLoading) return <p style={{ color: 'var(--eph-muted)', fontSize: 14 }}>Cargando evolución del cliente…</p>;
-  if (error) return <p role="alert" style={{ color: '#D99483' }}>{(error as Error).message}</p>;
+  if (error) return <p role="alert" style={{ color: 'var(--eph-danger)' }}>{(error as Error).message}</p>;
   if (!data) return null;
 
   const { evo, cortisolCompletions, cortisolCheckins, fullClient: client, sleepLogs, trainingCompletions, wellnessIndex, labPanels } = data;

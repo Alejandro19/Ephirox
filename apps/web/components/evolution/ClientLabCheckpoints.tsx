@@ -115,7 +115,7 @@ function CheckpointCard({ clientId, semana, panel, onSaved }: { clientId: string
       )}
 
       {status && (
-        <p role={status.isError ? 'alert' : 'status'} className={`mb-3 font-body text-sm ${status.isError ? 'text-[#D99483]' : 'text-[var(--eph-accent)]'}`}>
+        <p role={status.isError ? 'alert' : 'status'} className={`mb-3 font-body text-sm ${status.isError ? 'text-[var(--eph-danger)]' : 'text-[var(--eph-accent)]'}`}>
           {status.message}
         </p>
       )}
