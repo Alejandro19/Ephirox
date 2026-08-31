@@ -75,9 +75,12 @@ function macroKcalPct(grams: number | null | undefined, kcalPerGram: number, tot
 
 function MacroRing({ grams, pct, label }: { grams: number | null | undefined; pct: number; label: string }) {
   return (
-    <RingProgress value={pct} size={68} strokeWidth={6} color="espresso" trackColor="rgba(255,255,255,.16)">
+    <RingProgress value={pct} size={68} strokeWidth={6} color="espresso" trackColor="var(--eph-line-2)">
       <div className="flex flex-col items-center justify-center">
-        <span className="text-[15px] font-bold leading-none" style={{ color: 'var(--eph-text)' }}>{grams ?? '-'}g</span>
+        <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 3 }}>
+          <span className="eph-num-mono font-mono text-[14px] font-normal leading-none" style={{ color: 'var(--eph-text)' }}>{grams ?? '-'}</span>
+          <span className="font-mono" style={{ fontSize: 8, textTransform: 'uppercase', letterSpacing: '0.14em', color: 'var(--eph-muted)' }}>G</span>
+        </span>
         <span className="mt-0.5 text-[9px] uppercase tracking-wide" style={{ color: 'var(--eph-muted)' }}>{label}</span>
       </div>
     </RingProgress>
@@ -323,7 +326,7 @@ export function ClientNutritionPanel({ clientId, clientType }: { clientId: strin
     return (
       <div>
         {header}
-        <p role="alert" className="text-[#D99483]">{(error as Error).message}</p>
+        <p role="alert" className="text-[var(--eph-danger)]">{(error as Error).message}</p>
       </div>
     );
   }
@@ -360,7 +363,7 @@ export function ClientNutritionPanel({ clientId, clientType }: { clientId: strin
       >
         <div
           className="pointer-events-none absolute -right-10 -top-10 h-[180px] w-[180px] rounded-full"
-          style={{ background: 'radial-gradient(circle, rgba(217,183,126,.18) 0%, transparent 70%)' }}
+          style={{ background: 'radial-gradient(circle, color-mix(in srgb, var(--eph-accent) 18%, transparent) 0%, transparent 70%)' }}
         />
         <div className="relative z-10 mb-5 flex items-center justify-between gap-3">
           <p className="font-mono text-[10px] font-normal uppercase tracking-[0.14em]" style={{ color: 'var(--eph-accent)' }}>

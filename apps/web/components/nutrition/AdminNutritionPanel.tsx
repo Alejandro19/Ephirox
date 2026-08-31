@@ -71,7 +71,7 @@ const ghostButtonStyle: React.CSSProperties = {
 const dangerButtonStyle: React.CSSProperties = {
   height: 32, padding: '0 14px', borderRadius: 0, border: '1px solid var(--eph-danger)',
   fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
-  background: 'transparent', color: '#D99483', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', cursor: 'pointer', flexShrink: 0,
+  background: 'transparent', color: 'var(--eph-danger)', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', cursor: 'pointer', flexShrink: 0,
 };
 
 async function fetchNutritionAdminBundle(clientId: string) {
@@ -191,7 +191,7 @@ export function AdminNutritionPanel({ clientId }: AdminNutritionPanelProps) {
   }
 
   if (loading) return <p style={{ color: 'var(--eph-muted)', fontSize: 14 }}>Cargando plan de nutrición…</p>;
-  if (error) return <p style={{ color: '#D99483' }}>{(error as Error).message}</p>;
+  if (error) return <p style={{ color: 'var(--eph-danger)' }}>{(error as Error).message}</p>;
 
   return (
     <div>
