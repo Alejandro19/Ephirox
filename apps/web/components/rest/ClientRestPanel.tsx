@@ -19,6 +19,7 @@ import IdentityHeader from '../ui/IdentityHeader';
 import MantraCard from '../ui/MantraCard';
 import LockedBenefit from '../ui/LockedBenefit';
 import EmptyState from '../ui/EmptyState';
+import MetricValue from '../ui/MetricValue';
 import { ProtocolDisclaimerFooter } from '../ui/ProtocolDisclaimerFooter';
 import { RestToolsClientPanel } from './RestToolsClientPanel';
 import { InsightsSection } from '../insights/InsightsSection';
@@ -80,7 +81,7 @@ function SyncHero({ latest, ultimaSync }: { latest: WearableMetrica | null; ulti
       <div className="relative mt-8 mb-5 overflow-hidden rounded-[0] p-7" style={{ background: 'var(--eph-surface)', color: 'var(--eph-text)' }}>
         <div
           className="pointer-events-none absolute -right-10 -top-10 h-[180px] w-[180px] rounded-full"
-          style={{ background: 'radial-gradient(circle, rgba(217,183,126,.18) 0%, transparent 70%)' }}
+          style={{ background: 'radial-gradient(circle, color-mix(in srgb, var(--eph-accent) 18%, transparent) 0%, transparent 70%)' }}
         />
         <EmptyState message="Aún no hay datos sincronizados desde tu Oura Ring." />
       </div>
@@ -97,7 +98,7 @@ function SyncHero({ latest, ultimaSync }: { latest: WearableMetrica | null; ulti
     <div className="relative mt-8 mb-5 overflow-hidden rounded-[0] p-7" style={{ background: 'var(--eph-surface)', color: 'var(--eph-text)' }}>
       <div
         className="pointer-events-none absolute -right-10 -top-10 h-[180px] w-[180px] rounded-full"
-        style={{ background: 'radial-gradient(circle, rgba(217,183,126,.18) 0%, transparent 70%)' }}
+        style={{ background: 'radial-gradient(circle, color-mix(in srgb, var(--eph-accent) 18%, transparent) 0%, transparent 70%)' }}
       />
       <div className="relative z-10 mb-4 flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.1em]" style={{ color: 'var(--eph-accent)' }}>
         <span className="inline-flex items-center gap-1.5">
@@ -107,8 +108,8 @@ function SyncHero({ latest, ultimaSync }: { latest: WearableMetrica | null; ulti
       </div>
 
       <div className="relative z-10 mb-1 flex items-start justify-between gap-3">
-        <p className="font-display text-4xl leading-none">{latest.suenoScore ?? '—'}</p>
-        <p className="text-right font-display text-lg">{formatMinutesDuration(totalMin)}</p>
+        <p className="eph-num font-display text-4xl leading-none">{latest.suenoScore ?? '—'}</p>
+        <MetricValue value={formatMinutesDuration(totalMin)} unit="H" size="secondary" />
       </div>
       <div className="relative z-10 mb-5 flex items-start justify-between gap-3">
         <p className="font-body text-sm" style={{ color: 'var(--eph-muted)' }}>puntaje de sueño · {sleepScoreLabel(latest.suenoScore)}</p>
@@ -124,11 +125,11 @@ function SyncHero({ latest, ultimaSync }: { latest: WearableMetrica | null; ulti
 
 // ─── Métricas de recuperación ───────────────────────────────────
 
-function MetricCard({ label, value, caption, captionColor }: { label: string; value: string; caption?: string; captionColor?: string }) {
+function MetricCard({ label, value, unit, caption, captionColor }: { label: string; value: string; unit?: string; caption?: string; captionColor?: string }) {
   return (
     <div className="border p-4" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface-2)' }}>
       <p className="mb-1 font-mono text-[10px] uppercase tracking-[0.08em]" style={{ color: 'var(--eph-muted)' }}>{label}</p>
-      <p className="font-display text-xl" style={{ color: 'var(--eph-text)' }}>{value}</p>
+      <MetricValue value={value} unit={unit} />
       {caption && (
         <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.06em]" style={{ color: captionColor || 'var(--eph-muted)' }}>
           {caption}
@@ -149,13 +150,29 @@ function RecoveryMetricsRow({ latest, previous }: { latest: WearableMetrica; pre
     <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
       <MetricCard
         label="HRV"
-        value={latest.hrvNocturno != null ? `${latest.hrvNocturno} ms` : '—'}
+        value={latest.hrvNocturno != null ? `${latest.hrvNocturno}` : '—'}
+        unit={latest.hrvNocturno != null ? 'MS' : undefined}
         caption={hrvPct != null ? `${hrvPct >= 0 ? '↑' : '↓'} ${Math.abs(hrvPct)}% vs. prom.` : undefined}
-        captionColor={hrvPct != null && hrvPct >= 0 ? 'var(--eph-accent)' : '#D99483'}
+        captionColor={hrvPct != null && hrvPct >= 0 ? 'var(--eph-accent)' : 'var(--eph-danger)'}
       />
-      <MetricCard label="FC reposo" value={latest.fcReposo != null ? `${latest.fcReposo} bpm` : '—'} caption="estable" />
-      <MetricCard label="Temp. piel" value={tempDelta != null ? `${tempDelta >= 0 ? '+' : ''}${tempDelta.toFixed(1)}°` : '—'} caption="vs. tu base" />
-      <MetricCard label="Resp." value={latest.tasaRespiratoria != null ? `${Number(latest.tasaRespiratoria).toFixed(1)} rpm` : '—'} caption="normal" />
+      <MetricCard
+        label="FC reposo"
+        value={latest.fcReposo != null ? `${latest.fcReposo}` : '—'}
+        unit={latest.fcReposo != null ? 'BPM' : undefined}
+        caption="estable"
+      />
+      <MetricCard
+        label="Temp. piel"
+        value={tempDelta != null ? `${tempDelta >= 0 ? '+' : ''}${tempDelta.toFixed(1)}` : '—'}
+        unit={tempDelta != null ? '°C' : undefined}
+        caption="vs. tu base"
+      />
+      <MetricCard
+        label="Resp."
+        value={latest.tasaRespiratoria != null ? `${Number(latest.tasaRespiratoria).toFixed(1)}` : '—'}
+        unit={latest.tasaRespiratoria != null ? 'RPM' : undefined}
+        caption="normal"
+      />
     </div>
   );
 }
@@ -320,7 +337,7 @@ export function ClientRestPanel({ clientId }: { clientId: string }) {
     return (
       <div>
         {header}
-        <p role="alert" className="font-body" style={{ color: '#D99483' }}>{(error as Error).message}</p>
+        <p role="alert" className="font-body" style={{ color: 'var(--eph-danger)' }}>{(error as Error).message}</p>
       </div>
     );
   }

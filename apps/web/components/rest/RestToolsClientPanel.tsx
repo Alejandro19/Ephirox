@@ -82,7 +82,7 @@ export function RestToolsClientPanel() {
     setPlayingAudioId((prev) => (prev === id ? null : id));
   }
 
-  if (error) return <p role="alert" className="font-body" style={{ color: '#D99483' }}>{error}</p>;
+  if (error) return <p role="alert" className="font-body" style={{ color: 'var(--eph-danger)' }}>{error}</p>;
 
   return (
     <section className="border-t py-6" style={{ borderColor: 'var(--eph-line)' }}>

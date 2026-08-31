@@ -57,17 +57,23 @@ describe('ClientRestPanel', () => {
     render(<ClientRestPanel clientId="client-1" />);
     expect(await screen.findByText('86')).toBeInTheDocument();
     expect(screen.getByText(/puntaje de sueño · óptimo/)).toBeInTheDocument();
-    expect(screen.getByText('7h 42m')).toBeInTheDocument();
-    expect(screen.getByText(/profundo 1h 51m/)).toBeInTheDocument();
-    expect(screen.getByText(/REM 3h 32m/)).toBeInTheDocument();
+    // MetricValue separa cifra y unidad en spans distintos (spec de cifras).
+    expect(screen.getByText('7:42')).toBeInTheDocument();
+    expect(screen.getByText('H')).toBeInTheDocument();
+    expect(screen.getByText(/profundo 1:51/)).toBeInTheDocument();
+    expect(screen.getByText(/REM 3:32/)).toBeInTheDocument();
   });
 
   it('shows recovery metric cards computed from the latest sync', async () => {
     mockFetches();
     render(<ClientRestPanel clientId="client-1" />);
-    expect(await screen.findByText('62 ms')).toBeInTheDocument();
-    expect(screen.getByText('54 bpm')).toBeInTheDocument();
-    expect(screen.getByText('14.2 rpm')).toBeInTheDocument();
+    // MetricValue separa cifra y unidad en spans distintos (spec de cifras).
+    expect(await screen.findByText('62')).toBeInTheDocument();
+    expect(screen.getByText('MS')).toBeInTheDocument();
+    expect(screen.getByText('54')).toBeInTheDocument();
+    expect(screen.getByText('BPM')).toBeInTheDocument();
+    expect(screen.getByText('14.2')).toBeInTheDocument();
+    expect(screen.getByText('RPM')).toBeInTheDocument();
     expect(screen.getByText(/↑ \d+% vs\. prom\./)).toBeInTheDocument();
   });
 

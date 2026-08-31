@@ -36,7 +36,7 @@ const ghostButtonStyle: React.CSSProperties = {
 const dangerButtonStyle: React.CSSProperties = {
   height: 32, padding: '0 14px', borderRadius: 0, border: '1px solid var(--eph-danger)',
   fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
-  background: 'transparent', color: '#D99483', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', cursor: 'pointer', flexShrink: 0,
+  background: 'transparent', color: 'var(--eph-danger)', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', cursor: 'pointer', flexShrink: 0,
 };
 const primaryButtonStyle: React.CSSProperties = {
   height: 40, padding: '0 22px', borderRadius: 0, border: 'none',
@@ -156,7 +156,7 @@ export function RestToolsAdminPanel() {
   return (
     <div style={cardStyle}>
       <h3 style={cardTitleStyle}>Herramientas para dormir (banco global)</h3>
-      {error && <p role="alert" style={{ color: '#D99483' }}>{error}</p>}
+      {error && <p role="alert" style={{ color: 'var(--eph-danger)' }}>{error}</p>}
 
       <div style={draftCardStyle}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12 }}>

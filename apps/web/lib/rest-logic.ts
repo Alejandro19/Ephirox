@@ -2,10 +2,13 @@ export function isMentoringClient(clientType: string | null | undefined): boolea
   return clientType === 'mentoring';
 }
 
+// "6:12" (H:MM) — la unidad explícita (" H") se agrega en el call site vía
+// MetricValue, no acá (spec: unidades explícitas en vez de símbolos, ej.
+// 6:12 → 6:12 H).
 export function formatMinutesDuration(totalMinutes: number): string {
   const h = Math.floor(totalMinutes / 60);
   const m = Math.round(totalMinutes % 60);
-  return h > 0 ? `${h}h ${m}m` : `${m}m`;
+  return `${h}:${String(m).padStart(2, '0')}`;
 }
 
 // "11:48pm" — mismo formato que el legacy: hora local corta, am/pm pegado y en minúscula.
