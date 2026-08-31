@@ -17,7 +17,7 @@ export default function Card({ children, eyebrow, className = "", style }: CardP
   return (
     <div
       className={`bg-[var(--eph-surface)] border border-[var(--eph-line)] rounded-none ${className}`}
-      style={{ padding: "clamp(26px, 3vw, 38px)", ...style }}
+      style={{ padding: "clamp(26px, 3vw, 38px)", boxShadow: "var(--eph-shadow)", ...style }}
     >
       {eyebrow && (
         <div
