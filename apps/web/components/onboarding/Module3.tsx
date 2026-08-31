@@ -248,7 +248,7 @@ export function Module3({ clientId, draft, onChange, invalidFields }: Module3Pro
                 onFileChange={(file) => { if (file) void handleInbodyFile(file); }}
               />
               {ocrStatus && (
-                <p role={ocrStatus.isError ? 'alert' : 'status'} className={`font-body text-sm ${ocrStatus.isError ? 'text-[#D99483]' : ''}`} style={ocrStatus.isError ? undefined : { color: 'var(--eph-body)' }}>
+                <p role={ocrStatus.isError ? 'alert' : 'status'} className={`font-body text-sm ${ocrStatus.isError ? 'text-[var(--eph-danger)]' : ''}`} style={ocrStatus.isError ? undefined : { color: 'var(--eph-body)' }}>
                   {ocrStatus.message}
                 </p>
               )}
@@ -297,7 +297,7 @@ export function Module3({ clientId, draft, onChange, invalidFields }: Module3Pro
                       options={objetivoOptions}
                     />
                     {invalidFields.has(`objetivo_${metrica}`) && (
-                      <p role="alert" className="mt-1.5 font-mono text-[10px] uppercase tracking-[0.1em] text-[#D99483]">Este campo es obligatorio.</p>
+                      <p role="alert" className="mt-1.5 font-mono text-[10px] uppercase tracking-[0.1em] text-[var(--eph-danger)]">Este campo es obligatorio.</p>
                     )}
                   </div>
                 ))}

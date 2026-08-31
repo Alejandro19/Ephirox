@@ -24,7 +24,7 @@ export type WizardFieldProps = {
 
 function InvalidHint({ invalid }: { invalid?: boolean }) {
   if (!invalid) return null;
-  return <p role="alert" className="mt-1.5 font-mono text-[10px] uppercase tracking-[0.1em] text-[#D99483]">Este campo es obligatorio.</p>;
+  return <p role="alert" className="mt-1.5 font-mono text-[10px] uppercase tracking-[0.1em] text-[var(--eph-danger)]">Este campo es obligatorio.</p>;
 }
 
 export function WizardField({ field, value, otroValue, hidden, invalid, onChange, onOtroChange, onFileChange }: WizardFieldProps) {

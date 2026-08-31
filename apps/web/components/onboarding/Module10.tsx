@@ -282,7 +282,7 @@ export function Module10({ clientId, draft, onChange, hormonalStatus, lastPeriod
         </div>
 
         {ocrStatus && (
-          <p role={ocrStatus.isError ? 'alert' : 'status'} className="mb-4 font-body text-sm" style={{ color: ocrStatus.isError ? '#D99483' : 'var(--eph-accent)' }}>
+          <p role={ocrStatus.isError ? 'alert' : 'status'} className="mb-4 font-body text-sm" style={{ color: ocrStatus.isError ? 'var(--eph-danger)' : 'var(--eph-accent)' }}>
             {ocrStatus.message}
           </p>
         )}
