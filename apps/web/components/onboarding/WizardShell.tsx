@@ -32,9 +32,17 @@ type WizardData = Record<string, string | string[]>;
 
 const PHOTO_ANGLE_KEYS = ['frente', 'lado_derecho', 'lado_izquierdo', 'espalda'] as const;
 
-// Un campo "ancho" (chips, textarea, o un select con pregunta muy larga)
-// necesita la fila completa para no verse apretado — ver WizardField.tsx,
-// que ya les da sm:col-span-2.
+// Un campo "ancho" (chips, textarea, country-picker, o un select con
+// pregunta muy larga) necesita la fila completa — grid-column:1/-1 dentro
+// de la rejilla auto-fit de la card (única excepción de ancho permitida,
+// spec Prompt 02 §4 regla 5). El resto fluye en una sola rejilla
+// auto-fit por card (regla 3): sin emparejamiento manual de a dos, así
+// que un grupo con 3 campos ya no deja huecos ni desalinea columnas —
+// eso era lo que pasaba antes con groupFieldsIntoRows (removido), que
+// armaba filas de a pares en grids de 2 columnas independientes entre sí.
+// Como cada campo es su propio ítem de grid (sin agrupar en pares), un
+// campo condicional que aparece/desaparece solo agrega o quita SU PROPIO
+// ítem — el resto de la card nunca se remonta.
 function isWideField(field: WizardFieldConfig): boolean {
   return (
     field.type === 'chips' ||
@@ -44,18 +52,6 @@ function isWideField(field: WizardFieldConfig): boolean {
   );
 }
 
-// El emparejamiento de filas se calcula UNA sola vez a partir de la lista
-// estática de campos del módulo — nunca a partir de cuáles están ocultos en
-// este momento. Antes se filtraban los campos ocultos ANTES de armar los
-// pares, así que cuando un campo condicional (ej. "¿Cuáles probióticos?")
-// pasaba de oculto a visible, el emparejamiento de TODAS las filas
-// siguientes cambiaba de a uno — React desmontaba y volvía a montar en
-// cascada cada fila restante del módulo con keys nuevas. Ese remount masivo,
-// en un único clic, es lo que dejaba la página con scroll "varado" en un
-// hueco en blanco (la altura vieja ya no correspondía al contenido nuevo,
-// más corto). Ahora las filas son fijas: activar/desactivar un campo
-// condicional solo agrega o quita SU PROPIA fila — el resto nunca se
-// remonta.
 // Agrupación temática visual (cards estilo Oura, ver metadata `group` en
 // lib/wizard-modules.ts): campos contiguos con el mismo `group` van juntos
 // en una sola card. Campos sin `group` (o el módulo entero, ej. Módulo 2 no
@@ -72,27 +68,6 @@ function groupFieldsIntoCards(fields: WizardFieldConfig[]): { group: string | nu
     }
   }
   return cards;
-}
-
-function groupFieldsIntoRows(fields: WizardFieldConfig[]): WizardFieldConfig[][] {
-  const rows: WizardFieldConfig[][] = [];
-  let pendingNarrow: WizardFieldConfig | null = null;
-  for (const field of fields) {
-    if (isWideField(field)) {
-      if (pendingNarrow) {
-        rows.push([pendingNarrow]);
-        pendingNarrow = null;
-      }
-      rows.push([field]);
-    } else if (pendingNarrow) {
-      rows.push([pendingNarrow, field]);
-      pendingNarrow = null;
-    } else {
-      pendingNarrow = field;
-    }
-  }
-  if (pendingNarrow) rows.push([pendingNarrow]);
-  return rows;
 }
 
 export type WizardShellProps = {
@@ -431,74 +406,70 @@ export function WizardShell({ clientId, variant }: WizardShellProps) {
           Módulo {mod.n} · {mod.title}
         </h2>
 
-        <div className="space-y-3.5">
+        <div className="grid" style={{ gap: 24 }}>
           {groupFieldsIntoCards(mod.fields).map((card) => {
             const visibleFields = card.fields.filter((f) => !hiddenFieldIds.has(f.id));
             if (visibleFields.length === 0) return null;
             const GroupIcon = card.group ? WIZARD_GROUP_ICON[card.group] : undefined;
-            const rows = (
-              <div className="space-y-4">
-                {groupFieldsIntoRows(card.fields).map((row) => {
-                  const visibleRow = row.filter((field) => !hiddenFieldIds.has(field.id));
-                  if (visibleRow.length === 0) return null;
-                  // Si el campo que acompañaba a este en su fila está oculto por una
-                  // condición (ej. "alcohol_type" cuando "alcohol" = "Nunca"), el
-                  // que queda no debe dejar la otra mitad de la fila en blanco —
-                  // ocupa el ancho completo mientras esté solo.
-                  const alone = visibleRow.length === 1;
-                  return (
-                    <div key={row.map((f) => f.id).join('+')} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      {visibleRow.map((field) => {
-                        const wrapperClass = alone ? 'sm:col-span-2' : undefined;
-                        return (
-                        <div key={field.id} className={wrapperClass}>
-                          {field.type === 'country-picker' ? (
-                            <CountryCityPicker
-                              value={{
-                                country: (wizardData.country as string) || '',
-                                city: (wizardData.city as string) || '',
-                                phoneCode: (wizardData.phone_code as string) || '+57',
-                                phoneNumber: (wizardData.phone_number as string) || '',
-                              }}
-                              onChange={handleCountryCityChange}
-                              invalidFieldIds={invalidFieldIds}
-                            />
-                          ) : (
-                          <WizardField
-                            field={field}
-                            value={wizardData[field.id]}
-                            otroValue={otroValues[field.id]}
-                            invalid={invalidFieldIds.has(field.id)}
-                            onChange={handleFieldChange}
-                            onOtroChange={handleOtroChange}
-                            onFileChange={handleFileChange}
-                          />
-                          )}
-                        </div>
-                        );
-                      })}
-                    </div>
-                  );
-                })}
+            // Una sola rejilla auto-fit por card (spec §4 regla 3): nada de
+            // emparejar campos de a dos en grids de 2 columnas separados —
+            // eso es lo que desalineaba las columnas entre filas y dejaba
+            // huecos cuando un grupo tenía un número impar de campos. Un
+            // campo ancho (isWideField) ocupa la fila completa vía
+            // grid-column:1/-1 (regla 5, única excepción permitida).
+            const fieldsGrid = (
+              <div
+                className="grid"
+                style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '30px clamp(28px, 4vw, 56px)' }}
+              >
+                {visibleFields.map((field) => (
+                  <div key={field.id} style={isWideField(field) ? { gridColumn: '1 / -1' } : undefined}>
+                    {field.type === 'country-picker' ? (
+                      <CountryCityPicker
+                        value={{
+                          country: (wizardData.country as string) || '',
+                          city: (wizardData.city as string) || '',
+                          phoneCode: (wizardData.phone_code as string) || '+57',
+                          phoneNumber: (wizardData.phone_number as string) || '',
+                        }}
+                        onChange={handleCountryCityChange}
+                        invalidFieldIds={invalidFieldIds}
+                      />
+                    ) : (
+                      <WizardField
+                        field={field}
+                        value={wizardData[field.id]}
+                        otroValue={otroValues[field.id]}
+                        invalid={invalidFieldIds.has(field.id)}
+                        onChange={handleFieldChange}
+                        onOtroChange={handleOtroChange}
+                        onFileChange={handleFileChange}
+                      />
+                    )}
+                  </div>
+                ))}
               </div>
             );
-            if (!card.group) return <div key={card.fields[0].id}>{rows}</div>;
+            if (!card.group) return <div key={card.fields[0].id}>{fieldsGrid}</div>;
             return (
               <div
                 key={card.fields[0].id}
-                className="border p-5"
-                style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface)' }}
+                className="border"
+                style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface)', boxShadow: 'var(--eph-shadow)', padding: 'clamp(26px, 3vw, 38px)' }}
               >
-                <div className="mb-4 flex items-center gap-2">
+                <div
+                  className="flex items-center gap-2"
+                  style={{ paddingBottom: 26, borderBottom: '1px solid var(--eph-line)' }}
+                >
                   {GroupIcon && <GroupIcon size={16} style={{ color: 'var(--eph-accent)' }} />}
                   <span
-                    className="font-mono text-[10px] uppercase tracking-[0.14em]"
+                    className="font-mono text-[10px] uppercase tracking-[0.22em]"
                     style={{ color: 'var(--eph-accent)' }}
                   >
                     {card.group}
                   </span>
                 </div>
-                {rows}
+                <div style={{ paddingTop: 28 }}>{fieldsGrid}</div>
               </div>
             );
           })}

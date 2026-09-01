@@ -35,11 +35,11 @@ export function WizardField({ field, value, otroValue, hidden, invalid, onChange
   if (field.type === 'select') {
     // Preguntas largas ("¿Se te da mejor pesar la comida diariamente o
     // prefieres...?") no entran en una sola línea a la mitad del ancho de la
-    // grilla y terminaban truncadas a media palabra — se les da la fila
-    // completa para que el texto respire.
-    const wide = field.label.length > 55;
+    // grilla y terminaban truncadas a media palabra — WizardShell les da la
+    // fila completa (isWideField, grid-column:1/-1) por su propio ancho de
+    // label, no acá.
     return (
-      <div className={wide ? 'sm:col-span-2' : undefined}>
+      <div>
         <SelectField
           label={field.label}
           placeholder="Seleccionar"
@@ -123,7 +123,7 @@ export function WizardField({ field, value, otroValue, hidden, invalid, onChange
     // espacio real donde acomodarse.
     const selected = Array.isArray(value) ? value : [];
     return (
-      <div className="sm:col-span-2">
+      <div>
         <ChipGroup
           label={field.label}
           options={(field.options || []).map((option) => ({ value: option, label: option }))}
@@ -158,7 +158,7 @@ export function WizardField({ field, value, otroValue, hidden, invalid, onChange
 
   if (field.type === 'textarea') {
     return (
-      <div className="sm:col-span-2">
+      <div>
         <FloatingTextarea
           id={fieldId}
           label={field.label}
