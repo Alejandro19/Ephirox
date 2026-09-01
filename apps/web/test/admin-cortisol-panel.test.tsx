@@ -12,7 +12,7 @@ vi.mock('../lib/cortisol-tips-client');
 const baseTechnique = {
   type: null, duration: null, durationMinutes: null, durationSeconds: null, description: null,
   videoUrl: null, videoName: null, youtubeUrl: null, audioUrl: null, audioName: null, emotion: null,
-  precautionNote: null,
+  precautionNote: null, isRitual: false,
 };
 
 describe('AdminCortisolPanel', () => {

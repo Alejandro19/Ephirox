@@ -61,6 +61,26 @@ describe('cortisol techniques routes', () => {
     expect(notifications.some((n) => n.message.includes('Stress'))).toBe(true);
   });
 
+  it('creates a technique flagged as a Rox Ritual, and a later partial edit does not clear the flag', async () => {
+    const createRes = await request(app)
+      .post(`/api/clients/${clientId}/cortisol-techniques`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ title: 'Respiración de descarga', is_ritual: true });
+    expect(createRes.status).toBe(201);
+    expect(createRes.body.technique.isRitual).toBe(true);
+    const techId = createRes.body.technique.id;
+
+    // Editar SOLO el título (sin volver a marcar is_ritual) no debe apagar
+    // el flag — regresión real: un `?? false` en el mapeo de campos del
+    // servicio apagaba isRitual en cualquier PATCH parcial que no lo tocara.
+    const updateRes = await request(app)
+      .put(`/api/clients/${clientId}/cortisol-techniques/${techId}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ title: 'Respiración de descarga (editada)' });
+    expect(updateRes.status).toBe(200);
+    expect(updateRes.body.technique.isRitual).toBe(true);
+  });
+
   it('admin updates and deletes a technique', async () => {
     const createRes = await request(app)
       .post(`/api/clients/${clientId}/cortisol-techniques`)

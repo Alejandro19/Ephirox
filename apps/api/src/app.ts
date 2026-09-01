@@ -19,6 +19,7 @@ import { adminNutritionTipsRouter } from './routes/admin-nutrition-tips.routes.j
 import { recipesRouter } from './routes/recipes.routes.js';
 import { cortisolTechniquesRouter } from './routes/cortisol-techniques.routes.js';
 import { cortisolLogsRouter } from './routes/cortisol-logs.routes.js';
+import { cognitiveLoadRouter } from './routes/cognitive-load.routes.js';
 import { sleepRouter } from './routes/sleep.routes.js';
 import { eventsRouter } from './routes/events.routes.js';
 import { therapiesRouter } from './routes/therapies.routes.js';
@@ -86,6 +87,7 @@ export function createApp() {
   app.use('/api/clients', supplementsRouter);
   app.use('/api/clients', cortisolTechniquesRouter);
   app.use('/api/clients', cortisolLogsRouter);
+  app.use('/api/clients', cognitiveLoadRouter);
   app.use('/api/clients', sleepRouter);
   app.use('/api/clients', labPanelsRouter);
   app.use('/api/clients', insightsRouter);

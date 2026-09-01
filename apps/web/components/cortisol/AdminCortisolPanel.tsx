@@ -63,7 +63,7 @@ const listRowStyle: React.CSSProperties = {
 };
 
 type EditDraft = {
-  title: string; type: string; minutes: string; seconds: string; youtubeUrl: string; description: string; emotion: string; precautionNote: string;
+  title: string; type: string; minutes: string; seconds: string; youtubeUrl: string; description: string; emotion: string; precautionNote: string; isRitual: boolean;
 };
 
 function draftFromTechnique(t: CortisolTechnique): EditDraft {
@@ -76,6 +76,7 @@ function draftFromTechnique(t: CortisolTechnique): EditDraft {
     description: t.description || '',
     emotion: t.emotion || '',
     precautionNote: t.precautionNote || '',
+    isRitual: t.isRitual,
   };
 }
 
@@ -101,6 +102,7 @@ export function AdminCortisolPanel({ clientId }: { clientId: string }) {
   const [description, setDescription] = useState('');
   const [emotion, setEmotion] = useState('');
   const [precautionNote, setPrecautionNote] = useState('');
+  const [isRitual, setIsRitual] = useState(false);
   const [audioFile, setAudioFile] = useState<File | null>(null);
 
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -124,6 +126,7 @@ export function AdminCortisolPanel({ clientId }: { clientId: string }) {
         description: description || undefined,
         emotion: emotion || null,
         precaution_note: precautionNote || null,
+        is_ritual: isRitual,
       });
       if (audioFile) await uploadTechniqueAudio(clientId, created.id, audioFile);
       setTitle('');
@@ -134,6 +137,7 @@ export function AdminCortisolPanel({ clientId }: { clientId: string }) {
       setDescription('');
       setEmotion('');
       setPrecautionNote('');
+      setIsRitual(false);
       setAudioFile(null);
       await refetch();
       showToast('Técnica asignada.', 'success');
@@ -161,6 +165,7 @@ export function AdminCortisolPanel({ clientId }: { clientId: string }) {
         description: editDraft.description || undefined,
         emotion: editDraft.emotion || null,
         precaution_note: editDraft.precautionNote || null,
+        is_ritual: editDraft.isRitual,
       });
       if (editAudioFile) await uploadTechniqueAudio(clientId, techId, editAudioFile);
       setEditingId(null);
@@ -254,6 +259,11 @@ export function AdminCortisolPanel({ clientId }: { clientId: string }) {
         <label style={{ ...labelStyle, marginTop: 14 }} htmlFor="ct-precaution">Nota de precaución/contraindicación (opcional)</label>
         <textarea id="ct-precaution" rows={2} style={textareaStyle} value={precautionNote} onChange={(e) => setPrecautionNote(e.target.value)} placeholder="Ej.: no recomendado con hipertensión no controlada." />
 
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 14, cursor: 'pointer' }}>
+          <input type="checkbox" checked={isRitual} onChange={(e) => setIsRitual(e.target.checked)} />
+          <span style={{ fontSize: 13, color: 'var(--eph-body)' }}>Es uno de los 3 rituales de &quot;The Rox Ritual&quot;</span>
+        </label>
+
         <button type="button" style={{ ...primaryButtonStyle, marginTop: 16 }} onClick={handleCreate}>
           Asignar
         </button>
@@ -322,6 +332,11 @@ export function AdminCortisolPanel({ clientId }: { clientId: string }) {
                           <label style={{ ...labelStyle, marginTop: 10 }} htmlFor={`ct-edit-precaution-${t.id}`}>Nota de precaución/contraindicación (opcional)</label>
                           <textarea id={`ct-edit-precaution-${t.id}`} rows={2} style={textareaStyle} value={editDraft.precautionNote} onChange={(e) => setEditDraft({ ...editDraft, precautionNote: e.target.value })} />
 
+                          <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, cursor: 'pointer' }}>
+                            <input type="checkbox" checked={editDraft.isRitual} onChange={(e) => setEditDraft({ ...editDraft, isRitual: e.target.checked })} />
+                            <span style={{ fontSize: 13, color: 'var(--eph-body)' }}>Es uno de los 3 rituales de &quot;The Rox Ritual&quot;</span>
+                          </label>
+
                           <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
                             <button type="button" style={primaryButtonStyle} onClick={() => handleSaveEdit(t.id)}>Guardar</button>
                             <button type="button" style={ghostButtonStyle} onClick={() => { setEditingId(null); setEditDraft(null); }}>Cancelar</button>
@@ -330,7 +345,7 @@ export function AdminCortisolPanel({ clientId }: { clientId: string }) {
                       ) : (
                         <>
                           <div style={{ flex: 1 }}>
-                            <strong>{t.title}</strong> {t.type && <Badge label={t.type} />}
+                            <strong>{t.title}</strong> {t.type && <Badge label={t.type} />} {t.isRitual && <Badge label="Rox Ritual" />}
                             {emotionLabel(t.emotion) && (
                               <span
                                 style={{

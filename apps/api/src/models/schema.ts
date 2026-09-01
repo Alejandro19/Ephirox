@@ -405,6 +405,10 @@ export const cortisolTechniques = pgTable('cortisol_techniques', {
   // Aviso de precaución/contraindicación visible en el cliente — sobre todo
   // para "Exposición Controlada" (frío/calor), disponible para cualquier tipo.
   precautionNote: text('precaution_note'),
+  // "The Rox Ritual" (bloque fijo de 3 rituales en Stress) reutiliza el
+  // reproductor/registro de técnicas existente en vez de un sistema nuevo —
+  // este flag es lo único que distingue a una técnica-ritual del resto.
+  isRitual: boolean('is_ritual').notNull().default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 }, (table) => ({
   clientIdIdx: index('cortisol_techniques_client_id_idx').on(table.clientId),
@@ -437,10 +441,49 @@ export const cortisolTips = pgTable('cortisol_tips', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 });
 
+// Check-in matutino de autorreporte (Stress) — reemplaza la fuente
+// inexistente de "Cortisol AM". 3 preguntas 1-5 (energía/tensión/claridad),
+// una vez por día por cliente; activacionMatutina es el score derivado
+// (0-10), calculado y guardado en el momento del check-in (ver
+// morning-checkin.service.ts). Un día sin respuesta no tiene fila — nunca
+// se rellena con un valor por defecto ni se repite el último.
+export const morningCheckins = pgTable('morning_checkins', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  clientId: uuid('client_id').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+  fecha: date('fecha').notNull(),
+  energia: integer('energia').notNull(),
+  tension: integer('tension').notNull(),
+  claridad: integer('claridad').notNull(),
+  activacionMatutina: numeric('activacion_matutina', { precision: 4, scale: 2 }).notNull().$type<number>(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (table) => ({
+  clientIdIdx: index('morning_checkins_client_id_idx').on(table.clientId),
+  clientFechaUnique: unique('morning_checkins_client_id_fecha_unique').on(table.clientId, table.fecha),
+}));
+
+// Carga Cognitiva diaria (Stress) — score 0-10 calculado por el job
+// nocturno (cognitive-load.service.ts) a partir de HRV/Activación Matutina/
+// Recuperación%/Sleep score. El umbral sostenible (percentil 75) y el
+// contador de días consecutivos por encima se calculan en LECTURA a partir
+// de esta tabla — no se guardan aparte, para no arriesgar un umbral
+// cacheado desincronizado del historial real.
+export const cognitiveLoadHistory = pgTable('cognitive_load_history', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  clientId: uuid('client_id').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+  fecha: date('fecha').notNull(),
+  score: numeric('score', { precision: 4, scale: 2 }).notNull().$type<number>(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (table) => ({
+  clientIdIdx: index('cognitive_load_history_client_id_idx').on(table.clientId),
+  clientFechaUnique: unique('cognitive_load_history_client_id_fecha_unique').on(table.clientId, table.fecha),
+}));
+
 export type CortisolTechnique = typeof cortisolTechniques.$inferSelect;
 export type CortisolCompletion = typeof cortisolCompletions.$inferSelect;
 export type CortisolCheckin = typeof cortisolCheckins.$inferSelect;
 export type CortisolTip = typeof cortisolTips.$inferSelect;
+export type MorningCheckin = typeof morningCheckins.$inferSelect;
+export type CognitiveLoadRow = typeof cognitiveLoadHistory.$inferSelect;
 
 export const nutritionTips = pgTable('nutrition_tips', {
   id: uuid('id').primaryKey().defaultRandom(),

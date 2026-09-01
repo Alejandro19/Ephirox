@@ -35,6 +35,7 @@ export type CortisolTechnique = {
   audioName: string | null;
   emotion: string | null;
   precautionNote: string | null;
+  isRitual: boolean;
 };
 
 export type CortisolTip = { id: string; content: string } | null;
@@ -54,6 +55,7 @@ export type CortisolTechniquePatch = {
   audio_name?: null;
   emotion?: string | null;
   precaution_note?: string | null;
+  is_ritual?: boolean;
 };
 
 export async function listTechniques(clientId: string): Promise<CortisolTechnique[]> {
@@ -128,4 +130,46 @@ export async function postCheckin(clientId: string, emotion: string): Promise<Co
   const body = await authorizedRequest<{ success: boolean; checkin: CortisolCheckin; error?: string }>(`/api/clients/${clientId}/cortisol-checkin`, 'POST', { emotion });
   if (!body.success) throw new Error(body.error || 'Error al guardar el check-in.');
   return body.checkin;
+}
+
+// Check-in matutino de autorreporte (reemplaza la fuente inexistente de
+// "Cortisol AM") — energía/tensión/claridad 1-5, una vez por día.
+export type MorningCheckin = {
+  id: string;
+  fecha: string;
+  energia: number;
+  tension: number;
+  claridad: number;
+  activacionMatutina: number;
+} | null;
+
+export async function getTodayMorningCheckin(clientId: string): Promise<MorningCheckin> {
+  const body = await authorizedRequest<{ success: boolean; checkin: MorningCheckin; error?: string }>(`/api/clients/${clientId}/morning-checkin/today`, 'GET');
+  if (!body.success) throw new Error(body.error || 'Error al obtener el check-in matutino.');
+  return body.checkin;
+}
+
+export async function postMorningCheckin(clientId: string, input: { energia: number; tension: number; claridad: number }): Promise<MorningCheckin> {
+  const body = await authorizedRequest<{ success: boolean; checkin: MorningCheckin; error?: string }>(`/api/clients/${clientId}/morning-checkin`, 'POST', input);
+  if (!body.success) throw new Error(body.error || 'Error al guardar el check-in matutino.');
+  return body.checkin;
+}
+
+// Carga Cognitiva diaria — puntaje de hoy (si ya corrió el job nocturno),
+// tendencia de 14 días, umbral sostenible personalizado y racha/alerta.
+export type CognitiveLoadOverview = {
+  today: number | null;
+  trend: Array<{ fecha: string; score: number }>;
+  threshold: number | null;
+  consecutiveDaysOverThreshold: number;
+  alert: boolean;
+  alertStreakThreshold: number;
+  latest: { hrv: number | null; activacionMatutina: number | null; recuperacionPct: number | null };
+};
+
+export async function getCognitiveLoadOverview(clientId: string): Promise<CognitiveLoadOverview> {
+  const body = await authorizedRequest<CognitiveLoadOverview & { success: boolean; error?: string }>(`/api/clients/${clientId}/cognitive-load`, 'GET');
+  if (!body.success) throw new Error(body.error || 'Error al obtener la carga cognitiva.');
+  const { success: _success, error: _error, ...overview } = body;
+  return overview;
 }

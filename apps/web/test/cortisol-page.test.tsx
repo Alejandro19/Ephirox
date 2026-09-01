@@ -13,6 +13,16 @@ vi.mock('../lib/cortisol-client', () => ({
   listCompletions: vi.fn().mockResolvedValue([]),
   getTipOfTheDay: vi.fn().mockResolvedValue(null),
   getTodayCheckin: vi.fn().mockResolvedValue(null),
+  getTodayMorningCheckin: vi.fn().mockResolvedValue({ id: 'mc1', fecha: '2026-08-02', energia: 3, tension: 3, claridad: 3, activacionMatutina: 6 }),
+  getCognitiveLoadOverview: vi.fn().mockResolvedValue({
+    today: null,
+    trend: [],
+    threshold: null,
+    consecutiveDaysOverThreshold: 0,
+    alert: false,
+    alertStreakThreshold: 3,
+    latest: { hrv: null, activacionMatutina: null, recuperacionPct: null },
+  }),
 }));
 
 describe('CortisolPage', () => {

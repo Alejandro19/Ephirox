@@ -25,6 +25,11 @@ function toTechniqueFields(input: CortisolTechniqueInput) {
     youtubeUrl: input.youtube_url ?? null,
     emotion: input.emotion ?? null,
     precautionNote: input.precaution_note ?? null,
+    // Omitido (no `?? false`) cuando no viene en el input: en create() la
+    // columna cae a su default (false); en update() de un PATCH parcial,
+    // `?? false` habría apagado el flag de ritual cada vez que se edita
+    // cualquier otro campo sin volver a marcar el checkbox.
+    ...(input.is_ritual !== undefined ? { isRitual: input.is_ritual } : {}),
   };
 }
 

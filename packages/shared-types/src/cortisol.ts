@@ -30,8 +30,20 @@ export const CortisolTechniqueInputSchema = z.object({
   // Aviso visible de precaución/contraindicación — relevante sobre todo para
   // "Exposición Controlada" (frío/calor), pero disponible para cualquier tipo.
   precaution_note: z.string().nullable().optional(),
+  // "The Rox Ritual" (bloque fijo de 3 rituales en Stress) reutiliza esta
+  // misma tabla — is_ritual es lo único que distingue a una técnica-ritual.
+  is_ritual: z.boolean().optional(),
 });
 export type CortisolTechniqueInput = z.infer<typeof CortisolTechniqueInputSchema>;
+
+// Check-in matutino de autorreporte (reemplaza la fuente inexistente de
+// "Cortisol AM") — 3 preguntas 1-5, ver Prompt 02 §5 parte 1.
+export const MorningCheckinInputSchema = z.object({
+  energia: z.coerce.number().int().min(1).max(5),
+  tension: z.coerce.number().int().min(1).max(5),
+  claridad: z.coerce.number().int().min(1).max(5),
+});
+export type MorningCheckinInput = z.infer<typeof MorningCheckinInputSchema>;
 
 export const CortisolCheckinInputSchema = z.object({
   emotion: CortisolEmotionSchema,

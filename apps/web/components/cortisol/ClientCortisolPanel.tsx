@@ -9,9 +9,15 @@ import {
   getTodayCheckin,
   postCheckin,
   getTipOfTheDay,
+  getTodayMorningCheckin,
+  postMorningCheckin,
+  getCognitiveLoadOverview,
   type CortisolTechnique,
   type CortisolCompletion,
 } from '../../lib/cortisol-client';
+import { MorningCheckinPrompt } from './MorningCheckinPrompt';
+import { CognitiveLoadSection } from './CognitiveLoadSection';
+import { RoxRitualSection } from './RoxRitualSection';
 import { youtubeEmbedUrl } from '../../lib/training-timer-logic';
 import { CORTISOL_EMOTIONS, CORTISOL_RECOMMENDATIONS, calculateCortisolWeeklyStats } from '../../lib/cortisol-logic';
 import { NEUROWELLNESS_TECHNIQUE_TYPES } from '@latribu/shared-types';
@@ -182,13 +188,15 @@ function TechniqueList({
 }
 
 async function fetchCortisolBundle(clientId: string) {
-  const [techniques, completions, tip, checkin] = await Promise.all([
+  const [techniques, completions, tip, checkin, morningCheckin, cognitiveLoad] = await Promise.all([
     listTechniques(clientId),
     listCompletions(clientId).catch(() => [] as CortisolCompletion[]),
     getTipOfTheDay(clientId),
     getTodayCheckin(clientId),
+    getTodayMorningCheckin(clientId),
+    getCognitiveLoadOverview(clientId),
   ]);
-  return { techniques, completions, tip, checkin };
+  return { techniques, completions, tip, checkin, morningCheckin, cognitiveLoad };
 }
 
 export function ClientCortisolPanel({ clientId, clientType }: { clientId: string; clientType?: string | null }) {
@@ -206,6 +214,14 @@ export function ClientCortisolPanel({ clientId, clientType }: { clientId: string
     } catch (e) {
       setActionError((e as Error).message);
     }
+  }
+
+  async function handleMorningCheckin(input: { energia: number; tension: number; claridad: number }) {
+    const saved = await postMorningCheckin(clientId, input);
+    // La Carga Cognitiva de hoy depende del check-in matutino, pero el score
+    // recién se calcula en el job nocturno — se revalida el resto del bundle
+    // (por si acaso) sin fingir un valor de "hoy" que todavía no existe.
+    await mutate((current) => (current ? { ...current, morningCheckin: saved } : current), { revalidate: false });
   }
 
   async function handleComplete(techniqueId: string) {
@@ -248,7 +264,7 @@ export function ClientCortisolPanel({ clientId, clientType }: { clientId: string
   }
   if (!data) return null;
 
-  const { techniques, completions, tip, checkin } = data;
+  const { techniques, completions, tip, checkin, morningCheckin, cognitiveLoad } = data;
   const active = activeId ? techniques.find((t) => t.id === activeId) : null;
   if (active) {
     const todayStr = new Date().toISOString().slice(0, 10);
@@ -280,10 +296,13 @@ export function ClientCortisolPanel({ clientId, clientType }: { clientId: string
   const isNeurowellnessType = (type: string | null) => !!type && (NEUROWELLNESS_TECHNIQUE_TYPES as readonly string[]).includes(type);
   const neurowellnessTechniques = techniques.filter((t) => isNeurowellnessType(t.type));
   const generalTechniques = techniques.filter((t) => !isNeurowellnessType(t.type));
+  const ritualTechniques = techniques.filter((t) => t.isRitual);
 
   return (
     <div>
       {header}
+
+      {!morningCheckin && <div className="mb-5"><MorningCheckinPrompt onSubmit={handleMorningCheckin} /></div>}
       {clientType === 'mentoring' && <InsightsSection clientId={clientId} moduleKey="cortisol" />}
 
       <div className="mb-5 border p-6" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface)' }}>
@@ -381,12 +400,16 @@ export function ClientCortisolPanel({ clientId, clientType }: { clientId: string
       )}
 
       {tip && (
-        <div className="border p-[18px_20px]" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface-2)' }}>
+        <div className="mb-5 border p-[18px_20px]" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface-2)' }}>
           <p className="m-0 font-body text-xs" style={{ color: 'var(--eph-muted)' }}>
             <strong style={{ color: 'var(--eph-text)' }}>Sabías que</strong> {tip.content}
           </p>
         </div>
       )}
+
+      <CognitiveLoadSection overview={cognitiveLoad} />
+      <RoxRitualSection rituals={ritualTechniques} onStart={setActiveId} />
+
       <ProtocolDisclaimerFooter />
     </div>
   );
