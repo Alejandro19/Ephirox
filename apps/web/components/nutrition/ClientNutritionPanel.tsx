@@ -9,7 +9,6 @@ import { listActiveRecipes, type Recipe } from '../../lib/recipes-client';
 import { PermissionDeniedError } from '../../lib/api-client';
 import { pickMantra } from '../../lib/mantra-bank';
 import IdentityHeader from '../ui/IdentityHeader';
-import RingProgress from '../ui/RingProgress';
 import MetricValue from '../ui/MetricValue';
 import LockedBenefit from '../ui/LockedBenefit';
 import { ProtocolDisclaimerFooter } from '../ui/ProtocolDisclaimerFooter';
@@ -65,23 +64,20 @@ function MealBlock({ meal, isFirst }: { meal: MenuMeal; isFirst: boolean }) {
   );
 }
 
-// % de las kcal diarias que aporta cada macro (prot×4 / carb×4 / grasa×9),
-// no progreso consumido — registrar comidas del día no existe hoy en el
-// sistema. Si no hay dailyCals asignado, se usa la suma de kcal de las
-// macros como referencia para no mostrar 0% de forma engañosa.
-function macroKcalPct(grams: number | null | undefined, kcalPerGram: number, totalKcal: number): number {
-  if (!totalKcal || grams == null) return 0;
-  return Math.round(((grams * kcalPerGram) / totalKcal) * 100);
-}
-
-function MacroRing({ grams, pct, label }: { grams: number | null | undefined; pct: number; label: string }) {
+// Tira de macros (spec Prompt 02 §2). Sin barra de "meta" real: el plan solo
+// guarda el gramaje que el mentor asignó, no un objetivo separado ni datos
+// de consumo del día — un riel o estado "en rango" fingirían un progreso
+// que no existe. La franja dorada queda fija (acento visual, no medición).
+// Sin macro de Agua: no hay ningún campo de hidratación en NutritionPlan.
+function MacroCard({ label, value, unit }: { label: string; value: number | null | undefined; unit: string }) {
   return (
-    <RingProgress value={pct} size={68} strokeWidth={6} color="espresso" trackColor="var(--eph-line-2)">
-      <div className="flex flex-col items-center justify-center">
-        <MetricValue value={grams ?? '-'} unit={grams != null ? 'G' : undefined} size="kpi" />
-        <span className="mt-0.5 text-[9px] uppercase tracking-wide" style={{ color: 'var(--eph-muted)' }}>{label}</span>
+    <div style={{ background: 'var(--eph-surface)', padding: '28px 26px', display: 'grid', gap: 20, alignContent: 'start' }}>
+      <span className="font-mono" style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--eph-steel)' }}>{label}</span>
+      <MetricValue value={value ?? '—'} unit={value != null ? unit : undefined} size="kpi" />
+      <div style={{ height: 2, background: 'var(--eph-line-2)' }}>
+        <div style={{ height: '100%', background: 'var(--eph-accent)' }} />
       </div>
-    </RingProgress>
+    </div>
   );
 }
 
@@ -345,38 +341,18 @@ export function ClientNutritionPanel({ clientId, clientType }: { clientId: strin
     );
   }
 
-  const totalKcal = plan.dailyCals || (plan.proteinG ?? 0) * 4 + (plan.carbsG ?? 0) * 4 + (plan.fatG ?? 0) * 9;
-  const proteinPct = macroKcalPct(plan.proteinG, 4, totalKcal);
-  const carbsPct = macroKcalPct(plan.carbsG, 4, totalKcal);
-  const fatPct = macroKcalPct(plan.fatG, 9, totalKcal);
-
   return (
     <div>
       {header}
       {insights}
 
       <div
-        className="relative mt-8 mb-6 overflow-hidden rounded-[0] p-7"
-        style={{ background: 'var(--eph-surface)', color: 'var(--eph-text)' }}
+        className="mt-8 mb-6 grid"
+        style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 230px), 1fr))', gap: 1, background: 'var(--eph-line-2)', border: '1px solid var(--eph-line-2)' }}
       >
-        <div
-          className="pointer-events-none absolute -right-10 -top-10 h-[180px] w-[180px] rounded-full"
-          style={{ background: 'radial-gradient(circle, color-mix(in srgb, var(--eph-accent) 18%, transparent) 0%, transparent 70%)' }}
-        />
-        <div className="relative z-10 mb-5 flex items-center justify-between gap-3">
-          <p className="font-mono text-[10px] font-normal uppercase tracking-[0.14em]" style={{ color: 'var(--eph-accent)' }}>
-            Tu objetivo · hoy
-          </p>
-          {plan.dailyCals ? (
-            <p className="text-[13px] font-semibold" style={{ color: 'var(--eph-muted)' }}>{plan.dailyCals} kcal/día</p>
-          ) : null}
-        </div>
-        <p className="relative z-10 mb-6 font-display text-xl font-normal">Meta nutricional diaria</p>
-        <div className="relative z-10 flex flex-wrap items-center justify-center gap-6 sm:justify-start">
-          <MacroRing grams={plan.proteinG} pct={proteinPct} label="Prot" />
-          <MacroRing grams={plan.carbsG} pct={carbsPct} label="Carbs" />
-          <MacroRing grams={plan.fatG} pct={fatPct} label="Grasa" />
-        </div>
+        <MacroCard label="Proteína" value={plan.proteinG} unit="G" />
+        <MacroCard label="Carbohidrato" value={plan.carbsG} unit="G" />
+        <MacroCard label="Grasa" value={plan.fatG} unit="G" />
       </div>
 
       <section className="rounded-[0] border border-[var(--eph-line)] bg-[var(--eph-surface)] p-6 mb-5">

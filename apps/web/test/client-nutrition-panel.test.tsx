@@ -31,12 +31,12 @@ describe('ClientNutritionPanel', () => {
     });
     vi.mocked(supplementsClient.listSupplements).mockResolvedValue([]);
     render(<ClientNutritionPanel clientId="client-1" />);
-    await waitFor(() => expect(screen.getAllByText(/2200/).length).toBeGreaterThan(0));
+    await waitFor(() => expect(screen.getAllByText('160').length).toBeGreaterThan(0));
     expect(screen.getAllByText('Desayuno').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Avena').length).toBeGreaterThan(0);
   });
 
-  it('shows the unified "Meta nutricional diaria" hero and no longer the duplicated tiles section', async () => {
+  it('shows the 3 macro cards (Proteína/Carbohidrato/Grasa) and no fabricated goal, water card, or old hero', async () => {
     vi.mocked(nutritionClient.getNutrition).mockResolvedValue({
       plan: {
         dailyCals: 2200,
@@ -49,9 +49,16 @@ describe('ClientNutritionPanel', () => {
     });
     vi.mocked(supplementsClient.listSupplements).mockResolvedValue([]);
     render(<ClientNutritionPanel clientId="client-1" />);
-    expect(await screen.findByText('Meta nutricional diaria')).toBeInTheDocument();
-    expect(screen.getByText('Tu objetivo · hoy')).toBeInTheDocument();
-    expect(screen.queryByText('Tu objetivo nutricional')).not.toBeInTheDocument();
+    expect(await screen.findByText('Proteína')).toBeInTheDocument();
+    expect(screen.getByText('Carbohidrato')).toBeInTheDocument();
+    expect(screen.getByText('Grasa')).toBeInTheDocument();
+    expect(screen.getByText('160')).toBeInTheDocument();
+    expect(screen.getByText('220')).toBeInTheDocument();
+    expect(screen.getByText('60')).toBeInTheDocument();
+    // Ningún macro de Agua (no existe el dato) ni la vieja meta/hero fabricados.
+    expect(screen.queryByText('Agua')).not.toBeInTheDocument();
+    expect(screen.queryByText('Meta nutricional diaria')).not.toBeInTheDocument();
+    expect(screen.queryByText('Tu objetivo · hoy')).not.toBeInTheDocument();
   });
 
   it('shows the "Tips and tricks" section with the active tips from the admin-managed library', async () => {
