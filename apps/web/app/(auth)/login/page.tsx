@@ -410,7 +410,7 @@ export default function LoginPage(): React.ReactElement {
               className="font-mono text-center"
               style={{ fontSize: 9, letterSpacing: '0.22em', textTransform: 'uppercase', color: FORM_INK_MUTED, lineHeight: 2.1, marginTop: 8 }}
             >
-              Sistema de Optimización Ejecutiva<br />Acceso por invitación · MMXXVI
+              Sistema de Optimización Ejecutiva
             </div>
           </div>
 
@@ -418,19 +418,12 @@ export default function LoginPage(): React.ReactElement {
           {/* --eph-auth (carbón) en vez del mismo fondo que el panel de marca
               — así se lee como una pieza aparte, con su propio hairline. */}
           <div className="p-12 flex flex-col justify-center gap-[30px]" style={{ background: 'var(--eph-auth)', borderLeft: '1px solid var(--eph-line-2)' }}>
-            {view === 'forgot' ? (
+            {/* Vista de login: sin título propio — el panel arranca directo en
+                el campo Email, centrado en vertical (prototipo aprobado). */}
+            {view === 'forgot' && (
               <h2 className="font-display text-[28px] font-normal" style={{ color: 'var(--eph-text)' }}>
                 Recuperar contraseña
               </h2>
-            ) : (
-              <div>
-                <div className="font-display" style={{ fontWeight: 300, fontSize: 38, lineHeight: 1.1, color: 'var(--eph-text)' }}>
-                  Acceso reservado
-                </div>
-                <div className="font-body" style={{ fontSize: 16, color: 'var(--eph-body)', marginTop: 12 }}>
-                  Solo miembros activos. Tu credencial es personal e intransferible.
-                </div>
-              </div>
             )}
 
             {view === 'forgot' ? (

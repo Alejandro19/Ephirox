@@ -8,55 +8,58 @@ type BrandRingProps = {
   background?: string;
 };
 
-// Sello "anillo abierto": dos arcos concéntricos desalineados (cada uno con
-// un hueco propio vía stroke-dasharray) + un punto central bronce — la marca
-// Ephirox definitiva. Sin degradados ni relleno: solo trazo fino monocromo,
-// acorde a la identidad reservada/precisa (nunca el anillo multicolor de
-// wellness genérico de la marca anterior).
-//
-// El color se fija por CSS (style, var(--eph-accent)), nunca por atributo de
-// presentación — así el isotipo hereda el tema (spec §4.1) y queda idéntico
-// píxel a píxel entre los 3 temas salvo el color del trazo.
-export default function BrandRing({ size = 24 }: BrandRingProps) {
-  const c = size / 2;
-  const strokeOuter = Math.max(1, size * 0.045);
-  const strokeInner = Math.max(1, size * 0.035);
-  const rOuter = c - strokeOuter * 1.4;
-  const rInner = rOuter - size * 0.16;
-  const circOuter = 2 * Math.PI * rOuter;
-  const circInner = 2 * Math.PI * rInner;
-  const dotRadius = size * 0.05;
+type RingConfig = { strokeWidth: number; dotR: number; showInner: boolean };
 
+// Tabla exacta del isotipo (spec Prompt 02 §1.1, "no negociable"): a menor
+// tamaño el trazo engrosa y se pierde el anillo interior (legibilidad) —
+// nunca al revés. r=62/47/4 y los dasharray/rotate son fijos en las 132
+// unidades del viewBox; solo cambian por tamaño el grosor del trazo, el
+// radio del punto y si el anillo interior se muestra.
+function ringConfig(size: number): RingConfig {
+  if (size >= 100) return { strokeWidth: 1.4, dotR: 4, showInner: true }; // Login (118)
+  if (size >= 55) return { strokeWidth: 1.6, dotR: 5, showInner: true }; // Header de app (74)
+  if (size >= 33) return { strokeWidth: 3, dotR: 6, showInner: false }; // Membresía / documento (34)
+  return { strokeWidth: 4, dotR: 7, showInner: false }; // Ícono de app / favicon (24–40)
+}
+
+// Sello "anillo abierto": dos arcos concéntricos de trazo fino, cada uno
+// con su propia abertura (stroke-dasharray) y rotados en direcciones
+// opuestas, más un punto central — la marca Ephirox definitiva. Sin
+// relleno, sin glow, sin degradado detrás, sin puntas redondeadas.
+//
+// Dos tonos, nunca uno: el anillo exterior va en --eph-accent (oro); el
+// interior NUNCA en oro — va en --eph-faint (--tx4, ya semitransparente),
+// visiblemente más apagado. Ese contraste entre anillos es la marca; con
+// un solo tono el logo se vuelve genérico.
+//
+// El color se fija por CSS (style, var(--eph-*)), nunca por atributo de
+// presentación — así el isotipo hereda el tema (spec §4.1) y queda
+// idéntico píxel a píxel entre los 3 temas salvo el color del trazo.
+export default function BrandRing({ size = 24 }: BrandRingProps) {
+  const { strokeWidth, dotR, showInner } = ringConfig(size);
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox={`0 0 ${size} ${size}`}
-      aria-hidden="true"
-      focusable="false"
-      style={{ flexShrink: 0 }}
-    >
+    <svg width={size} height={size} viewBox="0 0 132 132" fill="none" aria-label="Ephirox" style={{ flexShrink: 0 }}>
       <circle
-        cx={c}
-        cy={c}
-        r={rOuter}
-        fill="none"
+        cx={66}
+        cy={66}
+        r={62}
         style={{ stroke: "var(--eph-accent)" }}
-        strokeWidth={strokeOuter}
-        strokeDasharray={`${circOuter * 0.86} ${circOuter * 0.14}`}
-        transform={`rotate(-90 ${c} ${c})`}
+        strokeWidth={strokeWidth}
+        strokeDasharray="330 60"
+        transform="rotate(-58 66 66)"
       />
-      <circle
-        cx={c}
-        cy={c}
-        r={rInner}
-        fill="none"
-        style={{ stroke: "var(--eph-accent)" }}
-        strokeWidth={strokeInner}
-        strokeDasharray={`${circInner * 0.78} ${circInner * 0.22}`}
-        transform={`rotate(70 ${c} ${c})`}
-      />
-      <circle cx={c} cy={c} r={dotRadius} style={{ fill: "var(--eph-accent)" }} />
+      {showInner && (
+        <circle
+          cx={66}
+          cy={66}
+          r={47}
+          style={{ stroke: "var(--eph-faint)" }}
+          strokeWidth={strokeWidth}
+          strokeDasharray="250 45"
+          transform="rotate(122 66 66)"
+        />
+      )}
+      <circle cx={66} cy={66} r={dotR} style={{ fill: "var(--eph-accent)" }} />
     </svg>
   );
 }
