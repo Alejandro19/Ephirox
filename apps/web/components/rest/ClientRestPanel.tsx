@@ -108,7 +108,7 @@ function SyncHero({ latest, ultimaSync }: { latest: WearableMetrica | null; ulti
       </div>
 
       <div className="relative z-10 mb-1 flex items-start justify-between gap-3">
-        <p className="eph-num font-display text-4xl leading-none">{latest.suenoScore ?? '—'}</p>
+        <MetricValue value={latest.suenoScore ?? '—'} size="index" />
         <MetricValue value={formatMinutesDuration(totalMin)} unit="H" size="secondary" />
       </div>
       <div className="relative z-10 mb-5 flex items-start justify-between gap-3">

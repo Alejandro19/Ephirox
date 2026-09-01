@@ -40,7 +40,7 @@ const jost = Jost({
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
-  weight: ["300", "400", "500"],
+  weight: ["300", "400"],
   variable: "--font-jetbrains-mono",
   display: "swap",
 });

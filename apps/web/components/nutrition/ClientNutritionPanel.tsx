@@ -10,6 +10,7 @@ import { PermissionDeniedError } from '../../lib/api-client';
 import { pickMantra } from '../../lib/mantra-bank';
 import IdentityHeader from '../ui/IdentityHeader';
 import RingProgress from '../ui/RingProgress';
+import MetricValue from '../ui/MetricValue';
 import LockedBenefit from '../ui/LockedBenefit';
 import { ProtocolDisclaimerFooter } from '../ui/ProtocolDisclaimerFooter';
 import { IconFileDownload } from '../ui/icons';
@@ -77,10 +78,7 @@ function MacroRing({ grams, pct, label }: { grams: number | null | undefined; pc
   return (
     <RingProgress value={pct} size={68} strokeWidth={6} color="espresso" trackColor="var(--eph-line-2)">
       <div className="flex flex-col items-center justify-center">
-        <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 3 }}>
-          <span className="eph-num-mono font-mono text-[14px] font-normal leading-none" style={{ color: 'var(--eph-text)' }}>{grams ?? '-'}</span>
-          <span className="font-mono" style={{ fontSize: 8, textTransform: 'uppercase', letterSpacing: '0.14em', color: 'var(--eph-muted)' }}>G</span>
-        </span>
+        <MetricValue value={grams ?? '-'} unit={grams != null ? 'G' : undefined} size="kpi" />
         <span className="mt-0.5 text-[9px] uppercase tracking-wide" style={{ color: 'var(--eph-muted)' }}>{label}</span>
       </div>
     </RingProgress>

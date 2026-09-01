@@ -16,7 +16,7 @@ export function WellnessIndexHero({ index }: { index: number | null }) {
     >
       <RingProgress value={index ?? 0} size={88} strokeWidth={2}>
         <div className="flex flex-col items-center justify-center">
-          <span className="eph-num font-display text-[44px] font-normal leading-none">{index != null ? index : '—'}</span>
+          <MetricValue value={index != null ? index : '—'} size="index" />
           <span className="font-mono text-[9px]" style={{ color: 'var(--eph-muted)' }}>/ 100</span>
         </div>
       </RingProgress>
@@ -101,7 +101,7 @@ export function BienestarGeneral({
             <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: 'var(--eph-steel)' }} />
             Sleep
           </p>
-          <p className="eph-num font-display text-2xl font-normal" style={{ color: 'var(--eph-text)' }}>{sleepAvg ?? '—'}</p>
+          <MetricValue value={sleepAvg ?? '—'} size="secondary" />
           <p className="mt-0.5 font-body text-[10.5px]" style={{ color: 'var(--eph-muted)' }}>Calidad de sueño promedio</p>
           <TrendChip delta={sleepDelta} unit="" status={sleepStatus} comparisonLabel="vs mes pasado" />
         </div>
@@ -110,7 +110,7 @@ export function BienestarGeneral({
             <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: 'var(--eph-accent)' }} />
             Stress
           </p>
-          <p className="eph-num font-display text-2xl font-normal" style={{ color: 'var(--eph-text)' }}>{weeklyRegulation ?? '—'}</p>
+          <MetricValue value={weeklyRegulation ?? '—'} size="secondary" />
           <p className="mt-0.5 font-body text-[10.5px]" style={{ color: 'var(--eph-muted)' }}>Momentos de regulación esta semana</p>
           <TrendChip delta={cortisolDelta} unit="" status={cortisolStatus} comparisonLabel="vs mes pasado" />
         </div>
@@ -167,11 +167,7 @@ export function EvolutionKpiCard({
   return (
     <div className="border p-4 text-center" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface-2)' }}>
       <KpiIcon metrica={metrica} />
-      {value != null ? (
-        <MetricValue value={value} unit={unit.toUpperCase()} size="secondary" />
-      ) : (
-        <p className="eph-num font-display text-[32px] font-normal" style={{ color: 'var(--eph-text)' }}>—</p>
-      )}
+      <MetricValue value={value ?? '—'} unit={value != null ? unit.toUpperCase() : undefined} size="secondary" />
       <p className="my-1 font-mono text-[9.5px] uppercase tracking-[0.08em]" style={{ color: 'var(--eph-muted)' }}>{label}</p>
       <TrendChip delta={delta} unit={unit} status={status} comparisonLabel={comparisonLabel} />
     </div>
@@ -200,7 +196,7 @@ export function AdherenciaKpiCard({
     <div className="mb-5 flex items-center gap-4 border p-6" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface)' }}>
       <RingProgress value={hasSessions ? pct : 0} size={64} strokeWidth={2}>
         <div className="flex flex-col items-center justify-center">
-          <span className="eph-num-mono font-mono text-base font-normal leading-none">{hasSessions ? `${pct}%` : '—'}</span>
+          <MetricValue value={hasSessions ? pct : '—'} unit={hasSessions ? '%' : undefined} size="secondary" />
           <span className="font-mono text-[7px]" style={{ color: 'var(--eph-muted)' }}>ESTE MES</span>
         </div>
       </RingProgress>
@@ -224,7 +220,7 @@ export function MedidaTile({ label, value, firstValue }: { label: string; value:
   const delta = value != null && firstValue != null ? Number(value) - Number(firstValue) : null;
   return (
     <div className="border p-3 text-center" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface-2)' }}>
-      <p className="eph-num font-display text-base font-normal" style={{ color: 'var(--eph-text)' }}>{value ?? '—'}</p>
+      <MetricValue value={value ?? '—'} size="secondary" />
       <p className="my-0.5 font-mono text-[9px] uppercase tracking-[0.06em]" style={{ color: 'var(--eph-muted)' }}>{label}</p>
       {delta != null && (
         <span className="font-mono text-[10px]" style={{ color: 'var(--eph-muted)' }}>
@@ -290,7 +286,7 @@ export function CompositionDonut({
           })}
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="eph-num-mono font-mono text-[15px] font-normal text-[var(--eph-text)]">{peso}<span style={{ fontSize: 9, letterSpacing: '0.1em', color: 'var(--eph-muted)' }}> KG</span></span>
+          <MetricValue value={peso} unit="KG" size="secondary" />
           <span className="text-[8px] uppercase text-[var(--eph-muted)]">Total</span>
         </div>
       </div>
