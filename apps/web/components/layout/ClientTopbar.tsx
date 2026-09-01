@@ -8,6 +8,7 @@ import { CLIENT_NAV, VIEW_TO_PATH, type AppState } from "../../lib/constants";
 import { getModuleAccessState } from "../../lib/module-access";
 import NotificationBell from "./NotificationBell";
 import ThemeToggle from "./ThemeToggle";
+import { useThemeMode } from "./ThemeRoot";
 import BrandRing from "../ui/BrandRing";
 import { CrownBadge } from "../ui/CrownBadge";
 import { ModuleExpiredModal } from "./ModuleExpiredModal";
@@ -43,10 +44,45 @@ function AccountMenuRow({ icon, label, onClick }: { icon: React.ReactNode; label
   );
 }
 
+// Acceso directo de logout en la cabecera (spec §7.4) — mismo tratamiento
+// fantasma que la campana (34×34, borde solo en hover). No reemplaza el
+// "Cerrar sesión" del menú de la cuenta, solo agrega un atajo.
+function HeaderLogoutButton({ onClick }: { onClick: () => void }) {
+  const [hover, setHover] = useState(false);
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      aria-label="Cerrar sesión"
+      style={{
+        width: 34,
+        height: 34,
+        background: "transparent",
+        border: `1px solid ${hover ? "var(--eph-line-2)" : "transparent"}`,
+        borderRadius: "50%",
+        cursor: "pointer",
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        color: hover ? "var(--eph-text)" : "var(--eph-body)",
+        transition: "color 180ms ease, border-color 180ms ease",
+      }}
+    >
+      <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.3} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14.2 4.6H18a1.4 1.4 0 0 1 1.4 1.4v12a1.4 1.4 0 0 1-1.4 1.4h-3.8" />
+        <path d="M9.6 8.4 5.4 12l4.2 3.6M5.4 12h9" />
+      </svg>
+    </button>
+  );
+}
+
 export default function ClientTopbar({ viewKey }: ClientTopbarProps) {
   const router = useRouter();
   const { user, clientType, onboardingComplete, moduleAccess, planExpired, logout } = useAuth();
   const { t } = useTranslation();
+  const { isBrandLocked } = useThemeMode();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [expiredModalOpen, setExpiredModalOpen] = useState(false);
@@ -180,11 +216,11 @@ export default function ClientTopbar({ viewKey }: ClientTopbarProps) {
           })}
         </nav>
 
-        <div className="client-topbar-actions" style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0, marginLeft: "auto" }}>
+        <div className="client-topbar-actions" style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0, marginLeft: "auto" }}>
           <ThemeToggle />
-          <span className="bell-circle">
-            <NotificationBell />
-          </span>
+          {!isBrandLocked && <span style={{ width: 1, height: 20, background: "var(--eph-line-2)", margin: "0 2px" }} />}
+          <NotificationBell />
+          <HeaderLogoutButton onClick={logout} />
           <div ref={accountRef} style={{ position: "relative" }}>
             <button
               onClick={() => setAccountOpen((v) => !v)}
@@ -341,15 +377,6 @@ export default function ClientTopbar({ viewKey }: ClientTopbarProps) {
         }
         .client-nav-row::-webkit-scrollbar {
           display: none;
-        }
-        .bell-circle {
-          display: flex; align-items: center; justify-content: center;
-          width: 32px; height: 32px; border-radius: 50%;
-          border: 1px solid var(--eph-line-2);
-          transition: border-color 0.15s ease;
-        }
-        .bell-circle:hover {
-          border-color: var(--eph-accent);
         }
         .client-drawer {
           transform: translateX(100%);

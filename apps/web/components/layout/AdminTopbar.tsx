@@ -178,9 +178,10 @@ export default function AdminTopbar({ viewKey }: AdminTopbarProps) {
         </nav>
 
         <div className="admin-topbar-actions" style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0, marginLeft: "auto" }}>
-          <span className="bell-circle">
-            <NotificationBell />
-          </span>
+          {/* NotificationBell ya trae su propio botón fantasma 34×34 (spec
+              §7.3) — el círculo con borde permanente que había acá quedó
+              redundante/duplicado y se quitó. */}
+          <NotificationBell />
           <div ref={accountRef} style={{ position: "relative" }}>
             <button
               onClick={() => setAccountOpen((v) => !v)}
@@ -326,15 +327,6 @@ export default function AdminTopbar({ viewKey }: AdminTopbarProps) {
         }
         .admin-nav-tab.active::after {
           width: calc(100% - 24px);
-        }
-        .bell-circle {
-          display: flex; align-items: center; justify-content: center;
-          width: 32px; height: 32px; border-radius: 50%;
-          border: 1px solid var(--eph-line-2);
-          transition: border-color 0.15s ease;
-        }
-        .bell-circle:hover {
-          border-color: var(--eph-accent);
         }
         .admin-drawer {
           transform: translateX(100%);

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Fraunces, Inter, Cormorant_Garamond, Jost, JetBrains_Mono } from "next/font/google";
 import Script from "next/script";
 import Providers from "./providers";
@@ -48,6 +48,14 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "EPHIROX",
   description: "Redefining limits.",
+  icons: {
+    icon: "/favicon.svg",
+    apple: "/favicon.svg",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#100F0D",
 };
 
 export default function RootLayout({

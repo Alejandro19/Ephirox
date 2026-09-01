@@ -4,7 +4,18 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../lib/auth-context";
 import { getSessionToken } from "../../lib/api-client";
-import { IconBell } from "../ui/icons";
+
+// Icono de campana propio de la cabecera (spec §7.3) — distinto del IconBell
+// compartido (usado en otros contextos con otro peso de trazo), para no
+// alterar esos otros usos al ajustar este botón puntual.
+function HeaderBellIcon() {
+  return (
+    <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.3} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17.6 15.4V10.4a5.6 5.6 0 1 0-11.2 0v5l-1.5 2.3h14.2Z" />
+      <path d="M10.2 20.4a2 2 0 0 0 3.6 0" />
+    </svg>
+  );
+}
 
 type NotificationItem = {
   id: string;
@@ -20,6 +31,7 @@ export default function NotificationBell() {
   const router = useRouter();
   const { role, user } = useAuth();
   const [open, setOpen] = useState(false);
+  const [hover, setHover] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [hasUnread, setHasUnread] = useState(false);
   const bellRef = useRef<HTMLDivElement>(null);
@@ -95,34 +107,34 @@ export default function NotificationBell() {
         aria-label="Notificaciones"
         style={{
           position: "relative",
-          background: "none",
-          border: "none",
+          width: 34,
+          height: 34,
+          background: "transparent",
+          border: `1px solid ${hover ? "var(--eph-line-2)" : "transparent"}`,
+          borderRadius: "50%",
           cursor: "pointer",
           display: "inline-flex",
-          color: "var(--eph-text)",
-          padding: "4px 6px",
-          opacity: 0.85,
-          transition: "opacity 0.15s ease",
+          alignItems: "center",
+          justifyContent: "center",
+          color: hover ? "var(--eph-text)" : "var(--eph-body)",
+          transition: "color 180ms ease, border-color 180ms ease",
         }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.opacity = "1";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.opacity = "0.85";
-        }}
+        onMouseEnter={() => setHover(true)}
+        onMouseLeave={() => setHover(false)}
       >
-        <IconBell size={18} />
-        {/* Punto de no leído */}
+        <HeaderBellIcon />
+        {/* Punto de no leído — nunca un número */}
         {hasUnread && (
           <span
             style={{
               position: "absolute",
-              top: 2,
-              right: 4,
-              width: 6,
-              height: 6,
+              top: 6,
+              right: 7,
+              width: 5,
+              height: 5,
               borderRadius: "50%",
               background: "var(--eph-accent)",
+              boxShadow: "0 0 0 2px var(--eph-bg)",
             }}
           />
         )}
