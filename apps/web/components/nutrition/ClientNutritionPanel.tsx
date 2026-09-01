@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
 import useSWR from 'swr';
 import { getNutrition, type NutritionPlan, type MenuMeal } from '../../lib/nutrition-client';
 import { listSupplements, type Supplement } from '../../lib/supplements-client';
@@ -283,6 +283,16 @@ async function fetchNutritionBundle(clientId: string) {
   return { plan, supplements, tips, recipes };
 }
 
+// Cabecera de página del módulo (spec Prompt 02 §3): centrada, ancho máximo
+// 1320px, ritmo de gap:26px entre bloques en vez de márgenes ad-hoc por sección.
+const PAGE_MAIN_STYLE: CSSProperties = {
+  padding: 'clamp(34px, 4.5vw, 60px) clamp(20px, 4vw, 52px) 90px',
+  maxWidth: 1320,
+  margin: '0 auto',
+  display: 'grid',
+  gap: 26,
+};
+
 export function ClientNutritionPanel({ clientId, clientType }: { clientId: string; clientType?: string | null }) {
   const [showAllMeals, setShowAllMeals] = useState(false);
   const [mantra] = useState(() => pickMantra('nutrition'));
@@ -290,9 +300,9 @@ export function ClientNutritionPanel({ clientId, clientType }: { clientId: strin
 
   const header = (
     <>
-      <IdentityHeader title="Nutrition" subtitle="Plan de alimentación y protocolos asignados por tu mentor." />
+      <IdentityHeader title="Nutrition" subtitle="Combustible calibrado a tu carga cognitiva del día" />
       {mantra && (
-        <p className="mb-6 font-display text-base italic leading-relaxed text-[var(--eph-muted)]">
+        <p className="font-display text-base italic leading-relaxed text-[var(--eph-muted)]">
           &ldquo;{mantra}&rdquo;
         </p>
       )}
@@ -302,26 +312,26 @@ export function ClientNutritionPanel({ clientId, clientType }: { clientId: strin
 
   if (isLoading) {
     return (
-      <div>
+      <main style={PAGE_MAIN_STYLE}>
         {header}
         <p className="text-sm text-[var(--eph-muted)]">Cargando tu plan de nutrición…</p>
-      </div>
+      </main>
     );
   }
   if (error instanceof PermissionDeniedError) {
     return (
-      <div>
+      <main style={PAGE_MAIN_STYLE}>
         {header}
         <LockedBenefit benefit="tu plan de nutrición" />
-      </div>
+      </main>
     );
   }
   if (error) {
     return (
-      <div>
+      <main style={PAGE_MAIN_STYLE}>
         {header}
         <p role="alert" className="text-[var(--eph-danger)]">{(error as Error).message}</p>
-      </div>
+      </main>
     );
   }
   if (!data) return null;
@@ -333,21 +343,21 @@ export function ClientNutritionPanel({ clientId, clientType }: { clientId: strin
 
   if (!hasPlan) {
     return (
-      <div>
+      <main style={PAGE_MAIN_STYLE}>
         {header}
         {insights}
         <p className="text-[var(--eph-muted)]">Todavía no tienes un plan de nutrición asignado.</p>
-      </div>
+      </main>
     );
   }
 
   return (
-    <div>
+    <main style={PAGE_MAIN_STYLE}>
       {header}
       {insights}
 
       <div
-        className="mt-8 mb-6 grid"
+        className="grid"
         style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 230px), 1fr))', gap: 1, background: 'var(--eph-line-2)', border: '1px solid var(--eph-line-2)' }}
       >
         <MacroCard label="Proteína" value={plan.proteinG} unit="G" />
@@ -355,7 +365,7 @@ export function ClientNutritionPanel({ clientId, clientType }: { clientId: strin
         <MacroCard label="Grasa" value={plan.fatG} unit="G" />
       </div>
 
-      <section className="rounded-[0] border border-[var(--eph-line)] bg-[var(--eph-surface)] p-6 mb-5">
+      <section className="rounded-[0] border border-[var(--eph-line)] bg-[var(--eph-surface)] p-6">
         <h2 className="mb-4 font-display text-lg font-normal text-[var(--eph-text)]">Vista previa de tu plan</h2>
         {menu.length ? (
           <>
@@ -387,7 +397,7 @@ export function ClientNutritionPanel({ clientId, clientType }: { clientId: strin
       </section>
 
       {(recommendations.length > 0 || plan.closingMessage) && (
-        <section className="rounded-[0] border border-[var(--eph-line)] bg-[var(--eph-surface)] p-6 mb-5">
+        <section className="rounded-[0] border border-[var(--eph-line)] bg-[var(--eph-surface)] p-6">
           {recommendations.length > 0 && (
             <>
               <h2 className="mb-3 font-display text-lg font-normal text-[var(--eph-text)]">Recomendaciones</h2>
@@ -408,7 +418,7 @@ export function ClientNutritionPanel({ clientId, clientType }: { clientId: strin
         </section>
       )}
 
-      <section className="rounded-[0] border border-[var(--eph-line)] bg-[var(--eph-surface)] p-6 mb-5">
+      <section className="rounded-[0] border border-[var(--eph-line)] bg-[var(--eph-surface)] p-6">
         <h2 className="mb-4 font-display text-lg font-normal text-[var(--eph-text)]">Esquema de suplementación</h2>
         {supplements.length ? (
           <div>
@@ -441,7 +451,7 @@ export function ClientNutritionPanel({ clientId, clientType }: { clientId: strin
       </section>
 
       {recipes.length > 0 && (
-        <section className="mt-2 mb-6 border-t border-[var(--eph-line)] pt-5">
+        <section className="border-t border-[var(--eph-line)] pt-5">
           <h2 className="mb-3 font-display text-lg font-normal text-[var(--eph-text)]">Recetas saludables</h2>
           <div>
             {recipes.map((recipe: Recipe, i: number) => (
@@ -476,7 +486,7 @@ export function ClientNutritionPanel({ clientId, clientType }: { clientId: strin
       )}
 
       {tips.length > 0 && (
-        <section className="mt-2 mb-6 border-t border-[var(--eph-line)] pt-5">
+        <section className="border-t border-[var(--eph-line)] pt-5">
           <h2 className="mb-3 font-display text-lg font-normal text-[var(--eph-text)]">Tips and tricks</h2>
           <ul className="space-y-2 text-sm leading-relaxed text-[var(--eph-text)]">
             {tips.map((tip: NutritionTip) => (
@@ -488,6 +498,6 @@ export function ClientNutritionPanel({ clientId, clientType }: { clientId: strin
         </section>
       )}
       <ProtocolDisclaimerFooter />
-    </div>
+    </main>
   );
 }

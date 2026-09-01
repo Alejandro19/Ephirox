@@ -9,15 +9,15 @@ export default function IdentityHeader({ title, subtitle }: IdentityHeaderProps)
   return (
     <div
       className="font-display"
-      style={{ marginBottom: 32, paddingBottom: 20, borderBottom: "1px solid var(--eph-line)" }}
+      style={{ marginBottom: 26, paddingBottom: 32, borderBottom: "1px solid var(--eph-line-2)" }}
     >
       <h1
         style={{
-          fontSize: "clamp(28px, 3.2vw, 38px)",
-          fontWeight: 400,
-          margin: "0 0 8px",
+          fontSize: "clamp(40px, 5vw, 58px)",
+          fontWeight: 300,
+          lineHeight: 1,
+          margin: "0 0 16px",
           color: "var(--eph-text)",
-          lineHeight: 1.15,
         }}
       >
         {title}
@@ -26,12 +26,12 @@ export default function IdentityHeader({ title, subtitle }: IdentityHeaderProps)
         <p
           className="font-mono"
           style={{
-            fontSize: 11,
-            color: "var(--eph-muted)",
+            fontSize: 10,
+            color: "var(--eph-body)",
             margin: 0,
             textTransform: "uppercase",
-            letterSpacing: "0.18em",
-            fontWeight: 400,
+            letterSpacing: "0.2em",
+            fontWeight: 300,
           }}
         >
           {subtitle}
