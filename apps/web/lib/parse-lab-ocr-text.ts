@@ -117,6 +117,25 @@ export const OCR_FIELD_MAP: LabFieldMeta[] = [
   { field: 'potasio', lbl: 'Potasio', unit: 'mEq/L', opt: [3.5, 5.0], lowerBetter: false,
     kw: ['potasio', 'potassium'],
     re: [/potasio[^\n]{0,60}?(\d+[.,]\d+)/i, /potassium[^\n]{0,60}?(\d+[.,]\d+)/i] },
+  // EXCLUSIVOS DE EDAD BIOLÓGICA (PhenoAge) — sin rango óptimo propio en
+  // Matriz_Reglas_Mentoria.xlsx (no forman parte del panel original de 32);
+  // rangos de referencia clínica estándar solo para mostrar en el grid, ver
+  // marker-ranges.ts para el detalle de por qué no están en FIXED_MARKER_RANGES.
+  { field: 'albumina', lbl: 'Albúmina', unit: 'g/L', opt: [35, 50], lowerBetter: false,
+    kw: ['albumina', 'albúmina', 'albumin'],
+    re: [/alb[uú]mina[^\n]{0,60}?(\d+[.,]?\d*)/i, /albumin[^\n]{0,60}?(\d+[.,]?\d*)/i] },
+  { field: 'linfocitos_pct', lbl: '% Linfocitos', unit: '%', opt: [20, 40], lowerBetter: false,
+    kw: ['% linfocitos', 'linfocitos %', 'linfocitos', 'lymphocytes'],
+    re: [/linfocitos[^\n]{0,60}?(\d+[.,]?\d*)\s*%/i, /%\s*linfocitos[^\n]{0,60}?(\d+[.,]?\d*)/i, /lymphocytes[^\n]{0,60}?(\d+[.,]?\d*)/i] },
+  { field: 'vcm', lbl: 'VCM', unit: 'fL', opt: [80, 100], lowerBetter: false,
+    kw: ['vcm', 'mcv', 'volumen corpuscular medio', 'mean corpuscular volume'],
+    re: [/\bvcm\b[^\n]{0,60}?(\d+[.,]?\d*)/i, /\bmcv\b[^\n]{0,60}?(\d+[.,]?\d*)/i, /volumen\s+corpuscular\s+medio[^\n]{0,60}?(\d+[.,]?\d*)/i] },
+  { field: 'rdw', lbl: 'RDW', unit: '%', opt: [11.5, 14.5], lowerBetter: true,
+    kw: ['rdw', 'amplitud de distribución eritrocitaria', 'red cell distribution width'],
+    re: [/\brdw\b[^\n]{0,60}?(\d+[.,]?\d*)/i, /amplitud\s+de\s+distribuci[oó]n\s+eritrocitaria[^\n]{0,60}?(\d+[.,]?\d*)/i] },
+  { field: 'fosfatasa_alcalina', lbl: 'Fosfatasa Alcalina', unit: 'U/L', opt: [40, 129], lowerBetter: true,
+    kw: ['fosfatasa alcalina', 'alkaline phosphatase', 'fal', 'alp'],
+    re: [/fosfatasa\s+alcalina[^\n]{0,60}?(\d+[.,]?\d*)/i, /alkaline\s+phosphatase[^\n]{0,60}?(\d+[.,]?\d*)/i, /\bfal\b[^\n]{0,60}?(\d+[.,]?\d*)/i] },
 ];
 
 // Extrae el valor de una línea "valor+unidad+referencia" concatenada.

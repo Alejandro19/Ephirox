@@ -5,6 +5,7 @@ import { db } from '../db/index.js';
 import { clientNotifications } from '../models/schema.js';
 import * as labPanelsService from '../services/lab-panels.service.js';
 import { captureBenchmarkSnapshot } from '../services/mentoring-benchmark.service.js';
+import { computeAndStoreBiologicalAge } from '../services/biological-age.service.js';
 import { extractMarkersWithAI, AiNotConfiguredError, AiExtractionError } from '../services/lab-ai-extraction.service.js';
 import * as ocrService from '../services/ocr.service.js';
 import { uploadFile } from '../storage/index.js';
@@ -79,13 +80,19 @@ export async function approveLabPanel(req: Request, res: Response) {
   if (![0, 6, 12].includes(semana)) return err(res, 'La semana debe ser 0, 6 o 12.', 400);
   const { datos } = req.body as LabPanelApproveInput;
 
-  const panel = await labPanelsService.approveLabPanel(req.params.id, semana, datos);
+  let panel = await labPanelsService.approveLabPanel(req.params.id, semana, datos);
   if (!panel) return err(res, 'Panel no encontrado.', 404);
 
   try {
     await captureBenchmarkSnapshot(req.params.id, { semanaNumero: panel.semanaNumero, datos: panel.datos as Record<string, number> });
   } catch (e) {
     console.error('captureBenchmarkSnapshot failed', e);
+  }
+  try {
+    await computeAndStoreBiologicalAge(req.params.id, panel);
+    panel = (await labPanelsService.findLabPanel(req.params.id, semana)) ?? panel;
+  } catch (e) {
+    console.error('computeAndStoreBiologicalAge failed', e);
   }
   await db.insert(clientNotifications).values({ clientId: req.params.id, message: `Tu laboratorio de Semana ${semana} fue validado por el equipo.` });
   if (semana === 0) await checkWeek1Activation(req.params.id);

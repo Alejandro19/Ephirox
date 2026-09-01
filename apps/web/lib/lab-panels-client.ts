@@ -23,6 +23,9 @@ export type LabPanel = {
   fileUrl: string | null;
   fileName: string | null;
   approvedAt: string | null;
+  edadBiologica: number | null;
+  edadCronologicaCalculo: number | null;
+  edadBiologicaCalculadaEn: string | null;
 };
 
 export type ExtractedMarker = {

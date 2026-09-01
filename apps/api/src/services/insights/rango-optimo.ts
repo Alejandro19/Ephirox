@@ -17,7 +17,7 @@ export type RangoOptimoContext = {
 
 export const POSMENOPAUSIA = 'Posmenopausia';
 
-function computeAge(birthdate: string | null, today: Date = new Date()): number | null {
+export function computeAge(birthdate: string | null, today: Date = new Date()): number | null {
   if (!birthdate) return null;
   const born = new Date(birthdate);
   if (Number.isNaN(born.getTime())) return null;

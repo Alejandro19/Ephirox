@@ -186,4 +186,59 @@ describe('lab-panels routes: guardado, aprobación, y captura de benchmark compa
       .send({});
     expect(res.status).toBe(403);
   });
+
+  describe('Edad Biológica (PhenoAge) al aprobar', () => {
+    const PHENOAGE_DATOS = {
+      albumina: 45, creatinina: 0.9, glucosa: 85, pcr: 1.0,
+      linfocitos_pct: 30, vcm: 90, rdw: 12.5, fosfatasa_alcalina: 70, leucocitos: 6.5,
+    };
+
+    it('calcula y guarda edad_biologica cuando el panel aprobado trae los 9 marcadores completos', async () => {
+      await db.insert(personalInfo).values({ clientId: mentoringClientId, birthdate: '1986-08-01' }); // 40 años exactos en la fecha del panel
+      await request(app)
+        .put(`/api/clients/${mentoringClientId}/lab-panels`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ semana: 0, fecha: '2026-08-01', datos: PHENOAGE_DATOS });
+
+      const approveRes = await request(app)
+        .post(`/api/clients/${mentoringClientId}/lab-panels/0/approve`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({});
+      expect(approveRes.status).toBe(200);
+      // numeric(5,2) en la columna redondea a 2 decimales al guardar (30.7419 → 30.74).
+      expect(Number(approveRes.body.panel.edadBiologica)).toBeCloseTo(30.74, 2);
+      expect(Number(approveRes.body.panel.edadCronologicaCalculo)).toBe(40);
+      expect(approveRes.body.panel.edadBiologicaCalculadaEn).not.toBeNull();
+    });
+
+    it('no calcula nada si al panel le falta uno de los 9 marcadores requeridos', async () => {
+      await db.insert(personalInfo).values({ clientId: mentoringClientId, birthdate: '1986-08-01' });
+      const { leucocitos: _omit, ...incompletos } = PHENOAGE_DATOS;
+      await request(app)
+        .put(`/api/clients/${mentoringClientId}/lab-panels`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ semana: 0, fecha: '2026-08-01', datos: incompletos });
+
+      const approveRes = await request(app)
+        .post(`/api/clients/${mentoringClientId}/lab-panels/0/approve`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({});
+      expect(approveRes.status).toBe(200);
+      expect(approveRes.body.panel.edadBiologica).toBeNull();
+    });
+
+    it('no calcula nada si el cliente no tiene birthdate registrado', async () => {
+      await request(app)
+        .put(`/api/clients/${mentoringClientId}/lab-panels`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ semana: 0, fecha: '2026-08-01', datos: PHENOAGE_DATOS });
+
+      const approveRes = await request(app)
+        .post(`/api/clients/${mentoringClientId}/lab-panels/0/approve`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({});
+      expect(approveRes.status).toBe(200);
+      expect(approveRes.body.panel.edadBiologica).toBeNull();
+    });
+  });
 });

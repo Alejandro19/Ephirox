@@ -727,6 +727,15 @@ export const labPanels = pgTable('lab_panels', {
   // Hash del archivo fuente (ver lab-ai-extraction.service.ts) — evita
   // volver a llamar a la IA si se re-sube el mismo PDF sin cambios.
   sourceFileHash: text('source_file_hash'),
+  // Edad Biológica (PhenoAge, Levine et al. 2018) — calculada y congelada una
+  // sola vez al momento de aprobar el panel (ver biological-age.service.ts),
+  // solo si `datos` trae los 9 marcadores requeridos completos. Se guarda la
+  // edad cronológica usada en el cálculo (edad EN LA FECHA del panel, no la
+  // actual) para que el dato histórico nunca cambie si se corrige el
+  // birthdate del cliente más adelante.
+  edadBiologica: numeric('edad_biologica', { precision: 5, scale: 2 }).$type<number>(),
+  edadCronologicaCalculo: numeric('edad_cronologica_calculo', { precision: 5, scale: 2 }).$type<number>(),
+  edadBiologicaCalculadaEn: timestamp('edad_biologica_calculada_en', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 }, (table) => ({

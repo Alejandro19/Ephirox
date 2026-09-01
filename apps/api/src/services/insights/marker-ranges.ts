@@ -14,7 +14,12 @@ export type MarkerId =
   | 'cortisol' | 'testosterona_total' | 'testosterona_libre' | 'estradiol' | 'dhea' | 'tsh' | 't3' | 't4'
   | 'vitamina_d' | 'b12' | 'magnesio' | 'zinc'
   | 'creatinina' | 'bun' | 'tgo' | 'tgp' | 'ggt' | 'colesterol_total'
-  | 'hemoglobina' | 'hematocrito' | 'leucocitos' | 'potasio';
+  | 'hemoglobina' | 'hematocrito' | 'leucocitos' | 'potasio'
+  // Exclusivos de Edad Biológica (PhenoAge, ver phenoage.ts) — no tienen
+  // "rango óptimo" definido en Matriz_Reglas_Mentoria.xlsx (no forman parte
+  // del panel de 32 marcadores original), así que deliberadamente NO se
+  // agregan a FIXED_MARKER_RANGES ni participan del sistema de Punto Ciego.
+  | 'albumina' | 'linfocitos_pct' | 'vcm' | 'rdw' | 'fosfatasa_alcalina';
 
 export type Range = { min: number; max: number };
 
@@ -67,9 +72,25 @@ export const GENDER_DEPENDENT_MARKERS: readonly MarkerId[] = [
 // (ver mentoring-benchmark.service.ts). Mismo patrón que ALL_MARKERS, ya
 // local en punto-ciego.rules.ts — acá queda compartido para no duplicarlo
 // una tercera vez.
+// Los 5 marcadores exclusivos de Edad Biológica que no están en
+// FIXED_MARKER_RANGES (ver comentario en MarkerId) — se listan aparte para
+// poder incluirlos en ALL_MARKER_IDS (y así en el parser OCR y la
+// extracción por IA) sin inventarles un "rango óptimo".
+const PHENOAGE_ONLY_MARKER_IDS: MarkerId[] = ['albumina', 'linfocitos_pct', 'vcm', 'rdw', 'fosfatasa_alcalina'];
+
 export const ALL_MARKER_IDS: MarkerId[] = [
   ...(Object.keys(FIXED_MARKER_RANGES) as MarkerId[]),
   ...GENDER_DEPENDENT_MARKERS,
+  ...PHENOAGE_ONLY_MARKER_IDS,
+];
+
+// Los 9 marcadores requeridos por la fórmula PhenoAge (Levine et al., 2018)
+// — ver phenoage.ts. 4 de los 9 son marcadores ya existentes del panel de 32
+// (se reutilizan con conversión de unidad en phenoage.ts, mismo criterio que
+// ya se usaba para no duplicar PCR): creatinina (mg/dL), glucosa (mg/dL),
+// leucocitos (x10³/uL, sin conversión) y pcr (mg/L).
+export const PHENOAGE_MARKER_IDS: MarkerId[] = [
+  'albumina', 'creatinina', 'glucosa', 'pcr', 'linfocitos_pct', 'vcm', 'rdw', 'fosfatasa_alcalina', 'leucocitos',
 ];
 
 export const GENDER_RANGES: Partial<Record<MarkerId, { hombres?: Range; mujeres?: Range }>> = {

@@ -14,6 +14,8 @@ export const MARKER_UNITS: Record<MarkerId, string> = {
   vitamina_d: 'ng/mL', b12: 'pg/mL', magnesio: 'mg/dL', zinc: 'ug/dL',
   creatinina: 'mg/dL', bun: 'mg/dL', tgo: 'U/L', tgp: 'U/L', ggt: 'U/L', colesterol_total: 'mg/dL',
   hemoglobina: 'g/dL', hematocrito: '%', leucocitos: 'x10³/uL', potasio: 'mEq/L',
+  // Exclusivos de Edad Biológica (PhenoAge) — ver marker-ranges.ts.
+  albumina: 'g/L', linfocitos_pct: '%', vcm: 'fL', rdw: '%', fosfatasa_alcalina: 'U/L',
 };
 
 export type ExtractedMarker = {
@@ -82,7 +84,7 @@ Reglas estrictas:
 1. Para cada marcador de la lista, busca su valor en el texto, sin importar cómo esté nombrado (sinónimos, abreviaturas, en otro idioma).
 2. Si encuentras el valor pero en una unidad distinta a la estándar indicada, conviértelo matemáticamente a la unidad estándar usando factores de conversión clínicos reales antes de reportarlo.
 3. Si el documento está borroso, el formato no se reconoce, o no encuentras el campo con confianza razonable, reporta ese marcador con "detected": false y "value": null — NUNCA inventes ni aproximes un valor que no está claramente presente.
-4. Reporta los 32 marcadores de la lista, uno por uno, incluso los no detectados.
+4. Reporta los ${ALL_MARKER_IDS.length} marcadores de la lista, uno por uno, incluso los no detectados.
 
 Texto extraído por OCR:
 ---

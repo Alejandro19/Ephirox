@@ -31,6 +31,7 @@ import { WellnessIndexHero, BienestarGeneral, EvolucionFisicaSection } from './E
 import { CheckinAccordion } from './CheckinAccordion';
 import { InsightsSection } from '../insights/InsightsSection';
 import { ClientLabCheckpoints } from './ClientLabCheckpoints';
+import { BiologicalAgeCard } from './BiologicalAgeCard';
 
 function clientTz(): string {
   try {
@@ -136,6 +137,7 @@ export function ClientEvolutionPanel({ clientId }: { clientId: string }) {
         streakWeeks={streakWeeks}
       />
       <CheckinAccordion clientId={clientId} onSaved={() => mutate()} />
+      {client?.clientType === 'mentoring' && <BiologicalAgeCard clientId={clientId} />}
       {client?.clientType === 'mentoring' && <ClientLabCheckpoints clientId={clientId} />}
     </div>
   );
