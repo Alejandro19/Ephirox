@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from 'vitest';
-import { screen } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderWithSWR as render } from './swr-test-utils';
 import { ClientRestPanel } from '../components/rest/ClientRestPanel';
@@ -35,15 +35,23 @@ function mockFetches({
   clientType = 'mentoring',
   metrics = sampleMetrics,
   protocol = null,
+  ultimaSyncMinutesAgo = 12,
+  dispositivosConectados = ['oura'] as wearableClient.Dispositivo[],
 }: {
   clientType?: string;
   metrics?: wearableClient.WearableMetrica[];
   protocol?: sleepClient.SleepProtocol;
+  ultimaSyncMinutesAgo?: number;
+  dispositivosConectados?: wearableClient.Dispositivo[];
 } = {}) {
   vi.mocked(wearableClient.getMetricas).mockResolvedValue({ total: metrics.length, promedios: {}, data: metrics });
-  vi.mocked(wearableClient.getWearableEstado).mockResolvedValue([
-    { dispositivo: 'oura', conectado: true, conectadoEn: '2026-07-01T00:00:00Z', ultimaSync: new Date(Date.now() - 12 * 60000).toISOString(), tokenExpirado: false },
-  ]);
+  vi.mocked(wearableClient.getWearableEstado).mockResolvedValue(
+    dispositivosConectados.map((dispositivo) => ({
+      dispositivo, conectado: true, conectadoEn: '2026-07-01T00:00:00Z',
+      ultimaSync: new Date(Date.now() - ultimaSyncMinutesAgo * 60000).toISOString(), tokenExpirado: false,
+    }))
+  );
+  vi.mocked(wearableClient.syncWearable).mockResolvedValue({ success: true, sincronizados: 1 });
   vi.mocked(sleepClient.getProtocol).mockResolvedValue(protocol);
   vi.mocked(clientsClient.fetchClient).mockResolvedValue({
     id: 'client-1', name: 'Ana', email: 'a@x.com', plan: '', status: 'active', clientType,
@@ -52,6 +60,11 @@ function mockFetches({
 }
 
 describe('ClientRestPanel', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+
   it('shows the sleep score, duration and hypnogram for a mentoring client', async () => {
     mockFetches();
     render(<ClientRestPanel clientId="client-1" />);
@@ -137,5 +150,42 @@ describe('ClientRestPanel', () => {
     render(<ClientRestPanel clientId="client-1" />);
 
     expect(await screen.findByText('Disponible en Premium')).toBeInTheDocument();
+  });
+
+  it('auto-syncs in the background on open when the last sync is stale, so the client never has to remember to sync', async () => {
+    mockFetches({ ultimaSyncMinutesAgo: 12 });
+    render(<ClientRestPanel clientId="client-1" />);
+    await screen.findByText('86');
+    await waitFor(() => expect(wearableClient.syncWearable).toHaveBeenCalledWith('client-1', 'oura'));
+  });
+
+  it('does not auto-sync again if the last sync was very recent (avoids hammering the provider)', async () => {
+    mockFetches({ ultimaSyncMinutesAgo: 1 });
+    render(<ClientRestPanel clientId="client-1" />);
+    await screen.findByText('86');
+    expect(wearableClient.syncWearable).not.toHaveBeenCalled();
+  });
+
+  it('lets the client force a sync with the "Sincronizar ahora" button', async () => {
+    const user = userEvent.setup();
+    mockFetches({ ultimaSyncMinutesAgo: 1 }); // sin auto-sync de fondo, para aislar el click manual
+    render(<ClientRestPanel clientId="client-1" />);
+    await screen.findByText('86');
+
+    await user.click(screen.getByRole('button', { name: /Sincronizar ahora/ }));
+    await waitFor(() => expect(wearableClient.syncWearable).toHaveBeenCalledWith('client-1', 'oura'));
+  });
+
+  it('shows an error message next to the button when a manual sync fails, without wiping the data already shown', async () => {
+    const user = userEvent.setup();
+    mockFetches({ ultimaSyncMinutesAgo: 1 });
+    vi.mocked(wearableClient.syncWearable).mockResolvedValue({ success: false, error: 'Oura no conectado' });
+    render(<ClientRestPanel clientId="client-1" />);
+    await screen.findByText('86');
+
+    await user.click(screen.getByRole('button', { name: /Sincronizar ahora/ }));
+    expect(await screen.findByText('Oura no conectado')).toBeInTheDocument();
+    // El puntaje de la última noche completa sigue visible — un fallo de sync no borra nada.
+    expect(screen.getByText('86')).toBeInTheDocument();
   });
 });

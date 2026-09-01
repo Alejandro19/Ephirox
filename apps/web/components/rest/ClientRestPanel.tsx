@@ -1,7 +1,8 @@
 'use client';
 
+import { useEffect, useRef, useState } from 'react';
 import useSWR from 'swr';
-import { getMetricas, getWearableEstado, type WearableMetrica, type WearableEstado } from '../../lib/wearable-client';
+import { getMetricas, getWearableEstado, syncWearable, type WearableMetrica, type WearableEstado, type Dispositivo } from '../../lib/wearable-client';
 import { getProtocol, type SleepProtocol } from '../../lib/sleep-client';
 import { fetchClient } from '../../lib/clients-client';
 import { PermissionDeniedError } from '../../lib/api-client';
@@ -72,7 +73,36 @@ function SyncIcon() {
 
 // ─── Hero de sincronización ─────────────────────────────────────
 
-function SyncHero({ latest, ultimaSync }: { latest: WearableMetrica | null; ultimaSync: string | null }) {
+type SyncControlProps = {
+  hasDevice: boolean;
+  onSyncNow: () => void;
+  syncing: boolean;
+  syncMessage: { text: string; isError: boolean } | null;
+};
+
+function SyncNowButton({ hasDevice, onSyncNow, syncing, syncMessage }: SyncControlProps) {
+  if (!hasDevice) return null;
+  return (
+    <div className="relative z-10 mb-3 flex items-center gap-3">
+      <button
+        type="button"
+        onClick={onSyncNow}
+        disabled={syncing}
+        className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.1em] disabled:opacity-60"
+        style={{ color: 'var(--eph-accent)' }}
+      >
+        <SyncIcon /> {syncing ? 'Sincronizando…' : 'Sincronizar ahora'}
+      </button>
+      {syncMessage && (
+        <span className="font-mono text-[10px]" style={{ color: syncMessage.isError ? 'var(--eph-danger)' : 'var(--eph-muted)' }}>
+          {syncMessage.text}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function SyncHero({ latest, ultimaSync, hasDevice, onSyncNow, syncing, syncMessage }: { latest: WearableMetrica | null; ultimaSync: string | null } & SyncControlProps) {
   if (!latest) {
     return (
       <div className="relative mt-8 mb-5 overflow-hidden rounded-[0] p-7" style={{ background: 'var(--eph-surface)', color: 'var(--eph-text)' }}>
@@ -80,6 +110,7 @@ function SyncHero({ latest, ultimaSync }: { latest: WearableMetrica | null; ulti
           className="pointer-events-none absolute -right-10 -top-10 h-[180px] w-[180px] rounded-full"
           style={{ background: 'radial-gradient(circle, color-mix(in srgb, var(--eph-accent) 18%, transparent) 0%, transparent 70%)' }}
         />
+        <SyncNowButton hasDevice={hasDevice} onSyncNow={onSyncNow} syncing={syncing} syncMessage={syncMessage} />
         <EmptyState message="Aún no hay datos sincronizados desde tu Oura Ring." />
       </div>
     );
@@ -106,6 +137,7 @@ function SyncHero({ latest, ultimaSync }: { latest: WearableMetrica | null; ulti
         </span>
         <span className="normal-case tracking-normal" style={{ color: 'var(--eph-muted)' }}>Anoche</span>
       </div>
+      <SyncNowButton hasDevice={hasDevice} onSyncNow={onSyncNow} syncing={syncing} syncMessage={syncMessage} />
 
       <div className="relative z-10 mb-1 flex items-start justify-between gap-3">
         <MetricValue value={latest.suenoScore ?? '—'} size="index" />
@@ -301,13 +333,60 @@ async function fetchRestBundle(clientId: string) {
   return {
     metrics: metricasRes.data,
     ultimaSync: oura?.ultimaSync ?? null,
+    dispositivosConectados: estados.map((w) => w.dispositivo),
     protocol: sleepProtocol,
     mentoring: isMentoringClient(client?.clientType),
   };
 }
 
+// Umbral para no re-sincronizar en cada montaje si ya hubo un sync muy
+// reciente (cron, webhook, u otra pestaña) — evita llamadas redundantes al
+// proveedor sin perder el objetivo real: que la data esté fresca cada vez
+// que el cliente abre Sleep, sin que tenga que acordarse de sincronizar.
+const AUTO_SYNC_SKIP_IF_RECENT_MS = 5 * 60_000;
+
 export function ClientRestPanel({ clientId }: { clientId: string }) {
-  const { data, error, isLoading } = useSWR(['rest-bundle', clientId], () => fetchRestBundle(clientId));
+  const { data, error, isLoading, mutate } = useSWR(['rest-bundle', clientId], () => fetchRestBundle(clientId));
+  const [syncing, setSyncing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState<{ text: string; isError: boolean } | null>(null);
+  const autoSyncedRef = useRef(false);
+
+  async function runSync(dispositivos: Dispositivo[]) {
+    setSyncing(true);
+    try {
+      const results = await Promise.all(dispositivos.map((d) => syncWearable(clientId, d)));
+      const failed = results.find((r) => !r.success);
+      if (failed) {
+        setSyncMessage({ text: failed.error || 'No se pudo sincronizar.', isError: true });
+      } else {
+        setSyncMessage(null);
+      }
+      await mutate();
+    } catch (e) {
+      setSyncMessage({ text: e instanceof Error ? e.message : 'No se pudo sincronizar.', isError: true });
+    } finally {
+      setSyncing(false);
+    }
+  }
+
+  // Sincroniza en segundo plano apenas se abre Sleep — el objetivo es que la
+  // data esté alineada con la app de Oura sin que el cliente tenga que
+  // acordarse de sincronizar manualmente. Silencioso (sin mensaje de error
+  // visible): si falla, el cron nocturno y el webhook siguen como respaldo,
+  // y el cliente igual puede forzarlo con el botón "Sincronizar ahora".
+  useEffect(() => {
+    if (!data || autoSyncedRef.current || data.dispositivosConectados.length === 0) return;
+    if (data.ultimaSync && Date.now() - new Date(data.ultimaSync).getTime() < AUTO_SYNC_SKIP_IF_RECENT_MS) return;
+    autoSyncedRef.current = true;
+    (async () => {
+      try {
+        await Promise.allSettled(data.dispositivosConectados.map((d) => syncWearable(clientId, d)));
+        await mutate();
+      } catch {
+        // silencioso a propósito — ver comentario arriba.
+      }
+    })();
+  }, [data, clientId, mutate]);
 
   const header = <IdentityHeader title="Sleep" subtitle="Tu recuperación nocturna, medida por tu wearable." />;
 
@@ -337,7 +416,7 @@ export function ClientRestPanel({ clientId }: { clientId: string }) {
   }
   if (!data) return null;
 
-  const { metrics, ultimaSync, protocol, mentoring } = data;
+  const { metrics, ultimaSync, dispositivosConectados, protocol, mentoring } = data;
   // data llega ordenada desc por fecha (ver wearable.service.ts). La fecha
   // más reciente puede tener readiness pero todavía no el detalle de sueño
   // (Oura suele publicarlo más tarde que el puntaje de readiness) — nunca
@@ -350,7 +429,14 @@ export function ClientRestPanel({ clientId }: { clientId: string }) {
 
   const body = (
     <div>
-      <SyncHero latest={latest} ultimaSync={ultimaSync} />
+      <SyncHero
+        latest={latest}
+        ultimaSync={ultimaSync}
+        hasDevice={dispositivosConectados.length > 0}
+        onSyncNow={() => runSync(dispositivosConectados)}
+        syncing={syncing}
+        syncMessage={syncMessage}
+      />
       {latest && <RecoveryMetricsRow latest={latest} previous={previous} />}
       <TrendChart points={trendPoints} />
       <ProtocolCard protocol={protocol} />
