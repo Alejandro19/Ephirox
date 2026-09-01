@@ -1,6 +1,6 @@
 # session-memory.md
 
-> **Última actualización:** 2026-08-22
+> **Última actualización:** 2026-09-01
 > **Propósito:** Resumen ejecutivo por sesión (orden cronológico) y plan de continuidad inmediato para la siguiente sesión.
 
 ---
@@ -518,7 +518,46 @@ Suites completas de `apps/api` y `apps/web` corridas repetidamente durante toda 
 
 ---
 
-## Próximas actividades — Siguiente sesión (actualizada 2026-08-22)
+## Resumen Ejecutivo — Sesión 2026-08-31 → 2026-09-01
+
+### 1. Edad Biológica vía PhenoAge (Levine et al. 2018) — Evolution / Ephi-Metrics (Prompt 02 §6)
+
+Continuación de una conversación previa (comprimida por límite de contexto) donde ya se habían completado los §1-§5 de `docs/PROMPT-02-CORRECCIONES.md`. Se implementó el cálculo de "Edad biológica" con la fórmula PhenoAge original — coeficientes verificados contra el paquete de referencia `dayoonkwon/BioAge` (`phenoage_calc.R`, rama `orig=TRUE`) y confirmados explícitamente con Alejandro antes de programar el cálculo (regla del propio pedido: nunca aproximar ni inventar coeficientes).
+
+Hallazgos clave antes de escribir código:
+- El prototipo (`docs/Ephirox - Producto.dc.html`) ubica "Edad biológica" en la pantalla **Evolution** ("Ephi-Metrics"), no en "Baseline" como decía el texto del pedido — se siguió el prototipo, por la regla ya establecida "si algo no coincide con el prototipo, gana el prototipo".
+- De los 8 marcadores nuevos que pedía el prompt, solo 5 eran genuinamente nuevos (Albúmina, % Linfocitos, VCM, RDW, Fosfatasa Alcalina); Creatinina, Glucosa, Leucocitos y PCR ya existían en el panel de 32 marcadores (algunos en otra unidad) — se reutilizaron con conversión de unidad en el cálculo, sin duplicar campos, mismo criterio que ya regía para PCR.
+- Los 5 marcadores nuevos se agregaron a `MarkerId`/OCR/IA pero deliberadamente NO a `FIXED_MARKER_RANGES`: se verificó leyendo `Documentos/Matriz_Reglas_Mentoria.xlsx` directamente (parseado con Python/zipfile, sin abrir Excel) que esos 5 marcadores no tienen un "rango óptimo" definido ahí — agregarles uno inventado habría contaminado el sistema de Punto Ciego con un rango sin respaldo del negocio.
+- "Sin cálculos parciales" se implementó como: el cálculo de PhenoAge en sí nunca corre con datos incompletos (requiere los 9 marcadores + birthdate del cliente), pero el guardado general del panel de laboratorio sigue tolerando marcadores no detectados como siempre lo hizo (no se agregó un gate nuevo que hubiera roto el flujo de OCR+IA existente).
+
+Archivos nuevos: `apps/api/src/services/phenoage.ts` (fórmula pura + validación de completitud, 6 tests), `apps/api/src/services/biological-age.service.ts` (único punto que calcula y persiste, llamado solo al aprobar un panel), `apps/web/components/evolution/BiologicalAgeCard.tsx`. Migración: `lab_panels` gana `edad_biologica`/`edad_cronologica_calculo`/`edad_biologica_calculada_en` — la edad cronológica se congela en el momento del cálculo (edad del cliente en la fecha del panel, no la actual) para que el histórico no cambie si se corrige el birthdate después.
+
+### 2. Bugs reales en la integración de Oura (módulo Sleep) — reportados por Alejandro con capturas comparando contra la app oficial de Oura
+
+Investigación siguiendo el protocolo de "mostrar el código y confirmar la causa antes de corregir". Se leyó `wearable_metricas` real de la base de datos (incluido `rawData.sleep`/`rawData.readiness` crudos de Oura) para el cliente y fechas exactas que Alejandro reportó, en vez de asumir.
+
+- **"REM y Ligero cruzados" — descartado.** El mapeo por nombre de campo (`rem_sleep_duration→suenoRemMinutos`, `light_sleep_duration→suenoLigeroMinutos`, etc. en `oura.service.ts`) es correcto, verificado 1:1 contra el payload crudo guardado. La discrepancia real: Ephirox mostraba la noche del 30→31 ago (última completa disponible en ese momento) mientras Alejandro comparaba contra la app de Oura, que ya mostraba la noche del 31 ago→1 sep — dos noches distintas, confirmado además cruzando capturas reales de la app de Oura (pestañas "Yesterday"/"Today" con puntajes y porcentajes distintos, coincidiendo exacto con las dos filas de la base de datos).
+- **Bug real #1 — "Despierto" siempre mostraba 0:00.** Se calculaba como `total-(profundo+rem+ligero)` en vez de usar el `awake_time` real que Oura manda; como `total_sleep_duration` de Oura ya excluye el tiempo despierto por definición, esa resta daba ~0 casi siempre. Fix: nueva columna `sueno_despierto_minutos`, mapeada desde `awake_time`; el cálculo por resta queda solo de fallback para Whoop/Polar (que todavía no lo reportan).
+- **Bug real #2 — la sincronización podía "vaciar" la vista de Sleep.** Confirmado con la fila real: Oura publica el readiness de un día antes que el detalle de sueño de esa misma noche; `ClientRestPanel` tomaba `metrics[0]` (fecha más reciente) a ciegas como "Anoche", así que una fila parcial (solo readiness) desplazaba a la última noche completa y mostraba ceros — sin que nada se hubiera borrado realmente. Fix: se toma la fila más reciente que **sí tiene** `suenoTotalMinutos`; si ninguna la tiene, cae al empty state ya existente.
+- Se ocultó también `MantraCard` (frase de motivación) del header de Sleep, a pedido explícito.
+
+### 3. Sincronización automática al abrir Sleep + botón "Sincronizar ahora" (objetivo: que Ephirox y Oura estén alineados cada mañana)
+
+Se investigó si el webhook de Oura (`wearable-webhook.controller.ts`, ya existía como esqueleto) era el mecanismo correcto para esto. Se confirmó vía el OpenAPI real de Oura (mirror en `github.com/api-evangelist/oura-ring`, generado desde la spec pública) el flujo completo de creación de suscripciones (`POST /v2/webhook/subscription`), pero se encontraron dos gaps que impiden confiar en ese camino hoy: (a) no existe ningún código en el repo que cree/renueve una suscripción real con Oura — el endpoint receptor nunca ha recibido un evento real; (b) ni el OpenAPI ni ninguna fuente verificable documenta el schema exacto del payload de entrega ni el esquema de firma (el código ya traía un comentario reconociendo esto). Construirlo a ciegas habría significado adivinar un contrato externo no confirmado — se decidió NO hacerlo, mismo criterio aplicado con los coeficientes de PhenoAge.
+
+Fix implementado en su lugar, reutilizando el pull ya existente y probado (`sincronizarOura` vía `POST /wearable/:dispositivo/sync`):
+- Auto-sync silencioso al montar `ClientRestPanel` (salvo que ya haya habido un sync hace menos de 5 min).
+- Botón "Sincronizar ahora" visible en el hero de Sleep (antes esa función solo existía escondida en `Module10.tsx`, onboarding de uso único).
+
+**Verificado en vivo con datos reales** (no solo con tests): se disparó `sincronizarOura` manualmente para el cliente real y se confirmó contra la base de datos que el readiness del 1 sep sí llega, pero el detalle de sueño de esa misma noche seguía sin estar disponible del lado de Oura incluso en una sincronización fresca — esto descarta un bug de fechas/parámetros en nuestro código (mismos parámetros, mismo request, el readiness sí llegó) y confirma que es un retraso de disponibilidad específico de la API pública de Oura (la app del teléfono usa un pipeline interno más rápido que lo que exponen a integraciones de terceros). Pendiente de confirmar la próxima sesión si se resuelve solo (debería, vía el auto-sync) o si persiste más de 24h.
+
+### 4. Verificación
+
+`tsc --noEmit` limpio en ambos paquetes en cada punto de control. Suites completas corridas repetidamente (481 tests API, 397 tests web) sin regresiones nuevas — los únicos fallos son los ya documentados como pre-existentes y no relacionados (`wellness-index.routes.test.ts` 73≠82 desde el commit `d0b91d4`, `login-page.test.tsx`) más instancias nuevas de la flakiness ya conocida por contención de CPU al correr ambas suites completas en paralelo (`exercises.routes.test.ts`, `wizard-shell-validation.test.tsx`), confirmadas limpias corriéndolas en aislado.
+
+---
+
+## Próximas actividades — Siguiente sesión (actualizada 2026-09-01)
 
 ### Actividad 1 — Confirmar que el login desde el celular ya funciona
 
@@ -539,6 +578,14 @@ Suites completas de `apps/api` y `apps/web` corridas repetidamente durante toda 
 ### Actividad 5 — Construir los 6 módulos placeholder del panel de terapeuta
 
 - (Sigue pendiente de varias sesiones atrás, sin tocar.) Mi perfil, Mis clientes, Mi agenda, Recursos clínicos, Comunidad de terapeutas, Dashboards.
+
+### Actividad 6 — Confirmar que el auto-sync de Sleep resolvió el retraso de la noche del 31 ago→1 sep (nueva, 2026-09-01)
+
+- Al cierre de la sesión, el detalle de sueño del 1 sep todavía no estaba disponible en la API de Oura (confirmado con un re-sync manual en vivo — ver sección 3 del resumen de esta sesión). Debería resolverse solo la próxima vez que Alejandro abra Sleep (el auto-sync nuevo lo recogerá). Si para la próxima sesión sigue sin aparecer (más de 24h de retraso), eso sí sería una señal real de que hay algo roto y ameritaría investigar más a fondo — hasta entonces, no es un bug de Ephirox.
+
+### Actividad 7 — Si se quiere que el webhook de Oura sirva como respaldo instantáneo real (nueva, 2026-09-01)
+
+- Hoy `wearable-webhook.controller.ts` tiene el endpoint receptor pero **nunca se creó una suscripción real con Oura** — nadie le ha pedido a Oura que mande eventos. Para que funcione de verdad hace falta: (a) implementar la creación/renovación de la suscripción (`POST /v2/webhook/subscription`, requiere `x-client-id`/`x-client-secret`, ver OpenAPI real en `github.com/api-evangelist/oura-ring`), (b) el handshake de verificación que Oura hace contra `callback_url` al crear la suscripción (no documentado con certeza, hay que confirmarlo contra el comportamiento real de Oura al intentarlo), y (c) confirmar el schema de firma exacto contra el primer evento real recibido — no antes, para no adivinar un contrato externo. No es urgente: el auto-sync al abrir Sleep (Actividad 6 de la sesión anterior, ya implementado) ya resuelve el objetivo práctico de "datos alineados cada mañana" sin depender de esto.
 
 ---
 
@@ -561,3 +608,6 @@ Suites completas de `apps/api` y `apps/web` corridas repetidamente durante toda 
 - **Wompi exige la moneda en MAYÚSCULA** (`COP`/`USD`/`GTQ`) tanto en la firma de integridad como en el payload del widget — el resto del sistema (incluido Stripe) usa minúscula como convención interna. Normalizado en el borde, dentro de `wompi.provider.ts` (`createCharge`), nunca en las capas de arriba.
 - **Probar pagos/NFC/Google login desde el celular necesita DOS túneles, no uno:** uno para `apps/web` (:3000, lo que el celular visita) y otro para `apps/api` (:3003, lo que ese frontend necesita llamar). Si `apps/web/.env.local` sigue apuntando `NEXT_PUBLIC_API_BASE_URL` a `http://localhost:3003`, el celular interpreta "localhost" como sí mismo y todo login falla en silencio (incluido Google, que además necesita el dominio del túnel de `apps/web` agregado a "Authorized JavaScript origins" en Google Cloud Console — cambios ahí tardan de minutos a un par de horas en propagar).
 - **Los túneles "quick" de `cloudflared` (sin cuenta) generan una URL aleatoria nueva cada vez que se reinician — nunca se recupera la misma.** Cualquier cosa física o durable que dependa de esa URL (como un tag NFC del gimnasio) se rompe cada vez que el túnel se cae, y hay que reprogramarla a mano. Antes de matar un proceso `cloudflared` "huérfano" de una sesión anterior, confirmar que no sea un link real en uso — en esta sesión uno de dos túneles de 13 días de antigüedad resultó ser el NFC físico que usan clientes reales del gimnasio. La solución de fondo (dominio propio + túnel con nombre fijo, o deploy real) sigue pendiente — ver Actividad 2 de la sección de próximas actividades.
+- **Oura: los datos de sueño (REM/Ligero/Profundo/Despierto) pueden tardar horas en aparecer en la API pública v2 después de que ya se ven en la app del teléfono** (sesión 2026-08-31→09-01) — la app usa un pipeline interno más rápido que lo que exponen a integraciones de terceros. Antes de asumir que un re-sync "no trajo lo de hoy" es un bug de Ephirox, cruzar contra el `readiness` del mismo día: si ese sí llegó con los mismos parámetros de fecha, confirma que el sync funciona bien y el retraso es solo de Oura, no de nuestro código.
+- **Para leer un `.xlsx` sin abrir Excel ni instalar `openpyxl`:** es un zip — `python3 -c "import zipfile; z = zipfile.ZipFile(path); ..."` sobre `xl/sharedStrings.xml` + `xl/worksheets/sheetN.xml` (mapear el nombre de hoja a `sheetN.xml` vía `xl/_rels/workbook.xml.rels`) alcanza para extraer filas/columnas sin dependencias nuevas. Usado en la sesión 2026-08-31→09-01 para verificar `Documentos/Matriz_Reglas_Mentoria.xlsx` antes de inventar rangos "óptimos" para marcadores nuevos.
+- **Para inspeccionar/verificar hipótesis contra datos reales de producción (no solo tests):** un script `tsx` desechable con el paquete `postgres` apuntando a `DATABASE_URL` (mismo patrón que las migraciones manuales, ver más arriba) sirve también para leer filas reales y confirmar o descartar una causa raíz antes de tocar código — usado en la sesión 2026-08-31→09-01 para descartar un bug de mapeo de Oura comparando contra el `rawData` crudo guardado, y para verificar en vivo (re-disparando `sincronizarOura`) que un fix realmente resolvía lo reportado. Siempre borrar el script al terminar.
