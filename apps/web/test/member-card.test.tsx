@@ -20,8 +20,12 @@ describe('MemberCard', () => {
     });
     render(<MemberCard clientId="client-1" />);
     expect(await screen.findByText('Ana López')).toBeInTheDocument();
-    expect(screen.getByText('Miembro N.° 00142')).toBeInTheDocument();
+    expect(screen.getByText('N.º 00142')).toBeInTheDocument();
     expect(screen.getByText('Premium')).toBeInTheDocument();
+    expect(screen.getByText('Tu credencial')).toBeInTheDocument();
+    expect(screen.getByText('Miembro activo del círculo')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Gestionar membresía' })).toHaveAttribute('href', '/configuracion/membresias');
+    expect(screen.getByText('EPHIROX')).toBeInTheDocument();
   });
 
   it('shows "Quedan X de Y clases" for a Cliente 1:1 client with an active package, alongside the expiration date', async () => {
@@ -55,7 +59,7 @@ describe('MemberCard', () => {
       planEndDate: '2099-01-01',
     });
     render(<MemberCard clientId="client-4" />);
-    await screen.findByText('Miembro N.° 00008');
+    await screen.findByText('N.º 00008');
     expect(screen.queryByText('Clases')).not.toBeInTheDocument();
   });
 
