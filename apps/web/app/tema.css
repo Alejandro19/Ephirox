@@ -23,6 +23,7 @@
   --eph-shadow:none;
   --eph-steel:#7E8A93;
   --eph-danger:#B4614F;
+  --eph-auth:#1c1a17;
   --eph-panel:radial-gradient(circle at 50% 45%,#1A1512 0%,#0b0a08 72%);
   --eph-hatch:repeating-linear-gradient(135deg,#121110 0 8px,#181614 8px 16px);
 }
@@ -46,6 +47,7 @@
   --eph-shadow:none;
   --eph-steel:#8A959C;
   --eph-danger:#C06B56;
+  --eph-auth:#221f1c;
   --eph-panel:radial-gradient(circle at 82% 18%,#372c20 0%,#221f1c 64%);
   --eph-hatch:repeating-linear-gradient(135deg,#221f1d 0 8px,#292522 8px 16px);
 }
@@ -69,6 +71,7 @@
   --eph-shadow:0 1px 3px rgba(0,0,0,0.04);
   --eph-steel:#5D6A72;
   --eph-danger:#A24B36;
+  --eph-auth:#f4f2ec;
   --eph-panel:linear-gradient(135deg,#ffffff 0%,#f5f1e6 100%);
   --eph-hatch:repeating-linear-gradient(135deg,#f4f2ec 0 8px,#ebe7dc 8px 16px);
 }
