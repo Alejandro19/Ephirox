@@ -42,6 +42,7 @@ export type WearableMetrica = {
   suenoProfundoMinutos: number | null;
   suenoRemMinutos: number | null;
   suenoLigeroMinutos: number | null;
+  suenoDespiertoMinutos: number | null;
   suenoScore: number | null;
   tasaRespiratoria: number | string | null;
   temperaturaPiel: number | string | null;

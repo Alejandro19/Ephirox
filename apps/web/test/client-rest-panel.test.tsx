@@ -18,14 +18,14 @@ const sampleMetrics: wearableClient.WearableMetrica[] = [
   {
     id: 'm2', dispositivo: 'oura', fecha: '2026-08-05',
     fcReposo: 54, hrvNocturno: 62, suenoTotalMinutos: 462,
-    suenoProfundoMinutos: 111, suenoRemMinutos: 212, suenoLigeroMinutos: 112,
+    suenoProfundoMinutos: 111, suenoRemMinutos: 212, suenoLigeroMinutos: 112, suenoDespiertoMinutos: 15,
     suenoScore: 86, tasaRespiratoria: 14.2, temperaturaPiel: 0.2,
     horaDormir: '2026-08-04T23:48:00Z', horaDespertar: '2026-08-05T07:30:00Z',
   },
   {
     id: 'm1', dispositivo: 'oura', fecha: '2026-08-04',
     fcReposo: 56, hrvNocturno: 57, suenoTotalMinutos: 420,
-    suenoProfundoMinutos: 100, suenoRemMinutos: 190, suenoLigeroMinutos: 100,
+    suenoProfundoMinutos: 100, suenoRemMinutos: 190, suenoLigeroMinutos: 100, suenoDespiertoMinutos: 12,
     suenoScore: 78, tasaRespiratoria: 14.0, temperaturaPiel: 0.1,
     horaDormir: '2026-08-04T00:00:00Z', horaDespertar: '2026-08-04T07:00:00Z',
   },
@@ -62,6 +62,9 @@ describe('ClientRestPanel', () => {
     expect(screen.getByText('H')).toBeInTheDocument();
     expect(screen.getByText(/profundo 1:51/)).toBeInTheDocument();
     expect(screen.getByText(/REM 3:32/)).toBeInTheDocument();
+    // Despierto usa el dato real del wearable (Oura: awake_time), nunca la
+    // resta total-(profundo+rem+ligero) — ver bug reportado, siempre daba 0.
+    expect(screen.getByText(/despierto 0:15/)).toBeInTheDocument();
   });
 
   it('shows recovery metric cards computed from the latest sync', async () => {
@@ -90,6 +93,25 @@ describe('ClientRestPanel', () => {
     expect(screen.getByText(/incluso los viernes\./)).toBeInTheDocument();
     expect(screen.getByText('Suplemento sugerido')).toBeInTheDocument();
     expect(screen.getByText('Magnesio · 45 min antes')).toBeInTheDocument();
+  });
+
+  it('skips a same-day row that only has readiness (no sleep detail yet) and shows the last complete night instead', async () => {
+    // Reproduce el bug reportado: Oura publica el readiness de hoy antes que
+    // el detalle de sueño (llega después) — esa fila queda con todo en null
+    // salvo temperaturaPiel, y nunca debe mostrarse como "Anoche".
+    const partialToday: wearableClient.WearableMetrica = {
+      id: 'm3', dispositivo: 'oura', fecha: '2026-08-06',
+      fcReposo: null, hrvNocturno: null, suenoTotalMinutos: null,
+      suenoProfundoMinutos: null, suenoRemMinutos: null, suenoLigeroMinutos: null, suenoDespiertoMinutos: null,
+      suenoScore: null, tasaRespiratoria: null, temperaturaPiel: -0.2,
+      horaDormir: null, horaDespertar: null,
+    };
+    mockFetches({ metrics: [partialToday, ...sampleMetrics] });
+    render(<ClientRestPanel clientId="client-1" />);
+    // El puntaje 86 y la duración 7:42 son de la última noche COMPLETA (m2),
+    // no de la fila parcial de hoy.
+    expect(await screen.findByText('86')).toBeInTheDocument();
+    expect(screen.getByText('7:42')).toBeInTheDocument();
   });
 
   it('shows an empty state in the hero when no wearable data has synced yet', async () => {

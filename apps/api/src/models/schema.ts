@@ -685,6 +685,10 @@ export const wearableMetricas = pgTable('wearable_metricas', {
   suenoProfundoMinutos: integer('sueno_profundo_minutos'),
   suenoRemMinutos: integer('sueno_rem_minutos'),
   suenoLigeroMinutos: integer('sueno_ligero_minutos'),
+  // Tiempo despierto real reportado por el wearable (Oura: `awake_time`) —
+  // nunca derivar de total-(profundo+rem+ligero): Oura ya excluye el tiempo
+  // despierto de total_sleep_duration, así que esa resta casi siempre da 0.
+  suenoDespiertoMinutos: integer('sueno_despierto_minutos'),
   suenoScore: integer('sueno_score'),
   suenoPerformance: integer('sueno_performance'),
   recoveryScore: integer('recovery_score'),

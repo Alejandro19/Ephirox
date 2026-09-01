@@ -122,6 +122,7 @@ export async function sincronizarOura(clienteId: string): Promise<{ sincronizado
         suenoProfundoMinutos: secsToMins(principal.deep_sleep_duration),
         suenoRemMinutos: secsToMins(principal.rem_sleep_duration),
         suenoLigeroMinutos: secsToMins(principal.light_sleep_duration),
+        suenoDespiertoMinutos: secsToMins(principal.awake_time),
         rawData: { ...(base(fecha).rawData as object), sleep: principal },
       });
     }

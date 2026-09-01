@@ -1,12 +1,10 @@
 'use client';
 
-import { useState } from 'react';
 import useSWR from 'swr';
 import { getMetricas, getWearableEstado, type WearableMetrica, type WearableEstado } from '../../lib/wearable-client';
 import { getProtocol, type SleepProtocol } from '../../lib/sleep-client';
 import { fetchClient } from '../../lib/clients-client';
 import { PermissionDeniedError } from '../../lib/api-client';
-import { pickMantra } from '../../lib/mantra-bank';
 import {
   isMentoringClient,
   formatMinutesDuration,
@@ -16,7 +14,6 @@ import {
   average,
 } from '../../lib/rest-logic';
 import IdentityHeader from '../ui/IdentityHeader';
-import MantraCard from '../ui/MantraCard';
 import LockedBenefit from '../ui/LockedBenefit';
 import EmptyState from '../ui/EmptyState';
 import MetricValue from '../ui/MetricValue';
@@ -92,7 +89,10 @@ function SyncHero({ latest, ultimaSync }: { latest: WearableMetrica | null; ulti
   const profundo = latest.suenoProfundoMinutos ?? 0;
   const rem = latest.suenoRemMinutos ?? 0;
   const ligero = latest.suenoLigeroMinutos ?? 0;
-  const despierto = Math.max(0, totalMin - (profundo + rem + ligero));
+  // Preferir el dato real del wearable (Oura: awake_time) — el fallback por
+  // resta solo aplica a dispositivos que todavía no lo reportan (Whoop/Polar),
+  // y casi siempre da 0 porque total_sleep_duration ya excluye el despierto.
+  const despierto = latest.suenoDespiertoMinutos ?? Math.max(0, totalMin - (profundo + rem + ligero));
 
   return (
     <div className="relative mt-8 mb-5 overflow-hidden rounded-[0] p-7" style={{ background: 'var(--eph-surface)', color: 'var(--eph-text)' }}>
@@ -307,15 +307,9 @@ async function fetchRestBundle(clientId: string) {
 }
 
 export function ClientRestPanel({ clientId }: { clientId: string }) {
-  const [mantra] = useState(() => pickMantra('rest'));
   const { data, error, isLoading } = useSWR(['rest-bundle', clientId], () => fetchRestBundle(clientId));
 
-  const header = (
-    <>
-      <IdentityHeader title="Sleep" subtitle="Tu recuperación nocturna, medida por tu wearable." />
-      {mantra && <MantraCard mantra={mantra} />}
-    </>
-  );
+  const header = <IdentityHeader title="Sleep" subtitle="Tu recuperación nocturna, medida por tu wearable." />;
 
   if (isLoading) {
     return (
@@ -344,10 +338,14 @@ export function ClientRestPanel({ clientId }: { clientId: string }) {
   if (!data) return null;
 
   const { metrics, ultimaSync, protocol, mentoring } = data;
-  // data llega ordenada desc por fecha (ver wearable.service.ts) — el primer
-  // elemento es la noche más reciente; el resto es la línea base de comparación.
-  const latest = metrics[0] ?? null;
-  const previous = metrics.slice(1);
+  // data llega ordenada desc por fecha (ver wearable.service.ts). La fecha
+  // más reciente puede tener readiness pero todavía no el detalle de sueño
+  // (Oura suele publicarlo más tarde que el puntaje de readiness) — nunca
+  // mostrar esa fila parcial como "Anoche": se toma la más reciente que
+  // realmente tenga sueño registrado, y el resto queda como línea base.
+  const latestIndex = metrics.findIndex((m) => m.suenoTotalMinutos != null);
+  const latest = latestIndex >= 0 ? metrics[latestIndex] : null;
+  const previous = latestIndex >= 0 ? metrics.filter((_, i) => i !== latestIndex) : metrics;
   const trendPoints = [...metrics].reverse();
 
   const body = (
