@@ -450,8 +450,8 @@ export function ClientNutritionPanel({ clientId, clientType }: { clientId: strin
       </section>
 
       {recipes.length > 0 && (
-        <section className="border-t border-[var(--eph-line)] pt-5">
-          <h2 className="mb-3 font-display text-lg font-normal text-[var(--eph-text)]">Recetas saludables</h2>
+        <section className="rounded-[0] border border-[var(--eph-line)] bg-[var(--eph-surface)] p-6">
+          <h2 className="mb-4 font-display text-lg font-normal text-[var(--eph-text)]">Recetas saludables</h2>
           <div>
             {recipes.map((recipe: Recipe, i: number) => (
               <div key={recipe.id} className={`flex items-center gap-3 py-3 ${i === 0 ? '' : 'border-t'}`} style={{ borderColor: 'var(--eph-line)', borderTopWidth: i === 0 ? 0 : '0.5px' }}>
@@ -485,8 +485,8 @@ export function ClientNutritionPanel({ clientId, clientType }: { clientId: strin
       )}
 
       {tips.length > 0 && (
-        <section className="border-t border-[var(--eph-line)] pt-5">
-          <h2 className="mb-3 font-display text-lg font-normal text-[var(--eph-text)]">Tips and tricks</h2>
+        <section className="rounded-[0] border border-[var(--eph-line)] bg-[var(--eph-surface)] p-6">
+          <h2 className="mb-4 font-display text-lg font-normal text-[var(--eph-text)]">Tips and tricks</h2>
           <ul className="space-y-2 text-sm leading-relaxed text-[var(--eph-text)]">
             {tips.map((tip: NutritionTip) => (
               <li key={tip.id} className="relative pl-3.5 before:absolute before:left-0 before:top-[8px] before:h-[5px] before:w-[5px] before:rounded-full before:bg-[var(--eph-accent)] before:content-['']">
