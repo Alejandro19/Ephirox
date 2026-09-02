@@ -345,28 +345,76 @@ async function fetchRestBundle(clientId: string) {
 // que el cliente abre Sleep, sin que tenga que acordarse de sincronizar.
 const AUTO_SYNC_SKIP_IF_RECENT_MS = 5 * 60_000;
 
+// Reintentos automáticos tras un sync: Oura suele publicar el readiness de
+// hoy antes que el detalle de sueño de esa misma noche (ver commit del fix
+// de "Anoche" parcial) — un solo intento puede quedar sin la noche más
+// reciente todavía. En vez de obligar al cliente a volver a hacer clic,
+// reintentamos en segundo plano cada minuto hasta 4 veces más (~4 min en
+// total) o hasta que la noche de hoy ya tenga sueño completo.
+const RETRY_INTERVAL_MS = 60_000;
+const MAX_RETRY_ATTEMPTS = 4;
+
+function hasCompleteNightFor(dateStr: string, metrics: WearableMetrica[]): boolean {
+  return metrics.some((m) => m.fecha === dateStr && m.suenoTotalMinutos != null);
+}
+
 export function ClientRestPanel({ clientId }: { clientId: string }) {
   const { data, error, isLoading, mutate } = useSWR(['rest-bundle', clientId], () => fetchRestBundle(clientId));
   const [syncing, setSyncing] = useState(false);
   const [syncMessage, setSyncMessage] = useState<{ text: string; isError: boolean } | null>(null);
   const autoSyncedRef = useRef(false);
+  const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  async function runSync(dispositivos: Dispositivo[]) {
-    setSyncing(true);
+  useEffect(() => {
+    return () => {
+      if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
+    };
+  }, []);
+
+  // Sincroniza y, si la noche de hoy todavía no tiene sueño completo (Oura
+  // no ha terminado de procesarla), reintenta solo en segundo plano en vez
+  // de dejar que el cliente tenga que volver a pedirlo. `onUpdate` se llama
+  // en el primer intento (para que el botón manual muestre spinner/mensaje)
+  // y de nuevo si un reintento posterior finalmente encuentra la noche
+  // lista, para poder limpiar el aviso de "seguimos intentando".
+  async function syncAndRetryUntilReady(
+    dispositivos: Dispositivo[],
+    attempt: number,
+    onUpdate?: (info: { success: boolean; error?: string; ready: boolean }) => void
+  ) {
+    let result: { success: boolean; error?: string } = { success: true };
     try {
       const results = await Promise.all(dispositivos.map((d) => syncWearable(clientId, d)));
       const failed = results.find((r) => !r.success);
-      if (failed) {
-        setSyncMessage({ text: failed.error || 'No se pudo sincronizar.', isError: true });
+      if (failed) result = { success: false, error: failed.error };
+    } catch (e) {
+      result = { success: false, error: e instanceof Error ? e.message : 'No se pudo sincronizar.' };
+    }
+    const fresh = await mutate();
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const ready = result.success && fresh ? hasCompleteNightFor(todayStr, fresh.metrics) : false;
+
+    if (attempt === 0 || ready) onUpdate?.({ ...result, ready });
+    if (!result.success || ready || attempt >= MAX_RETRY_ATTEMPTS) return;
+
+    retryTimeoutRef.current = setTimeout(() => {
+      syncAndRetryUntilReady(dispositivos, attempt + 1, onUpdate);
+    }, RETRY_INTERVAL_MS);
+  }
+
+  function runSync(dispositivos: Dispositivo[]) {
+    if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
+    setSyncing(true);
+    void syncAndRetryUntilReady(dispositivos, 0, ({ success, error, ready }) => {
+      setSyncing(false);
+      if (!success) {
+        setSyncMessage({ text: error || 'No se pudo sincronizar.', isError: true });
+      } else if (!ready) {
+        setSyncMessage({ text: 'Oura todavía está procesando el detalle de esta noche — seguimos intentando en segundo plano.', isError: false });
       } else {
         setSyncMessage(null);
       }
-      await mutate();
-    } catch (e) {
-      setSyncMessage({ text: e instanceof Error ? e.message : 'No se pudo sincronizar.', isError: true });
-    } finally {
-      setSyncing(false);
-    }
+    });
   }
 
   // Sincroniza en segundo plano apenas se abre Sleep — el objetivo es que la
@@ -378,14 +426,8 @@ export function ClientRestPanel({ clientId }: { clientId: string }) {
     if (!data || autoSyncedRef.current || data.dispositivosConectados.length === 0) return;
     if (data.ultimaSync && Date.now() - new Date(data.ultimaSync).getTime() < AUTO_SYNC_SKIP_IF_RECENT_MS) return;
     autoSyncedRef.current = true;
-    (async () => {
-      try {
-        await Promise.allSettled(data.dispositivosConectados.map((d) => syncWearable(clientId, d)));
-        await mutate();
-      } catch {
-        // silencioso a propósito — ver comentario arriba.
-      }
-    })();
+    void syncAndRetryUntilReady(data.dispositivosConectados, 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, clientId, mutate]);
 
   const header = <IdentityHeader title="Sleep" subtitle="Tu recuperación nocturna, medida por tu wearable." />;

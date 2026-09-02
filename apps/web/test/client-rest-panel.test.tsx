@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { screen, waitFor } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderWithSWR as render } from './swr-test-utils';
 import { ClientRestPanel } from '../components/rest/ClientRestPanel';
@@ -187,5 +187,73 @@ describe('ClientRestPanel', () => {
     expect(await screen.findByText('Oura no conectado')).toBeInTheDocument();
     // El puntaje de la última noche completa sigue visible — un fallo de sync no borra nada.
     expect(screen.getByText('86')).toBeInTheDocument();
+  });
+
+  describe('reintentos automáticos hasta que la noche de hoy esté completa', () => {
+    const today = '2026-08-06';
+    const partialToday: wearableClient.WearableMetrica = {
+      id: 'm3', dispositivo: 'oura', fecha: today,
+      fcReposo: null, hrvNocturno: null, suenoTotalMinutos: null,
+      suenoProfundoMinutos: null, suenoRemMinutos: null, suenoLigeroMinutos: null, suenoDespiertoMinutos: null,
+      suenoScore: null, tasaRespiratoria: null, temperaturaPiel: -0.1,
+      horaDormir: null, horaDespertar: null,
+    };
+    const completeToday: wearableClient.WearableMetrica = { ...partialToday, suenoTotalMinutos: 400, suenoScore: 82 };
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('retries in the background one minute later when the first sync still lacks a complete night for today, and stops once it does', async () => {
+      mockFetches({ ultimaSyncMinutesAgo: 1, metrics: [partialToday, ...sampleMetrics] });
+      vi.mocked(wearableClient.getMetricas)
+        .mockResolvedValueOnce({ total: 3, promedios: {}, data: [partialToday, ...sampleMetrics] })
+        .mockResolvedValueOnce({ total: 3, promedios: {}, data: [partialToday, ...sampleMetrics] })
+        .mockResolvedValue({ total: 3, promedios: {}, data: [completeToday, ...sampleMetrics] });
+
+      render(<ClientRestPanel clientId="client-1" />);
+      await screen.findByText('86');
+
+      // Solo se congela el reloj (setTimeout + Date) DESPUÉS de que cargó
+      // todo lo inicial — con fake timers desde el montaje, el propio
+      // `waitFor`/`findBy*` de Testing Library (que también usa timers para
+      // reintentar) se queda esperando sin nunca poder avanzar.
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
+      vi.setSystemTime(new Date(`${today}T10:00:00Z`));
+      fireEvent.click(screen.getByRole('button', { name: /Sincronizar ahora/ }));
+      // Con setTimeout ya congelado, `findByText`/`waitFor` no pueden
+      // reintentar solos — se drena la cadena de promesas a mano antes de
+      // hacer aserciones síncronas.
+      await vi.advanceTimersByTimeAsync(0);
+      expect(screen.getByText(/seguimos intentando en segundo plano/)).toBeInTheDocument();
+      expect(wearableClient.syncWearable).toHaveBeenCalledTimes(1);
+
+      await vi.advanceTimersByTimeAsync(60_000);
+      await vi.advanceTimersByTimeAsync(0);
+      expect(wearableClient.syncWearable).toHaveBeenCalledTimes(2);
+      // La noche de hoy ya está completa — el aviso desaparece sin más reintentos.
+      expect(screen.queryByText(/seguimos intentando en segundo plano/)).not.toBeInTheDocument();
+
+      await vi.advanceTimersByTimeAsync(5 * 60_000);
+      expect(wearableClient.syncWearable).toHaveBeenCalledTimes(2);
+    });
+
+    it('stops retrying after 4 background attempts even if the night never completes', async () => {
+      mockFetches({ ultimaSyncMinutesAgo: 1, metrics: [partialToday, ...sampleMetrics] });
+      vi.mocked(wearableClient.getMetricas).mockResolvedValue({ total: 3, promedios: {}, data: [partialToday, ...sampleMetrics] });
+
+      render(<ClientRestPanel clientId="client-1" />);
+      await screen.findByText('86');
+
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
+      vi.setSystemTime(new Date(`${today}T10:00:00Z`));
+      fireEvent.click(screen.getByRole('button', { name: /Sincronizar ahora/ }));
+      await vi.advanceTimersByTimeAsync(0);
+      expect(screen.getByText(/seguimos intentando en segundo plano/)).toBeInTheDocument();
+
+      await vi.advanceTimersByTimeAsync(5 * 60_000);
+      // 1 intento manual + 4 reintentos en segundo plano = 5, nunca más.
+      expect(wearableClient.syncWearable).toHaveBeenCalledTimes(5);
+    });
   });
 });
