@@ -179,7 +179,7 @@ export default function ClientTopbar({ viewKey }: ClientTopbarProps) {
             cursor: "pointer",
           }}
         >
-          <Isotipo size={74} />
+          <Isotipo size={40} />
           Ephirox
         </button>
 

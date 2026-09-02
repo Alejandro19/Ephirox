@@ -95,7 +95,7 @@ export default function AdminTopbar({ viewKey }: AdminTopbarProps) {
             cursor: "pointer",
           }}
         >
-          <Isotipo size={74} />
+          <Isotipo size={40} />
           Ephirox
         </button>
 

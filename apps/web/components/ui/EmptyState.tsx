@@ -8,7 +8,7 @@ export default function EmptyState({ message = "No hay datos por ahora." }: { me
       style={{
         color: "var(--eph-faint)",
         padding: "40px 16px",
-        backgroundImage: "repeating-linear-gradient(135deg, #121110 0 8px, #181614 8px 16px)",
+        backgroundImage: "var(--eph-hatch)",
         border: "1px solid var(--eph-line)",
       }}
     >

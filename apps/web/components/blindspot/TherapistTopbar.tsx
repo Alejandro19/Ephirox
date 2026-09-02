@@ -80,7 +80,7 @@ export default function TherapistTopbar({
             cursor: 'pointer',
           }}
         >
-          <Isotipo size={74} />
+          <Isotipo size={40} />
           Ephirox
         </button>
 

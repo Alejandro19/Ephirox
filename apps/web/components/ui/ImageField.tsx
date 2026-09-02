@@ -52,7 +52,7 @@ export default function ImageField({ id, label, onFileChange }: ImageFieldProps)
           className="flex items-center justify-center font-mono text-[10px] font-normal uppercase tracking-[0.16em]"
           style={{
             aspectRatio: "16 / 9", borderRadius: 0, border: "1px solid var(--eph-line-2)",
-            backgroundImage: "repeating-linear-gradient(135deg, #121110 0 8px, #181614 8px 16px)",
+            backgroundImage: "var(--eph-hatch)",
             color: "var(--eph-muted)", cursor: "pointer",
           }}
         >

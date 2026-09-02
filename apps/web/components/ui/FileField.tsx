@@ -58,7 +58,7 @@ export default function FileField({ id, label, accept, disabled, uploading, inva
             ? "rgba(201,164,106,.08)"
             : fileName
               ? "transparent"
-              : "repeating-linear-gradient(135deg, #121110 0 8px, #181614 8px 16px)",
+              : "var(--eph-hatch)",
           fontWeight: 400,
           color: uploading ? "var(--eph-accent)" : fileName ? "var(--eph-text)" : "var(--eph-muted)",
           cursor: inactive ? "not-allowed" : "pointer",

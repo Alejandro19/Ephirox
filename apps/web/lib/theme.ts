@@ -19,9 +19,11 @@ export function isBrandLockedScreen(screen: string): boolean {
 
 export const THEME_MODE_STORAGE_KEY = "ephirox.theme-mode";
 
-// Los 8 módulos con toggle (ver spec §1.1). Cualquier otra ruta (dashboard,
-// login, configuración, admin, terapeuta, auth) no está cubierta por el
-// spec de reskin y se trata como 'dashboard': dark-brand, sin toggle.
+// Los 8 módulos con toggle (ver spec §1.1) + Configuración (agregada a
+// pedido explícito de Alejandro: la pantalla quedaba fija en dark-brand
+// sin importar el toggle elegido, mismo bug que "dashboard"). Cualquier
+// otra ruta (dashboard, login, admin, terapeuta, auth) sigue sin cubrir
+// por el spec de reskin y se trata como 'dashboard': dark-brand, sin toggle.
 const TOGGLEABLE_MODULE_PATHS = [
   "/onboarding",
   "/training",
@@ -31,6 +33,7 @@ const TOGGLEABLE_MODULE_PATHS = [
   "/blindspot",
   "/community",
   "/evolution",
+  "/configuracion",
 ];
 
 export function screenForPathname(pathname: string): string {

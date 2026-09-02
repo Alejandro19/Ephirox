@@ -149,6 +149,9 @@ describe('ClientNutritionPanel', () => {
     expect(window.open).toHaveBeenCalledWith('', '_blank');
     expect(write).toHaveBeenCalledWith(expect.stringContaining('Plan nutricional'));
     expect(write).toHaveBeenCalledWith(expect.stringContaining('Desayuno'));
+    // El header del PDF usa el lockup real de marca (isotipo + wordmark en
+    // SVG), no el texto plano "Ephirox" de antes.
+    expect(write).toHaveBeenCalledWith(expect.stringContaining('viewBox="0 0 530 132"'));
     await waitFor(() => expect(print).toHaveBeenCalled());
   });
 

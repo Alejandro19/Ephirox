@@ -57,9 +57,14 @@
   --eph-surface:#ffffff;
   --eph-surface-2:#f4f2ec;
   --eph-text:#1a1710;
-  --eph-body:rgba(26,23,16,0.50);
-  --eph-muted:rgba(26,23,16,0.40);
-  --eph-faint:rgba(26,23,16,0.30);
+  /* --eph-body/muted/faint: opacidades subidas (antes 0.50/0.40/0.30) —
+     el mismo % de opacidad que en los temas oscuros da mucho menos
+     contraste sobre un fondo claro (texto oscuro diluido en blanco se
+     ve gris pálido, no gris oscuro), dejando ilegibles labels de campo,
+     títulos y subtítulos en light-premium. Reportado por Alejandro. */
+  --eph-body:rgba(26,23,16,0.70);
+  --eph-muted:rgba(26,23,16,0.56);
+  --eph-faint:rgba(26,23,16,0.40);
   --eph-accent:#9a7b3f;
   --eph-accent-hi:#7d6231;
   --eph-ink:#ffffff;
