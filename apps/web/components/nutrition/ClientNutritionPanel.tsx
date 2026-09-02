@@ -19,7 +19,7 @@ import { IconFileDownload } from '../ui/icons';
 // texto que tenía el PDF antes. Se usa la variante negro (no oro) porque el
 // wordmark claro de la variante oro casi no se leía sobre el fondo claro
 // del PDF (~1.1:1 de contraste).
-const EPHIROX_LOCKUP_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 530 132" width="210" height="52">
+const EPHIROX_LOCKUP_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 530 132">
   <circle cx="66" cy="66" r="62" fill="none" stroke="#0B0A08" stroke-width="4" stroke-dasharray="329 60.6" transform="rotate(-61.9 66 66)"></circle>
   <circle cx="66" cy="66" r="47" fill="none" stroke="#0B0A08" stroke-opacity="0.38" stroke-width="3.4" stroke-dasharray="250 45.3" transform="rotate(-242.3 66 66)"></circle>
   <circle cx="66" cy="66" r="6" fill="#0B0A08"></circle>
@@ -150,8 +150,9 @@ body{font-family:'Jost',Arial,sans-serif;color:#1C1613;background:#EDE6DC;paddin
 .pdf-meal,.pdf-supp-row,.pdf-closing,.pdf-section{break-inside:avoid;page-break-inside:avoid;}
 .pdf-meal,.pdf-section{padding-top:12mm;}
 .pdf-header{display:flex;flex-direction:column;align-items:flex-start;text-align:left;margin-top:0;}
-.pdf-wordmark{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:22pt;line-height:1.25;color:#C9A46A;margin:0;}
-.pdf-tagline{font-size:9pt;color:#8A8377;margin:4px 0 14px;}
+.pdf-lockup-header{width:210px;}
+.pdf-lockup-header svg,.pdf-lockup-footer svg{display:block;width:100%;height:auto;}
+.pdf-tagline{font-size:9pt;color:#8A8377;margin:4px 0 14px 74px;}
 .pdf-rule{border:none;border-top:1.5px solid #C9A46A;margin:0 0 40px;}
 .pdf-title{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:19pt;line-height:1.25;color:#2B2621;margin:0 0 6px;text-align:center;}
 .pdf-summary{font-size:9.5pt;line-height:1.6;color:#6B6459;text-align:left;max-width:560px;margin:0 0 24px;}
@@ -179,7 +180,7 @@ body{font-family:'Jost',Arial,sans-serif;color:#1C1613;background:#EDE6DC;paddin
 .pdf-closing-rule{width:30%;margin:0 auto 16px;border:none;border-top:1px solid #E7DFC9;}
 .pdf-closing-quote{font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:500;font-size:12pt;line-height:1.5;color:#2B2621;}
 .pdf-footer{text-align:center;margin-top:24px;page-break-inside:avoid;break-inside:avoid;}
-.pdf-footer-word{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:15pt;color:#C9A46A;margin:0 0 6px;}
+.pdf-lockup-footer{width:130px;margin:0 auto 6px;}
 .pdf-footer-tagline{font-size:8pt;color:#8A8377;margin:0;}
 `;
 
@@ -250,7 +251,7 @@ function downloadNutritionPdf(plan: NutritionPlan, supplements: Supplement[]) {
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,500&family=Jost:wght@400;600&display=swap" rel="stylesheet">
     <style>${NUTRITION_PDF_CSS}</style></head><body>
     <div class="pdf-header">
-      ${EPHIROX_LOCKUP_SVG}
+      <div class="pdf-lockup-header">${EPHIROX_LOCKUP_SVG}</div>
       <p class="pdf-tagline">Redefining limits.</p>
     </div>
     <hr class="pdf-rule">
@@ -262,7 +263,7 @@ function downloadNutritionPdf(plan: NutritionPlan, supplements: Supplement[]) {
     ${suppHtml}
     ${closingHtml}
     <div class="pdf-footer">
-      <p class="pdf-footer-word">Ephirox</p>
+      <div class="pdf-lockup-footer">${EPHIROX_LOCKUP_SVG}</div>
       <p class="pdf-footer-tagline">Redefining limits.</p>
     </div>
     </body></html>`
