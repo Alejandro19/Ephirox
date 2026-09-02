@@ -13,8 +13,15 @@ describe('screenForPathname / resolveTheme', () => {
     expect(screenForPathname('/configuracion/membresias')).toBe('module');
   });
 
-  it('keeps the home dashboard ("/") brand-locked to dark-brand regardless of the toggle', () => {
-    expect(screenForPathname('/')).toBe('dashboard');
+  it('treats the home screen ("/") as a toggleable module — regression: used to be forced to dark-brand regardless of the toggle', () => {
+    expect(screenForPathname('/')).toBe('module');
+    expect(isBrandLockedScreen(screenForPathname('/'))).toBe(false);
+    expect(resolveTheme(screenForPathname('/'), 'light')).toBe('light-premium');
+    expect(resolveTheme(screenForPathname('/'), 'dark')).toBe('dark-carbon');
+  });
+
+  it('still treats an uncovered route (e.g. admin) as brand-locked dark-brand', () => {
+    expect(screenForPathname('/admin')).toBe('dashboard');
     expect(resolveTheme('dashboard', 'light')).toBe('dark-brand');
   });
 
