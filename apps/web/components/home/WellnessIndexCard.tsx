@@ -28,8 +28,12 @@ export function WellnessIndexCard({ clientId }: { clientId: string }) {
 
   return (
     <div
-      className="mb-8 flex items-center gap-5 rounded-[0] p-7"
-      style={{ background: 'linear-gradient(135deg, var(--eph-surface), var(--eph-surface-2))', color: 'var(--eph-text)' }}
+      className="mb-8 flex items-center gap-5 rounded-[0] border p-7"
+      style={{
+        background: 'linear-gradient(135deg, var(--eph-surface), var(--eph-surface-2))',
+        borderColor: 'var(--eph-line)',
+        color: 'var(--eph-text)',
+      }}
     >
       <RingProgress value={data.value} size={76} strokeWidth={2}>
         <div className="flex flex-col items-center justify-center">
