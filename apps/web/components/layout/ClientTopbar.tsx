@@ -9,7 +9,7 @@ import { getModuleAccessState } from "../../lib/module-access";
 import NotificationBell from "./NotificationBell";
 import ThemeToggle from "./ThemeToggle";
 import { useThemeMode } from "./ThemeRoot";
-import BrandRing from "../ui/BrandRing";
+import Isotipo from "../ui/Isotipo";
 import { CrownBadge } from "../ui/CrownBadge";
 import { ModuleExpiredModal } from "./ModuleExpiredModal";
 import { IconLock, IconSettings, IconLogout } from "../ui/icons";
@@ -179,7 +179,7 @@ export default function ClientTopbar({ viewKey }: ClientTopbarProps) {
             cursor: "pointer",
           }}
         >
-          <BrandRing size={24} />
+          <Isotipo size={74} />
           Ephirox
         </button>
 

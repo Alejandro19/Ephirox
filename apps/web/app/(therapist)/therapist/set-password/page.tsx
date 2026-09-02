@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from 'react';
 import { getSessionToken, saveSession, changePasswordRequest } from '@/lib/api-client';
-import BrandRing from '@/components/ui/BrandRing';
+import Isotipo from '@/components/ui/Isotipo';
 import Button from '@/components/ui/Button';
 
 export default function TherapistSetPasswordPage() {
@@ -61,7 +61,7 @@ export default function TherapistSetPasswordPage() {
     <div style={{ minHeight: '100vh', background: 'var(--eph-bg)', padding: '32px 16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ maxWidth: 420, width: '100%', background: 'var(--eph-surface)', border: '1px solid var(--eph-line)', borderRadius: 0, padding: 32 }}>
         <div className="flex justify-center mb-5">
-          <BrandRing size={40} />
+          <Isotipo size={40} />
         </div>
         <h1 className="font-display text-2xl font-normal text-center mb-1.5" style={{ color: 'var(--eph-text)' }}>Crea tu contraseña</h1>
         <p className="font-body text-sm text-center mb-6" style={{ color: 'var(--eph-body)' }}>

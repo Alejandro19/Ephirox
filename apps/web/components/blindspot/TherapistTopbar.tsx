@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { getSessionToken, decodeTokenPayload, clearSession } from '@/lib/api-client';
-import BrandRing from '../ui/BrandRing';
+import Isotipo from '../ui/Isotipo';
 import { THERAPIST_NAV, type TherapistModuleKey } from './therapist-nav';
 
 const COLLAPSE_BREAKPOINT = 1280;
@@ -80,7 +80,7 @@ export default function TherapistTopbar({
             cursor: 'pointer',
           }}
         >
-          <BrandRing size={24} />
+          <Isotipo size={74} />
           Ephirox
         </button>
 

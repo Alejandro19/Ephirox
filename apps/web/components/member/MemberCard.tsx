@@ -5,7 +5,7 @@ import Link from 'next/link';
 import useSWR from 'swr';
 import { fetchClient } from '../../lib/clients-client';
 import { MEMBERSHIP_LABELS } from '../../lib/constants';
-import BrandRing from '../ui/BrandRing';
+import Isotipo from '../ui/Isotipo';
 
 function formatMemberNumber(n: number): string {
   return String(n).padStart(5, '0');
@@ -69,7 +69,7 @@ export function MemberCard({ clientId }: { clientId: string }) {
           style={{ background: 'linear-gradient(115deg, rgba(201,164,106,0) 38%, rgba(201,164,106,0.10) 50%, rgba(201,164,106,0) 62%)' }}
         />
         <div className="relative flex items-start justify-between gap-4">
-          <BrandRing size={32} />
+          <Isotipo size={34} />
           <div className="text-right font-mono text-[9px] uppercase leading-[1.9] tracking-[0.2em]" style={{ color: 'var(--eph-body)' }}>
             <div>MEMBRESÍA</div>
             <div>N.º {formatMemberNumber(client.memberNumber)}</div>

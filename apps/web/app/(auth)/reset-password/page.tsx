@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, type FormEvent } from 'react';
 import { resetPasswordRequest } from '@/lib/api-client';
-import BrandRing from '@/components/ui/BrandRing';
+import Isotipo from '@/components/ui/Isotipo';
 import Button from '@/components/ui/Button';
 
 const PANEL_BG = 'var(--eph-bg)';
@@ -64,7 +64,7 @@ export default function ResetPasswordPage(): React.ReactElement {
             className="pointer-events-none absolute rounded-full"
             style={{ width: 260, height: 260, background: 'radial-gradient(circle, rgba(201,164,106,.18) 0%, transparent 70%)' }}
           />
-          <BrandRing size={64} />
+          <Isotipo size={64} />
           <h1 className="relative z-[1] font-display text-2xl font-normal uppercase tracking-[0.16em] mt-[18px] mb-1.5" style={{ color: 'var(--eph-text)' }}>Ephirox</h1>
           <p className="relative z-[1] font-display italic text-[12.5px]" style={{ color: 'var(--eph-accent)' }}>Redefining limits.</p>
         </div>

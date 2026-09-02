@@ -3,7 +3,7 @@
 import React, { useEffect, useState, type FormEvent } from 'react';
 import { therapistLogin } from '@/lib/blindspot-client';
 import { saveSession, forgotPasswordRequest } from '@/lib/api-client';
-import BrandRing from '@/components/ui/BrandRing';
+import Isotipo from '@/components/ui/Isotipo';
 import Button from '@/components/ui/Button';
 
 // Mismo patrón que (auth)/login/page.tsx: identidad Ephirox, ambos paneles
@@ -109,7 +109,7 @@ export default function TherapistLoginPage(): React.ReactElement {
               className="pointer-events-none absolute rounded-full"
               style={{ width: 260, height: 260, background: 'radial-gradient(circle, rgba(201,164,106,.18) 0%, transparent 70%)' }}
             />
-            <BrandRing size={64} />
+            <Isotipo size={64} />
             <h1 className="relative z-[1] font-display text-2xl font-normal uppercase tracking-[0.16em] mt-[18px] mb-1.5" style={{ color: 'var(--eph-text)' }}>Ephirox</h1>
             <p className="relative z-[1] font-display italic text-[12.5px]" style={{ color: 'var(--eph-accent)' }}>Redefining limits.</p>
           </div>

@@ -8,7 +8,7 @@ import {
   forgotPasswordRequest,
 } from '@/lib/api-client';
 import { getSafeRedirectTarget, getSetPasswordUrl } from '@/lib/login-redirect';
-import BrandRing from '@/components/ui/BrandRing';
+import Isotipo from '@/components/ui/Isotipo';
 import Button from '@/components/ui/Button';
 
 // "Recuérdame" solo guarda el email localmente (nunca la contraseña — un
@@ -388,10 +388,10 @@ export default function LoginPage(): React.ReactElement {
         <div className="max-w-4xl w-full md:min-h-[600px] grid grid-cols-1 md:grid-cols-2 rounded-none border overflow-hidden" style={{ borderColor: 'var(--eph-line-2)', boxShadow: 'var(--eph-shadow)' }}>
 
           {/* ========== LADO IZQUIERDO — IDENTIDAD EPHIROX ========== */}
-          {/* Sin glow: el prototipo aprobado pide el anillo en trazo limpio,
-              sin halo difuso detrás. */}
+          {/* Sin halo ni anillos decorativos alrededor (Prompt 03 §3): el
+              halo es un recurso gráfico aparte, nunca parte del logo. */}
           <div className="relative overflow-hidden p-12 flex flex-col items-center justify-center text-center gap-[34px]" style={{ background: 'var(--eph-panel)' }}>
-            <BrandRing size={118} />
+            <Isotipo size={118} />
             <div style={{ textAlign: 'center' }}>
               <div
                 className="font-display uppercase"

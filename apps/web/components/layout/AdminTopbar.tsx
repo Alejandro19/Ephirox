@@ -6,7 +6,7 @@ import { useAuth } from "../../lib/auth-context";
 import { useTranslation } from "../../lib/i18n/useTranslation";
 import { ADMIN_NAV, ADMIN_HUB_SUBITEMS, VIEW_TO_PATH } from "../../lib/constants";
 import NotificationBell from "./NotificationBell";
-import BrandRing from "../ui/BrandRing";
+import Isotipo from "../ui/Isotipo";
 
 type AdminTopbarProps = {
   viewKey: string;
@@ -95,7 +95,7 @@ export default function AdminTopbar({ viewKey }: AdminTopbarProps) {
             cursor: "pointer",
           }}
         >
-          <BrandRing size={24} />
+          <Isotipo size={74} />
           Ephirox
         </button>
 
