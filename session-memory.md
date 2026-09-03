@@ -518,7 +518,7 @@ Suites completas de `apps/api` y `apps/web` corridas repetidamente durante toda 
 
 ---
 
-## Resumen Ejecutivo — Sesión 2026-08-31 → 2026-09-01
+## Resumen Ejecutivo — Sesión 2026-08-31 → 2026-09-02
 
 ### 1. Edad Biológica vía PhenoAge (Levine et al. 2018) — Evolution / Ephi-Metrics (Prompt 02 §6)
 
@@ -584,13 +584,54 @@ Alejandro reportó que en el header del PDF "Redefining limits." se veía desorg
 
 **Verificado visualmente, no solo leyendo el código:** se extrajo el CSS+SVG reales del componente a un HTML standalone en el scratchpad y se renderizó con Chrome en modo headless (`--screenshot`) para confirmar el resultado antes de dar el cambio por bueno — el tagline efectivamente quedó alineado bajo la "E" de "EPHIROX" y no bajo el ícono.
 
-### 9. Verificación
+### 9. Variante negra del logo en el PDF de nutrición (decisión tomada)
 
-`tsc --noEmit` limpio en `apps/web` en cada punto de control. Suite completa de `apps/web` corrida de nuevo tras estos cambios: 2 fallos, ambos confirmados como pre-existentes y no relacionados corriendo la misma suite contra un `git stash` del estado limpio (`login-page.test.tsx` — 4 de 5 tests, ver Actividad 4 de próximas actividades — y `wizard-shell-finalize.test.tsx` — 5 tests, timeouts de 15s por causa aún no investigada en este segmento). Los 14 tests de `client-rest-panel.test.tsx` (incluidos los 2 nuevos de reintentos), los 6 de `theme.test.ts` y los 9 de `client-nutrition-panel.test.tsx` pasan limpios.
+Alejandro confirmó cambiar `ephirox-lockup-horizontal-oro.svg` por `ephirox-lockup-horizontal-negro.svg` (monocromática, `#0B0A08`) en el header y el cierre del PDF de nutrición — resuelve el problema de contraste flagueado en la sección 8. Mismo geometría, solo cambian los colores de relleno/trazo.
+
+### 10. Sistema unificado de "Rituales" — fusión de los 3 check-ins dispersos
+
+Pedido explícito de Alejandro: fusionar el pulso de ánimo, el check-in matutino de Stress (energía/tensión/claridad) y la reflexión semanal en dos bloques del Dashboard — **Ritual Diario** y **Ritual Semanal** — con un mismo mecanismo de expandido/pendiente ↔ colapsado/completado, reutilizable y parametrizado por cadencia.
+
+**Investigación previa (corrigió la premisa del pedido original):** el pulso de ánimo y la reflexión semanal YA vivían juntos en una sola tarjeta del Dashboard (`CheckinCard.tsx`, montada en `app/(app)/page.tsx`) — no en Workout, como decía el pedido. Solo el check-in matutino de Stress vivía en otro módulo con otro modelo de acceso (`requirePermission('cortisol')`, más amplio que el `mentoringOnly` de los otros dos). Esto simplificó la fusión.
+
+**Decisiones confirmadas con Alejandro antes de implementar:**
+- Acceso del Ritual Diario = Mentoría (mismo gate que ánimo/reflexión). Consecuencia aceptada: un cliente no-Mentoría que hoy podía responder el check-in de Stress deja de poder hacerlo — ve un resumen de solo lectura permanentemente vacío.
+- Caso borde encontrado en la investigación: ni siquiera un cliente Mentoría tiene garantizado el acceso a Stress (matriz de tipo + override por cliente, ambos pueden estar en `false`). El Ritual Diario chequea esto con `getModuleAccessState('cortisol', ...)` y, si no hay acceso, muestra solo la pregunta de ánimo — nunca llama al endpoint de morning-checkin en ese caso, para evitar un 403 garantizado.
+- Nombres internos bajo `components/rituals/` (`DailyRitualCard`, `WeeklyRitualCard`, `RitualCheckinCard`) para no colisionar con el concepto ya existente de "Ritual" en Stress (`cortisolTechniques.isRitual` / "The Rox Ritual", técnicas curadas por el admin, no relacionado).
+- Ventana del Ritual Semanal: originalmente domingo, luego ampliada a sábado+domingo (ver sección 11).
+
+**Implementación (sin tocar tablas, endpoints ni fórmulas):**
+- `DailyRitualCard`: un solo botón "Guardar ritual" postea a `daily-checkin` y (si hay acceso) a `morning-checkin`, los mismos dos endpoints de siempre — la fórmula de Activación Matutina/Carga Cognitiva no cambia, solo el lugar donde se capturan los datos.
+- `WeeklyRitualCard`: mismas 3 preguntas y endpoint de siempre (`weekly-reflection`), ahora con ventana de aparición.
+- Stress ya no tiene su propio formulario de check-in matutino (`MorningCheckinPrompt.tsx`, borrado) — `MorningCheckinSummary.tsx` muestra un resumen de solo lectura con 3 estados (sin acceso / Mentoría sin dato hoy / con dato).
+- `CheckinCard.tsx` se dividió: ánimo y reflexión semanal migraron a `rituals/`, y `PeriodConfirmationCard.tsx` se quedó solo con la pregunta de período (sin cambios de comportamiento).
+- Backend (`checkins.service.ts`, único archivo tocado): `getCheckinsStatus` ganó `dailyStreakDays`/`weeklyStreakWeeks` (funciones puras, mismo patrón que `computeConsecutiveDaysOverThreshold` y `computeTrainingStreakState`) y `weeklyRitualWindowOpen`.
+- Como todo ya hacía upsert por día/semana, "editar la respuesta" no necesitó backend nuevo: solo reabrir el formulario precargado.
+
+Antes de implementar se investigó a fondo (agente Explore + lecturas directas) dónde vivía cada uno de los 3 check-ins, su modelo de acceso, y el blast radius completo (incluido que `insights/engine.ts` lee la reflexión semanal para refrescar el baseline de Mentoría) — se armó un plan formal (`/plan`) revisado antes de escribir código, dado el tamaño y las decisiones de arquitectura involucradas.
+
+### 11. Ajustes de comportamiento y diseño de Rituales, pedidos tras ver el resultado inicial
+
+Alejandro pidió tres cambios después de ver el resumen de la implementación:
+
+- **Los dos Rituales ya nunca desaparecen del Dashboard.** Antes, el Ritual Semanal se ocultaba por completo fuera de su ventana. Ahora se queda visible pero **bloqueado** (ícono de candado + "Se habilita el sábado y domingo — vuelve entonces para responder", sin formulario ni botón) — a propósito: verlo ahí sabiendo que se habilitará genera más retentiva que ocultarlo. `RitualCheckinCard` ganó este tercer estado (además de pendiente/completado).
+- **Ventana ampliada de domingo a sábado+domingo** (`isSundayUTC` → `isWeekendUTC` en `checkins.service.ts`).
+- **Diseño visual igualado al de Workout**: ambos Rituales pasaron de ir apilados verticalmente a un grid de 2 columnas lado a lado, con el mismo `border` + `p-6` + `var(--eph-surface)`/`var(--eph-line)` que ya usan las cards "Tu semana"/"Protector de racha disponible" de `TrainingHome.tsx` — el estado bloqueado reutiliza exactamente ese mismo patrón visual (círculo con ícono + texto al lado), en vez de inventar uno nuevo.
+
+### 12. Dos bugs de UI reportados sueltos, corregidos en el camino
+
+- **Card de "Índice de rendimiento" sin borde en tema CLARO.** Era la única card del menú principal sin `border` declarado (`WellnessIndexCard.tsx`) — las demás (MemberCard, tiles de acceso rápido, Workout) ya usaban `var(--eph-line)`. Corregido agregando el mismo borde. Después, a pedido de Alejandro, esta card se ocultó del todo del Dashboard y la tarjeta de membresía subió a la 3ra posición (justo tras los dos Rituales — no la 2da literal, para no romper el requisito de que los Rituales sean "los dos primeros bloques" ya confirmado).
+- **"Recetas saludables" y "Tips and tricks" en Nutrition sin card propia.** Usaban solo un `border-top` de separador, a diferencia de "Esquema de suplementación" y el resto del módulo (card completa con borde + fondo + padding). Igualadas al mismo patrón.
+
+### 13. Verificación
+
+`tsc --noEmit` limpio en ambos paquetes en cada punto de control. Suites completas corridas repetidamente: `apps/web` (427 tests) y `apps/api` (490-508 tests) sin regresiones nuevas — los únicos fallos son los ya documentados como pre-existentes y no relacionados (`login-page.test.tsx`, `wizard-shell-finalize.test.tsx`, y ocasionalmente `onboarding-page.test.tsx`/`onboarding-approvals.routes.test.ts`/`wearable-baseline.test.ts` por contención de CPU bajo la suite completa — confirmados limpios corriéndolos aislados). Se agregaron ~20 tests nuevos para el sistema de Rituales (`daily-ritual-card.test.tsx`, `weekly-ritual-card.test.tsx`, `morning-checkin-summary.test.tsx`, `checkins-streaks.test.ts`).
+
+**Pendiente, no verificado por Claude:** el flujo completo de Ritual Diario/Semanal (guardar → colapsar → editar) no se probó en un navegador real con sesión autenticada de un cliente Mentoría — solo vía tests con mocks, `tsc` y una captura de Chrome headless para el fix del PDF. Alejandro debe confirmarlo en vivo.
 
 ---
 
-## Próximas actividades — Siguiente sesión (actualizada 2026-09-01)
+## Próximas actividades — Siguiente sesión (actualizada 2026-09-02)
 
 ### Actividad 1 — Confirmar que el login desde el celular ya funciona
 
@@ -622,7 +663,11 @@ Alejandro reportó que en el header del PDF "Redefining limits." se veía desorg
 
 ### Actividad 8 — Confirmar si se quiere commitear los cambios pendientes de `WizardShell.tsx`/`TrainingHome.tsx`/`TrainingShell.tsx`/`training-client.ts` (arrastrada de una tarea anterior)
 
-- Estos archivos (y sus tests) quedaron modificados sin commitear desde la tarea de fusión de encabezados Baseline/Workout, de antes de esta sesión — no forman parte del trabajo de rebrand/Oura de esta sesión y no se tocaron ni se commitearon con él a propósito (disciplina de un commit por tarea). Siguen esperando confirmación.
+- Estos archivos (y sus tests) quedaron modificados sin commitear desde la tarea de fusión de encabezados Baseline/Workout, de antes de esta sesión — no forman parte del trabajo de rebrand/Oura/Rituales de esta sesión y no se tocaron ni se commitearon con él a propósito (disciplina de un commit por tarea). Siguen esperando confirmación.
+
+### Actividad 9 — Confirmar en vivo el flujo completo de Ritual Diario / Ritual Semanal (nueva, 2026-09-02)
+
+- Ver sección 10-11 del resumen de esta sesión. Todo lo implementado pasa `tsc`, tests con mocks y la suite completa, pero nadie (ni Claude ni Alejandro) probó el ciclo completo guardar → colapsar → editar en un navegador real con sesión de un cliente Mentoría — incluido el caso borde de un cliente Mentoría sin acceso a Stress (debería mostrar solo la pregunta de ánimo) y el estado bloqueado del Ritual Semanal fuera de sábado/domingo.
 
 ---
 
