@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --port 3000",
+    "prebuild": "pnpm --filter @latribu/shared-types build",
     "build": "next build",
     "start": "next start",
     "test": "vitest run"
