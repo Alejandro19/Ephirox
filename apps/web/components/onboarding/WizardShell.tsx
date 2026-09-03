@@ -8,7 +8,6 @@ import { WizardField } from './WizardField';
 import { CountryCityPicker, type CountryCityValue } from './CountryCityPicker';
 import { Module3, EMPTY_MODULE3_DRAFT, validateModule3, type Module3Draft } from './Module3';
 import { Module10, EMPTY_MODULE10_DRAFT, type Module10Draft } from './Module10';
-import IdentityHeader from '../ui/IdentityHeader';
 import RingProgress from '../ui/RingProgress';
 import Button from '../ui/Button';
 import { upsertLabPanel } from '../../lib/lab-panels-client';
@@ -358,25 +357,34 @@ export function WizardShell({ clientId, variant }: WizardShellProps) {
 
   return (
     <div>
-      <IdentityHeader
-        title="Baseline"
-        subtitle="El punto de partida exacto. Cada dato aquí calibra tu protocolo de optimización."
-      />
-
-      {/* Progreso del formulario — sin bloque de color, RingProgress como único acento */}
-      <div className="mb-6 flex items-center justify-between gap-5 border-t pt-5" style={{ borderColor: 'var(--eph-line)' }}>
-        <div className="flex-1">
-          <p className="m-0 mb-2.5 font-mono text-[10px] uppercase tracking-[0.16em]" style={{ color: 'var(--eph-accent)' }}>
-            Módulo {step} de {totalModules}
+      {/* Header de Baseline + estado del módulo actual en la misma línea —
+          caso especial de este wizard (necesita el progreso en vivo), no
+          usa <IdentityHeader/> genérico como el resto de los módulos. */}
+      <div
+        className="mb-6 flex flex-wrap items-end justify-between gap-6 pb-8"
+        style={{ borderBottom: '1px solid var(--eph-line-2)' }}
+      >
+        <div className="font-display">
+          <h1 style={{ fontSize: 'clamp(40px, 5vw, 58px)', fontWeight: 300, lineHeight: 1, margin: '0 0 16px', color: 'var(--eph-text)' }}>
+            Baseline
+          </h1>
+          <p className="font-mono" style={{ fontSize: 10, color: 'var(--eph-body)', margin: 0, textTransform: 'uppercase', letterSpacing: '0.2em', fontWeight: 300 }}>
+            El punto de partida exacto. Cada dato aquí calibra tu protocolo de optimización.
           </p>
-          <p className="m-0 mb-1 font-display text-[22px]" style={{ color: 'var(--eph-text)' }}>{mod.title}</p>
-          <p className="m-0 font-mono text-[10px] uppercase tracking-[0.12em]" style={{ color: 'var(--eph-muted)' }}>{formPct}% de tu formulario completado</p>
         </div>
-        <RingProgress value={formPct} size={70} strokeWidth={6} />
+        <div className="flex flex-shrink-0 items-center gap-5">
+          <div className="text-right">
+            <p className="m-0 mb-2 font-mono text-[10px] uppercase tracking-[0.16em]" style={{ color: 'var(--eph-accent)' }}>
+              Módulo {step} de {totalModules}
+            </p>
+            <p className="m-0 font-display text-[22px]" style={{ color: 'var(--eph-text)' }}>{mod.title}</p>
+          </div>
+          <RingProgress value={formPct} size={70} strokeWidth={6} />
+        </div>
       </div>
 
       {/* Punticos de módulo */}
-      <div className="mb-6 flex flex-wrap gap-1.5">
+      <div className="mb-6 flex flex-wrap gap-2">
         {modules.map((m) => {
           const done = m.n < step;
           const current = m.n === step;
@@ -387,7 +395,7 @@ export function WizardShell({ clientId, variant }: WizardShellProps) {
               onClick={() => setStep(m.n)}
               aria-current={current ? 'step' : undefined}
               aria-label={`Ir al módulo ${m.n}: ${m.title}`}
-              className="flex h-8 w-8 items-center justify-center rounded-full border font-mono text-[12px] transition-colors"
+              className="flex h-10 w-10 items-center justify-center rounded-full border font-mono text-[14px] transition-colors"
               style={{
                 background: current ? "var(--eph-accent)" : "transparent",
                 borderColor: current || done ? "var(--eph-accent)" : "var(--eph-line)",

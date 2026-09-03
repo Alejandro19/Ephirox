@@ -2,10 +2,8 @@
 
 import { useState } from 'react';
 import type { Exercise, TrainingCompletion, TrainingStreak } from '../../lib/training-client';
-import type { MindsetQuote } from '../../lib/quotes-client';
 import { isDayUnlocked, isDayCompletedThisWeek, calculateDisciplineStats } from '../../lib/training-home-logic';
 import IdentityHeader from '../ui/IdentityHeader';
-import MantraCard from '../ui/MantraCard';
 import Button from '../ui/Button';
 import { ProgressBar } from './TrainingVisuals';
 import { IconFlame, IconShield, IconLock } from '../ui/icons';
@@ -19,8 +17,6 @@ export type TrainingHomeProps = {
   exercises: Exercise[];
   completions: TrainingCompletion[];
   streak: TrainingStreak | null;
-  quote: MindsetQuote | null;
-  clientName: string;
   onOpenDay: (day: number) => void;
   onUseProtector: () => void;
   protectorPending: boolean;
@@ -53,8 +49,6 @@ export function TrainingHome({
   exercises,
   completions,
   streak,
-  quote,
-  clientName,
   onOpenDay,
   onUseProtector,
   protectorPending,
@@ -71,19 +65,11 @@ export function TrainingHome({
       <IdentityHeader title="Workout" subtitle={trainingDays ? 'Tu programa de ejercicios personalizado.' : undefined} />
       {clientType === 'mentoring' && <InsightsSection clientId={clientId} moduleKey="entrenamiento" />}
 
-      {quote && (
-        <MantraCard mantra={quote.quote} lead={`Hola ${clientName}, repite después de mí:`} author={quote.author} />
-      )}
-
       {heroDay !== null && (
         <div
           className="relative mt-8 mb-6 overflow-hidden border p-7"
-          style={{ background: 'var(--eph-surface)', borderColor: 'var(--eph-line)', color: 'var(--eph-text)' }}
+          style={{ background: 'var(--eph-panel)', borderColor: 'var(--eph-accent-edge)', color: 'var(--eph-text)' }}
         >
-          <div
-            className="pointer-events-none absolute -right-10 -top-10 h-[180px] w-[180px] rounded-full"
-            style={{ background: 'radial-gradient(circle, color-mix(in srgb, var(--eph-accent) 16%, transparent) 0%, transparent 70%)' }}
-          />
           <div className="relative z-10 mb-2.5 flex items-start justify-between gap-3">
             <p className="font-mono text-[10px] uppercase tracking-[0.16em]" style={{ color: 'var(--eph-accent)' }}>
               HOY · DÍA {heroDay}
@@ -115,70 +101,70 @@ export function TrainingHome({
       )}
 
       {streak && (
-        <section className="border p-6 mb-5" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface)' }}>
-          <div className="mb-3 font-display text-[16px]" style={{ color: 'var(--eph-text)' }}>Tu semana</div>
-          <div className="flex items-center gap-2.5">
-            {Array.from({ length: streak.sessionsRequiredThisWeek }, (_, i) => i + 1).map((n) => {
-              const done = n <= streak.sessionsDoneThisWeek;
-              const shielded = !done && streak.protectorUsedThisWeek;
-              return (
-                <div
-                  key={n}
-                  className="flex h-[34px] w-[34px] flex-shrink-0 items-center justify-center rounded-full border font-mono text-[13px] transition-colors"
-                  style={
-                    done
-                      ? { borderColor: 'var(--eph-accent)', background: 'var(--eph-accent)', color: 'var(--eph-ink)' }
-                      : shielded
-                        ? { borderColor: 'var(--eph-steel)', color: 'var(--eph-steel)' }
-                        : { borderColor: 'var(--eph-line-2)', color: 'var(--eph-body)' }
-                  }
-                >
-                  {done ? '✓' : shielded ? <IconShield size={14} /> : n}
-                </div>
-              );
-            })}
-          </div>
-          <p className="mt-3 font-body text-[13px]" style={{ color: 'var(--eph-body)' }}>
-            {streak.protectorUsedThisWeek
-              ? 'Semana protegida — no necesitas completar más sesiones para conservar tu racha.'
-              : `${streak.sessionsDoneThisWeek} de ${streak.sessionsRequiredThisWeek} sesiones completadas.`}
-          </p>
-        </section>
-      )}
+        <div className="mb-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <section className="border p-6" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface)' }}>
+            <div className="mb-3 font-display text-[16px]" style={{ color: 'var(--eph-text)' }}>Tu semana</div>
+            <div className="flex items-center gap-2.5">
+              {Array.from({ length: streak.sessionsRequiredThisWeek }, (_, i) => i + 1).map((n) => {
+                const done = n <= streak.sessionsDoneThisWeek;
+                const shielded = !done && streak.protectorUsedThisWeek;
+                return (
+                  <div
+                    key={n}
+                    className="flex h-[34px] w-[34px] flex-shrink-0 items-center justify-center rounded-full border font-mono text-[13px] transition-colors"
+                    style={
+                      done
+                        ? { borderColor: 'var(--eph-accent)', background: 'var(--eph-accent)', color: 'var(--eph-ink)' }
+                        : shielded
+                          ? { borderColor: 'var(--eph-steel)', color: 'var(--eph-steel)' }
+                          : { borderColor: 'var(--eph-line-2)', color: 'var(--eph-body)' }
+                    }
+                  >
+                    {done ? '✓' : shielded ? <IconShield size={14} /> : n}
+                  </div>
+                );
+              })}
+            </div>
+            <p className="mt-3 font-body text-[13px]" style={{ color: 'var(--eph-body)' }}>
+              {streak.protectorUsedThisWeek
+                ? 'Semana protegida — no necesitas completar más sesiones para conservar tu racha.'
+                : `${streak.sessionsDoneThisWeek} de ${streak.sessionsRequiredThisWeek} sesiones completadas.`}
+            </p>
+          </section>
 
-      {streak && (
-        <section className="border p-6 mb-5" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface)' }}>
-          <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border" style={{ borderColor: 'var(--eph-steel)', color: 'var(--eph-steel)' }}>
-              <IconShield size={15} />
-            </div>
-            <div className="flex-1">
-              <div className="font-body text-xs font-medium" style={{ color: 'var(--eph-text)' }}>
-                {streak.protectorUsedThisWeek ? 'Protector ya usado esta semana' : 'Protector de racha disponible'}
+          <section className="border p-6" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface)' }}>
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border" style={{ borderColor: 'var(--eph-steel)', color: 'var(--eph-steel)' }}>
+                <IconShield size={15} />
               </div>
-              <div className="mt-0.5 font-body text-[10.5px]" style={{ color: 'var(--eph-muted)' }}>
-                {streak.protectorUsedThisWeek
-                  ? 'Vuelve a estar disponible la próxima semana.'
-                  : 'Úsalo si esta semana no puedes completar tus sesiones — tu racha no se rompe.'}
+              <div className="flex-1">
+                <div className="font-body text-xs font-medium" style={{ color: 'var(--eph-text)' }}>
+                  {streak.protectorUsedThisWeek ? 'Protector ya usado esta semana' : 'Protector de racha disponible'}
+                </div>
+                <div className="mt-0.5 font-body text-[10.5px]" style={{ color: 'var(--eph-muted)' }}>
+                  {streak.protectorUsedThisWeek
+                    ? 'Vuelve a estar disponible la próxima semana.'
+                    : 'Úsalo si esta semana no puedes completar tus sesiones — tu racha no se rompe.'}
+                </div>
               </div>
+              <button
+                type="button"
+                disabled={streak.protectorUsedThisWeek || protectorPending}
+                onClick={onUseProtector}
+                className="h-8 flex-shrink-0 rounded-[999px] border px-3.5 font-mono text-[10px] uppercase tracking-[0.08em] disabled:cursor-default disabled:opacity-40"
+                style={{ borderColor: 'var(--eph-steel)', color: 'var(--eph-steel)' }}
+              >
+                {streak.protectorUsedThisWeek ? 'Usado' : 'Usar protector'}
+              </button>
             </div>
-            <button
-              type="button"
-              disabled={streak.protectorUsedThisWeek || protectorPending}
-              onClick={onUseProtector}
-              className="h-8 flex-shrink-0 rounded-[999px] border px-3.5 font-mono text-[10px] uppercase tracking-[0.08em] disabled:cursor-default disabled:opacity-40"
-              style={{ borderColor: 'var(--eph-steel)', color: 'var(--eph-steel)' }}
-            >
-              {streak.protectorUsedThisWeek ? 'Usado' : 'Usar protector'}
-            </button>
-          </div>
-        </section>
+          </section>
+        </div>
       )}
 
       <section className="border p-6 mb-5" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface)' }}>
         <h2 className="mb-4 font-display text-lg" style={{ color: 'var(--eph-text)' }}>Días de entrenamiento</h2>
         {days.length ? (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-px sm:grid-cols-2" style={{ background: 'var(--eph-line-2)' }}>
             {days.map((day) => {
               const unlocked = isDayUnlocked(day, completions);
               const completedThisWeek = isDayCompletedThisWeek(day, completions);
@@ -189,14 +175,14 @@ export function TrainingHome({
                   type="button"
                   disabled={!unlocked}
                   onClick={() => onOpenDay(day)}
-                  className="border px-3.5 py-5 text-center transition-colors disabled:cursor-not-allowed disabled:opacity-50 enabled:hover:border-[var(--eph-accent)]"
-                  style={{ borderColor: 'var(--eph-line-2)', background: 'transparent' }}
+                  className="grid gap-3 px-6 py-8 text-left transition-colors disabled:cursor-not-allowed enabled:hover:bg-[var(--eph-surface-2)]"
+                  style={{ background: 'var(--eph-surface)' }}
                 >
-                  <div className="font-display text-[22px]" style={{ color: 'var(--eph-text)' }}>Día {day}</div>
-                  <div className="mt-1 font-mono text-[10px] uppercase tracking-[0.08em]" style={{ color: 'var(--eph-muted)' }}>
+                  <div className="font-display text-[26px]" style={{ color: unlocked ? 'var(--eph-text)' : 'var(--eph-faint)' }}>Día {day}</div>
+                  <div className="font-mono text-[10px] uppercase tracking-[0.1em]" style={{ color: unlocked ? 'var(--eph-accent)' : 'var(--eph-muted)' }}>
                     {!unlocked ? (
                       <span className="inline-flex items-center gap-1">
-                        <IconLock size={11} /> Bloqueado
+                        <IconLock size={11} /> Se abre al completar el anterior
                       </span>
                     ) : completedThisWeek ? (
                       'Completado esta semana'

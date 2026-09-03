@@ -5,7 +5,6 @@ import useSWR from 'swr';
 import type { ExerciseCategory, TrainingStreak } from '../../lib/training-client';
 import {
   getClientTrainingDays,
-  getClientName,
   listExercises,
   listTrainingCompletions,
   confirmSession,
@@ -13,7 +12,6 @@ import {
   useProtector,
 } from '../../lib/training-client';
 import { isDayCompletedThisWeek } from '../../lib/training-home-logic';
-import { getQuoteOfTheDay } from '../../lib/quotes-client';
 import { PermissionDeniedError } from '../../lib/api-client';
 import { TrainingHome } from './TrainingHome';
 import { TrainingDayView } from './TrainingDayView';
@@ -37,15 +35,13 @@ function clientTz(): string {
 
 async function fetchTrainingBundle(clientId: string) {
   const tz = clientTz();
-  const [trainingDays, clientName, exercises, completions, streak, quote] = await Promise.all([
+  const [trainingDays, exercises, completions, streak] = await Promise.all([
     getClientTrainingDays(clientId),
-    getClientName(clientId),
     listExercises(clientId),
     listTrainingCompletions(clientId),
     getStreak(clientId, tz),
-    getQuoteOfTheDay(clientId).catch(() => null),
   ]);
-  return { trainingDays, clientName, exercises, completions, streak, quote };
+  return { trainingDays, exercises, completions, streak };
 }
 
 export function TrainingShell({ clientId, clientType }: TrainingShellProps) {
@@ -123,7 +119,7 @@ export function TrainingShell({ clientId, clientType }: TrainingShellProps) {
   if (error) return <p role="alert" className="font-body" style={{ color: 'var(--eph-danger)' }}>{error}</p>;
   if (!data) return null;
 
-  const { trainingDays, exercises, completions, streak, quote, clientName } = data;
+  const { trainingDays, exercises, completions, streak } = data;
 
   if (confirmedResult) {
     return (
@@ -171,8 +167,6 @@ export function TrainingShell({ clientId, clientType }: TrainingShellProps) {
         exercises={exercises}
         completions={completions}
         streak={streak}
-        quote={quote}
-        clientName={clientName}
         onOpenDay={openDay}
         onUseProtector={handleUseProtector}
         protectorPending={protectorPending}

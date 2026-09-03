@@ -4,10 +4,8 @@ import { renderWithSWR as render } from './swr-test-utils';
 import { TrainingShell } from '../components/training/TrainingShell';
 import { showToast } from '../components/layout/AppShell';
 import * as trainingClient from '../lib/training-client';
-import * as quotesClient from '../lib/quotes-client';
 
 vi.mock('../lib/training-client');
-vi.mock('../lib/quotes-client');
 vi.mock('../components/layout/AppShell', () => ({ showToast: vi.fn() }));
 
 function exercise(id: string, dayNumber: number, category: trainingClient.ExerciseCategory = 'strength'): trainingClient.Exercise {
@@ -32,7 +30,6 @@ describe('TrainingShell', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(trainingClient.getClientTrainingDays).mockResolvedValue(1);
-    vi.mocked(trainingClient.getClientName).mockResolvedValue('Ana');
     vi.mocked(trainingClient.listExercises).mockResolvedValue([exercise('e1', 1)]);
     vi.mocked(trainingClient.listTrainingCompletions).mockResolvedValue([]);
     vi.mocked(trainingClient.getStreak).mockResolvedValue({
@@ -49,7 +46,6 @@ describe('TrainingShell', () => {
       streak: { streakWeeks: 1, sessionsDoneThisWeek: 1, sessionsRequiredThisWeek: 1, protectorAvailable: true, protectorUsedThisWeek: false, atRisk: false },
       phrase: 'Vas muy bien.',
     });
-    vi.mocked(quotesClient.getQuoteOfTheDay).mockResolvedValue(null);
   });
 
   it('loads training data and shows the home screen', async () => {
@@ -175,13 +171,6 @@ describe('TrainingShell', () => {
     fireEvent.click(await screen.findByRole('button', { name: /usar protector/i }));
     await waitFor(() => expect(trainingClient.useProtector).toHaveBeenCalledWith('c1', expect.any(String)));
     expect(await screen.findByRole('button', { name: /^usado$/i })).toBeInTheDocument();
-  });
-
-  it('fetches the quote of the day and passes it to TrainingHome, non-fatally on failure', async () => {
-    vi.mocked(quotesClient.getQuoteOfTheDay).mockRejectedValueOnce(new Error('network'));
-    render(<TrainingShell clientId="c1" />);
-    expect(await screen.findByText('Workout')).toBeInTheDocument();
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
   it('shows a LockedBenefit upgrade card when the module is not allowed for this client type (403)', async () => {
