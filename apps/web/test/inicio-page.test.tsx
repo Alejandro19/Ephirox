@@ -22,10 +22,12 @@ vi.mock('../lib/evolution-client');
 vi.mock('../lib/events-client');
 vi.mock('../lib/therapies-client');
 vi.mock('../lib/retreats-client');
-// MemberCard/WellnessIndexCard tienen sus propias dependencias de fetch —
-// se mockean para aislar el test al comportamiento propio de esta página.
+// MemberCard/DailyRitualCard/WeeklyRitualCard tienen sus propias
+// dependencias de fetch — se mockean para aislar el test al comportamiento
+// propio de esta página.
 vi.mock('../components/member/MemberCard', () => ({ MemberCard: () => null }));
-vi.mock('../components/home/WellnessIndexCard', () => ({ WellnessIndexCard: () => null }));
+vi.mock('../components/rituals/DailyRitualCard', () => ({ DailyRitualCard: () => null }));
+vi.mock('../components/rituals/WeeklyRitualCard', () => ({ WeeklyRitualCard: () => null }));
 
 function mockAuth(
   clientType: string | null,

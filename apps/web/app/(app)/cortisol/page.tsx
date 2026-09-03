@@ -11,7 +11,7 @@ export default function CortisolPage() {
   // AppShell ya bloquea el render de esta página hasta que useAuth() termina
   // de cargar (ver components/layout/AppShell.tsx) — leer directo de acá evita
   // el doble-render que causaba decodificar el JWT de nuevo en cada page.tsx.
-  const { role, user, clientType } = useAuth();
+  const { role, user, clientType, moduleAccess, planExpired } = useAuth();
   const clientId = user?.id ?? null;
   const [adminClientId, setAdminClientId] = useState<string | null>(null);
 
@@ -36,5 +36,11 @@ export default function CortisolPage() {
     );
   }
 
-  return <div>{clientId && <ClientCortisolPanel clientId={clientId} clientType={clientType} />}</div>;
+  return (
+    <div>
+      {clientId && (
+        <ClientCortisolPanel clientId={clientId} clientType={clientType} moduleAccess={moduleAccess} planExpired={planExpired} />
+      )}
+    </div>
+  );
 }

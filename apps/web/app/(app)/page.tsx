@@ -6,10 +6,11 @@ import { useAuth } from "@/lib/auth-context";
 import { VIEW_TO_PATH } from "@/lib/constants";
 import { getModuleAccessState } from "@/lib/module-access";
 import { MemberCard } from "@/components/member/MemberCard";
-import { WellnessIndexCard } from "@/components/home/WellnessIndexCard";
 import { CrownBadge } from "@/components/ui/CrownBadge";
 import { ModuleExpiredModal } from "@/components/layout/ModuleExpiredModal";
-import { CheckinCard } from "@/components/checkins/CheckinCard";
+import { PeriodConfirmationCard } from "@/components/checkins/PeriodConfirmationCard";
+import { DailyRitualCard } from "@/components/rituals/DailyRitualCard";
+import { WeeklyRitualCard } from "@/components/rituals/WeeklyRitualCard";
 import { fetchClient } from "@/lib/clients-client";
 import { getNutrition } from "@/lib/nutrition-client";
 import { getWearableEstado } from "@/lib/wearable-client";
@@ -114,9 +115,10 @@ export default function InicioPage() {
         </p>
       </div>
 
-      {!isAdmin && user?.id && <WellnessIndexCard clientId={user.id} />}
+      {!isAdmin && user?.id && clientType === "mentoring" && <DailyRitualCard clientId={user.id} />}
+      {!isAdmin && user?.id && clientType === "mentoring" && <WeeklyRitualCard clientId={user.id} />}
       {!isAdmin && user?.id && <MemberCard clientId={user.id} />}
-      {!isAdmin && user?.id && clientType === "mentoring" && <CheckinCard clientId={user.id} />}
+      {!isAdmin && user?.id && clientType === "mentoring" && <PeriodConfirmationCard clientId={user.id} />}
 
       {/* Quick-access cards grid — Oura style: no shadow, subtle border, pill-radius */}
       {quickLinks.length > 0 && (
