@@ -115,8 +115,12 @@ export default function InicioPage() {
         </p>
       </div>
 
-      {!isAdmin && user?.id && clientType === "mentoring" && <DailyRitualCard clientId={user.id} />}
-      {!isAdmin && user?.id && clientType === "mentoring" && <WeeklyRitualCard clientId={user.id} />}
+      {!isAdmin && user?.id && clientType === "mentoring" && (
+        <div className="mb-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <DailyRitualCard clientId={user.id} />
+          <WeeklyRitualCard clientId={user.id} />
+        </div>
+      )}
       {!isAdmin && user?.id && <MemberCard clientId={user.id} />}
       {!isAdmin && user?.id && clientType === "mentoring" && <PeriodConfirmationCard clientId={user.id} />}
 

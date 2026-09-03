@@ -21,16 +21,19 @@ describe('WeeklyRitualCard', () => {
     vi.clearAllMocks();
   });
 
-  it('does not render at all outside the Sunday window when nothing was answered this week', async () => {
+  it('stays visible but locked (no form) outside the weekend window when nothing was answered this week', async () => {
     vi.mocked(checkinsClient.getCheckinsStatus).mockResolvedValue({ ...BASE_STATUS, weeklyRitualWindowOpen: false });
     vi.mocked(checkinsClient.getCurrentWeekReflection).mockResolvedValue(null);
 
-    const { container } = render(<WeeklyRitualCard clientId="client-1" />);
-    await waitFor(() => expect(checkinsClient.getCheckinsStatus).toHaveBeenCalled());
-    expect(container).toBeEmptyDOMElement();
+    render(<WeeklyRitualCard clientId="client-1" />);
+
+    expect(await screen.findByText('Ritual Semanal')).toBeInTheDocument();
+    expect(screen.getByText(/Se habilita el sábado y domingo/)).toBeInTheDocument();
+    expect(screen.queryByLabelText(/Nivel de estrés crónico/)).not.toBeInTheDocument();
+    expect(screen.queryByText('Completado')).not.toBeInTheDocument();
   });
 
-  it('renders expanded on Sunday when nothing was answered this week', async () => {
+  it('renders expanded on weekend days when nothing was answered this week', async () => {
     vi.mocked(checkinsClient.getCheckinsStatus).mockResolvedValue({ ...BASE_STATUS, weeklyRitualWindowOpen: true });
     vi.mocked(checkinsClient.getCurrentWeekReflection).mockResolvedValue(null);
 

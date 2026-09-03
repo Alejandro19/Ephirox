@@ -41,7 +41,10 @@ export function WeeklyRitualCard({ clientId }: { clientId: string }) {
   if (!status) return null;
 
   const answeredThisWeek = !!reflection;
-  if (!answeredThisWeek && !status.weeklyRitualWindowOpen) return null;
+  // Siempre visible (nunca desaparece) — bloqueado hasta el fin de semana si
+  // aún no se respondió, a propósito: ver el bloque ahí, sabiendo que se
+  // habilita el sábado/domingo, genera más retentiva que ocultarlo.
+  const locked = !answeredThisWeek && !status.weeklyRitualWindowOpen;
 
   async function handleSubmit() {
     setSaving(true);
@@ -66,6 +69,8 @@ export function WeeklyRitualCard({ clientId }: { clientId: string }) {
       cadence="weekly"
       title="Ritual Semanal"
       completed={answeredThisWeek}
+      locked={locked}
+      lockedMessage="Se habilita el sábado y domingo — vuelve entonces para responder."
       streakLabel={streakLabel(status.weeklyStreakWeeks)}
       isEditing={isEditing}
       onStartEdit={() => setIsEditing(true)}
