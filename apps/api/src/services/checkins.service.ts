@@ -20,6 +20,41 @@ function todayISO(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+function addDaysISO(iso: string, days: number): string {
+  const [y, m, d] = iso.split('-').map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d + days));
+  return dt.toISOString().slice(0, 10);
+}
+
+function isSundayUTC(today: Date = new Date()): boolean {
+  return today.getUTCDay() === 0;
+}
+
+// Mismo patrón que computeConsecutiveDaysOverThreshold (cognitive-load-logic.ts):
+// función pura, derivada en lectura, sin contador persistido.
+export function computeDailyCheckinStreak(fechas: string[], today: string): number {
+  const set = new Set(fechas);
+  let streak = 0;
+  let cursor = today;
+  while (set.has(cursor)) {
+    streak += 1;
+    cursor = addDaysISO(cursor, -1);
+  }
+  return streak;
+}
+
+// Mismo patrón que el recorrido hacia atrás de computeTrainingStreakState (training.service.ts).
+export function computeWeeklyReflectionStreak(semanaInicios: string[], currentWeekStart: string): number {
+  const set = new Set(semanaInicios);
+  let streak = 0;
+  let cursor = currentWeekStart;
+  while (set.has(cursor)) {
+    streak += 1;
+    cursor = addDaysISO(cursor, -7);
+  }
+  return streak;
+}
+
 export async function getTodayCheckin(clientId: string): Promise<DailyCheckin | null> {
   const rows = await db.select().from(dailyCheckins).where(and(eq(dailyCheckins.clientId, clientId), eq(dailyCheckins.fecha, todayISO()))).limit(1);
   return rows[0] ?? null;
@@ -72,15 +107,31 @@ export type CheckinsStatus = {
   weeklyDueThisWeek: boolean;
   periodConfirmationDue: boolean;
   lastResponseAt: string | null;
+  dailyStreakDays: number;
+  weeklyStreakWeeks: number;
+  weeklyRitualWindowOpen: boolean;
 };
 
 export async function getCheckinsStatus(clientId: string): Promise<CheckinsStatus> {
-  const [today, currentWeek, personalInfo, latestDaily, latestWeekly] = await Promise.all([
+  const today = todayISO();
+  const currentWeekStart = currentWeekStartUTC();
+
+  const [
+    todayCheckin,
+    currentWeek,
+    personalInfo,
+    latestDaily,
+    latestWeekly,
+    allDailyFechas,
+    allWeeklyStarts,
+  ] = await Promise.all([
     getTodayCheckin(clientId),
     getCurrentWeekReflection(clientId),
     getPersonalInfoByClientId(clientId),
     db.select().from(dailyCheckins).where(eq(dailyCheckins.clientId, clientId)).orderBy(desc(dailyCheckins.fecha)).limit(1),
     getLatestWeeklyReflection(clientId),
+    db.select({ fecha: dailyCheckins.fecha }).from(dailyCheckins).where(eq(dailyCheckins.clientId, clientId)),
+    db.select({ semanaInicio: weeklyReflections.semanaInicio }).from(weeklyReflections).where(eq(weeklyReflections.clientId, clientId)),
   ]);
 
   const periodConfirmationDue = isPeriodConfirmationDue({
@@ -98,9 +149,12 @@ export async function getCheckinsStatus(clientId: string): Promise<CheckinsStatu
     : null;
 
   return {
-    dailyDoneToday: !!today,
+    dailyDoneToday: !!todayCheckin,
     weeklyDueThisWeek: !currentWeek,
     periodConfirmationDue,
     lastResponseAt,
+    dailyStreakDays: computeDailyCheckinStreak(allDailyFechas.map((r) => r.fecha), today),
+    weeklyStreakWeeks: computeWeeklyReflectionStreak(allWeeklyStarts.map((r) => r.semanaInicio), currentWeekStart),
+    weeklyRitualWindowOpen: isSundayUTC(),
   };
 }
