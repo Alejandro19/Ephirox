@@ -143,9 +143,14 @@ describe('checkins routes (pulso diario + reflexión semanal — exclusivo Mento
     }
   });
 
-  it('weeklyRitualWindowOpen es true solo en domingo (UTC)', async () => {
+  it('weeklyRitualWindowOpen es true en sábado y domingo (UTC), false el resto de la semana', async () => {
     vi.useFakeTimers({ toFake: ['Date'] });
     try {
+      const saturday = new Date('2026-08-29T10:00:00Z'); // sábado confirmado
+      vi.setSystemTime(saturday);
+      const onSaturday = await request(app).get(`/api/clients/${mentoringClientId}/checkins-status`).set('Authorization', `Bearer ${mentoringClientToken}`);
+      expect(onSaturday.body.weeklyRitualWindowOpen).toBe(true);
+
       const sunday = new Date('2026-08-30T10:00:00Z'); // domingo confirmado
       vi.setSystemTime(sunday);
       const onSunday = await request(app).get(`/api/clients/${mentoringClientId}/checkins-status`).set('Authorization', `Bearer ${mentoringClientToken}`);

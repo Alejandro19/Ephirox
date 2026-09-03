@@ -26,8 +26,13 @@ function addDaysISO(iso: string, days: number): string {
   return dt.toISOString().slice(0, 10);
 }
 
-function isSundayUTC(today: Date = new Date()): boolean {
-  return today.getUTCDay() === 0;
+// Sábado (6) o domingo (0) — ventana del Ritual Semanal. El bloque queda
+// visible toda la semana (Alejandro pidió que nunca desaparezca, genera
+// retentiva verlo aunque esté bloqueado), pero solo es interactuable en fin
+// de semana.
+function isWeekendUTC(today: Date = new Date()): boolean {
+  const day = today.getUTCDay();
+  return day === 0 || day === 6;
 }
 
 // Mismo patrón que computeConsecutiveDaysOverThreshold (cognitive-load-logic.ts):
@@ -155,6 +160,6 @@ export async function getCheckinsStatus(clientId: string): Promise<CheckinsStatu
     lastResponseAt,
     dailyStreakDays: computeDailyCheckinStreak(allDailyFechas.map((r) => r.fecha), today),
     weeklyStreakWeeks: computeWeeklyReflectionStreak(allWeeklyStarts.map((r) => r.semanaInicio), currentWeekStart),
-    weeklyRitualWindowOpen: isSundayUTC(),
+    weeklyRitualWindowOpen: isWeekendUTC(),
   };
 }
