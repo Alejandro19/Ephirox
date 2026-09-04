@@ -684,7 +684,38 @@ Cada fix se verificó contra el sistema real en producción (`curl` directo a `a
 
 ---
 
-## Próximas actividades — Siguiente sesión (actualizada 2026-09-03)
+## Resumen Ejecutivo — Sesión 2026-09-03 → 2026-09-04 — Fix de topbar móvil (Client/Admin/Terapeuta) y login con Google en localhost
+
+Alejandro reportó que, al entrar desde el celular, no se veía la forma de navegar entre módulos y la pantalla "se desconfiguraba" en casi todos ellos — con una captura de iPhone Safari mostrando el header cortado y ningún ícono de hamburguesa visible ("hay que mover mucho la pantalla"). Sesión corta, enfocada en encontrar y corregir esa causa raíz, más un bug puntual de login en desarrollo local.
+
+### 1. Causa raíz del bug móvil: el grupo de acciones del header no colapsaba
+
+Los tres topbars (`ClientTopbar.tsx`, `AdminTopbar.tsx`, `TherapistTopbar.tsx`) ya tenían un patrón de hamburguesa+drawer correcto y con tests (`COLLAPSE_BREAKPOINT = 1280`, confirmado por un agente Explore antes de tocar nada — la hipótesis inicial de "falta un `MobileTopbar` que se borró" era incorrecta). El bug real: el botón de hamburguesa vivía **dentro** del mismo `<div>` flex (`.{client|admin|therapist}-topbar-actions`) que el toggle de tema, la campana de notificaciones, el atajo de logout y el avatar de cuenta — y ese grupo entero nunca se ocultaba en mobile. En una pantalla angosta, Logo + todos esos controles + hamburguesa no caben en una sola fila sin envolver, así que el conjunto desbordaba el ancho del viewport y empujaba la hamburguesa fuera de la pantalla visible. Como el header es `width: 100%` de un contenedor oscuro que sí respeta el viewport, pero el contenido que se desborda queda "sangrado" por fuera de ese contenedor, lo que se veía en las capturas de Alejandro (incluidas Sleep y Workout, páginas distintas — mismo bug porque el topbar es compartido) era una franja del fondo claro del `<body>` asomando a la derecha del panel oscuro de la app. Confirmado por el propio Alejandro: el efecto se nota más al hacer zoom out, porque Safari ya venía auto-ajustando la página para que quepa completa cuando el documento es más ancho que el dispositivo.
+
+### 2. Fix aplicado (mismo patrón en las tres topbars)
+
+- Se sacó el botón `.{client|admin|therapist}-hamburger` de dentro de `.{...}-topbar-actions` para que sea hermano directo dentro de `<header>`, con `margin-left: auto` agregado solo en el media query de mobile (para que siga pegado a la derecha cuando el grupo de acciones desaparece).
+- Se agregó `.{...}-topbar-actions { display: none !important; }` al mismo `@media (max-width: 1280px)` que ya ocultaba la nav — ya no compite por espacio con el hamburguesa.
+- Como tema y notificaciones quedaban entonces inalcanzables en mobile, se movieron `<ThemeToggle />` y `<NotificationBell />` (Cliente y Admin) al panel deslizante (`.client-drawer`/`.admin-drawer`), junto al título "Ephirox". Terapeuta no necesitó este paso — su grupo de acciones solo tenía el avatar con logout, y "Cerrar sesión" ya vive en su drawer.
+- Se agregó `overflow-x: hidden` en `html, body` (`globals.css`) como red de seguridad general — la causa raíz ya está resuelta en el header, pero así cualquier otro elemento que se desborde en el futuro no vuelve a ensanchar la página completa en ningún módulo.
+- Verificado con `tsc --noEmit` limpio en `apps/web`. **No se verificó visualmente con captura real** — no hay MCP de Chrome DevTools configurado en esta sesión — así que queda pendiente que Alejandro lo confirme en su iPhone real (ver Actividad 14).
+- Comiteado y pusheado a `origin/main` (repo Ephirox, commit `a460ebf`).
+
+### 3. Bug de login con Google en localhost: `NEXT_PUBLIC_API_BASE_URL` mal configurado
+
+Al reiniciar los servidores locales para probar el fix anterior, Alejandro notó que el botón de Google no se habilitaba en `localhost:3000`. Causa raíz: `apps/web/.env.local` tenía `NEXT_PUBLIC_API_BASE_URL=ephirox-web.vercel.app` — sin `http://` y apuntando al dominio del *frontend* en Vercel, no al del API. Al faltarle el protocolo, el `fetch()` a `/api/config` lo interpretaba como ruta relativa sobre el propio origen (`localhost:3000/ephirox-web.vercel.app/api/config`, confirmado en el log del dev server como un 404 en loop), así que nunca llegaba a preguntarle al backend por `GOOGLE_CLIENT_ID` (que sí estaba bien configurado en `apps/api/.env` local). Fix: cambiarlo a `http://localhost:3003`. Next.js recargó el env automáticamente (`Reload env: .env.local`) sin necesidad de reiniciar el proceso a mano.
+
+### 4. Hallazgo de seguridad al revisar ese mismo archivo: segunda credencial de Google Cloud suelta
+
+Al leer `apps/web/.env.local` completo para diagnosticar lo anterior, apareció una credencial de cuenta de servicio de Google Cloud (`GOOGLE_APPLICATION_CREDENTIALS_JSON`, con `private_key` RSA completa) y una variable mal etiquetada (`GOOGLE_VISION_API_KEY`, que en realidad contenía un Client ID) — resto de la integración OCR de Google Vision del monolito legacy, sin ningún uso en el frontend actual. El `private_key_id` (`866214190a5fbb80e42953c60db0c8cdb921bbf1`) es distinto al que se pidió rotar en la sesión anterior (`c606aa43e8bbca579bd902b156de59c45f50bc4a`) — parece ser una clave adicional de la misma cuenta de servicio, no la misma reexpuesta. Como `.env.local` está gitignoreado y nunca se commiteó, no hubo exposición vía git — pero era una clave privada real en texto plano sin uso, así que Alejandro confirmó eliminar esas líneas del archivo. Queda pendiente que confirme en Google Cloud Console si esa clave en particular sigue activa (ver Actividad 15).
+
+### 5. Verificación
+
+`tsc --noEmit` limpio en `apps/web`. Servidores locales reiniciados y confirmados con `curl` (`web / -> 307` esperado sin sesión, `api /api/health -> {"success":true}`, `api /api/config` devolviendo el `googleClientId` real). Commit y push a `origin/main` hechos a pedido explícito de Alejandro en este turno.
+
+---
+
+## Próximas actividades — Siguiente sesión (actualizada 2026-09-03, 2026-09-04)
 
 ### Actividad 1 — Confirmar que el login desde el celular ya funciona
 
@@ -738,6 +769,14 @@ Cada fix se verificó contra el sistema real en producción (`curl` directo a `a
 
 - Ver sección 4.5 del resumen de la sesión 2026-09-02→09-03. El primer push tras conectar el repo sí disparó un deployment automático; los siguientes no, y hubo que forzar uno con un commit vacío. No se investigó la causa raíz (¿webhook de GitHub roto? ¿configuración de "Ignored Build Step"? ¿algo de la cuenta/integración?) — si vuelve a pasar, revisar Settings → Git del proyecto en Vercel antes de asumir que hay que seguir forzando pushes vacíos cada vez.
 
+### Actividad 14 — Confirmar en el celular real que el topbar móvil ya no se desborda (nueva, 2026-09-04)
+
+- Se corrigió el bug (ver resumen de esta sesión) y se pusheó a `origin/main` (`a460ebf`). Falta: (a) confirmar que Vercel disparó un deploy automático con este push — si no, revisar Actividad 13 antes de forzar un commit vacío otra vez — y (b) que Alejandro confirme en su iPhone real, en `ephirox.com`, que el ícono de hamburguesa ya es visible sin necesidad de hacer zoom out ni desplazar la pantalla, en Dashboard, Sleep, Workout y al menos un módulo de Admin/Terapeuta.
+
+### Actividad 15 — Verificar si la clave de servicio de Google Cloud encontrada en `apps/web/.env.local` sigue activa (nueva, 2026-09-04)
+
+- Se encontró y eliminó del archivo local (nunca llegó al repo, `.env.local` está gitignoreado) una credencial completa de la cuenta de servicio `latribuoficial@la-tribu-503901.iam.gserviceaccount.com`, con `private_key_id` `866214190a5fbb80e42953c60db0c8cdb921bbf1` — **distinto** al que se pidió rotar en la Actividad 8 (`c606aa43e8bbca579bd902b156de59c45f50bc4a`), así que parece ser una clave adicional de la misma cuenta, no la misma reexpuesta. El riesgo de exposición real es bajo (nunca se commiteó, vivía solo en el Mac de Alejandro), pero como quedó un rato en texto plano sin uso claro, vale la pena que Alejandro revise en Google Cloud Console (IAM y administración → Cuentas de servicio → esa cuenta) si esa clave en particular sigue vigente y, si no se necesita, la elimine ahí también.
+
 ---
 
 ## Notas adicionales
@@ -768,3 +807,5 @@ Cada fix se verificó contra el sistema real en producción (`curl` directo a `a
 - **CORS `origin: '*'` combinado con `credentials: true` es inválido según el estándar** (sesión 2026-09-02→09-03) — el navegador rechaza la respuesta completa y reporta "no hay header Access-Control-Allow-Origin" aunque el servidor sí lo mandó, sin explicar la causa real. Si la app no usa cookies de sesión (auth por JWT en header), quitar `credentials: true` sin más.
 - **En Railway, el puerto configurado en Settings → Networking para un dominio custom NO se actualiza solo si la app empieza a escuchar en un puerto distinto** (sesión 2026-09-02→09-03) — causa `502 Application failed to respond` en todas las rutas aunque el proceso arranque bien y el panel lo muestre "Online" (el healthcheck no lo detecta). Si se cambia el código para leer `process.env.PORT` dinámicamente, hay que revisar/actualizar ese campo a mano la primera vez.
 - **⚠️ Nunca usar `sed 's/=.*/.../'` (u otro patrón de una sola línea) para "ocultar" valores de un `.env` antes de mostrarlo** — si algún valor es JSON multilínea (ej. `GOOGLE_APPLICATION_CREDENTIALS_JSON`), el patrón solo enmascara la primera línea y el resto (claves privadas incluidas) se imprime sin filtrar. Para listar solo nombres de variables sin riesgo, usar `grep -oE '^[A-Za-z_][A-Za-z0-9_]*='` — nunca captura nada del valor, sin importar cuántas líneas tenga.
+- **En un header flex con hamburguesa mobile, cualquier otro grupo de controles (tema, notificaciones, logout, avatar) que quede DENTRO del mismo contenedor que el hamburguesa debe ocultarse también en el mismo media query que oculta la nav** (sesión 2026-09-03→09-04, `ClientTopbar.tsx`/`AdminTopbar.tsx`/`TherapistTopbar.tsx`) — si no, ese grupo entero sigue intentando caber junto al logo en una pantalla angosta, desborda el ancho del viewport, y el desborde se "sangra" fuera del contenedor de la app (visible como una franja del fondo del `<body>` a la derecha, en TODOS los módulos porque el topbar es compartido). El hamburguesa debe vivir fuera de ese grupo (hermano directo en el header, con su propio `margin-left: auto` en mobile) para sobrevivir aunque el resto se esconda; cualquier control que se oculte así necesita reaparecer en el drawer si no tiene otro acceso. `overflow-x: hidden` en `html, body` es una red de seguridad razonable para que un desborde futuro similar no vuelva a ensanchar toda la página.
+- **`NEXT_PUBLIC_API_BASE_URL` sin protocolo (`ephirox-web.vercel.app` en vez de `http://...`) hace que `fetch()` lo trate como ruta relativa sobre el propio origen**, no como error obvio — el síntoma es sutil (ej. el botón de Google nunca se habilita) y el log del dev server lo delata como una ruta rara tipo `/ephirox-web.vercel.app/api/config` con 404 en loop. Antes de sospechar de credenciales o CORS, confirmar que esta variable tiene protocolo y apunta al host correcto para el contexto que se está probando (localhost / túnel / producción).
