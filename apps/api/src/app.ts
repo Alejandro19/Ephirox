@@ -43,8 +43,11 @@ export function createApp() {
   const app = express();
   app.set('trust proxy', 1);
 
-  // FASE 0: CORS universal para desarrollo
-  app.use(cors({ origin: '*', credentials: true }));
+  // CORS universal — sin `credentials: true`: el navegador prohíbe combinar
+  // origin: '*' con credentials: true (rechaza la respuesta completa). La
+  // app no usa cookies de sesión, autentica por JWT en el header
+  // Authorization, así que no hace falta credentials aquí.
+  app.use(cors({ origin: '*' }));
 
   // gzip/brotli en todas las respuestas — las de listados (evolution,
   // achievements, etc.) son JSON repetitivo, comprimen muy bien.
