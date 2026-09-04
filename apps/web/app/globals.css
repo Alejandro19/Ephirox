@@ -88,6 +88,20 @@ input, select, textarea {
   font-family: inherit;
 }
 
+/* El navegador pinta el fondo de los campos con autocompletar/contraseñas
+   guardadas (azul en Chrome) ignorando cualquier background del sitio — se
+   sobreescribe con un box-shadow inset del mismo color del panel, y un
+   transition de duración absurda para que nunca se note el cambio. */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-text-fill-color: var(--eph-text, var(--ink));
+  -webkit-box-shadow: 0 0 0 1000px var(--eph-panel, var(--paper)) inset;
+  box-shadow: 0 0 0 1000px var(--eph-panel, var(--paper)) inset;
+  transition: background-color 9999s ease-in-out 0s;
+}
+
 /* ─── Animations ─── */
 @keyframes module-in {
   from { opacity: 0; transform: translateY(10px); }
