@@ -153,20 +153,25 @@ export default function TherapistTopbar({
               </div>
             )}
           </div>
-          <button
-            className="therapist-hamburger"
-            onClick={() => setDrawerOpen(true)}
-            aria-label="Abrir menú"
-            style={{
-              display: 'none', background: 'none', border: 'none',
-              padding: 6, flexDirection: 'column', gap: 4, cursor: 'pointer',
-            }}
-          >
-            <span style={{ display: 'block', width: 20, height: 1, background: 'var(--eph-text)' }} />
-            <span style={{ display: 'block', width: 20, height: 1, background: 'var(--eph-text)' }} />
-            <span style={{ display: 'block', width: 20, height: 1, background: 'var(--eph-text)' }} />
-          </button>
         </div>
+
+        {/* Fuera de .therapist-topbar-actions a propósito: ese grupo se
+            oculta entero en mobile (ver media query abajo) porque el
+            avatar de cuenta no cabe junto al logo en pantalla angosta —
+            el hamburguesa necesita sobrevivir aunque el resto se esconda. */}
+        <button
+          className="therapist-hamburger"
+          onClick={() => setDrawerOpen(true)}
+          aria-label="Abrir menú"
+          style={{
+            display: 'none', background: 'none', border: 'none',
+            padding: 6, flexDirection: 'column', gap: 4, cursor: 'pointer', flexShrink: 0,
+          }}
+        >
+          <span style={{ display: 'block', width: 20, height: 1, background: 'var(--eph-text)' }} />
+          <span style={{ display: 'block', width: 20, height: 1, background: 'var(--eph-text)' }} />
+          <span style={{ display: 'block', width: 20, height: 1, background: 'var(--eph-text)' }} />
+        </button>
       </header>
 
       {drawerOpen && (
@@ -251,8 +256,12 @@ export default function TherapistTopbar({
           .therapist-nav-row {
             display: none !important;
           }
+          .therapist-topbar-actions {
+            display: none !important;
+          }
           .therapist-hamburger {
             display: flex !important;
+            margin-left: auto;
           }
         }
       `}</style>

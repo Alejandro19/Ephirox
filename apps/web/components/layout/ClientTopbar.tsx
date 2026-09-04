@@ -269,20 +269,25 @@ export default function ClientTopbar({ viewKey }: ClientTopbarProps) {
               </div>
             )}
           </div>
-          <button
-            className="client-hamburger"
-            onClick={() => setDrawerOpen(true)}
-            aria-label="Abrir menú"
-            style={{
-              display: "none", background: "none", border: "none",
-              padding: 6, flexDirection: "column", gap: 4, cursor: "pointer",
-            }}
-          >
-            <span style={{ display: "block", width: 20, height: 1, background: "var(--eph-text)" }} />
-            <span style={{ display: "block", width: 20, height: 1, background: "var(--eph-text)" }} />
-            <span style={{ display: "block", width: 20, height: 1, background: "var(--eph-text)" }} />
-          </button>
         </div>
+
+        {/* Fuera de .client-topbar-actions a propósito: ese grupo entero se
+            oculta en mobile (ver media query abajo) porque tema+campana+
+            logout+avatar no caben junto al logo en una pantalla angosta —
+            el hamburguesa necesita sobrevivir aunque el resto se esconda. */}
+        <button
+          className="client-hamburger"
+          onClick={() => setDrawerOpen(true)}
+          aria-label="Abrir menú"
+          style={{
+            display: "none", background: "none", border: "none",
+            padding: 6, flexDirection: "column", gap: 4, cursor: "pointer", flexShrink: 0,
+          }}
+        >
+          <span style={{ display: "block", width: 20, height: 1, background: "var(--eph-text)" }} />
+          <span style={{ display: "block", width: 20, height: 1, background: "var(--eph-text)" }} />
+          <span style={{ display: "block", width: 20, height: 1, background: "var(--eph-text)" }} />
+        </button>
       </header>
 
       {/* Mobile drawer */}
@@ -301,9 +306,17 @@ export default function ClientTopbar({ viewKey }: ClientTopbarProps) {
           display: "flex", flexDirection: "column", gap: 4,
         }}
       >
-        <span className="font-display" style={{ fontSize: 17, textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--eph-text)", marginBottom: 16 }}>
-          Ephirox
-        </span>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+          <span className="font-display" style={{ fontSize: 17, textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--eph-text)" }}>
+            Ephirox
+          </span>
+          {/* Tema y notificaciones viven acá porque .client-topbar-actions
+              (donde viven en desktop) se oculta entero en mobile. */}
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <ThemeToggle />
+            <NotificationBell />
+          </div>
+        </div>
         {items.map((item) => {
           const active = viewKey === item.key;
           const state = getModuleAccessState(item.key, { moduleAccess, planExpired });
@@ -389,8 +402,12 @@ export default function ClientTopbar({ viewKey }: ClientTopbarProps) {
           .client-nav-row {
             display: none !important;
           }
+          .client-topbar-actions {
+            display: none !important;
+          }
           .client-hamburger {
             display: flex !important;
+            margin-left: auto;
           }
         }
       `}</style>

@@ -224,20 +224,25 @@ export default function AdminTopbar({ viewKey }: AdminTopbarProps) {
               </div>
             )}
           </div>
-          <button
-            className="admin-hamburger"
-            onClick={() => setDrawerOpen(true)}
-            aria-label="Abrir menú"
-            style={{
-              display: "none", background: "none", border: "none",
-              padding: 6, flexDirection: "column", gap: 4, cursor: "pointer",
-            }}
-          >
-            <span style={{ display: "block", width: 20, height: 1, background: "var(--eph-text)" }} />
-            <span style={{ display: "block", width: 20, height: 1, background: "var(--eph-text)" }} />
-            <span style={{ display: "block", width: 20, height: 1, background: "var(--eph-text)" }} />
-          </button>
         </div>
+
+        {/* Fuera de .admin-topbar-actions a propósito: ese grupo se oculta
+            entero en mobile (ver media query abajo) porque campana+avatar
+            no caben junto al logo en pantalla angosta — el hamburguesa
+            necesita sobrevivir aunque el resto se esconda. */}
+        <button
+          className="admin-hamburger"
+          onClick={() => setDrawerOpen(true)}
+          aria-label="Abrir menú"
+          style={{
+            display: "none", background: "none", border: "none",
+            padding: 6, flexDirection: "column", gap: 4, cursor: "pointer", flexShrink: 0,
+          }}
+        >
+          <span style={{ display: "block", width: 20, height: 1, background: "var(--eph-text)" }} />
+          <span style={{ display: "block", width: 20, height: 1, background: "var(--eph-text)" }} />
+          <span style={{ display: "block", width: 20, height: 1, background: "var(--eph-text)" }} />
+        </button>
       </header>
 
       {/* Mobile drawer */}
@@ -256,9 +261,14 @@ export default function AdminTopbar({ viewKey }: AdminTopbarProps) {
           display: "flex", flexDirection: "column", gap: 4,
         }}
       >
-        <span className="font-display" style={{ fontSize: 17, textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--eph-text)", marginBottom: 16 }}>
-          Ephirox
-        </span>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+          <span className="font-display" style={{ fontSize: 17, textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--eph-text)" }}>
+            Ephirox
+          </span>
+          {/* Notificaciones vive acá porque .admin-topbar-actions (donde
+              vive en desktop) se oculta entero en mobile. */}
+          <NotificationBell />
+        </div>
         <span className="font-mono" style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--eph-muted)", padding: "8px 4px 2px" }}>
           Administration
         </span>
@@ -339,8 +349,12 @@ export default function AdminTopbar({ viewKey }: AdminTopbarProps) {
           .admin-nav-row {
             display: none !important;
           }
+          .admin-topbar-actions {
+            display: none !important;
+          }
           .admin-hamburger {
             display: flex !important;
+            margin-left: auto;
           }
         }
       `}</style>
