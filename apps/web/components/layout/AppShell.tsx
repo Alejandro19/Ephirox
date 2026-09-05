@@ -9,11 +9,7 @@ import { MembershipExpiredBanner } from "./MembershipExpiredBanner";
 import AceptacionRegistro from "../auth/AceptacionRegistro";
 import { getLegalAcceptance, submitLegalAcceptance, type LegalAcceptancePayload } from "../../lib/account-client";
 import { useAuth } from "../../lib/auth-context";
-import {
-  captureIncomingDeepLink,
-  getPendingAction,
-  clearPendingAction,
-} from "../../lib/deep-link";
+import { captureIncomingDeepLink } from "../../lib/deep-link";
 import { PATH_TO_VIEW } from "../../lib/constants";
 import { IconAlertTriangle, IconCheckCircle } from "../ui/icons";
 
@@ -103,17 +99,18 @@ export default function AppShell({ children }: { children: ReactNode }) {
   }, []);
 
   // ── Deep link handler ──
+  // Solo captura y guarda en localStorage (con TTL, ver deep-link.ts) — leer,
+  // consumir y actuar sobre la acción pendiente es responsabilidad exclusiva
+  // de la página dueña de esa acción (ej. TrainingPage para NFC). Hacerlo acá
+  // también corría en una carrera contra el guard de auth de abajo: si el
+  // cliente no estaba logueado todavía, este efecto borraba la acción y
+  // pisaba la redirección a /login antes de que el login terminara — cuando
+  // finalmente entraba a Workout, la acción ya no existía y nunca se
+  // confirmaba la sesión.
   useEffect(() => {
     if (isLoading) return;
     captureIncomingDeepLink(window.location.search);
-    const pending = getPendingAction();
-    if (pending) {
-      clearPendingAction();
-      if (pending.m === "entrenamiento" && pending.a === "confirmar") {
-        router.push("/training");
-      }
-    }
-  }, [isLoading, router]);
+  }, [isLoading]);
 
   // ── Auth guard ──
   // logout() (UserChip) solo limpia el token en memoria/storage, no navega —
