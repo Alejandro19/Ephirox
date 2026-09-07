@@ -1,6 +1,6 @@
 # session-memory.md
 
-> **Última actualización:** 2026-09-01
+> **Última actualización:** 2026-09-06
 > **Propósito:** Resumen ejecutivo por sesión (orden cronológico) y plan de continuidad inmediato para la siguiente sesión.
 
 ---
@@ -727,6 +727,41 @@ Alejandro escaneó el tag reprogramado y la sesión no se confirmó dentro de Wo
 
 ---
 
+## Resumen Ejecutivo — Sesión 2026-09-06 — Landing v2, dominio propio, reactivar aprobación de registros, alarma de leads y fixes de tests intermitentes
+
+### 1. Landing page v1 → dominio propio
+
+Se construyó la primera versión de la landing a partir de `docs/Ephirox - Landing.dc.html`. Se decidió (opción de mayor impacto, elegida explícitamente por Alejandro) que la landing tomara la raíz del dominio: `ephirox.com` sirve la landing, `app.ephirox.com` sirve el producto actual (login). Enrutamiento implementado en `apps/web/middleware.ts` leyendo el header `Host` crudo (`request.headers.get("host")`) — `request.nextUrl.hostname`/`request.url` siempre reflejan `localhost` en `next dev`, nunca el host real del cliente. Verificado end-to-end en producción por curl: `ephirox.com`/`www` → landing, `app.ephirox.com` → login, links viejos del NFC siguen redirigiendo bien por la cadena completa.
+
+### 2. Redirección `ephirox.co` → `ephirox.com` en Hostinger
+
+`ephirox.co` seguía apuntando a la IP de parking por defecto de Hostinger (`2.57.91.91`) en vez de la de Vercel (`216.198.79.1`) — no era un problema de propagación, los registros nunca se habían editado. Alejandro corrigió los registros durante la sesión (ver Actividad 16 de próximas actividades — falta reconfirmar por curl que ya propagó).
+
+### 3. Landing page v2 (rediseño completo) a partir de `docs/ephirox-landing.html`
+
+Archivo fuente de 521 KB con 4 imágenes embebidas en base64 (una línea de 341,857 caracteres) — leído con las líneas base64 recortadas por `sed` (confirmado explícitamente por Alejandro, regla del `CLAUDE.md` de pedir permiso para archivos >50 KB). Se implementó todo en `apps/web/app/landing/`: card de estadística rotativa en el hero, párrafo con reveal palabra por palabra, sección "cómo lo medimos" con scroll-pin (`PasosSticky.tsx`), tabla comparativa, riel de Día 90, gráfico de barras de la Junta, carrusel de diferenciadores, formulario de lead real conectado al backend, y footer completo. Imágenes servidas desde `/docs/img` vía `next/image`.
+
+**Bug de producción resuelto con depuración sistemática:** los pasos 02/03 de "cómo lo medimos" quedaban invisibles al hacer scroll en el sitio real (espacio en blanco). Se armó un script de Playwright que scrapeaba `getBoundingClientRect().top` del sitio en producción durante el scroll: la opacidad cambiaba bien (la lógica de React estaba correcta) pero `position: sticky` nunca se activaba. Causa raíz: **cualquier ancestro con `overflow-x` distinto de `visible` rompe `position: sticky` por completo**, aunque sea solo `overflow-x` (el spec obliga a la UA a calcular `overflow-y: auto` también, convirtiendo a ese elemento en su propia caja de scroll). Había DOS culpables: `.eph-landing2 { overflow-x: hidden }` (agregado por error durante esta misma implementación) y, ya resuelto ese, `html, body { overflow-x: hidden }` en `globals.css` (agregado en una sesión anterior para el bug del topbar móvil) — se angostó a solo `html`, verificado con el mismo script que `innerTop` se queda fijo en `0` durante todo el scroll.
+
+### 4. Mobile-first + aprobación de registros reactivada (pedido combinado)
+
+- **Mobile:** la landing no se veía bien en celular. Se creó `PasosMobileList.tsx` (lista apilada simple, sin scroll-pin, con texto corto por imagen — referencia visual: capturas de Fountain Life que mandó Alejandro) para pantallas ≤768px, y se arregló el header que envolvía mal en mobile (login largo + CTA se solapaban) con un layout de 2 filas intencional y un texto corto "Entrar →" alternativo.
+- **Aprobación de registros:** se había eliminado a propósito el 31 de agosto. Alejandro pidió reactivarlo, con una aclaración explícita clave (corrigió mi primer plan): **solo aplica a alguien que intenta loguearse por su propia cuenta con un email nunca visto** — un cliente dado de alta desde adentro (cohorte nueva, invitación manual) nunca pasa por esta cola porque ya existe como `status:'active'` antes de llegar al login. Implementado: `clients.status` ahora acepta `'pending'`/`'rejected'` (es `text`, no enum — cero migración de schema), `googleLogin`/`appleLogin` crean un cliente `pending` en el primer intento de una identidad nueva (`createPendingSsoClient`) y devuelven `{pending:true}` en vez de un 403 plano; reintentos no duplican la fila. Panel nuevo `PendingApprovals.tsx` en `/admin/clients`, reutilizando `PATCH /api/clients/:id/status` que ya existía (aprobar=`active`, asigna `memberNumber` automático; rechazar=`rejected`). Pendiente de probar en vivo (Actividad 17).
+
+### 5. Imágenes borrosas, Instagram, alarma admin + CC de leads empresariales
+
+- **Imágenes borrosas:** no estaban hardcodeadas, era el `quality` por defecto de `next/image` (75) dejando fotos detalladas visiblemente suaves — subido a `quality={95}` en todos los usos de la landing.
+- **Instagram:** el handle en el footer tenía un typo heredado del archivo de diseño original (`epirox_`) — corregido a `@ephirox_`.
+- **Alarma + email CC:** cada lead nuevo del formulario ahora también inserta una fila en `admin_notifications` (se hizo `client_id` nullable — una alarma de lead no está atada a ningún cliente) además de mandar el correo a `contacto@ephirox.com`, ahora con copia a `g619alejandro@gmail.com`. Pendiente de confirmar en producción que el correo real llega (Actividad 18).
+
+### 6. Tests intermitentes por latencia de red — diagnosticados y corregidos
+
+La suite completa de `apps/api` (68 archivos) mostró fallas que persistían incluso corriendo los archivos solos, sin contención de CPU — apuntando a latencia elevada hacia la base remota de Supabase de pruebas ese día, no al problema de contención de CPU ya documentado de sesiones anteriores. Corregidos con la estrategia correcta según la causa: `wearable-baseline.test.ts` insertaba cada día del baseline con su propio `await` secuencial (hasta 28 round trips) — agrupado en un solo insert con array. `onboarding-approvals.routes.test.ts` y `training.routes.test.ts` tienen llamadas HTTP secuenciales y dependientes que no se pueden agrupar — se les subió el timeout a 20s. De paso, una corrida fallida anterior de `training.routes.test.ts` había dejado 2 filas basura en `mindset_quotes` de la base de test (mismo patrón que un incidente anterior con leads "Beta SAS"/"Acme Corp") — se identificaron y borraron a mano.
+
+### 7. Commit y push
+
+Todo lo anterior (excepto lo que ya se había commiteado en sesiones previas: v1 de la landing, ruteo de dominio, rutas de enterprise-leads) se commiteó en 4 commits atómicos por feature y se pusheó directo a `origin/main`: `13729d5` (mobile+imágenes+IG), `e37c579` (aprobación de registros), `ba692a2` (alarma+CC de leads), `49c803e` (fixes de tests). Se dejaron fuera del commit a propósito: la carpeta `Documentos/` (documentos personales/legales de Alejandro que aparecieron como untracked, sin relación con el código) y los archivos fuente de diseño en `docs/` (ver Actividad 19).
+
 ## Próximas actividades — Siguiente sesión (actualizada 2026-09-03, 2026-09-04)
 
 ### Actividad 1 — Confirmar que el login desde el celular ya funciona
@@ -788,6 +823,22 @@ Alejandro escaneó el tag reprogramado y la sesión no se confirmó dentro de Wo
 ### Actividad 15 — Verificar si la clave de servicio de Google Cloud encontrada en `apps/web/.env.local` sigue activa (nueva, 2026-09-04)
 
 - Se encontró y eliminó del archivo local (nunca llegó al repo, `.env.local` está gitignoreado) una credencial completa de la cuenta de servicio `latribuoficial@la-tribu-503901.iam.gserviceaccount.com`, con `private_key_id` `866214190a5fbb80e42953c60db0c8cdb921bbf1` — **distinto** al que se pidió rotar en la Actividad 8 (`c606aa43e8bbca579bd902b156de59c45f50bc4a`), así que parece ser una clave adicional de la misma cuenta, no la misma reexpuesta. El riesgo de exposición real es bajo (nunca se commiteó, vivía solo en el Mac de Alejandro), pero como quedó un rato en texto plano sin uso claro, vale la pena que Alejandro revise en Google Cloud Console (IAM y administración → Cuentas de servicio → esa cuenta) si esa clave en particular sigue vigente y, si no se necesita, la elimine ahí también.
+
+### Actividad 16 — Confirmar que `ephirox.co` ya redirige bien a `ephirox.com` (nueva, 2026-09-06)
+
+- Hostinger tenía los registros DNS de `ephirox.co` sin editar (apuntando a la IP de parking por defecto, `2.57.91.91`, en vez de la de Vercel, `216.198.79.1`). Alejandro corrigió los registros durante la sesión y los últimos pantallazos mostraban la configuración correcta, pero no se volvió a verificar por curl después del último cambio — falta confirmar que ya propagó y que `ephirox.co` redirige de verdad a `ephirox.com`.
+
+### Actividad 17 — Probar en vivo el flujo completo de aprobación de registro nuevo (Google/Apple SSO) (nueva, 2026-09-06)
+
+- Se reactivó el sistema completo (ver resumen de esta sesión) y toda la suite de tests pasa, pero nadie probó el ciclo real en un navegador: loguearse con una cuenta de Google que no exista en la base, confirmar que aparece en la cola de "Pendientes" dentro de `/admin/clients`, aprobarla desde ahí, y confirmar que ese mismo login de Google ahora entra normal (y que un login con una cuenta ya rechazada sigue bloqueado).
+
+### Actividad 18 — Confirmar que la alarma de leads empresariales y el correo con copia llegan de verdad (nueva, 2026-09-06)
+
+- El test automatizado confirma que se crea la fila en `admin_notifications` y que `sendMail` se llama con `cc: g619alejandro@gmail.com`, pero no se probó enviando un lead real desde el formulario de la landing en producción — falta confirmar que el correo a `contacto@ephirox.com` con copia realmente llega (no solo que la llamada al proveedor de correo se hizo) y que la alarma aparece en la campanita del panel admin en producción.
+
+### Actividad 19 — Decidir qué hacer con los archivos de diseño sueltos en `docs/` (nueva, 2026-09-06)
+
+- `docs/ephirox-landing.html` (512 KB, con imágenes embebidas en base64), `docs/Ephirox - Producto.dc.html` (80 KB) y `docs/PROMPT-02-CORRECCIONES.md` son los archivos fuente de diseño que Alejandro fue soltando en `docs/` para que se leyeran e implementaran — se usaron para construir la landing pero **nunca se commitearon** (quedan fuera del commit a propósito, ver resumen de esta sesión). Preguntarle a Alejandro si quiere que queden versionados en el repo como referencia histórica o si prefiere que sigan siendo archivos locales sueltos.
 
 ---
 
