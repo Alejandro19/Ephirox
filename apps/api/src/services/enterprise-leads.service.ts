@@ -1,13 +1,24 @@
 import nodemailer from 'nodemailer';
 import type { EnterpriseLeadInput } from '@latribu/shared-types';
 import { db } from '../db/index.js';
-import { enterpriseLeads, type EnterpriseLeadRow } from '../models/schema.js';
+import { enterpriseLeads, adminNotifications, type EnterpriseLeadRow } from '../models/schema.js';
 import { renderEmailHtml } from './email-template.js';
 
 export async function createEnterpriseLead(input: EnterpriseLeadInput): Promise<EnterpriseLeadRow> {
   const [row] = await db.insert(enterpriseLeads).values(input).returning();
-  await notifyEnterpriseLead(row);
+  await Promise.all([notifyEnterpriseLead(row), createAdminAlert(row)]);
   return row;
+}
+
+// Alarma dentro del panel admin (campana de NotificationBell.tsx) — sin
+// client_id, este lead no es un cliente del gimnasio (ver el ALTER que
+// volvió nullable esa columna, apps/api/drizzle/manual-migrations/
+// 2026-09-06-admin-notifications-nullable-client.sql).
+async function createAdminAlert(lead: EnterpriseLeadRow): Promise<void> {
+  await db.insert(adminNotifications).values({
+    type: 'enterprise_lead',
+    message: `Nueva empresa interesada: ${lead.empresa} — ${lead.nombre} (${lead.rol})`,
+  });
 }
 
 // Mismo transporter/no-op que sendPasswordResetEmail (password-reset.service.ts)
@@ -21,6 +32,7 @@ async function notifyEnterpriseLead(lead: EnterpriseLeadRow): Promise<void> {
   const EMAIL_PASS = process.env.EMAIL_PASS;
   const EMAIL_FROM = process.env.NOTIFICATION_FROM || 'no-reply@ephirox.com';
   const NOTIFY_TO = process.env.ENTERPRISE_LEADS_NOTIFY_EMAIL || 'contacto@ephirox.com';
+  const NOTIFY_CC = process.env.ENTERPRISE_LEADS_NOTIFY_CC || 'g619alejandro@gmail.com';
 
   const subject = `Nueva empresa interesada: ${lead.empresa}`;
   const html = renderEmailHtml({
@@ -44,7 +56,7 @@ ${lead.quien ? `<p style="margin:0;"><strong>Quién más debería estar:</strong
       secure: EMAIL_SECURE,
       auth: { user: EMAIL_USER, pass: EMAIL_PASS },
     });
-    await transporter.sendMail({ from: EMAIL_FROM, to: NOTIFY_TO, subject, html });
+    await transporter.sendMail({ from: EMAIL_FROM, to: NOTIFY_TO, cc: NOTIFY_CC, subject, html });
   } catch (e) {
     console.error('notifyEnterpriseLead error', e);
   }

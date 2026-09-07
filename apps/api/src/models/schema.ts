@@ -103,7 +103,11 @@ export type ClientInvitation = typeof clientInvitations.$inferSelect;
 
 export const adminNotifications = pgTable('admin_notifications', {
   id: uuid('id').primaryKey().defaultRandom(),
-  clientId: uuid('client_id').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+  // Nullable: no todas las notificaciones son sobre un cliente existente —
+  // ej. type:'enterprise_lead' (nuevo interesado desde la landing pública)
+  // no tiene ningún client_id que referenciar. NotificationBell.tsx ya
+  // esperaba esto (su "Ver cliente" solo se muestra `n.clientId &&`).
+  clientId: uuid('client_id').references(() => clients.id, { onDelete: 'cascade' }),
   type: text('type').notNull().default('onboarding_complete'),
   message: text('message').notNull(),
   read: boolean('read').notNull().default(false),
