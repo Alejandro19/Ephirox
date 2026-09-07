@@ -144,9 +144,6 @@ export function LandingPage() {
             <p className="body">
               El 34% de los trabajadores en Colombia se ausenta del trabajo por ansiedad o estrés. Pero cuando quien se agota es la persona que toma las decisiones más importantes, esto deja de ser una ausencia: reemplazar ese liderazgo cuesta entre el 30% y el 50% de su salario anual — en algunos casos documentados, hasta nueve meses de salario completo.
             </p>
-            <p className="body">
-              El estrés laboral le cuesta a la economía global cerca de US$1 billón al año (OMS/OIT). Aquí, el mismo nivel de ambición se paga más caro. Menos infraestructura, más trámite, más incertidumbre — el mismo objetivo que en otros mercados cuesta menos, aquí exige más de ti. Ese costo extra no aparece en ninguna cuenta de resultados. Aparece en tu cuerpo.
-            </p>
 
             <div className="costos-grid">
               {COSTOS.map((c) => (
@@ -202,6 +199,20 @@ export function LandingPage() {
               </div>
             </div>
           </section>
+
+          <div className="divider-banner">
+            <Image
+              src="/landing/divider.jpg"
+              alt=""
+              fill
+              unoptimized
+              style={{ objectFit: 'cover', objectPosition: '24% 46%', filter: 'saturate(0.9) contrast(1.03)' }}
+            />
+            <div className="divider-banner-shade" />
+            <div className="divider-banner-text">
+              <p>Redefining limits.</p>
+            </div>
+          </div>
 
           <section className="dia90-section">
             <div className="dia90-wrap">

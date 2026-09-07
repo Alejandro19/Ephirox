@@ -132,6 +132,7 @@
 .eph-landing2 .compare-row span.trad { font-size: 16px; line-height: 1.55; color: rgba(23,19,14,0.7); text-wrap: balance; }
 .eph-landing2 .compare-row span.eph { background: rgba(140,106,47,0.05); font-size: 17px; line-height: 1.55; color: var(--ink); text-wrap: balance; }
 .eph-landing2 .compare-row span.dif { font-size: 16px; line-height: 1.5; color: var(--gold-dark); text-wrap: balance; }
+.eph-landing2 .compare-mobile-list { display: none; }
 
 .eph-landing2 #beneficios { background: var(--bg-light); color: var(--ink); }
 .eph-landing2 .cambia-section { padding: clamp(72px, 12vh, 140px) clamp(22px, 6vw, 92px) clamp(50px, 7vh, 80px); }
@@ -144,6 +145,27 @@
 .eph-landing2 .shift-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: clamp(12px, 3vw, 56px); align-items: baseline; padding: clamp(24px, 3vw, 38px) 0; border-top: 1px solid rgba(23,19,14,0.14); }
 .eph-landing2 .shift-row .antes { margin: 0; font-size: 17px; line-height: 1.5; color: rgba(23,19,14,0.6); font-style: italic; max-width: 30ch; }
 .eph-landing2 .shift-row .despues { margin: 0; font-family: 'Cormorant Garamond', serif; font-weight: 400; font-size: clamp(24px, 2.9vw, 34px); line-height: 1.25; max-width: 26ch; text-wrap: pretty; }
+
+.eph-landing2 .divider-banner { position: relative; height: clamp(220px, 34vw, 420px); overflow: hidden; }
+.eph-landing2 .divider-banner-shade { position: absolute; inset: 0; background: linear-gradient(100deg, rgba(11,10,8,0.14) 0%, rgba(11,10,8,0.56) 42%, rgba(11,10,8,0.74) 100%); }
+.eph-landing2 .divider-banner-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 clamp(24px, 6vw, 92px);
+}
+.eph-landing2 .divider-banner-text p {
+  margin: 0;
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-weight: 300;
+  font-size: clamp(22px, 3vw, 34px);
+  color: #E3C795;
+  max-width: 20ch;
+  text-align: right;
+}
 
 .eph-landing2 .dia90-section { background: var(--bg-panel); color: var(--cream); padding: clamp(56px, 9vh, 104px) clamp(22px, 6vw, 92px) clamp(80px, 13vh, 150px); }
 .eph-landing2 .dia90-wrap { max-width: 1120px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: clamp(30px, 5vw, 76px); align-items: start; }
@@ -243,6 +265,18 @@
   .eph-landing2 .hero-inner { padding-top: clamp(90px, 18vh, 130px); }
 }
 
+/* En pantallas muy angostas la barra fija (~72px acá) queda más justa que a
+   680px — se despeja con un padding fijo en vez del clamp de arriba, y se
+   quita el CTA del hero (la barra fija ya lo muestra siempre) para que el
+   título no compita por espacio con texto redundante. */
+@media (max-width: 640px) {
+  .eph-landing2 section.hero { padding-top: 92px; }
+  .eph-landing2 .hero-inner { padding-top: 8px; }
+  .eph-landing2 .hero-copy { gap: 16px; }
+  .eph-landing2 .tagline { display: none; }
+  .eph-landing2 .hero-cta-row { display: none; }
+}
+
 @media (max-width: 768px) {
   .eph-landing2 section.pasos-sticky { display: none; }
   .eph-landing2 .pasos-mobile-list {
@@ -265,4 +299,37 @@
   }
   .eph-landing2 .pasos-mobile-item .paso-titulo { color: var(--ink); max-width: none; }
   .eph-landing2 .pasos-mobile-item .paso-texto { color: rgba(23,19,14,0.66); max-width: none; }
+
+  .eph-landing2 .table-scroll { display: none; }
+  .eph-landing2 .compare-mobile-list { display: grid; gap: 18px; }
+  .eph-landing2 .compare-card {
+    display: grid;
+    gap: 16px;
+    padding: 22px clamp(18px, 5vw, 26px);
+    border: 1px solid rgba(140,106,47,0.3);
+    border-radius: 16px;
+    background: linear-gradient(160deg, #FBF8F1 0%, #F7F2E7 100%);
+  }
+  .eph-landing2 .compare-card h3 {
+    margin: 0;
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 400;
+    font-size: 21px;
+    line-height: 1.25;
+    color: var(--ink);
+  }
+  .eph-landing2 .compare-card-field { display: grid; gap: 4px; }
+  .eph-landing2 .compare-card-field .label {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(23,19,14,0.5);
+  }
+  .eph-landing2 .compare-card-field p { margin: 0; font-size: 15px; line-height: 1.55; color: rgba(23,19,14,0.75); }
+  .eph-landing2 .compare-card-field.eph { padding: 10px 12px; margin: 0 -12px; border-radius: 10px; background: rgba(140,106,47,0.08); }
+  .eph-landing2 .compare-card-field.eph p { color: var(--ink); }
+  .eph-landing2 .compare-card-field.dif .label { color: var(--gold-dark); opacity: 0.75; }
+  .eph-landing2 .compare-card-field.dif p { color: var(--gold-dark); }
 }
