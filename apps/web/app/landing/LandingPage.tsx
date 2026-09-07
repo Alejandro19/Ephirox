@@ -89,7 +89,8 @@ export function LandingPage() {
             <span className="header-login-short">Entrar →</span>
           </a>
           <a className="cta-pill link-hover pill-hover eph-a" href="#llevarlo" onClick={handleAnchorClick} style={{ animationDelay: '200ms' }}>
-            Llevar Ephirox a mi empresa
+            <span className="cta-pill-full">Llevar Ephirox a mi empresa</span>
+            <span className="cta-pill-short">Llevar a mi empresa</span>
           </a>
         </div>
       </header>
@@ -176,7 +177,7 @@ export function LandingPage() {
           <div className="categoria-wrap">
             <div className="categoria-head">
               <h2><span className="a">Anticipamos</span><em className="b">lo que otros descubren demasiado tarde</em></h2>
-              <p>Reemplazar a un ejecutivo clave le cuesta a una empresa en Colombia hasta el 50 % de su salario anual — mientras las compañías que invierten en detección temprana evitan que ese riesgo se materialice.</p>
+              <p className="categoria-intro-p">Reemplazar a un ejecutivo clave le cuesta a una empresa en Colombia hasta el 50 % de su salario anual — mientras las compañías que invierten en detección temprana evitan que ese riesgo se materialice.</p>
             </div>
             <CategoriaTable />
           </div>
@@ -202,11 +203,11 @@ export function LandingPage() {
 
           <div className="divider-banner">
             <Image
-              src="/landing/divider.jpg"
+              src="/landing/junta.jpg"
               alt=""
               fill
               unoptimized
-              style={{ objectFit: 'cover', objectPosition: '24% 46%', filter: 'saturate(0.9) contrast(1.03)' }}
+              style={{ objectFit: 'cover', objectPosition: '50% 28%', filter: 'saturate(0.9) contrast(1.03)' }}
             />
             <div className="divider-banner-shade" />
             <div className="divider-banner-text">

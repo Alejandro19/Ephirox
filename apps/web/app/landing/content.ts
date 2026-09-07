@@ -23,7 +23,16 @@ export const PASOS = [
   { ord: '03', titulo: 'Todo cruzado en un solo lugar.', texto: 'Tu estado real, en un tablero del que puedes hablar con datos, no con sensaciones.', img: '/landing/dashboard-preview.png', alt: 'Vista previa del tablero Evolution' },
 ] as const;
 
-export const COMPARACION = [
+type CompareRow = {
+  indicador: string;
+  trad: string;
+  tradMobile?: string;
+  eph: string;
+  dif: string;
+  mobileHide?: boolean;
+};
+
+export const COMPARACION: CompareRow[] = [
   {
     indicador: 'Detección temprana de riesgo',
     trad: '1 de cada 3 trabajadores en Colombia enfrenta desafíos de salud mental que afectan su desempeño.',
@@ -33,6 +42,7 @@ export const COMPARACION = [
   {
     indicador: 'Costo de ausentismo por salud',
     trad: '34 % de los trabajadores colombianos se ausenta por ansiedad o estrés; el ausentismo le cuesta a las empresas cerca de 10 días por trabajador al año.',
+    tradMobile: 'Reemplazar a un ejecutivo clave le cuesta a una empresa en Colombia hasta el 50 % de su salario anual — mientras las compañías que invierten en detección temprana evitan que ese riesgo se materialice.',
     eph: 'Stress + Sleep con monitoreo continuo por wearable y check-ins sobre datos reales del ejecutivo.',
     dif: 'Intervención antes de que se traduzca en ausencia',
   },
@@ -41,20 +51,23 @@ export const COMPARACION = [
     trad: 'El mismo plan de wellness para toda la nómina.',
     eph: 'Protocolos personalizados por ciclo y por persona.',
     dif: '100 % personalizado, no por población.',
+    mobileHide: true,
   },
   {
     indicador: 'Validación',
     trad: 'Ninguna, o subjetiva — apps de autoayuda sin respaldo clínico.',
     eph: 'Cada protocolo es revisado por un especialista humano antes de llegar al cliente.',
     dif: 'Respaldo humano, no solo algoritmo.',
+    mobileHide: true,
   },
   {
     indicador: 'Acceso',
     trad: 'Abierto a cualquiera, beneficio genérico de nómina.',
     eph: 'Reservado por cohorte ejecutiva, dentro de la empresa (founders y C-levels).',
     dif: 'Élite, no es masivo',
+    mobileHide: true,
   },
-] as const;
+];
 
 export const SHIFTS = [
   { antes: 'No sé por qué ya no rindo igual.', despues: 'Sé qué está pasando en mi cuerpo antes de que afecte una decisión importante.' },
