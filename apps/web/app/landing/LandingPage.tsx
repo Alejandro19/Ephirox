@@ -1,0 +1,285 @@
+'use client';
+
+import Image from 'next/image';
+import { useEffect, useState } from 'react';
+import './landing.css';
+import { COSTOS, FRASE, SHIFTS, APP_LOGIN_URL } from './content';
+import { HeroStatCard } from './HeroStatCard';
+import { WordReveal } from './WordReveal';
+import { PasosSticky } from './PasosSticky';
+import { CategoriaTable } from './CategoriaTable';
+import { Dia90Rail } from './Dia90Rail';
+import { JuntaSection } from './JuntaChart';
+import { DifCarousel } from './DifCarousel';
+import { LeadForm } from './LeadForm';
+
+// Puerto 1:1 de docs/ephirox-landing.html — mismo copy, mismas imágenes
+// (docs/img, copiadas a public/landing), mismas interacciones (tarjeta de
+// estadísticas rotativa, scroll pineado de "cómo lo medimos", carrusel de
+// diferenciadores, tabla comparativa, gráfico de Junta). El formulario NO usa
+// el TODO del original ("aquí debes conectar tu backend") — ya postea al
+// endpoint real de apps/api (ver LeadForm.tsx / lib/enterprise-leads-client.ts).
+
+const CSS_VARS = {
+  '--ink': '#17130E',
+  '--ink-soft': 'rgba(23,19,14,0.66)',
+  '--cream': '#F5F1E8',
+  '--cream-soft': 'rgba(245,241,232,0.6)',
+  '--gold': '#C9A66B',
+  '--gold-light': '#E3C795',
+  '--gold-cream': '#DDBE8A',
+  '--gold-dark': '#8C6A2F',
+  '--bg-dark': '#0b0a08',
+  '--bg-dark-2': '#17130f',
+  '--bg-panel': '#100E0B',
+  '--bg-light': '#F3EDE1',
+} as React.CSSProperties;
+
+function RingIcon({ size }: { size: number }) {
+  return (
+    <svg viewBox="0 0 132 132" style={{ width: size, height: size }} aria-hidden="true">
+      <circle cx="66" cy="66" r="58" fill="none" stroke="#C9A66B" strokeWidth="4" strokeDasharray="272 92" transform="rotate(-224.3 66 66)" />
+      <circle cx="66" cy="66" r="8" fill="#C9A66B" />
+    </svg>
+  );
+}
+
+function handleAnchorClick(e: React.MouseEvent<HTMLAnchorElement>) {
+  const href = e.currentTarget.getAttribute('href') || '';
+  if (!href.startsWith('#')) return;
+  const el = document.getElementById(href.slice(1));
+  if (!el) return;
+  e.preventDefault();
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+}
+
+export function LandingPage() {
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    let raf: number | null = null;
+    function onScroll() {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = null;
+        setScrolled((window.scrollY || document.documentElement.scrollTop || 0) > 30);
+      });
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, []);
+
+  return (
+    <div className="eph-landing2" style={{ ...CSS_VARS, background: 'var(--bg-dark-2)', color: 'var(--cream)' }}>
+      <header className="site-header">
+        <div className="bar-bg" style={{ opacity: scrolled ? 1 : 0 }} />
+        <div className="brand eph-a" style={{ animationDelay: '120ms' }}>
+          <RingIcon size={24} />
+          <span>EPHIROX</span>
+        </div>
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 18 }}>
+          <a href={APP_LOGIN_URL} className="link-hover eph-a" style={{ animationDelay: '160ms', fontSize: 13, color: 'rgba(245,241,232,0.6)' }}>
+            ¿Ya eres cliente? Iniciar sesión →
+          </a>
+          <a className="cta-pill link-hover pill-hover eph-a" href="#llevarlo" onClick={handleAnchorClick} style={{ animationDelay: '200ms' }}>
+            Llevar Ephirox a mi empresa
+          </a>
+        </div>
+      </header>
+
+      <main>
+        <section className="hero">
+          <div className="hero-ring eph-ring">
+            <svg viewBox="0 0 132 132" style={{ width: '100%', height: '100%' }} aria-hidden="true">
+              <circle cx="66" cy="66" r="62" fill="none" stroke="#C9A66B" strokeOpacity="0.16" strokeWidth="0.3" strokeDasharray="329 60.6" transform="rotate(-61.9 66 66)" />
+              <circle cx="66" cy="66" r="47" fill="none" stroke="#C9A66B" strokeOpacity="0.09" strokeWidth="0.25" strokeDasharray="250 45.3" transform="rotate(-242.3 66 66)" />
+            </svg>
+          </div>
+
+          <div className="hero-inner">
+            <div className="hero-grid">
+              <div className="hero-copy">
+                <h1 className="eph-a" style={{ animationDelay: '320ms' }}>
+                  Diriges tu empresa con el cuerpo que menos <em className="serif">cuidas</em>.
+                </h1>
+                <p className="lead eph-a" style={{ animationDelay: '520ms' }}>
+                  Ephirox mide lo que está pasando dentro de ti — antes de que se note en una decisión que ya no puedas deshacer.
+                </p>
+                <div className="hero-cta-row eph-a" style={{ animationDelay: '680ms' }}>
+                  <a className="link-hover underline-link" href="#llevarlo" onClick={handleAnchorClick}>Llevar Ephirox a mi empresa</a>
+                  <span className="micro">Acceso reservado por cohorte, no individual. No sustituye diagnóstico ni tratamiento médico.</span>
+                </div>
+                <div className="tagline eph-a" style={{ animationDelay: '860ms' }}>Redefining limits.</div>
+              </div>
+
+              <div className="hero-media eph-a" style={{ animationDelay: '760ms' }}>
+                <div className="hero-photo-frame">
+                  <Image
+                    src="/landing/hero.png"
+                    alt="Ejecutivo caminando, vista aérea"
+                    fill
+                    priority
+                    sizes="(max-width: 900px) 90vw, 520px"
+                    style={{ objectFit: 'cover', objectPosition: '26% 34%', filter: 'saturate(0.82) contrast(1.02)' }}
+                  />
+                  <div className="hero-photo-shade" />
+                </div>
+                <HeroStatCard />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="contexto" id="contexto">
+          <div className="contexto-wrap">
+            <h2>Lo que sientes tú, ya se lo estás cobrando a tu <em>empresa</em>.</h2>
+            <p className="body">
+              El 34% de los trabajadores en Colombia se ausenta del trabajo por ansiedad o estrés. Pero cuando quien se agota es la persona que toma las decisiones más importantes, esto deja de ser una ausencia: reemplazar ese liderazgo cuesta entre el 30% y el 50% de su salario anual — en algunos casos documentados, hasta nueve meses de salario completo.
+            </p>
+            <p className="body">
+              El estrés laboral le cuesta a la economía global cerca de US$1 billón al año (OMS/OIT). Aquí, el mismo nivel de ambición se paga más caro. Menos infraestructura, más trámite, más incertidumbre — el mismo objetivo que en otros mercados cuesta menos, aquí exige más de ti. Ese costo extra no aparece en ninguna cuenta de resultados. Aparece en tu cuerpo.
+            </p>
+
+            <div className="costos-grid">
+              {COSTOS.map((c) => (
+                <div className="cost-outer" key={c.num}>
+                  <div className="cost-card">
+                    <span className="num">{c.num}</span>
+                    <p>{c.texto}</p>
+                    <span className="src">{c.src}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="leer-block">
+              <WordReveal text={FRASE} />
+              <p className="disclaimer">Ephirox mide y ayuda a gestionar hábitos. No previene ni trata ninguna condición médica.</p>
+            </div>
+          </div>
+        </section>
+
+        <div className="medimos-intro">
+          <span className="eyebrow">CÓMO LO MEDIMOS</span>
+          <h2>No es una sensación. Es un registro.</h2>
+        </div>
+
+        <PasosSticky />
+
+        <section className="categoria" id="categoria">
+          <div className="categoria-wrap">
+            <div className="categoria-head">
+              <h2><span className="a">Anticipamos</span><em className="b">lo que otros descubren demasiado tarde</em></h2>
+              <p>Reemplazar a un ejecutivo clave le cuesta a una empresa en Colombia hasta el 50 % de su salario anual — mientras las compañías que invierten en detección temprana evitan que ese riesgo se materialice.</p>
+            </div>
+            <CategoriaTable />
+          </div>
+        </section>
+
+        <div id="beneficios">
+          <section className="cambia-section">
+            <div className="cambia-wrap">
+              <div className="cambia-head">
+                <span className="eyebrow">LO QUE CAMBIA</span>
+                <h2>El control que creías haber perdido, <em>vuelve</em>.</h2>
+              </div>
+              <div className="shifts-list">
+                {SHIFTS.map((s) => (
+                  <div className="shift-row" key={s.antes}>
+                    <p className="antes">{s.antes}</p>
+                    <p className="despues">{s.despues}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          <section className="dia90-section">
+            <div className="dia90-wrap">
+              <div className="dia90-head">
+                <span className="eyebrow">DÍA 90</span>
+                <h2>Lo que vas a reconocer en ti al tercer mes.</h2>
+                <p>No una promesa de bienestar: cuatro cambios que vas a poder nombrar, con el registro que los respalda.</p>
+              </div>
+              <Dia90Rail />
+            </div>
+          </section>
+        </div>
+
+        <section className="junta-section">
+          <JuntaSection />
+        </section>
+
+        <section className="dif-section">
+          <div className="dif-wrap">
+            <DifCarousel />
+          </div>
+        </section>
+
+        <section className="llevarlo" id="llevarlo">
+          <div className="llevarlo-wrap">
+            <div className="llevarlo-copy">
+              <h2>Llevar Ephirox a mi <em>empresa</em>.</h2>
+              <p>Te ayudamos a preparar la propuesta correcta para quien tenga que decidir: alcance de cohorte y el reporte con el que se aprueba.</p>
+            </div>
+            <LeadForm />
+          </div>
+        </section>
+      </main>
+
+      <footer className="site-footer">
+        <div className="footer-grid">
+          <div className="footer-brand">
+            <div className="brandline">
+              <RingIcon size={22} />
+              <span>EPHIROX</span>
+            </div>
+            <span className="claim">El lujo de tener salud.</span>
+            <div className="notes">
+              <span>Privado y confidencial.</span>
+              <span>Cada protocolo validado por un especialista humano.</span>
+            </div>
+            <a className="cta-pill link-hover pill-hover" href="#llevarlo" onClick={handleAnchorClick} style={{ justifySelf: 'start' }}>Contactar</a>
+          </div>
+
+          <div className="footer-col">
+            <span className="eyebrow">PROGRAMA</span>
+            <a className="link-hover" href="#contexto" onClick={handleAnchorClick}>El costo de no verlo</a>
+            <a className="link-hover" href="#categoria" onClick={handleAnchorClick}>¿Por qué Ephirox?</a>
+            <a className="link-hover" href="#beneficios" onClick={handleAnchorClick}>Beneficios</a>
+          </div>
+
+          <div className="footer-col">
+            <span className="eyebrow">COMPAÑÍA</span>
+            <a className="link-hover" href="#llevarlo" onClick={handleAnchorClick}>Llevarlo a mi empresa</a>
+          </div>
+
+          <div className="footer-col">
+            <span className="eyebrow">CONTACTO</span>
+            <div className="footer-contact-item">
+              <span className="label">Email</span>
+              <a className="link-hover" href="mailto:contacto@ephirox.com">contacto@ephirox.com</a>
+            </div>
+            <div className="footer-contact-item">
+              <span className="label">Instagram</span>
+              <a className="link-hover" href="https://instagram.com/epirox_" target="_blank" rel="noopener">@epirox_</a>
+            </div>
+          </div>
+        </div>
+
+        <div className="footer-bottom">
+          <span className="copy">© 2026 Ephirox. Programa de optimización de hábitos y rendimiento. No constituye diagnóstico ni tratamiento médico.</span>
+          <div className="legal">
+            <a className="link-hover" href="#">Términos</a>
+            <a className="link-hover" href="#">Privacidad</a>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}

@@ -15,3 +15,4 @@ export * from './roles.js';
 export * from './membership.js';
 export * from './checkins.js';
 export * from './mentoring-benchmark.js';
+export * from './enterprise-leads.js';

@@ -1,11 +1,46 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const PUBLIC_PATHS = ["/login", "/therapist-login", "/reset-password", "/_next", "/api", "/icon", "/apple-icon"];
+const PUBLIC_PATHS = ["/login", "/therapist-login", "/reset-password", "/_next", "/api", "/icon", "/apple-icon", "/landing"];
 const STATIC_EXTS = /\.(svg|png|jpg|jpeg|gif|ico|css|js|woff2?)$/;
+
+// ephirox.com/www es el dominio público de marketing (landing B2B); el
+// producto (login, dashboard, NFC, etc.) vive en app.ephirox.com. Un solo
+// deployment de Vercel sirve ambos dominios — esta rama decide cuál mostrar
+// según el Host, antes de que corra el auth-gate de abajo (que solo aplica
+// al dominio del producto).
+const MARKETING_HOSTS = new Set(["ephirox.com", "www.ephirox.com"]);
+const MARKETING_ASSET_PATHS = ["/_next", "/favicon", "/icon", "/apple-icon"];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  // `request.nextUrl.hostname` no sirve para esto: en `next dev` siempre
+  // devuelve el host real del servidor (localhost), ignorando el header Host
+  // que mandó el cliente — confirmado corriendo el server local con un Host
+  // spoofeado. El header crudo sí refleja el dominio pedido, tanto en local
+  // como en producción (Vercel).
+  const host = (request.headers.get("host") || "").split(":")[0];
+
+  if (MARKETING_HOSTS.has(host)) {
+    const isAsset =
+      MARKETING_ASSET_PATHS.some((p) => pathname.startsWith(p)) ||
+      STATIC_EXTS.test(pathname);
+
+    if (isAsset) {
+      return NextResponse.next();
+    }
+    if (pathname === "/") {
+      return NextResponse.rewrite(new URL("/landing", request.url));
+    }
+    // Cualquier otra ruta pedida en el dominio de marketing (bookmarks
+    // viejos de clientes reales, el NFC antes de reprogramarse, links de
+    // correos con WEB_APP_URL desactualizado) se manda al dominio real del
+    // producto, preservando path y query string.
+    const target = new URL(request.url);
+    target.hostname = "app.ephirox.com";
+    target.port = "";
+    return NextResponse.redirect(target, 307);
+  }
 
   // Allow public paths and static assets
   if (

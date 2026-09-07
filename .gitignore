@@ -23,3 +23,7 @@ agent-skills/
 
 # Datos binarios de Tesseract OCR usados en pruebas locales — no son código fuente
 apps/api/*.traineddata
+
+# Material de referencia de diseño de la landing — las imágenes reales que usa
+# el sitio ya viven en apps/web/public/landing/, esto solo duplicaría ~21MB.
+/docs/img/

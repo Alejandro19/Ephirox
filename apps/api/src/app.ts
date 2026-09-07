@@ -38,6 +38,7 @@ import { membershipPricesRouter } from './routes/membership-prices.routes.js';
 import { stripeWebhookRouter } from './routes/stripe-webhook.routes.js';
 import { wompiWebhookRouter } from './routes/wompi-webhook.routes.js';
 import { wearableWebhookRouter } from './routes/wearable-webhook.routes.js';
+import { enterpriseLeadsRouter } from './routes/enterprise-leads.routes.js';
 
 export function createApp() {
   const app = express();
@@ -103,6 +104,7 @@ export function createApp() {
   app.use('/api/clients', clientNotificationsRouter);
   app.use('/api/account', accountRouter);
   app.use('/api', membershipPricesRouter);
+  app.use('/api', enterpriseLeadsRouter);
 
   // Error handler
   app.use((error: unknown, req: Request, res: Response, _next: NextFunction) => {

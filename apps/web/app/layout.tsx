@@ -33,7 +33,9 @@ const cormorant = Cormorant_Garamond({
 
 const jost = Jost({
   subsets: ["latin"],
-  weight: ["300", "400", "500"],
+  // 200 lo usa la landing pública (ephirox.com/landing) para sus titulares
+  // livianos — el resto de la app solo usaba 300/400/500.
+  weight: ["200", "300", "400", "500"],
   variable: "--font-jost",
   display: "swap",
 });

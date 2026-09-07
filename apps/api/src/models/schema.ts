@@ -998,3 +998,18 @@ export const wellnessIndexHistory = pgTable('wellness_index_history', {
 }));
 
 export type WellnessIndexHistoryRow = typeof wellnessIndexHistory.$inferSelect;
+
+// Formulario "Llevar Ephirox a mi empresa" de la landing pública
+// (ephirox.com/landing, sin autenticación) — sin relación a `clients`, es un
+// lead comercial, no un cliente del gimnasio.
+export const enterpriseLeads = pgTable('enterprise_leads', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  nombre: text('nombre').notNull(),
+  empresa: text('empresa').notNull(),
+  rol: text('rol').notNull(),
+  tamano: text('tamano'),
+  quien: text('quien'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+export type EnterpriseLeadRow = typeof enterpriseLeads.$inferSelect;
