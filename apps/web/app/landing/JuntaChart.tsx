@@ -14,7 +14,7 @@ export function JuntaSection() {
   return (
     <div className="junta-wrap">
       <div className="junta-left">
-        <h2>Esto es lo que vas a poder mostrarle a tu Junta en 90 días.</h2>
+        <h2>El reporte que le llevas a tu Junta.</h2>
         <div className="junta-chart">
           <div className="junta-bars">
             {current.barras.map((h, i) => (
@@ -39,7 +39,7 @@ export function JuntaSection() {
           return (
             <div
               key={j.titulo}
-              className="junta-row"
+              className={`junta-row${isActive ? ' is-active' : ''}`}
               tabIndex={0}
               onMouseEnter={pick}
               onFocus={pick}

@@ -1,13 +1,14 @@
 'use client';
 
+import type { CSSProperties } from 'react';
 import { HERO_STATS, HERO_INTERVAL_MS } from './content';
 import { useAutoRotate } from './useAutoRotate';
 
-export function HeroStatCard() {
+export function HeroStatCard({ className = '', style }: { className?: string; style?: CSSProperties } = {}) {
   const { active, running, pick, pause, resume } = useAutoRotate(HERO_STATS.length, HERO_INTERVAL_MS);
 
   return (
-    <div className="hero-card" onMouseEnter={pause} onMouseLeave={resume}>
+    <div className={`hero-stat-card${className ? ` ${className}` : ''}`} style={style} onMouseEnter={pause} onMouseLeave={resume}>
       <div className="hero-card-stack">
         {HERO_STATS.map((h, i) => {
           const isActive = i === active;

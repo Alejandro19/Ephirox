@@ -13,6 +13,7 @@ import { Dia90Rail } from './Dia90Rail';
 import { JuntaSection } from './JuntaChart';
 import { DifCarousel } from './DifCarousel';
 import { LeadForm } from './LeadForm';
+import { ScrollReveal } from './ScrollReveal';
 
 // Puerto 1:1 de docs/ephirox-landing.html — mismo copy, mismas imágenes
 // (docs/img, copiadas a public/landing), mismas interacciones (tarjeta de
@@ -57,6 +58,7 @@ function handleAnchorClick(e: React.MouseEvent<HTMLAnchorElement>) {
 
 export function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
+  const [showBackToTop, setShowBackToTop] = useState(false);
 
   useEffect(() => {
     let raf: number | null = null;
@@ -64,7 +66,9 @@ export function LandingPage() {
       if (raf) return;
       raf = requestAnimationFrame(() => {
         raf = null;
-        setScrolled((window.scrollY || document.documentElement.scrollTop || 0) > 30);
+        const y = window.scrollY || document.documentElement.scrollTop || 0;
+        setScrolled(y > 30);
+        setShowBackToTop(y > window.innerHeight * 0.8);
       });
     }
     window.addEventListener('scroll', onScroll, { passive: true });
@@ -74,6 +78,11 @@ export function LandingPage() {
       if (raf) cancelAnimationFrame(raf);
     };
   }, []);
+
+  function scrollToTop() {
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
+  }
 
   return (
     <div className="eph-landing2" style={{ ...CSS_VARS, background: 'var(--bg-dark-2)', color: 'var(--cream)' }}>
@@ -97,6 +106,21 @@ export function LandingPage() {
 
       <main>
         <section className="hero">
+          <div className="bg">
+            <Image
+              src="/landing/hero.jpg"
+              alt="Ejecutivo en la naturaleza"
+              fill
+              priority
+              unoptimized
+              sizes="100vw"
+              style={{ objectFit: 'cover', objectPosition: '76% 14%', filter: 'saturate(0.86) contrast(1.05)' }}
+            />
+          </div>
+          <div className="grad" />
+          <div className="topgrad" />
+          <div className="botgrad" />
+
           <div className="hero-ring eph-ring">
             <svg viewBox="0 0 132 132" style={{ width: '100%', height: '100%' }} aria-hidden="true">
               <circle cx="66" cy="66" r="62" fill="none" stroke="#C9A66B" strokeOpacity="0.16" strokeWidth="0.3" strokeDasharray="329 60.6" transform="rotate(-61.9 66 66)" />
@@ -104,39 +128,20 @@ export function LandingPage() {
             </svg>
           </div>
 
-          <div className="hero-inner">
-            <div className="hero-grid">
-              <div className="hero-copy">
-                <h1 className="eph-a" style={{ animationDelay: '320ms' }}>
-                  Diriges tu empresa con el cuerpo que menos <em className="serif">cuidas</em>.
-                </h1>
-                <p className="lead eph-a" style={{ animationDelay: '520ms' }}>
-                  Ephirox mide lo que está pasando dentro de ti — antes de que se note en una decisión que ya no puedas deshacer.
-                </p>
-                <div className="hero-cta-row eph-a" style={{ animationDelay: '680ms' }}>
-                  <a className="link-hover underline-link" href="#llevarlo" onClick={handleAnchorClick}>Llevar Ephirox a mi empresa</a>
-                  <span className="micro">Acceso reservado por cohorte, no individual. No sustituye diagnóstico ni tratamiento médico.</span>
-                </div>
-                <div className="tagline eph-a" style={{ animationDelay: '860ms' }}>Redefining limits.</div>
-              </div>
-
-              <div className="hero-media eph-a" style={{ animationDelay: '760ms' }}>
-                <div className="hero-photo-frame">
-                  <Image
-                    src="/landing/hero.png"
-                    alt="Ejecutivo caminando, vista aérea"
-                    fill
-                    priority
-                    quality={95}
-                    sizes="(max-width: 900px) 90vw, 520px"
-                    style={{ objectFit: 'cover', objectPosition: '26% 34%', filter: 'saturate(0.82) contrast(1.02)' }}
-                  />
-                  <div className="hero-photo-shade" />
-                </div>
-                <HeroStatCard />
-              </div>
+          <div className="hero-content">
+            <h1 className="eph-a" style={{ animationDelay: '320ms' }}>
+              Diriges tu empresa con el cuerpo que menos <em className="serif">cuidas</em>.
+            </h1>
+            <p className="lead eph-a" style={{ animationDelay: '520ms' }}>
+              Ephirox mide lo que está pasando dentro de ti — antes de que se note en una decisión que ya no puedas deshacer.
+            </p>
+            <div className="hero-cta-row eph-a" style={{ animationDelay: '680ms' }}>
+              <a className="link-hover underline-link" href="#llevarlo" onClick={handleAnchorClick}>Llevar Ephirox a mi empresa</a>
+              <span className="micro">Acceso reservado por cohorte, no individual. No sustituye diagnóstico ni tratamiento médico.</span>
             </div>
           </div>
+
+          <HeroStatCard className="eph-a" style={{ animationDelay: '760ms' }} />
         </section>
 
         <section className="contexto" id="contexto">
@@ -175,10 +180,10 @@ export function LandingPage() {
 
         <section className="categoria" id="categoria">
           <div className="categoria-wrap">
-            <div className="categoria-head">
+            <ScrollReveal className="categoria-head">
               <h2><span className="a">Anticipamos</span><em className="b">lo que otros descubren demasiado tarde</em></h2>
               <p className="categoria-intro-p">Reemplazar a un ejecutivo clave le cuesta a una empresa en Colombia hasta el 50 % de su salario anual — mientras las compañías que invierten en detección temprana evitan que ese riesgo se materialice.</p>
-            </div>
+            </ScrollReveal>
             <CategoriaTable />
           </div>
         </section>
@@ -186,16 +191,16 @@ export function LandingPage() {
         <div id="beneficios">
           <section className="cambia-section">
             <div className="cambia-wrap">
-              <div className="cambia-head">
+              <ScrollReveal className="cambia-head">
                 <span className="eyebrow">LO QUE CAMBIA</span>
                 <h2>El control que creías haber perdido, <em>vuelve</em>.</h2>
-              </div>
+              </ScrollReveal>
               <div className="shifts-list">
-                {SHIFTS.map((s) => (
-                  <div className="shift-row" key={s.antes}>
+                {SHIFTS.map((s, i) => (
+                  <ScrollReveal className="shift-row" delayMs={i * 90} key={s.antes}>
                     <p className="antes">{s.antes}</p>
                     <p className="despues">{s.despues}</p>
-                  </div>
+                  </ScrollReveal>
                 ))}
               </div>
             </div>
@@ -207,7 +212,7 @@ export function LandingPage() {
               alt=""
               fill
               unoptimized
-              style={{ objectFit: 'cover', objectPosition: '50% 28%', filter: 'saturate(0.9) contrast(1.03)' }}
+              style={{ objectFit: 'cover', filter: 'saturate(0.9) contrast(1.03)' }}
             />
             <div className="divider-banner-shade" />
             <div className="divider-banner-text">
@@ -220,7 +225,7 @@ export function LandingPage() {
               <div className="dia90-head">
                 <span className="eyebrow">DÍA 90</span>
                 <h2>Lo que vas a reconocer en ti al tercer mes.</h2>
-                <p>No una promesa de bienestar: cuatro cambios que vas a poder nombrar, con el registro que los respalda.</p>
+                <p>No una promesa de bienestar: el registro de cuatro cambios reales.</p>
               </div>
               <Dia90Rail />
             </div>
@@ -296,6 +301,15 @@ export function LandingPage() {
           </div>
         </div>
       </footer>
+
+      <button
+        type="button"
+        aria-label="Volver al inicio"
+        className={`back-to-top${showBackToTop ? ' is-visible' : ''}`}
+        onClick={scrollToTop}
+      >
+        ↑
+      </button>
     </div>
   );
 }

@@ -42,7 +42,7 @@ export const COMPARACION: CompareRow[] = [
   {
     indicador: 'Costo de ausentismo por salud',
     trad: '34 % de los trabajadores colombianos se ausenta por ansiedad o estrés; el ausentismo le cuesta a las empresas cerca de 10 días por trabajador al año.',
-    tradMobile: 'Reemplazar a un ejecutivo clave le cuesta a una empresa en Colombia hasta el 50 % de su salario anual — mientras las compañías que invierten en detección temprana evitan que ese riesgo se materialice.',
+    tradMobile: '34 % de los trabajadores colombianos se ausenta por ansiedad o estrés; el ausentismo le cuesta a las empresas cerca de 10 días por trabajador al año.',
     eph: 'Stress + Sleep con monitoreo continuo por wearable y check-ins sobre datos reales del ejecutivo.',
     dif: 'Intervención antes de que se traduzca en ausencia',
   },
@@ -77,25 +77,26 @@ export const SHIFTS = [
 ] as const;
 
 export const HITOS = [
-  { titulo: 'Claridad mental sostenida', detalle: 'Menos caídas de foco, con el registro que lo respalda.' },
-  { titulo: 'Menos días de baja energía', detalle: 'Los días malos dejan de ser un misterio.' },
-  { titulo: 'Decisiones con más certeza', detalle: 'Sabes en qué estado tomaste cada decisión crítica.' },
-  { titulo: 'Control recuperado', detalle: 'Diriges tu capacidad en vez de administrar su desgaste.' },
+  { titulo: 'Piensas con la misma nitidez a las 4pm que a las 8am.', detalle: 'Menos caídas de foco, con el registro que lo respalda.' },
+  { titulo: 'El día ya no se te acaba a media tarde.', detalle: 'Los días malos dejan de ser un misterio.' },
+  { titulo: 'Sabes en qué estado tomaste cada decisión crítica — y puedes repetirlo a voluntad.', detalle: 'Sabes en qué estado tomaste cada decisión crítica.' },
+  { titulo: 'Diriges tu capacidad, en vez de improvisar con lo que te queda de ella.', detalle: 'Diriges tu capacidad en vez de administrar su desgaste.' },
 ] as const;
 
 export const JUNTA = [
-  { titulo: 'Ver el riesgo, no intuirlo', texto: 'El estado real de rendimiento del talento crítico, agregado y anónimo.', barras: [0.22, 0.34, 0.28, 0.78, 0.31, 0.26, 0.82, 0.3, 0.24, 0.86, 0.27, 0.33], pie: 'Señales que hoy no se ven: se destacan solas dentro de la cohorte.' },
-  { titulo: 'Material listo para la Junta', texto: 'Adherencia, tendencia de recuperación y señales tempranas, por cohorte.', barras: [0.3, 0.36, 0.42, 0.47, 0.55, 0.6, 0.66, 0.73, 0.78, 0.84, 0.9, 0.96], pie: 'Tendencia por cohorte, trimestre a trimestre. Representación ilustrativa.' },
-  { titulo: 'Liderazgo protegido', texto: 'Menos probabilidad de perder sin aviso a quien sostiene la decisión más crítica.', barras: [0.88, 0.9, 0.86, 0.91, 0.89, 0.92, 0.87, 0.9, 0.93, 0.89, 0.91, 0.9], pie: 'Continuidad sostenida en lugar de caídas sin aviso.' },
+  { titulo: 'Ver el riesgo, no intuirlo', texto: 'Visibilidad agregada y anónima del estado del talento crítico — antes de que se traduzca en una salida inesperada.', barras: [0.22, 0.34, 0.28, 0.78, 0.31, 0.26, 0.82, 0.3, 0.24, 0.86, 0.27, 0.33], pie: 'Señales que hoy no se ven: se destacan solas dentro de la cohorte.' },
+  { titulo: 'Retorno que se paga solo', texto: 'Reemplazar a un ejecutivo clave cuesta hasta el 50 % de su salario anual. Evitar una sola salida cubre la inversión de la cohorte completa.', barras: [0.3, 0.36, 0.42, 0.47, 0.55, 0.6, 0.66, 0.73, 0.78, 0.84, 0.9, 0.96], pie: 'Retorno proyectado por cohorte, trimestre a trimestre. Representación ilustrativa.' },
+  { titulo: 'Antes del riesgo, no después', texto: 'Mientras la póliza de hombre clave indemniza cuando el riesgo ya ocurrió, esto reduce la probabilidad de que ocurra.', barras: [0.9, 0.82, 0.74, 0.68, 0.6, 0.54, 0.48, 0.42, 0.36, 0.32, 0.28, 0.24], pie: 'Probabilidad de salida inesperada, a la baja con el tiempo. Representación ilustrativa.' },
+  { titulo: 'Ventaja de retención', texto: '42 % de los ejecutivos rechazaría un ascenso si perjudica su bienestar. Ofrecerlo es una ventaja de retención, no un costo adicional.', barras: [0.88, 0.9, 0.86, 0.91, 0.89, 0.92, 0.87, 0.9, 0.93, 0.89, 0.91, 0.9], pie: 'Continuidad sostenida en lugar de caídas sin aviso.' },
+  { titulo: 'Riesgo de capital humano', texto: 'Datos agregados y anónimos por cohorte, listos para reportarse a la Junta como parte del riesgo que ya se espera que gobiernen — sin exposición individual ni legal.', barras: [0.24, 0.3, 0.36, 0.43, 0.5, 0.56, 0.62, 0.68, 0.74, 0.8, 0.86, 0.92], pie: 'Cobertura de gobierno de riesgo, creciente por cohorte. Representación ilustrativa.' },
 ] as const;
-export const JUNTA_INITIAL_INDEX = 1;
+export const JUNTA_INITIAL_INDEX = 0;
 
 export const DIF = [
   'Ningún protocolo llega a ti sin que un especialista lo haya validado.',
   'Es optimización de hábitos y rendimiento, no diagnóstico ni tratamiento.',
   'Se contrata por cohorte dentro de una empresa. No hay registro individual.',
 ] as const;
-export const DIF_INTERVAL_MS = 6500;
 
 export const EQUIPO_TAMANOS = ['1 – 10', '11 – 30', '31 – 80', '80 +'] as const;
 

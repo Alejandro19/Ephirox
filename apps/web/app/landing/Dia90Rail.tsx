@@ -18,7 +18,7 @@ export function Dia90Rail() {
           return (
             <div
               key={h.titulo}
-              className="dia90-row"
+              className={`dia90-row${isActive ? ' is-active' : ''}`}
               tabIndex={0}
               onMouseEnter={pick}
               onFocus={pick}
