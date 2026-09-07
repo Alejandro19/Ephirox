@@ -543,6 +543,13 @@ describe('training routes', () => {
       expect(res.body.quote).toBeNull();
     });
 
+    // 5 llamadas de red secuenciales y dependientes (insert + PATCH + GET +
+    // PATCH + delete) — confirmado que el timeout intermitente es la latencia
+    // hacia la base remota de pruebas, no algo que se pueda agrupar. Igual que
+    // en onboarding-approvals.routes.test.ts, 20s en vez del default de 10s;
+    // además, si este test corta a mitad de camino, dejaba al cliente con una
+    // frase asignada sin limpiar, lo que hacía fallar en cascada el siguiente
+    // test ("falls back to the active pool...").
     it('assigns a quote and returns it from quote-of-the-day even when inactive', async () => {
       const [created] = await db.insert(mindsetQuotes).values({ quote: 'Frase asignada', active: false }).returning();
 
@@ -567,7 +574,7 @@ describe('training routes', () => {
       expect(clearRes.body.client.assignedQuoteId).toBeNull();
 
       await db.delete(mindsetQuotes).where(eq(mindsetQuotes.id, created.id));
-    });
+    }, 20000);
 
     it('falls back to the active pool for quote-of-the-day when the client has no assignment', async () => {
       const [created] = await db.insert(mindsetQuotes).values({ quote: 'Frase del pool activo', active: true }).returning();

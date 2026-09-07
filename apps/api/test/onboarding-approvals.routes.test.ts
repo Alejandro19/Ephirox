@@ -62,6 +62,11 @@ describe('onboarding approvals (baseline / wearable) + activación de Semana 1',
     expect(notifications.some((n) => n.message.includes('wearable'))).toBe(true);
   });
 
+  // 6 llamadas HTTP reales y secuenciales (cada una depende del estado que
+  // dejó la anterior, no se pueden agrupar) — confirmado que el fallo
+  // intermitente es la latencia de red hacia la base remota de pruebas, no
+  // contención de CPU (falla igual corriéndolo solo, sin ninguna otra suite
+  // en paralelo). 20s en vez del default de 10s.
   it('activates Semana 1 exactly once baseline + wearable + laboratorio semana 0 are all approved', async () => {
     await db.update(clients).set({ wearableBaselineReadyAt: new Date() }).where(eq(clients.id, clientId));
     await db.insert(labPanels).values({ clientId, semanaNumero: 0, datos: { cortisol: 15 } });
@@ -92,7 +97,7 @@ describe('onboarding approvals (baseline / wearable) + activación de Semana 1',
     const notificationsAfter = await db.select().from(clientNotifications).where(eq(clientNotifications.clientId, clientId));
     const week1NotificationsAfter = notificationsAfter.filter((n) => n.message.includes('Semana 1')).length;
     expect(week1NotificationsAfter).toBe(week1NotificationsBefore);
-  });
+  }, 20000);
 
   it('a non-admin cannot approve baseline or wearable', async () => {
     const clientToken = signToken({ id: clientId, role: 'cliente', name: 'x', email: 'x@x.com', clientType: 'mentoring' });
