@@ -18,6 +18,27 @@ function err(res: Response, message: string, status = 400) {
   return res.status(status).json({ success: false, error: message });
 }
 
+// `pending: true` deja que el frontend muestre un mensaje distinto al de
+// "credenciales inválidas" — el login con Google/Apple funcionó, la cuenta
+// solo está esperando que un admin la apruebe desde el panel.
+function pendingSsoResponse(res: Response) {
+  return res.status(403).json({
+    success: false,
+    pending: true,
+    error: 'Tu cuenta está pendiente de aprobación. Te avisaremos cuando el administrador la confirme.',
+  });
+}
+
+// Se dispara solo cuando ninguna búsqueda (email ni googleId/appleId) encontró
+// una cuenta — un cliente dado de alta desde el panel admin (manual o por
+// invitación) ya existe con status:'active' antes de este punto y nunca pasa
+// por acá. Crea la cuenta en 'pending' para que quede visible en el panel de
+// aprobación, sin emitir token.
+async function handleUnmatchedSsoIdentity(res: Response, input: { name: string; email: string; googleId?: string; appleId?: string }) {
+  await clientsService.createPendingSsoClient(input);
+  return pendingSsoResponse(res);
+}
+
 export async function login(req: Request, res: Response) {
   const { email, password } = req.body as LoginInput;
   const emailLower = email.toLowerCase().trim();
@@ -252,6 +273,8 @@ export async function googleLogin(req: Request, res: Response) {
   const client = (await clientsService.findClientByEmail(emailLower)) ?? (await clientsService.findClientByGoogleId(googleId));
   if (client) {
     if (client.status === 'inactive') return err(res, 'Tu cuenta está inactiva. Contacta al administrador.', 403);
+    if (client.status === 'pending') return pendingSsoResponse(res);
+    if (client.status === 'rejected') return err(res, 'No existe una cuenta asociada a este correo. Contacta al administrador para que te dé acceso.', 403);
     if (!client.googleId) await clientsService.updateClientGoogleId(client.id, googleId);
     const token = authService.signToken({ id: client.id, role: 'cliente', name: client.name, email: client.email, plan: client.plan, clientType: client.clientType });
     const moduleAccess = await getResolvedModuleAccess(client.clientType, client.permissions);
@@ -268,9 +291,7 @@ export async function googleLogin(req: Request, res: Response) {
     });
   }
 
-  // El alta de cliente es exclusivamente manual desde el panel admin — una
-  // identidad de Google sin cuenta previa nunca crea una por su cuenta.
-  return err(res, 'No existe una cuenta asociada a este correo. Contacta al administrador para que te dé acceso.', 403);
+  return handleUnmatchedSsoIdentity(res, { name: payload.name || emailLower, email: emailLower, googleId });
 }
 
 export async function appleLogin(req: Request, res: Response) {
@@ -297,6 +318,8 @@ export async function appleLogin(req: Request, res: Response) {
   const client = (await clientsService.findClientByEmail(emailLower)) ?? (await clientsService.findClientByAppleId(appleId));
   if (client) {
     if (client.status === 'inactive') return err(res, 'Tu cuenta está inactiva. Contacta al administrador.', 403);
+    if (client.status === 'pending') return pendingSsoResponse(res);
+    if (client.status === 'rejected') return err(res, 'No existe una cuenta asociada a este correo. Contacta al administrador para que te dé acceso.', 403);
     if (!client.appleId) await clientsService.updateClientAppleId(client.id, appleId);
     const token = authService.signToken({ id: client.id, role: 'cliente', name: client.name, email: client.email, plan: client.plan, clientType: client.clientType });
     const moduleAccess = await getResolvedModuleAccess(client.clientType, client.permissions);
@@ -313,6 +336,5 @@ export async function appleLogin(req: Request, res: Response) {
     });
   }
 
-  // Misma regla que Google — ver comentario arriba.
-  return err(res, 'No existe una cuenta asociada a este correo. Contacta al administrador para que te dé acceso.', 403);
+  return handleUnmatchedSsoIdentity(res, { name: name || emailLower, email: emailLower, appleId });
 }

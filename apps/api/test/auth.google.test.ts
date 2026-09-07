@@ -53,16 +53,77 @@ describe('POST /api/auth/google', () => {
     expect(res.body.role).toBe('admin');
   });
 
-  it('rejects a brand new identity with no existing account — the platform has no public self-registration', async () => {
+  it('creates a pending client for a brand new identity with no existing account, instead of a 403 dead end', async () => {
     setGoogleVerifierForTests({
       verifyIdToken: async () => ({ getPayload: () => fakePayload() }),
     });
     const res = await request(app).post('/api/auth/google').send({ credential: 'fake' });
     expect(res.status).toBe(403);
     expect(res.body.token).toBeUndefined();
+    expect(res.body.pending).toBe(true);
 
     const created = await db.select().from(clients).where(eq(clients.email, 'google-user@example.com'));
-    expect(created).toHaveLength(0);
+    expect(created).toHaveLength(1);
+    expect(created[0]).toMatchObject({ status: 'pending', name: 'Google User', googleId: 'google-sub-123', passwordHash: null });
+
+    await db.delete(clients).where(eq(clients.id, created[0].id));
+  });
+
+  it('does not create a second row when the same unmatched identity tries again while still pending', async () => {
+    setGoogleVerifierForTests({
+      verifyIdToken: async () => ({ getPayload: () => fakePayload({ email: 'retry-pending@example.com', sub: 'google-sub-retry' }) }),
+    });
+    const first = await request(app).post('/api/auth/google').send({ credential: 'fake' });
+    expect(first.body.pending).toBe(true);
+
+    const second = await request(app).post('/api/auth/google').send({ credential: 'fake' });
+    expect(second.status).toBe(403);
+    expect(second.body.pending).toBe(true);
+    expect(second.body.token).toBeUndefined();
+
+    const rows = await db.select().from(clients).where(eq(clients.email, 'retry-pending@example.com'));
+    expect(rows).toHaveLength(1);
+
+    await db.delete(clients).where(eq(clients.id, rows[0].id));
+  });
+
+  it('lets a client in once an admin approves their pending registration', async () => {
+    const [client] = await db
+      .insert(clients)
+      .values({ name: 'Soon Approved', email: 'soon-approved@example.com', googleId: 'google-sub-approved', status: 'pending' })
+      .returning();
+
+    setGoogleVerifierForTests({
+      verifyIdToken: async () => ({ getPayload: () => fakePayload({ email: 'soon-approved@example.com', sub: 'google-sub-approved' }) }),
+    });
+    const beforeApproval = await request(app).post('/api/auth/google').send({ credential: 'fake' });
+    expect(beforeApproval.body.pending).toBe(true);
+
+    await db.update(clients).set({ status: 'active' }).where(eq(clients.id, client.id));
+
+    const afterApproval = await request(app).post('/api/auth/google').send({ credential: 'fake' });
+    expect(afterApproval.status).toBe(200);
+    expect(afterApproval.body.role).toBe('cliente');
+    expect(afterApproval.body.token).toBeDefined();
+
+    await db.delete(clients).where(eq(clients.id, client.id));
+  });
+
+  it('keeps a rejected client out with the generic no-account message, not the pending one', async () => {
+    const [client] = await db
+      .insert(clients)
+      .values({ name: 'Rejected One', email: 'rejected-one@example.com', googleId: 'google-sub-rejected', status: 'rejected' })
+      .returning();
+
+    setGoogleVerifierForTests({
+      verifyIdToken: async () => ({ getPayload: () => fakePayload({ email: 'rejected-one@example.com', sub: 'google-sub-rejected' }) }),
+    });
+    const res = await request(app).post('/api/auth/google').send({ credential: 'fake' });
+    expect(res.status).toBe(403);
+    expect(res.body.pending).toBeUndefined();
+    expect(res.body.token).toBeUndefined();
+
+    await db.delete(clients).where(eq(clients.id, client.id));
   });
 
   it('still finds a client by googleId when their platform email no longer matches the Google account (changed via the account panel)', async () => {

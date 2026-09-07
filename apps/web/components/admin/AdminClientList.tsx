@@ -10,6 +10,7 @@ import { adminCreateTherapist } from "../../lib/blindspot-client";
 import { CLIENT_TYPE_LABELS } from "../../lib/constants";
 import { showToast } from "../layout/AppShell";
 import AdminTherapistList from "./AdminTherapistList";
+import PendingApprovals from "./PendingApprovals";
 
 function isPlanExpired(c: ClientSummary): boolean {
   if (!c.planEndDate) return false;
@@ -23,8 +24,13 @@ function statusBadgeStyle(status: string): React.CSSProperties {
     display: "inline-block", padding: "3px 10px", borderRadius: "9999px",
     fontFamily: "var(--font-jetbrains-mono), ui-monospace, monospace",
     fontSize: 10, fontWeight: 400, textTransform: "uppercase", letterSpacing: "0.06em",
-    background: status === "inactive" ? "var(--eph-line)" : "rgba(201,166,107,.14)",
-    color: status === "inactive" ? "var(--eph-muted)" : "var(--eph-accent)",
+    background: status === "inactive" ? "var(--eph-line)"
+      : status === "pending" ? "rgba(201,166,107,.28)"
+      : status === "rejected" ? "rgba(138,74,60,.14)"
+      : "rgba(201,166,107,.14)",
+    color: status === "inactive" ? "var(--eph-muted)"
+      : status === "rejected" ? "#D99483"
+      : "var(--eph-accent)",
   };
 }
 
@@ -142,6 +148,8 @@ export default function AdminClientList() {
         <p className="font-mono" style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--eph-muted)", margin: 0 }}>
           Gestiona los miembros de Ephirox.</p>
       </div>
+
+      <PendingApprovals clients={clients} onChanged={load} />
 
       {/* Nuevo cliente / terapeuta */}
       <div style={{

@@ -159,6 +159,40 @@ export async function deactivateClient(id: string): Promise<ClientDetail> {
   return body.client;
 }
 
+// Aprobar/rechazar un registro que se creó pendiente al intentar entrar por
+// Google/Apple sin cuenta previa (ver googleLogin/appleLogin en
+// auth.controller.ts) — mismo endpoint que activateClient/deactivateClient,
+// solo cambia el status destino.
+export async function approveClient(id: string): Promise<ClientDetail> {
+  const token = getSessionToken();
+  const res = await fetch(`${API_BASE_URL}/api/clients/${id}/status`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ status: 'active' }),
+  });
+  const body = await res.json();
+  if (!body.success) throw new Error(body.error || 'Error al aprobar cliente.');
+  return body.client;
+}
+
+export async function rejectClient(id: string): Promise<ClientDetail> {
+  const token = getSessionToken();
+  const res = await fetch(`${API_BASE_URL}/api/clients/${id}/status`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ status: 'rejected' }),
+  });
+  const body = await res.json();
+  if (!body.success) throw new Error(body.error || 'Error al rechazar cliente.');
+  return body.client;
+}
+
 export async function updateClientProfile(id: string, patch: { name?: string; email?: string }): Promise<ClientDetail> {
   const token = getSessionToken();
   const res = await fetch(`${API_BASE_URL}/api/clients/${id}`, {

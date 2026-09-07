@@ -49,6 +49,19 @@ describe('clients patch routes', () => {
     await request(app).patch(`/api/clients/${clientId}/status`).set('Authorization', `Bearer ${adminToken}`).send({ status: 'active' });
   });
 
+  // 'rejected' es el valor que usa el panel de aprobación de registros
+  // pendientes (PendingApprovals.tsx) para el botón "Rechazar" — ver
+  // googleLogin/appleLogin en auth.controller.ts.
+  it('updates status to rejected', async () => {
+    const res = await request(app)
+      .patch(`/api/clients/${clientId}/status`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ status: 'rejected' });
+    expect(res.status).toBe(200);
+    expect(res.body.client.status).toBe('rejected');
+    await request(app).patch(`/api/clients/${clientId}/status`).set('Authorization', `Bearer ${adminToken}`).send({ status: 'active' });
+  });
+
   it('rejects an invalid client type', async () => {
     const res = await request(app)
       .patch(`/api/clients/${clientId}/client-type`)

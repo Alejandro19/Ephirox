@@ -163,6 +163,25 @@ export async function createClient(input: CreateClientInput): Promise<Client> {
   return client;
 }
 
+// Alta automática cuando alguien intenta entrar por Google/Apple con un
+// email que el sistema nunca había visto (ver googleLogin/appleLogin en
+// auth.controller.ts) — a diferencia de createClient, sin contraseña ni
+// invitación por correo: queda en 'pending' hasta que un admin la apruebe
+// desde el panel, y entra con el mismo botón de SSO en cuanto se active.
+export async function createPendingSsoClient(input: { name: string; email: string; googleId?: string; appleId?: string }): Promise<Client> {
+  const [client] = await db
+    .insert(clients)
+    .values({
+      name: input.name,
+      email: input.email.toLowerCase().trim(),
+      status: 'pending',
+      googleId: input.googleId,
+      appleId: input.appleId,
+    })
+    .returning();
+  return client;
+}
+
 export async function updateClient(id: string, patch: Record<string, unknown>): Promise<Client | null> {
   let normalizedPatch = patch;
   if (typeof patch.email === 'string') {
@@ -186,7 +205,7 @@ export async function updatePermissions(id: string, permissions: Record<string, 
   return updateClient(id, { permissions });
 }
 
-export async function updateStatus(id: string, status: 'active' | 'inactive'): Promise<Client | null> {
+export async function updateStatus(id: string, status: 'active' | 'inactive' | 'rejected'): Promise<Client | null> {
   // Activar (inactive -> active) es el único momento en que se asigna el
   // número de miembro — de forma atómica vía secuencia de Postgres dentro de
   // una transacción, para que dos activaciones concurrentes nunca choquen.

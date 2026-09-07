@@ -42,8 +42,12 @@ export const PermissionsPatchSchema = z.object({
 });
 export type PermissionsPatch = z.infer<typeof PermissionsPatchSchema>;
 
+// 'pending' no está acá a propósito: un admin nunca lo pone a mano, solo se
+// crea así de forma automática cuando alguien intenta entrar por primera vez
+// con Google/Apple y no existe cuenta previa (ver googleLogin/appleLogin en
+// auth.controller.ts) — el admin solo puede aprobar ('active') o rechazar.
 export const StatusPatchSchema = z.object({
-  status: z.enum(['active', 'inactive']),
+  status: z.enum(['active', 'inactive', 'rejected']),
 });
 export type StatusPatch = z.infer<typeof StatusPatchSchema>;
 
