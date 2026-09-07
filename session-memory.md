@@ -762,6 +762,17 @@ La suite completa de `apps/api` (68 archivos) mostró fallas que persistían inc
 
 Todo lo anterior (excepto lo que ya se había commiteado en sesiones previas: v1 de la landing, ruteo de dominio, rutas de enterprise-leads) se commiteó en 4 commits atómicos por feature y se pusheó directo a `origin/main`: `13729d5` (mobile+imágenes+IG), `e37c579` (aprobación de registros), `ba692a2` (alarma+CC de leads), `49c803e` (fixes de tests). Se dejaron fuera del commit a propósito: la carpeta `Documentos/` (documentos personales/legales de Alejandro que aparecieron como untracked, sin relación con el código) y los archivos fuente de diseño en `docs/` (ver Actividad 19).
 
+### 8. Ajustes finos de la landing tras el primer commit (mismo día)
+
+Tres pedidos puntuales sobre la landing, verificados con Chrome headless (desktop y mobile) antes de cerrar:
+
+- Se quitó el segundo párrafo de la sección "Lo que sientes tú" (el del costo global del estrés laboral en US$1 billón, OMS/OIT) — duplicaba mensaje con el resto de la sección.
+- La tabla comparativa "Anticipamos" ahora se reemplaza en mobile (≤768px) por una lista de tarjetas apiladas (una por indicador, con Enfoque tradicional/Ephirox/Diferencial etiquetados) en vez de forzar scroll horizontal sobre una tabla de 4 columnas — en desktop no cambió nada.
+- Banner panorámico nuevo full-bleed entre "Lo que cambia" y "Día 90" (`divider.jpg`, crop de `hero.png`: banda 2752×1000 desde y=60, reescalada a 1800px) con degradado oscuro hacia la derecha y el texto "Redefining limits.". **Bug real encontrado y corregido:** el optimizador de `next/image` en modo desarrollo (`next dev`) servía para el `<img>` real de la página una variante de la imagen con dimensiones distintas a las que devolvía la misma URL pedida directamente (confirmado comparando `naturalWidth`/`naturalHeight` real vs. una página de prueba standalone apuntando a la misma URL) — el resultado visual era que el ejecutivo quedaba fuera de encuadre pese a que el CSS de `object-fit`/`object-position` era correcto. Se resolvió sirviendo esa imagen con la prop `unoptimized` de `next/image` (es una sola imagen decorativa fullbleed, no necesita variantes responsive de todos modos). Si aparece un bug visual similar (imagen recortada "mal" pese a que el CSS se ve bien) con otra imagen sk servida por `next/image` en desarrollo, sospechar de esto antes que del CSS.
+- Hero simplificado en mobile (≤640px): título/subtítulo quedan justo debajo de la barra fija sin choque visual (`padding-top` fijo en vez del `clamp` que ya no alcanzaba en pantallas muy angostas), y se ocultan el tagline "Redefining limits." y el bloque de CTA+leyenda del hero (redundantes con el botón que la barra fija ya muestra siempre). Desktop no se tocó.
+
+Commiteado y pusheado en `7e7a06a`.
+
 ## Próximas actividades — Siguiente sesión (actualizada 2026-09-03, 2026-09-04)
 
 ### Actividad 1 — Confirmar que el login desde el celular ya funciona
