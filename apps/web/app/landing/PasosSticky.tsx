@@ -97,7 +97,7 @@ export function PasosSticky() {
                       <div className="mac-body">
                         <div className="mac-lid">
                           <div className="mac-screen">
-                            <Image src={p.img} alt={p.alt} fill sizes="380px" style={{ objectFit: 'contain' }} />
+                            <Image src={p.img} alt={p.alt} fill quality={95} sizes="380px" style={{ objectFit: 'contain' }} />
                           </div>
                         </div>
                         <div className="mac-notch" />
@@ -109,7 +109,7 @@ export function PasosSticky() {
               }
               return (
                 <div key={p.ord} className="pasos-media-layer" style={layerStyle}>
-                  <Image src={p.img} alt={p.alt} fill sizes="(max-width: 700px) 100vw, 520px" style={{ objectFit: 'cover' }} />
+                  <Image src={p.img} alt={p.alt} fill quality={95} sizes="(max-width: 700px) 100vw, 520px" style={{ objectFit: 'cover' }} />
                 </div>
               );
             })}

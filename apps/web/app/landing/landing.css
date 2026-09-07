@@ -37,7 +37,9 @@
 .eph-landing2 .bar-bg { position: absolute; inset: 0; pointer-events: none; opacity: 0; background: var(--bg-dark); border-bottom: 1px solid rgba(245,241,232,0.07); transition: opacity 240ms ease-out; }
 .eph-landing2 .brand { position: relative; display: flex; align-items: center; gap: 13px; }
 .eph-landing2 .brand span { font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: 20px; letter-spacing: 0.2em; text-indent: 0.2em; line-height: 1; }
-.eph-landing2 .cta-pill { position: relative; font-size: 14px; letter-spacing: 0.02em; color: var(--cream); border: 1px solid rgba(201,166,107,0.45); border-radius: 999px; padding: 10px 20px; cursor: pointer; background: transparent; font-family: inherit; }
+.eph-landing2 .cta-pill { position: relative; font-size: 14px; letter-spacing: 0.02em; color: var(--cream); border: 1px solid rgba(201,166,107,0.45); border-radius: 999px; padding: 10px 20px; cursor: pointer; background: transparent; font-family: inherit; white-space: nowrap; }
+.eph-landing2 .header-login-link { white-space: nowrap; }
+.eph-landing2 .header-login-short { display: none; }
 
 .eph-landing2 section.hero { position: relative; background: var(--bg-dark); overflow: hidden; min-height: min(88vh, 920px); display: grid; align-content: center; padding-top: clamp(56px, 6vw, 74px); }
 .eph-landing2 .hero-ring { position: absolute; top: 54%; left: 50%; width: min(150vw, 1120px); height: min(150vw, 1120px); margin: -50% 0 0 -50%; pointer-events: none; }
@@ -106,6 +108,10 @@
 .eph-landing2 .mac-screen img { max-width: 100%; max-height: 100%; object-fit: contain; }
 .eph-landing2 .mac-notch { width: 100%; height: 5px; background: linear-gradient(#3a352c, #201d18); border-radius: 0 0 3px 3px; }
 .eph-landing2 .mac-base { width: 132%; height: 10px; border-radius: 0 0 12px 12px; background: linear-gradient(#2b2721, #17140f); box-shadow: 0 12px 24px rgba(0,0,0,0.5); }
+
+/* Lista mobile de "cómo lo medimos" — oculta en desktop, donde manda el
+   scroll pineado de arriba (section.pasos-sticky). */
+.eph-landing2 .pasos-mobile-list { display: none; }
 
 .eph-landing2 section.categoria { background: var(--bg-light); color: var(--ink); padding: clamp(74px, 11vh, 130px) clamp(22px, 6vw, 92px); }
 .eph-landing2 .categoria-wrap { max-width: 1120px; margin: 0 auto; display: grid; gap: clamp(34px, 4.6vw, 54px); }
@@ -216,3 +222,47 @@
 .eph-landing2 .footer-bottom .copy { font-size: 13px; line-height: 1.6; color: rgba(245,241,232,0.42); max-width: 54ch; }
 .eph-landing2 .footer-bottom .legal { display: flex; gap: 22px; }
 .eph-landing2 .footer-bottom .legal a { font-size: 13px; color: rgba(245,241,232,0.55); }
+
+/* ─── Mobile ───
+   El header roto (link + pill partiéndose en varias líneas dentro de su
+   propia caja) y el scroll pineado de "cómo lo medimos" (poco confiable en
+   navegadores móviles, pensado para mouse) eran los dos puntos reales de
+   quiebre en celular — confirmado midiendo el layout, no solo por ojo. */
+@media (max-width: 680px) {
+  .eph-landing2 header.site-header {
+    flex-wrap: wrap;
+    row-gap: 12px;
+  }
+  .eph-landing2 .header-actions {
+    flex-basis: 100%;
+    justify-content: flex-end;
+  }
+  .eph-landing2 .header-login-full { display: none; }
+  .eph-landing2 .header-login-short { display: inline; }
+  .eph-landing2 .cta-pill { font-size: 13px; padding: 9px 16px; }
+  .eph-landing2 .hero-inner { padding-top: clamp(90px, 18vh, 130px); }
+}
+
+@media (max-width: 768px) {
+  .eph-landing2 section.pasos-sticky { display: none; }
+  .eph-landing2 .pasos-mobile-list {
+    display: grid;
+    gap: 48px;
+    max-width: 560px;
+    margin: 0 auto;
+    padding: 56px clamp(22px, 6vw, 40px) 72px;
+    background: var(--bg-light);
+    color: var(--ink);
+  }
+  .eph-landing2 .pasos-mobile-item { display: grid; gap: 16px; }
+  .eph-landing2 .pasos-mobile-media {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    border-radius: 16px;
+    overflow: hidden;
+    background: var(--ink);
+  }
+  .eph-landing2 .pasos-mobile-item .paso-titulo { color: var(--ink); max-width: none; }
+  .eph-landing2 .pasos-mobile-item .paso-texto { color: rgba(23,19,14,0.66); max-width: none; }
+}

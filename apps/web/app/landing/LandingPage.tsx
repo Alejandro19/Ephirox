@@ -7,6 +7,7 @@ import { COSTOS, FRASE, SHIFTS, APP_LOGIN_URL } from './content';
 import { HeroStatCard } from './HeroStatCard';
 import { WordReveal } from './WordReveal';
 import { PasosSticky } from './PasosSticky';
+import { PasosMobileList } from './PasosMobileList';
 import { CategoriaTable } from './CategoriaTable';
 import { Dia90Rail } from './Dia90Rail';
 import { JuntaSection } from './JuntaChart';
@@ -82,9 +83,10 @@ export function LandingPage() {
           <RingIcon size={24} />
           <span>EPHIROX</span>
         </div>
-        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 18 }}>
-          <a href={APP_LOGIN_URL} className="link-hover eph-a" style={{ animationDelay: '160ms', fontSize: 13, color: 'rgba(245,241,232,0.6)' }}>
-            ¿Ya eres miembro? Iniciar sesión →
+        <div className="header-actions" style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 18 }}>
+          <a href={APP_LOGIN_URL} className="link-hover eph-a header-login-link" style={{ animationDelay: '160ms', fontSize: 13, color: 'rgba(245,241,232,0.6)' }}>
+            <span className="header-login-full">¿Ya eres miembro? Iniciar sesión →</span>
+            <span className="header-login-short">Entrar →</span>
           </a>
           <a className="cta-pill link-hover pill-hover eph-a" href="#llevarlo" onClick={handleAnchorClick} style={{ animationDelay: '200ms' }}>
             Llevar Ephirox a mi empresa
@@ -171,6 +173,7 @@ export function LandingPage() {
         </div>
 
         <PasosSticky />
+        <PasosMobileList />
 
         <section className="categoria" id="categoria">
           <div className="categoria-wrap">
@@ -268,7 +271,7 @@ export function LandingPage() {
             </div>
             <div className="footer-contact-item">
               <span className="label">Instagram</span>
-              <a className="link-hover" href="https://instagram.com/epirox_" target="_blank" rel="noopener">@epirox_</a>
+              <a className="link-hover" href="https://instagram.com/ephirox_" target="_blank" rel="noopener">@ephirox_</a>
             </div>
           </div>
         </div>
