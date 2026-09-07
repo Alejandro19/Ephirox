@@ -67,7 +67,14 @@
   box-sizing: border-box;
 }
 
-html, body {
+/* Solo en html, nunca también en body: cuando ambos declaran overflow-x,
+   body deja de "delegarle" su scroll a la ventana real y se vuelve su
+   propia caja de scroll — eso rompe position:sticky en cualquier
+   descendiente (ver PasosSticky.tsx en la landing), porque el sticky pasa
+   a calcularse contra una caja que nunca se desplaza. Con overflow-x solo
+   en html, el navegador sigue usando la ventana real como scroller y la
+   protección contra desborde horizontal funciona igual. */
+html {
   overflow-x: hidden;
 }
 

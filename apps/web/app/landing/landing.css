@@ -6,9 +6,13 @@
 .eph-landing2 {
   font-family: 'Jost', sans-serif;
   font-weight: 300;
-  overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
+/* NUNCA overflow-x acá: cualquier valor de overflow en un ancestro de un
+   position:sticky (PasosSticky.tsx) lo desactiva — el .pasos-inner deja de
+   pegarse al hacer scroll y su contenido (pasos 02/03) queda fuera de
+   pantalla antes de que le toque mostrarse. html/body ya tienen su propio
+   overflow-x:hidden (globals.css) para el mismo objetivo sin este problema. */
 .eph-landing2 a { color: var(--gold); text-decoration: none; }
 .eph-landing2 input, .eph-landing2 textarea, .eph-landing2 button { font-family: 'Jost', sans-serif; }
 .eph-landing2 input::placeholder, .eph-landing2 textarea::placeholder { color: rgba(245,241,232,0.26); }

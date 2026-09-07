@@ -84,7 +84,7 @@ export function LandingPage() {
         </div>
         <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 18 }}>
           <a href={APP_LOGIN_URL} className="link-hover eph-a" style={{ animationDelay: '160ms', fontSize: 13, color: 'rgba(245,241,232,0.6)' }}>
-            ¿Ya eres cliente? Iniciar sesión →
+            ¿Ya eres miembro? Iniciar sesión →
           </a>
           <a className="cta-pill link-hover pill-hover eph-a" href="#llevarlo" onClick={handleAnchorClick} style={{ animationDelay: '200ms' }}>
             Llevar Ephirox a mi empresa
@@ -124,6 +124,7 @@ export function LandingPage() {
                     alt="Ejecutivo caminando, vista aérea"
                     fill
                     priority
+                    quality={95}
                     sizes="(max-width: 900px) 90vw, 520px"
                     style={{ objectFit: 'cover', objectPosition: '26% 34%', filter: 'saturate(0.82) contrast(1.02)' }}
                   />
