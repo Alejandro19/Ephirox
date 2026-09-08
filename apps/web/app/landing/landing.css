@@ -346,6 +346,12 @@
      opacidad) se ve traslúcido e ilegible. */
   .eph-landing2 .hero .grad { background: linear-gradient(100deg, rgba(11,10,8,0.94) 0%, rgba(11,10,8,0.8) 55%, rgba(11,10,8,0.55) 85%, rgba(11,10,8,0.4) 100%); }
   .eph-landing2 .hero-cta-row { display: none; }
+  /* El bottom/right en % de viewport de la versión desktop asume harta
+     altura disponible — en un iPhone real con la barra de Safari expandida
+     (dvh chico) la tarjeta terminaba subiendo lo suficiente para taparse
+     con el lead. Achicarla y pegarla más al borde inferior le da margen
+     de sobra sin importar cuánto crezca el h1 (3 líneas con el copy actual). */
+  .eph-landing2 .hero-stat-card { width: 190px; right: clamp(16px, 4vw, 24px); bottom: clamp(16px, 3vh, 28px); }
 
   .eph-landing2 header.site-header { padding: 14px 16px; gap: 10px; }
   .eph-landing2 .cta-pill { font-size: 12px; padding: 8px 14px; }
