@@ -52,15 +52,21 @@
 .eph-landing2 .header-login-short { display: none; }
 .eph-landing2 .cta-pill-short { display: none; }
 
-/* dvh se recalcula en vivo con la barra de Safari — en teoría perfecto, pero
-   en un iPhone real (reportado con captura) igual dejaba ver la sección
-   siguiente por debajo: dvh no siempre se reajusta bien después de que la
-   barra ya se asentó. svh es el piso "peor caso" (con toda la barra de
-   Safari visible) — un valor fijo, no depende de que el navegador vuelva a
-   recalcular nada, así que nunca puede quedar corto. El costo es que a
-   veces el hero queda un pelín más alto que el viewport visible real (barra
-   colapsada) — un scroll mínimo imperceptible, mejor que el bug real. */
-.eph-landing2 section.hero { position: relative; overflow: hidden; min-height: 100vh; min-height: 100svh; }
+/* Dos intentos previos, cada uno corto en el sentido contrario:
+   - dvh se recalcula en vivo con la barra de Safari, pero en un iPhone real
+     no siempre se reajusta bien después de que la barra ya se asentó.
+   - svh (el piso "toda la barra visible") falló al revés: en la segunda
+     captura la barra de Safari ya se había COLAPSADO (scrolleada/ocultada,
+     nada de UI de Safari visible) — el viewport real creció más allá de lo
+     que svh reserva, y el hero se quedó corto otra vez, mismo hueco.
+   lvh es el TECHO — el tamaño con la barra completamente colapsada, el
+   viewport más grande posible. En iOS la barra de Safari flota SOBRE el
+   contenido (no lo empuja), así que con el hero a 100lvh: barra visible →
+   la barra tapa el borde inferior del hero, ningún hueco; barra oculta →
+   lvh calza exacto con el viewport ya crecido. En el peor caso (barra
+   visible) el hero queda apenas más alto que el área visible — un scroll
+   mínimo imperceptible, nunca un hueco con la sección siguiente asomando. */
+.eph-landing2 section.hero { position: relative; overflow: hidden; min-height: 100vh; min-height: 100lvh; }
 .eph-landing2 .hero-ring { position: absolute; top: 54%; left: 50%; width: min(150vw, 1120px); height: min(150vw, 1120px); margin: -50% 0 0 -50%; pointer-events: none; }
 .eph-landing2 .hero .bg { position: absolute; inset: 0; }
 .eph-landing2 .hero .bg img { width: 100%; height: 100%; object-fit: cover; object-position: 76% 14%; filter: saturate(0.86) contrast(1.05); }
