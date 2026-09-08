@@ -52,7 +52,15 @@
 .eph-landing2 .header-login-short { display: none; }
 .eph-landing2 .cta-pill-short { display: none; }
 
-.eph-landing2 section.hero { position: relative; overflow: hidden; min-height: 100vh; min-height: 100dvh; }
+/* dvh se recalcula en vivo con la barra de Safari — en teoría perfecto, pero
+   en un iPhone real (reportado con captura) igual dejaba ver la sección
+   siguiente por debajo: dvh no siempre se reajusta bien después de que la
+   barra ya se asentó. svh es el piso "peor caso" (con toda la barra de
+   Safari visible) — un valor fijo, no depende de que el navegador vuelva a
+   recalcular nada, así que nunca puede quedar corto. El costo es que a
+   veces el hero queda un pelín más alto que el viewport visible real (barra
+   colapsada) — un scroll mínimo imperceptible, mejor que el bug real. */
+.eph-landing2 section.hero { position: relative; overflow: hidden; min-height: 100vh; min-height: 100svh; }
 .eph-landing2 .hero-ring { position: absolute; top: 54%; left: 50%; width: min(150vw, 1120px); height: min(150vw, 1120px); margin: -50% 0 0 -50%; pointer-events: none; }
 .eph-landing2 .hero .bg { position: absolute; inset: 0; }
 .eph-landing2 .hero .bg img { width: 100%; height: 100%; object-fit: cover; object-position: 76% 14%; filter: saturate(0.86) contrast(1.05); }
