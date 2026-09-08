@@ -4,6 +4,8 @@ export type EnterpriseLeadInput = {
   nombre: string;
   empresa: string;
   rol: string;
+  correo: string;
+  celular: string;
   tamano?: string;
   quien?: string;
 };

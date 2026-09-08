@@ -1011,6 +1011,11 @@ export const enterpriseLeads = pgTable('enterprise_leads', {
   nombre: text('nombre').notNull(),
   empresa: text('empresa').notNull(),
   rol: text('rol').notNull(),
+  // Nullable a nivel de columna a propósito (leads de antes de 2026-09-07 no
+  // tienen estos datos) aunque el zod schema los exija para envíos nuevos —
+  // mismo criterio que el resto de esta tabla.
+  correo: text('correo'),
+  celular: text('celular'),
   tamano: text('tamano'),
   quien: text('quien'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),

@@ -38,6 +38,8 @@ async function notifyEnterpriseLead(lead: EnterpriseLeadRow): Promise<void> {
   const html = renderEmailHtml({
     preheader: `${lead.nombre} (${lead.rol}) en ${lead.empresa} quiere llevar Ephirox a su equipo.`,
     bodyHtml: `<p style="margin:0 0 6px;"><strong>Nombre:</strong> ${lead.nombre}</p>
+<p style="margin:0 0 6px;"><strong>Correo:</strong> ${lead.correo}</p>
+<p style="margin:0 0 6px;"><strong>Celular:</strong> ${lead.celular}</p>
 <p style="margin:0 0 6px;"><strong>Empresa:</strong> ${lead.empresa}</p>
 <p style="margin:0 0 6px;"><strong>Rol:</strong> ${lead.rol}</p>
 <p style="margin:0 0 6px;"><strong>Equipo a considerar:</strong> ${lead.tamano || 'No especificado'}</p>

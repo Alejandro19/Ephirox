@@ -8,9 +8,11 @@ export const EnterpriseLeadInputSchema = z.object({
   nombre: z.string().min(1),
   empresa: z.string().min(1),
   rol: z.string().min(1),
+  correo: z.string().email(),
+  celular: z.string().min(1),
   // Los chips de tamaño de equipo no son obligatorios en el formulario
-  // original (solo nombre/empresa/rol llevan `required`) — se guarda si el
-  // visitante eligió uno, sin bloquear el envío si no.
+  // original (solo nombre/empresa/rol/correo/celular llevan `required`) —
+  // se guarda si el visitante eligió uno, sin bloquear el envío si no.
   tamano: z.enum(EMPRESA_TAMANOS).optional(),
   quien: z.string().optional(),
 });

@@ -23,6 +23,8 @@ export function LeadForm() {
         nombre: nombreValue,
         empresa: String(data.get('empresa') || '').trim(),
         rol: String(data.get('rol') || '').trim(),
+        correo: String(data.get('correo') || '').trim(),
+        celular: String(data.get('celular') || '').trim(),
         tamano: tamano || undefined,
         quien: String(data.get('quien') || '').trim() || undefined,
       });
@@ -50,6 +52,16 @@ export function LeadForm() {
         <span>Nombre</span>
         <input name="nombre" required placeholder="Nombre y apellido" />
       </label>
+      <div className="field-row-2">
+        <label>
+          <span>Correo</span>
+          <input name="correo" type="email" required placeholder="nombre@empresa.com" />
+        </label>
+        <label>
+          <span>Celular</span>
+          <input name="celular" type="tel" required placeholder="+57 300 123 4567" />
+        </label>
+      </div>
       <div className="field-row-2">
         <label>
           <span>Empresa</span>
