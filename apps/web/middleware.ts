@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const PUBLIC_PATHS = ["/login", "/therapist-login", "/reset-password", "/_next", "/api", "/icon", "/apple-icon", "/landing"];
+const PUBLIC_PATHS = ["/login", "/therapist-login", "/reset-password", "/_next", "/api", "/icon", "/apple-icon", "/landing", "/terminos", "/privacidad"];
 const STATIC_EXTS = /\.(svg|png|jpg|jpeg|gif|ico|css|js|woff2?)$/;
 
 // ephirox.com/www es el dominio público de marketing (landing B2B); el
@@ -31,6 +31,12 @@ export function middleware(request: NextRequest) {
     }
     if (pathname === "/") {
       return NextResponse.rewrite(new URL("/landing", request.url));
+    }
+    // Términos y Privacidad son públicos en ambos dominios (linkeados desde
+    // el footer de la landing) — se sirven tal cual en vez de mandarse al
+    // dominio del producto como el resto de rutas de acá abajo.
+    if (pathname === "/terminos" || pathname === "/privacidad") {
+      return NextResponse.next();
     }
     // Cualquier otra ruta pedida en el dominio de marketing (bookmarks
     // viejos de clientes reales, el NFC antes de reprogramarse, links de

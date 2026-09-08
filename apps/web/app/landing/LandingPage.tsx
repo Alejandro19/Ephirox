@@ -130,10 +130,10 @@ export function LandingPage() {
 
           <div className="hero-content">
             <h1 className="eph-a" style={{ animationDelay: '320ms' }}>
-              Diriges tu empresa con el cuerpo que menos <em className="serif">cuidas</em>.
+              Tu empresa llega hasta donde tu <em className="serif">cuerpo</em> te lo permite.
             </h1>
             <p className="lead eph-a" style={{ animationDelay: '520ms' }}>
-              Ephirox mide lo que está pasando dentro de ti — antes de que se note en una decisión que ya no puedas deshacer.
+              Ephirox mide lo que sucede dentro de ti — antes de que pase factura.
             </p>
             <div className="hero-cta-row eph-a" style={{ animationDelay: '680ms' }}>
               <a className="link-hover underline-link" href="#llevarlo" onClick={handleAnchorClick}>Llevar Ephirox a mi empresa</a>
@@ -296,8 +296,8 @@ export function LandingPage() {
         <div className="footer-bottom">
           <span className="copy">© 2026 Ephirox. Programa de optimización de hábitos y rendimiento. No constituye diagnóstico ni tratamiento médico.</span>
           <div className="legal">
-            <a className="link-hover" href="#">Términos</a>
-            <a className="link-hover" href="#">Privacidad</a>
+            <a className="link-hover" href="/terminos">Términos</a>
+            <a className="link-hover" href="/privacidad">Privacidad</a>
           </div>
         </div>
       </footer>

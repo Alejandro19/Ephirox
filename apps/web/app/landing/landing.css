@@ -60,7 +60,7 @@
 .eph-landing2 .hero .topgrad { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(11,10,8,0.62) 0%, rgba(11,10,8,0) 28%); }
 .eph-landing2 .hero .botgrad { position: absolute; inset: 0; background: linear-gradient(0deg, rgba(11,10,8,0.55) 0%, rgba(11,10,8,0) 26%); }
 .eph-landing2 .hero-content { position: relative; max-width: 1180px; margin: 0 auto; padding: clamp(120px, 16vw, 172px) clamp(20px, 5vw, 76px) clamp(72px, 10vh, 110px); display: grid; gap: clamp(30px, 3.6vw, 46px); justify-items: start; }
-.eph-landing2 .hero-content h1 { margin: 0; font-weight: 200; font-size: clamp(38px, 4.6vw, 66px); line-height: 1.1; letter-spacing: -0.018em; max-width: 16.5ch; text-wrap: pretty; }
+.eph-landing2 .hero-content h1 { margin: 0; font-weight: 200; font-size: clamp(38px, 4.6vw, 66px); line-height: 1.15; letter-spacing: -0.018em; max-width: 14ch; text-wrap: balance; }
 .eph-landing2 .hero-content h1 em { font-size: 1.12em; line-height: 1; color: var(--gold); }
 .eph-landing2 .hero-content .lead { margin: 0; font-size: clamp(17px, 1.9vw, 20px); line-height: 1.6; color: var(--cream-soft); max-width: 44ch; text-wrap: pretty; }
 .eph-landing2 .hero-cta-row { display: grid; gap: 14px; justify-items: start; margin-top: 2px; }
@@ -339,6 +339,12 @@
    título no compita por espacio con texto redundante. */
 @media (max-width: 640px) {
   .eph-landing2 .hero .bg img { object-position: 82% 8%; }
+  /* El texto ocupa casi todo el ancho angosto acá, a diferencia de desktop
+     donde el max-width del lead lo mantiene dentro de la zona oscura del
+     degradado — sin esto, la mitad derecha de cada línea queda sobre la
+     parte más clara/transparente de la foto y el texto (cream-soft, 60% de
+     opacidad) se ve traslúcido e ilegible. */
+  .eph-landing2 .hero .grad { background: linear-gradient(100deg, rgba(11,10,8,0.94) 0%, rgba(11,10,8,0.8) 55%, rgba(11,10,8,0.55) 85%, rgba(11,10,8,0.4) 100%); }
   .eph-landing2 .hero-cta-row { display: none; }
 
   .eph-landing2 header.site-header { padding: 14px 16px; gap: 10px; }
