@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, type FormEvent } from 'react';
-import { acceptInvitationRequest, saveSession } from '@/lib/api-client';
+import { acceptInvitationRequest } from '@/lib/api-client';
 import Isotipo from '@/components/ui/Isotipo';
 import Button from '@/components/ui/Button';
 
@@ -44,7 +44,6 @@ export default function InvitacionPage(): React.ReactElement {
         setError(result.error || 'No se pudo crear tu contraseña.');
         return;
       }
-      saveSession(result.token);
       window.location.href = '/onboarding';
     } catch {
       setError('Error de conexión. Intenta de nuevo.');

@@ -137,6 +137,17 @@ export function Module10({ clientId, draft, onChange, hormonalStatus, lastPeriod
     setWearableEstado(estado);
   }
 
+  async function handleConnect() {
+    if (!dispositivo) return;
+    setSyncMsg(null);
+    try {
+      const url = await getWearableConnectUrl(dispositivo, clientId);
+      window.location.href = url;
+    } catch (e) {
+      setSyncMsg(e instanceof Error ? e.message : 'No pudimos iniciar la conexión.');
+    }
+  }
+
   async function handleLabFile(file: File) {
     if (file.size > 25 * 1024 * 1024) {
       setOcrStatus({ message: 'El archivo excede 25 MB.', isError: true });
@@ -234,10 +245,10 @@ export function Module10({ clientId, draft, onChange, hormonalStatus, lastPeriod
                 </button>
               </>
             ) : (
-              <a href={getWearableConnectUrl(dispositivo, clientId)}
+              <button type="button" onClick={handleConnect}
                 className="rounded-[999px] px-4 py-2 font-mono text-[10px] uppercase tracking-[0.1em]" style={{ background: 'var(--eph-accent)', color: 'var(--eph-ink)' }}>
                 Conectar {draft.wearable}
-              </a>
+              </button>
             )}
             {syncMsg && <span className="w-full font-body text-xs" style={{ color: 'var(--eph-body)' }}>{syncMsg}</span>}
           </div>

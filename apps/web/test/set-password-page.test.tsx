@@ -3,11 +3,14 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import SetPasswordPage from '../app/(auth)/set-password/page';
 import * as apiClient from '../lib/api-client';
+import { useAuth } from '../lib/auth-context';
 
 vi.mock('../lib/api-client', () => ({
-  getSessionToken: vi.fn(() => 'fake-token'),
-  saveSession: vi.fn(),
   changePasswordRequest: vi.fn(),
+}));
+
+vi.mock('../lib/auth-context', () => ({
+  useAuth: vi.fn(),
 }));
 
 describe('SetPasswordPage', () => {
@@ -27,7 +30,7 @@ describe('SetPasswordPage', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(apiClient.getSessionToken).mockReturnValue('fake-token');
+    vi.mocked(useAuth).mockReturnValue({ isLoading: false, isAuthenticated: true } as unknown as ReturnType<typeof useAuth>);
     capturedHref = null;
     setSearch('');
   });
@@ -36,8 +39,8 @@ describe('SetPasswordPage', () => {
     Object.defineProperty(window, 'location', { configurable: true, value: realLocation });
   });
 
-  it('redirects to /login when there is no session token', () => {
-    vi.mocked(apiClient.getSessionToken).mockReturnValue(null);
+  it('redirects to /login when there is no session', () => {
+    vi.mocked(useAuth).mockReturnValue({ isLoading: false, isAuthenticated: false } as unknown as ReturnType<typeof useAuth>);
     render(<SetPasswordPage />);
     expect(capturedHref).toBe('/login');
   });

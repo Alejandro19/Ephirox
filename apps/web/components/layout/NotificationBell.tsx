@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../lib/auth-context";
-import { getSessionToken } from "../../lib/api-client";
 
 // Icono de campana propio de la cabecera (spec §7.3) — distinto del IconBell
 // compartido (usado en otros contextos con otro peso de trazo), para no
@@ -38,17 +37,14 @@ export default function NotificationBell() {
 
   const fetchNotifications = useCallback(async () => {
     try {
-      const token = getSessionToken();
-      if (!token || !user?.id) return;
+      if (!user?.id) return;
 
       const url =
         role === "admin"
           ? `${API_BASE}/admin/notifications`
           : `${API_BASE}/clients/${user.id}/notifications`;
 
-      const res = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await fetch(url, { credentials: "include" });
 
       if (res.ok) {
         const data = await res.json();
@@ -79,8 +75,7 @@ export default function NotificationBell() {
   }, [open]);
 
   async function markRead(id: string) {
-    const token = getSessionToken();
-    if (!token) return;
+    if (!user?.id) return;
     setNotifications((prev) => {
       const next = prev.map((n) => (n.id === id ? { ...n, read: true } : n));
       setHasUnread(next.some((n) => !n.read));
@@ -91,7 +86,7 @@ export default function NotificationBell() {
         role === "admin"
           ? `${API_BASE}/admin/notifications/${id}/read`
           : `${API_BASE}/clients/${user?.id}/notifications/${id}/read`;
-      await fetch(url, { method: "PATCH", headers: { Authorization: `Bearer ${token}` } });
+      await fetch(url, { method: "PATCH", credentials: "include" });
     } catch {
       // Silently fail — a stale "unread" state on next refetch is harmless
     }

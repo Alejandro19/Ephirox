@@ -59,20 +59,21 @@ export async function disconnect(req: Request, res: Response) {
   return ok(res, { mensaje: `${dispositivo} desconectado` });
 }
 
-// ── OAuth connect/callback (públicas, redirect-based, /api/wearable) ──
+// ── OAuth connect-url (autenticada, /api/clients/:id/wearable/:dispositivo/connect-url) ──
 
-export function connect(req: Request, res: Response) {
+export function connectUrl(req: Request, res: Response) {
   const dispositivo = req.params.dispositivo as Dispositivo;
-  const clienteId = req.query.clienteId as string | undefined;
-  if (!clienteId) return err(res, 'clienteId requerido', 400);
+  const clienteId = req.params.id;
 
   if (!DISPOSITIVOS_OAUTH.includes(dispositivo) || !process.env[envVarFor(dispositivo)]) {
     return err(res, `${dispositivo} no está configurado en el servidor.`, 503);
   }
 
   const service = { whoop: whoopService, oura: ouraService, polar: polarService }[dispositivo as 'whoop' | 'oura' | 'polar'];
-  res.redirect(service.getAuthUrl(clienteId));
+  return ok(res, { url: service.getAuthUrl(clienteId) });
 }
+
+// ── OAuth callback (pública, redirect-based, /api/wearable) ──
 
 export async function callback(req: Request, res: Response) {
   const dispositivo = req.params.dispositivo as Dispositivo;

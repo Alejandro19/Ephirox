@@ -25,13 +25,28 @@ export type TokenPayload = {
   mustChangePassword?: boolean;
 };
 
+// 12, no 10 — el mínimo de OWASP para bcrypt es 10, pero esta plataforma
+// guarda datos de salud y de pago; no rompe hashes existentes (bcrypt
+// codifica el costo dentro del propio hash, así que las contraseñas ya
+// guardadas con costo 10 siguen verificando bien, solo las nuevas usan 12).
+const SALT_ROUNDS = 12;
+
 export async function hashPassword(password: string): Promise<string> {
-  return bcrypt.hash(password, 10);
+  return bcrypt.hash(password, SALT_ROUNDS);
 }
 
 export async function verifyPassword(password: string, hash: string): Promise<boolean> {
   return bcrypt.compare(password, hash);
 }
+
+// Hash fijo (de un valor arbitrario, no de ninguna contraseña real) para
+// cuando el email no corresponde a ninguna cuenta — sin esto, "cuenta
+// inexistente" responde casi instantáneo mientras "cuenta real, password
+// incorrecta" siempre paga el costo de un bcrypt.compare real (~60-100ms),
+// una diferencia medible que permite enumerar cuentas válidas por timing
+// (ver auditoría de seguridad). Comparar siempre contra algo, real o no,
+// iguala el tiempo de respuesta en ambos casos.
+export const DUMMY_PASSWORD_HASH = bcrypt.hashSync('no-such-account-timing-equalizer', SALT_ROUNDS);
 
 export function signToken(payload: TokenPayload): string {
   return jwt.sign(payload, requireJwtSecret(), { expiresIn: JWT_EXPIRES_IN });

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { EvolutionCheckinInputSchema, PersonalRecordInputSchema } from '@latribu/shared-types';
+import { EvolutionCheckinInputSchema, PersonalRecordInputSchema, PersonalRecordUpdateInputSchema, NextCheckinDateInputSchema } from '@latribu/shared-types';
 import { validateBody } from '../middleware/validate.js';
 import { asyncHandler } from '../middleware/async-handler.js';
 import { authMiddleware, adminOnly, ownerOrAdmin } from '../middleware/auth.middleware.js';
@@ -45,6 +45,7 @@ evolutionRouter.post(
 evolutionRouter.put(
   '/clients/:id/personal-records/:recordId',
   authMiddleware, adminOnly,
+  validateBody(PersonalRecordUpdateInputSchema),
   asyncHandler(personalRecordsController.updateRecord)
 );
 
@@ -59,6 +60,7 @@ evolutionRouter.delete(
 evolutionRouter.patch(
   '/clients/:id/next-checkin-date',
   authMiddleware, adminOnly,
+  validateBody(NextCheckinDateInputSchema),
   asyncHandler(async (req, res) => {
     await clientsService.updateClient(req.params.id, { nextCheckinDate: req.body.next_checkin_date || null });
     return res.status(200).json({ success: true, message: 'Fecha actualizada.' });

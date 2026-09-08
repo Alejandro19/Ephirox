@@ -5,6 +5,17 @@ import { findClientById, updateClient } from './clients.service.js';
 import { uploadFile } from '../storage/index.js';
 import type { InbodyRecordInput } from '@latribu/shared-types';
 
+// Mismo patrón que personal-info.service.ts::InvalidFileTypeError — este
+// upload no tenía NINGÚN chequeo de tipo antes (ver auditoría de seguridad).
+export class InvalidFileTypeError extends Error {
+  constructor() {
+    super('Formato inválido. Usa PDF o JPG/PNG.');
+    this.name = 'InvalidFileTypeError';
+  }
+}
+
+const ALLOWED_INBODY_MIMETYPES = ['application/pdf', 'image/jpeg', 'image/png'];
+
 export async function listInbodyRecords(clientId: string): Promise<BioInbodyRecord[]> {
   return db.select().from(bioInbodyRecords).where(eq(bioInbodyRecords.clientId, clientId)).orderBy(asc(bioInbodyRecords.fecha));
 }
@@ -65,6 +76,9 @@ export async function uploadInbodyFile(
   clientId: string,
   file: { buffer: Buffer; mimetype: string; originalname: string }
 ): Promise<{ file_url: string; file_name: string }> {
+  if (!ALLOWED_INBODY_MIMETYPES.includes(file.mimetype)) {
+    throw new InvalidFileTypeError();
+  }
   const fileUrl = await uploadFile(`${clientId}/inbody`, file.buffer, file.mimetype, file.originalname);
   return { file_url: fileUrl, file_name: file.originalname };
 }

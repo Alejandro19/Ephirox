@@ -1,12 +1,10 @@
-import { getSessionToken } from './api-client';
-
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3003';
 
 async function authorizedRequest<T>(path: string, method: string, body?: unknown): Promise<T> {
-  const token = getSessionToken();
   const res = await fetch(`${API_BASE_URL}${path}`, {
     method,
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
     body: body != null ? JSON.stringify(body) : undefined,
   });
   return res.json();
@@ -66,13 +64,12 @@ export async function extractLabPanel(
   semana: number,
   file: File
 ): Promise<{ markers: ExtractedMarker[]; fileUrl: string; fileName: string; sourceFileHash: string; reused: boolean }> {
-  const token = getSessionToken();
   const formData = new FormData();
   formData.append('file', file);
   formData.append('semana', String(semana));
   const res = await fetch(`${API_BASE_URL}/api/clients/${clientId}/lab-panels/extract`, {
     method: 'POST',
-    headers: { Authorization: `Bearer ${token}` },
+    credentials: 'include',
     body: formData,
   });
   const body = await res.json();

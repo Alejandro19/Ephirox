@@ -16,20 +16,21 @@ export async function listAllPhrases(_req: Request, res: Response) {
 }
 
 export async function createPhrase(req: Request, res: Response) {
-  const { text, context } = req.body as { text?: string; context?: string };
-  if (!text || !text.trim()) return err(res, 'La frase no puede estar vacía.');
-  if (!context || !VALID_CONTEXTS.includes(context)) return err(res, 'Contexto inválido.');
+  const { text, context } = req.body as { text?: unknown; context?: unknown };
+  if (typeof text !== 'string' || !text.trim()) return err(res, 'La frase no puede estar vacía.');
+  if (typeof context !== 'string' || !VALID_CONTEXTS.includes(context)) return err(res, 'Contexto inválido.');
   const phrase = await trainingService.createPhrase(text.trim(), context);
   return ok(res, { phrase }, 201);
 }
 
 export async function updatePhrase(req: Request, res: Response) {
-  const { text, context, active } = req.body as { text?: string; context?: string; active?: boolean };
-  if (context !== undefined && !VALID_CONTEXTS.includes(context)) return err(res, 'Contexto inválido.');
-  if (text !== undefined && !text.trim()) return err(res, 'La frase no puede estar vacía.');
+  const { text, context, active } = req.body as { text?: unknown; context?: unknown; active?: unknown };
+  if (context !== undefined && (typeof context !== 'string' || !VALID_CONTEXTS.includes(context))) return err(res, 'Contexto inválido.');
+  if (text !== undefined && (typeof text !== 'string' || !text.trim())) return err(res, 'La frase no puede estar vacía.');
+  if (active !== undefined && typeof active !== 'boolean') return err(res, 'Valor de "active" inválido.');
   const patch: { text?: string; context?: string; active?: boolean } = {};
-  if (text !== undefined) patch.text = text.trim();
-  if (context !== undefined) patch.context = context;
+  if (text !== undefined) patch.text = (text as string).trim();
+  if (context !== undefined) patch.context = context as string;
   if (active !== undefined) patch.active = active;
   const phrase = await trainingService.updatePhrase(req.params.id, patch);
   if (!phrase) return err(res, 'Frase no encontrada.', 404);

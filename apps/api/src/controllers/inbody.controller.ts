@@ -22,6 +22,11 @@ export async function createInbodyRecord(req: Request, res: Response) {
 
 export async function uploadInbodyFile(req: Request, res: Response) {
   if (!req.file) return err(res, 'No se recibió ningún archivo.');
-  const result = await inbodyService.uploadInbodyFile(req.params.id, req.file);
-  return ok(res, result);
+  try {
+    const result = await inbodyService.uploadInbodyFile(req.params.id, req.file);
+    return ok(res, result);
+  } catch (e) {
+    if (e instanceof inbodyService.InvalidFileTypeError) return err(res, e.message, 400);
+    throw e;
+  }
 }

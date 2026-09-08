@@ -10,13 +10,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import OnboardingPage from '../app/(app)/onboarding/page';
-import * as apiClient from '../lib/api-client';
 import * as onboardingClient from '../lib/onboarding-client';
 import * as geoClient from '../lib/geo-client';
+import { useAuth } from '../lib/auth-context';
 
 vi.mock('../lib/onboarding-client');
 vi.mock('../lib/geo-client');
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
+vi.mock('../lib/auth-context', () => ({ useAuth: vi.fn() }));
 
 function setField(label: string, value: string) {
   fireEvent.change(screen.getByLabelText(label), { target: { value } });
@@ -93,7 +94,11 @@ async function driveToModule5() {
 describe('WizardShell — módulo 5, chips condicionales de probióticos/suplementos', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.spyOn(apiClient, 'getSessionToken').mockReturnValue('fake-token');
+    vi.mocked(useAuth).mockReturnValue({
+      isLoading: false,
+      isAuthenticated: true,
+      user: { id: 'fake-client-id', name: 'Cliente de Prueba', email: 'cliente@example.com' },
+    } as unknown as ReturnType<typeof useAuth>);
     vi.mocked(geoClient.getCountries).mockResolvedValue({
       priority: [{ isoCode: 'CO', name: 'Colombia', flag: '🇨🇴', phonecode: '57' }],
       rest: [],

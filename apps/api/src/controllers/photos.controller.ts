@@ -17,6 +17,11 @@ export async function listPhotos(req: Request, res: Response) {
 export async function createPhoto(req: Request, res: Response) {
   if (!req.file) return err(res, 'No se recibió ninguna foto.');
   const metadata = req.body as PhotoUploadMetadata;
-  const photo = await photosService.createPhoto(req.params.id, req.file, metadata);
-  return ok(res, { photo }, 201);
+  try {
+    const photo = await photosService.createPhoto(req.params.id, req.file, metadata);
+    return ok(res, { photo }, 201);
+  } catch (e) {
+    if (e instanceof photosService.InvalidFileTypeError) return err(res, e.message, 400);
+    throw e;
+  }
 }

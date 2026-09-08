@@ -23,3 +23,9 @@ export const PersonalRecordInputSchema = z.object({
   sort_order: z.coerce.number().int().default(0),
 });
 export type PersonalRecordInput = z.infer<typeof PersonalRecordInputSchema>;
+
+export const PersonalRecordUpdateInputSchema = PersonalRecordInputSchema.partial();
+
+export const NextCheckinDateInputSchema = z.object({
+  next_checkin_date: z.string().min(1).nullable().optional(),
+});

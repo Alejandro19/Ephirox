@@ -15,12 +15,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import OnboardingPage from '../app/(app)/onboarding/page';
-import * as apiClient from '../lib/api-client';
 import * as onboardingClient from '../lib/onboarding-client';
 import * as geoClient from '../lib/geo-client';
+import { useAuth } from '../lib/auth-context';
 
 vi.mock('../lib/onboarding-client');
 vi.mock('../lib/geo-client');
+vi.mock('../lib/auth-context', () => ({ useAuth: vi.fn() }));
 
 const pushMock = vi.fn();
 vi.mock('next/navigation', () => ({
@@ -255,7 +256,11 @@ async function driveWizardToFinalize(options: DriveOptions = {}) {
 describe('WizardShell finalize()', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.spyOn(apiClient, 'getSessionToken').mockReturnValue('fake-token');
+    vi.mocked(useAuth).mockReturnValue({
+      isLoading: false,
+      isAuthenticated: true,
+      user: { id: 'fake-client-id', name: 'Cliente de Prueba', email: 'cliente@example.com' },
+    } as unknown as ReturnType<typeof useAuth>);
     vi.mocked(geoClient.getCountries).mockResolvedValue({
       priority: [{ isoCode: 'CO', name: 'Colombia', flag: '🇨🇴', phonecode: '57' }],
       rest: [],
@@ -281,7 +286,10 @@ describe('WizardShell finalize()', () => {
 
     expect(onboardingClient.putPersonalInfo).toHaveBeenCalledTimes(1);
     const [clientId, payload] = vi.mocked(onboardingClient.putPersonalInfo).mock.calls[0];
-    expect(clientId).toBe('');
+    // Antes esto salía de decodificar un token falso ('fake-token', no un
+    // JWT real) que no decodificaba a nada — de ahí el '' original. Ahora
+    // sale de useAuth().user.id (mockeado arriba), que sí es un valor real.
+    expect(clientId).toBe('fake-client-id');
     expect(payload.complete).toBeUndefined();
     expect(payload.apple_health_connected).toBe(false);
     expect(payload.birthdate).toBe('1990-01-01');
@@ -290,7 +298,7 @@ describe('WizardShell finalize()', () => {
     expect(payload.body_fat).toBe(20);
     expect(payload.onboarding_report).toMatchObject({ birthdate: '1990-01-01', goals: 'Bajar grasa y ganar músculo' });
 
-    expect(onboardingClient.finalizeOnboarding).toHaveBeenCalledWith('');
+    expect(onboardingClient.finalizeOnboarding).toHaveBeenCalledWith('fake-client-id');
     const putOrder = vi.mocked(onboardingClient.putPersonalInfo).mock.invocationCallOrder[0];
     const finalizeOrder = vi.mocked(onboardingClient.finalizeOnboarding).mock.invocationCallOrder[0];
     expect(putOrder).toBeLessThan(finalizeOrder);

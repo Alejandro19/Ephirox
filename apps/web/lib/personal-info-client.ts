@@ -1,5 +1,3 @@
-import { getSessionToken } from './api-client';
-
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3003';
 
 export type PersonalInfo = {
@@ -49,8 +47,7 @@ export type InbodyRecord = {
 };
 
 async function authorizedGet<T>(path: string): Promise<T> {
-  const token = getSessionToken();
-  const res = await fetch(`${API_BASE_URL}${path}`, { headers: { Authorization: `Bearer ${token}` } });
+  const res = await fetch(`${API_BASE_URL}${path}`, { credentials: 'include' });
   return res.json();
 }
 

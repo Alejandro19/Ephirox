@@ -1,12 +1,13 @@
 'use client';
 
 import { useEffect, useState, type FormEvent } from 'react';
-import { getSessionToken, saveSession, changePasswordRequest } from '@/lib/api-client';
+import { changePasswordRequest } from '@/lib/api-client';
+import { useAuth } from '@/lib/auth-context';
 import Isotipo from '@/components/ui/Isotipo';
 import Button from '@/components/ui/Button';
 
 export default function TherapistSetPasswordPage() {
-  const [ready, setReady] = useState(false);
+  const { isLoading, isAuthenticated } = useAuth();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -14,13 +15,8 @@ export default function TherapistSetPasswordPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const token = getSessionToken();
-    if (!token) {
-      window.location.href = '/therapist-login';
-      return;
-    }
-    setReady(true);
-  }, []);
+    if (!isLoading && !isAuthenticated) window.location.href = '/therapist-login';
+  }, [isLoading, isAuthenticated]);
 
   async function handleSubmit(e: FormEvent): Promise<void> {
     e.preventDefault();
@@ -40,9 +36,9 @@ export default function TherapistSetPasswordPage() {
         setError(result.error || 'No se pudo actualizar la contraseña.');
         return;
       }
-      // El backend reemite el token sin el flag mustChangePassword — hay que
-      // guardarlo, si no, el próximo /therapist te devuelve acá otra vez.
-      if (result.token) saveSession(result.token);
+      // El backend reemite la cookie de sesión sin el flag mustChangePassword
+      // (ver setSessionCookie en auth.controller.ts::changePassword) — nada
+      // que hacer acá, el navegador ya la tiene actualizada.
       window.location.href = '/therapist';
     } catch {
       setError('Error de conexión. Intenta de nuevo.');
@@ -51,7 +47,7 @@ export default function TherapistSetPasswordPage() {
     }
   }
 
-  if (!ready) return null;
+  if (isLoading || !isAuthenticated) return null;
 
   const inputClasses =
     'block w-full h-10 border-0 border-b border-[var(--eph-line-2)] rounded-none bg-transparent px-0.5 py-1.5 font-body text-[18px] font-normal text-[var(--eph-text)] outline-none transition-colors placeholder:text-[var(--eph-muted)] placeholder:opacity-70 focus:border-[var(--eph-accent)]';

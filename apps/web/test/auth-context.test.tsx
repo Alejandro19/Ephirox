@@ -6,8 +6,6 @@ vi.mock('../lib/api-client', async () => {
   const actual = await vi.importActual<typeof import('../lib/api-client')>('../lib/api-client');
   return {
     ...actual,
-    getSessionToken: vi.fn(() => 'fake.token.value'),
-    saveSession: vi.fn(),
     clearSession: vi.fn(),
     fetchAuthMe: vi.fn(),
   };
@@ -16,24 +14,13 @@ vi.mock('../lib/api-client', async () => {
 import { fetchAuthMe, clearSession, AuthInvalidError } from '../lib/api-client';
 
 function Probe() {
-  const { isLoading, token, role } = useAuth();
-  return <div>{isLoading ? 'loading' : `ready:${token}:${role}`}</div>;
+  const { isLoading, isAuthenticated, role } = useAuth();
+  return <div>{isLoading ? 'loading' : `ready:${isAuthenticated}:${role}`}</div>;
 }
 
 describe('AuthProvider.refreshAuth', () => {
-  let originalLocation: Location;
-
   beforeEach(() => {
     vi.clearAllMocks();
-    originalLocation = window.location;
-    Object.defineProperty(window, 'location', {
-      configurable: true,
-      value: { ...originalLocation, href: '' },
-    });
-  });
-
-  afterEach(() => {
-    Object.defineProperty(window, 'location', { configurable: true, value: originalLocation });
   });
 
   it('retries after a transient failure (network/tunnel blip) instead of clearing a fresh session', async () => {
@@ -47,13 +34,17 @@ describe('AuthProvider.refreshAuth', () => {
       </AuthProvider>,
     );
 
-    await waitFor(() => expect(screen.getByText('ready:fake.token.value:cliente')).toBeInTheDocument(), { timeout: 3000 });
+    await waitFor(() => expect(screen.getByText('ready:true:cliente')).toBeInTheDocument(), { timeout: 3000 });
     expect(fetchAuthMe).toHaveBeenCalledTimes(2);
     expect(clearSession).not.toHaveBeenCalled();
-    expect(window.location.href).toBe('');
   });
 
-  it('clears the session immediately on an AuthInvalidError (401/403), without retrying', async () => {
+  // Ya no fuerza un redirect a /login (ver auth-context.tsx) — este mismo
+  // hook corre en TODAS las páginas, incluida la landing pública, así que un
+  // 401 acá es simplemente "no autenticado", no un evento que deba navegar
+  // por su cuenta. Las páginas protegidas se cubren solas (middleware.ts del
+  // lado del servidor, y AppShell.tsx si el estado cambia ya adentro).
+  it('clears the session immediately on an AuthInvalidError (401/403), without retrying or redirecting', async () => {
     vi.mocked(fetchAuthMe).mockRejectedValue(new AuthInvalidError('invalid'));
 
     render(
@@ -62,8 +53,8 @@ describe('AuthProvider.refreshAuth', () => {
       </AuthProvider>,
     );
 
-    await waitFor(() => expect(clearSession).toHaveBeenCalled());
+    await waitFor(() => expect(screen.getByText('ready:false:null')).toBeInTheDocument());
     expect(fetchAuthMe).toHaveBeenCalledTimes(1);
-    expect(window.location.href).toBe('/login');
+    expect(clearSession).toHaveBeenCalled();
   });
 });

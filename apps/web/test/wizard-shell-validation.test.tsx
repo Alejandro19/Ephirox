@@ -8,12 +8,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import OnboardingPage from '../app/(app)/onboarding/page';
-import * as apiClient from '../lib/api-client';
 import * as onboardingClient from '../lib/onboarding-client';
 import * as geoClient from '../lib/geo-client';
+import { useAuth } from '../lib/auth-context';
 
 vi.mock('../lib/onboarding-client');
 vi.mock('../lib/geo-client');
+vi.mock('../lib/auth-context', () => ({ useAuth: vi.fn() }));
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn() }),
@@ -83,7 +84,11 @@ async function driveToModule4() {
 describe('WizardShell — live validation clears once a field is fixed', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.spyOn(apiClient, 'getSessionToken').mockReturnValue('fake-token');
+    vi.mocked(useAuth).mockReturnValue({
+      isLoading: false,
+      isAuthenticated: true,
+      user: { id: 'fake-client-id', name: 'Cliente de Prueba', email: 'cliente@example.com' },
+    } as unknown as ReturnType<typeof useAuth>);
     vi.mocked(geoClient.getCountries).mockResolvedValue({
       priority: [{ isoCode: 'CO', name: 'Colombia', flag: '🇨🇴', phonecode: '57' }],
       rest: [],

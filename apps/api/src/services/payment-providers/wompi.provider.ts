@@ -1,4 +1,4 @@
-import { createHash, randomUUID } from 'node:crypto';
+import { createHash, randomUUID, timingSafeEqual } from 'node:crypto';
 import type { ChargeResult, CreateChargeInput, PaymentProvider, WebhookVerificationResult } from './types.js';
 
 // Formato verificado contra docs.wompi.co (Widget/Web Checkout + Eventos) —
@@ -89,8 +89,9 @@ export const wompiProvider: PaymentProvider = {
 
     const concatenated =
       properties.map((path) => String(getByPath(payload.data, path))).join('') + String(payload.timestamp) + eventsSecret;
-    const computed = createHash('sha256').update(concatenated).digest('hex');
-    if (computed.toLowerCase() !== checksum.toLowerCase()) return { valid: false };
+    const computed = Buffer.from(createHash('sha256').update(concatenated).digest('hex').toLowerCase());
+    const received = Buffer.from(String(checksum).toLowerCase());
+    if (computed.length !== received.length || !timingSafeEqual(computed, received)) return { valid: false };
 
     if (payload.event !== 'transaction.updated') return { valid: true, actionable: false };
 

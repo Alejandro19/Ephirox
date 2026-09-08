@@ -259,6 +259,16 @@ export default function PanelConfiguracion({ clientId }) {
     await mutate(["account-wearable-estado", clientId]);
   };
 
+  const handleConnectOura = async () => {
+    try {
+      const url = await getWearableConnectUrl("oura", clientId);
+      window.location.href = url;
+    } catch {
+      // El botón vuelve a quedar disponible para reintentar; sin toast acá,
+      // mismo criterio que el resto de esta sección (no hay estado de error).
+    }
+  };
+
   // --- Notificaciones ---
   const prefs = client?.notificationPreferences ?? { streakReminders: true, events: true, news: false };
   const [savingPref, setSavingPref] = useState(null);
@@ -511,9 +521,9 @@ export default function PanelConfiguracion({ clientId }) {
                   </button>
                 </div>
               ) : (
-                <a href={getWearableConnectUrl("oura", clientId)} className="text-[12.5px] underline" style={{ color: INK }}>
+                <button type="button" onClick={handleConnectOura} className="text-[12.5px] underline" style={{ color: INK }}>
                   {t('settings.devices.connect')}
-                </a>
+                </button>
               )
             }
           />

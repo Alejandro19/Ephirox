@@ -2,48 +2,33 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { getSessionToken } from '@/lib/api-client';
+import { useAuth } from '@/lib/auth-context';
 import { getPersonalInfoAccess, type PersonalInfoVariant } from '@/lib/onboarding-client';
 import { WizardShell } from '@/components/onboarding/WizardShell';
 import LockedOverlay from '@/components/ui/LockedOverlay';
 
-// El JWT ya trae el id del cliente en su payload (mismo `TokenPayload` que
-// firma apps/api) — decodificarlo aquí evita un round-trip a /api/auth/me
-// solo para saber "quién soy" antes de renderizar el wizard. La autorización
-// real de cada llamada la sigue haciendo el backend (ownerOrAdmin) sin
-// importar lo que este decode diga.
-function decodeClientIdFromToken(token: string): string | null {
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    return typeof payload.id === 'string' ? payload.id : null;
-  } catch {
-    return null;
-  }
-}
-
 export default function OnboardingPage() {
   const router = useRouter();
+  const { isLoading: authLoading, isAuthenticated, user } = useAuth();
   const [ready, setReady] = useState(false);
-  const [clientId, setClientId] = useState<string | null>(null);
   const [variant, setVariant] = useState<PersonalInfoVariant>('none');
+  const clientId = user?.id ?? null;
 
   useEffect(() => {
-    const token = getSessionToken();
-    if (!token) {
+    if (authLoading) return;
+    if (!isAuthenticated) {
       router.push('/login');
       return;
     }
-    const id = decodeClientIdFromToken(token);
-    setClientId(id);
     // El módulo 10 (Dispositivos y Laboratorios) y el acceso mismo a este
     // formulario ahora los decide la matriz de "Roles y Perfiles", no un
     // clientType leído del token — ver require-personal-info-access
     // middleware en el backend.
-    getPersonalInfoAccess(id ?? '')
+    getPersonalInfoAccess(clientId ?? '')
       .then(setVariant)
       .catch(() => setVariant('none'))
       .finally(() => setReady(true));
-  }, [router]);
+  }, [authLoading, isAuthenticated, clientId, router]);
 
   if (!ready) return null;
 

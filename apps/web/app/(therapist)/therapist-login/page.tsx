@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, type FormEvent } from 'react';
 import { therapistLogin } from '@/lib/blindspot-client';
-import { saveSession, forgotPasswordRequest } from '@/lib/api-client';
+import { forgotPasswordRequest } from '@/lib/api-client';
 import Isotipo from '@/components/ui/Isotipo';
 import Button from '@/components/ui/Button';
 
@@ -43,7 +43,7 @@ export default function TherapistLoginPage(): React.ReactElement {
     setLoading(true);
     let navigating = false;
     try {
-      const { token, mustChangePassword } = await therapistLogin(email, password);
+      const { mustChangePassword } = await therapistLogin(email, password);
       if (typeof window !== 'undefined') {
         if (rememberMe) {
           window.localStorage.setItem(REMEMBER_EMAIL_KEY, email);
@@ -51,7 +51,6 @@ export default function TherapistLoginPage(): React.ReactElement {
           window.localStorage.removeItem(REMEMBER_EMAIL_KEY);
         }
       }
-      saveSession(token);
       setEnteringLabel('Calibrando…');
       navigating = true;
       window.location.href = mustChangePassword ? '/therapist/set-password' : '/therapist';

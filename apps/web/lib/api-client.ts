@@ -63,6 +63,10 @@ export type MeResult = {
   planExpired?: boolean;
   planEndDate?: string | null;
   language?: string;
+  // Solo se completa para terapeutas (ver auth.controller.ts::me) — leído
+  // fresco de la base en cada llamada, no de un claim del JWT que quedaría
+  // congelado desde que se emitió.
+  mustChangePassword?: boolean;
   error?: string;
 };
 
@@ -70,6 +74,7 @@ export async function loginRequest(email: string, password: string): Promise<Log
   try {
     const res = await fetch(`${API_BASE}/auth/login`, {
       method: 'POST',
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
     });
@@ -103,6 +108,7 @@ export async function appleLoginRequest(identityToken: string, name?: string): P
   try {
     const res = await fetch(`${API_BASE}/auth/apple`, {
       method: 'POST',
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ identityToken, name }),
     });
@@ -116,6 +122,7 @@ export async function googleLoginRequest(credential: string): Promise<LoginResul
   try {
     const res = await fetch(`${API_BASE}/auth/google`, {
       method: 'POST',
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ credential }),
     });
@@ -158,6 +165,7 @@ export async function acceptInvitationRequest(token: string, password: string): 
   try {
     const res = await fetch(`${API_BASE}/auth/accept-invitation`, {
       method: 'POST',
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token, password }),
     });
@@ -169,10 +177,10 @@ export async function acceptInvitationRequest(token: string, password: string): 
 
 export async function changePasswordRequest(currentPassword: string, newPassword: string): Promise<SimpleResult> {
   try {
-    const token = getSessionToken();
     const res = await fetch(`${API_BASE}/auth/change-password`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ currentPassword, newPassword }),
     });
     return res.json();
@@ -181,17 +189,19 @@ export async function changePasswordRequest(currentPassword: string, newPassword
   }
 }
 
-// Lanzado únicamente cuando el token en sí es inválido/expiró (401/403) —
+// Lanzado únicamente cuando la sesión en sí es inválida/expiró (401/403) —
 // distinto de un fallo transitorio de red o del servidor, que no debe cerrar
 // una sesión recién iniciada (ver refreshAuth en auth-context.tsx).
 export class AuthInvalidError extends Error {}
 
+// `credentials: 'include'` en vez de un header Authorization armado a mano —
+// la sesión vive en una cookie httpOnly que el navegador adjunta solo (ver
+// auditoría de seguridad: antes el JWT vivía en sessionStorage, legible por
+// cualquier XSS en cualquier parte del sitio). Ya no hace falta chequear "hay
+// token" antes de llamar — si no hay cookie, el backend responde 401 y el
+// catch de abajo lo interpreta igual que antes.
 export async function fetchAuthMe(): Promise<MeResult> {
-  const token = getSessionToken();
-  if (!token) throw new AuthInvalidError('No hay sesión activa.');
-  const res = await fetch(`${API_BASE}/auth/me`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const res = await fetch(`${API_BASE}/auth/me`, { credentials: 'include' });
   if (res.status === 401 || res.status === 403) {
     throw new AuthInvalidError('Sesión inválida o expirada.');
   }
@@ -200,8 +210,13 @@ export async function fetchAuthMe(): Promise<MeResult> {
   return data;
 }
 
-// Decodifica el payload de un JWT en el cliente sin verificar la firma
-// (la firma ya fue validada por el backend al emitir/aceptar el token).
+// Decodifica el payload de un JWT sin verificar la firma (la firma ya fue
+// validada por el backend al emitir/aceptar el token) — uso acotado a
+// procesar el `token` que trae la RESPUESTA de un login recién hecho (un
+// valor transitorio en una variable de JS, nunca persistido), como fallback
+// si por algún motivo la respuesta no trajera `user` directamente. Nunca se
+// usa sobre un token guardado — ya no hay ninguno guardado del lado del
+// cliente.
 export function decodeTokenPayload<T>(token: string): T | null {
   try {
     const base64 = token.split('.')[1];
@@ -218,23 +233,16 @@ export function decodeTokenPayload<T>(token: string): T | null {
   }
 }
 
-// Session helpers mínimos
-// El middleware de Next.js corre en el servidor y solo puede leer cookies,
-// no sessionStorage — por eso el token se espeja también en una cookie.
-export function saveSession(token: string): void {
-  if (typeof window === 'undefined') return;
-  window.sessionStorage.setItem('latribu_token', token);
-  document.cookie = `latribu_token=${token}; path=/; SameSite=Lax`;
-}
-
-export function getSessionToken(): string | null {
-  if (typeof window === 'undefined') return null;
-  return window.sessionStorage.getItem('latribu_token');
-}
-
-export function clearSession(): void {
-  if (typeof window === 'undefined') return;
-  window.sessionStorage.removeItem('latribu_token');
-  document.cookie = 'latribu_token=; path=/; max-age=0';
+// La sesión vive en una cookie httpOnly fijada por el backend en cada
+// respuesta de login — JS nunca la toca directamente, ni para leerla ni para
+// guardarla (ver arriba). Solo queda borrarla, y como es httpOnly, JS
+// tampoco puede hacer eso por su cuenta — hay que pedírselo al servidor.
+export async function clearSession(): Promise<void> {
+  try {
+    await fetch(`${API_BASE}/auth/logout`, { method: 'POST', credentials: 'include' });
+  } catch {
+    // Best-effort — si falla, la cookie de todos modos expira sola (es de
+    // sesión, no persistente) y el estado local ya se limpia igual.
+  }
 }
 

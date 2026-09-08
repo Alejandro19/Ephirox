@@ -1,5 +1,3 @@
-import { getSessionToken } from './api-client';
-
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3003';
 
 export type ClientSummary = {
@@ -81,20 +79,14 @@ export type MembershipPayment = {
 };
 
 export async function fetchClients(): Promise<ClientSummary[]> {
-  const token = getSessionToken();
-  const res = await fetch(`${API_BASE_URL}/api/clients`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const res = await fetch(`${API_BASE_URL}/api/clients`, { credentials: 'include' });
   const body = await res.json();
   if (!body.success) throw new Error(body.error || 'Error al listar clientes.');
   return body.clients;
 }
 
 export async function fetchClient(id: string): Promise<ClientDetail> {
-  const token = getSessionToken();
-  const res = await fetch(`${API_BASE_URL}/api/clients/${id}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const res = await fetch(`${API_BASE_URL}/api/clients/${id}`, { credentials: 'include' });
   const body = await res.json();
   if (!body.success) throw new Error(body.error || 'Error al obtener cliente.');
   return body.client;
@@ -107,13 +99,10 @@ export async function createClient(payload: {
   mustChangePassword?: boolean;
   client_type?: string;
 }): Promise<void> {
-  const token = getSessionToken();
   const res = await fetch(`${API_BASE_URL}/api/clients`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
   const body = await res.json();
@@ -121,22 +110,17 @@ export async function createClient(payload: {
 }
 
 export async function activateClient(id: string, clientType: string): Promise<ClientDetail> {
-  const token = getSessionToken();
   // First set client type, then activate
   await fetch(`${API_BASE_URL}/api/clients/${id}/client-type`, {
     method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ client_type: clientType }),
   });
   const res = await fetch(`${API_BASE_URL}/api/clients/${id}/status`, {
     method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ status: 'active' }),
   });
   const body = await res.json();
@@ -145,13 +129,10 @@ export async function activateClient(id: string, clientType: string): Promise<Cl
 }
 
 export async function deactivateClient(id: string): Promise<ClientDetail> {
-  const token = getSessionToken();
   const res = await fetch(`${API_BASE_URL}/api/clients/${id}/status`, {
     method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ status: 'inactive' }),
   });
   const body = await res.json();
@@ -164,13 +145,10 @@ export async function deactivateClient(id: string): Promise<ClientDetail> {
 // auth.controller.ts) — mismo endpoint que activateClient/deactivateClient,
 // solo cambia el status destino.
 export async function approveClient(id: string): Promise<ClientDetail> {
-  const token = getSessionToken();
   const res = await fetch(`${API_BASE_URL}/api/clients/${id}/status`, {
     method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ status: 'active' }),
   });
   const body = await res.json();
@@ -179,13 +157,10 @@ export async function approveClient(id: string): Promise<ClientDetail> {
 }
 
 export async function rejectClient(id: string): Promise<ClientDetail> {
-  const token = getSessionToken();
   const res = await fetch(`${API_BASE_URL}/api/clients/${id}/status`, {
     method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ status: 'rejected' }),
   });
   const body = await res.json();
@@ -194,13 +169,10 @@ export async function rejectClient(id: string): Promise<ClientDetail> {
 }
 
 export async function updateClientProfile(id: string, patch: { name?: string; email?: string }): Promise<ClientDetail> {
-  const token = getSessionToken();
   const res = await fetch(`${API_BASE_URL}/api/clients/${id}`, {
     method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(patch),
   });
   const body = await res.json();
@@ -209,20 +181,18 @@ export async function updateClientProfile(id: string, patch: { name?: string; em
 }
 
 export async function resendInvitation(id: string): Promise<void> {
-  const token = getSessionToken();
   const res = await fetch(`${API_BASE_URL}/api/clients/${id}/resend-invitation`, {
     method: 'POST',
-    headers: { Authorization: `Bearer ${token}` },
+    credentials: 'include',
   });
   const body = await res.json();
   if (!body.success) throw new Error(body.error || 'Error al reenviar la invitación.');
 }
 
 export async function approveBaseline(id: string): Promise<ClientDetail> {
-  const token = getSessionToken();
   const res = await fetch(`${API_BASE_URL}/api/clients/${id}/onboarding/approve-baseline`, {
     method: 'POST',
-    headers: { Authorization: `Bearer ${token}` },
+    credentials: 'include',
   });
   const body = await res.json();
   if (!body.success) throw new Error(body.error || 'Error al aprobar el baseline.');
@@ -230,10 +200,9 @@ export async function approveBaseline(id: string): Promise<ClientDetail> {
 }
 
 export async function approveWearable(id: string): Promise<ClientDetail> {
-  const token = getSessionToken();
   const res = await fetch(`${API_BASE_URL}/api/clients/${id}/onboarding/approve-wearable`, {
     method: 'POST',
-    headers: { Authorization: `Bearer ${token}` },
+    credentials: 'include',
   });
   const body = await res.json();
   if (!body.success) throw new Error(body.error || 'Error al aprobar el wearable.');
@@ -241,10 +210,9 @@ export async function approveWearable(id: string): Promise<ClientDetail> {
 }
 
 export async function resolveDeletionRequest(id: string): Promise<ClientDetail> {
-  const token = getSessionToken();
   const res = await fetch(`${API_BASE_URL}/api/clients/${id}/deletion-request/resolve`, {
     method: 'PATCH',
-    headers: { Authorization: `Bearer ${token}` },
+    credentials: 'include',
   });
   const body = await res.json();
   if (!body.success) throw new Error(body.error || 'Error al resolver la solicitud.');
@@ -252,13 +220,10 @@ export async function resolveDeletionRequest(id: string): Promise<ClientDetail> 
 }
 
 export async function saveClientType(id: string, clientType: string): Promise<ClientDetail> {
-  const token = getSessionToken();
   const res = await fetch(`${API_BASE_URL}/api/clients/${id}/client-type`, {
     method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ client_type: clientType }),
   });
   const body = await res.json();
@@ -267,23 +232,18 @@ export async function saveClientType(id: string, clientType: string): Promise<Cl
 }
 
 export async function fetchMembershipPayments(clientId: string): Promise<MembershipPayment[]> {
-  const token = getSessionToken();
-  const res = await fetch(`${API_BASE_URL}/api/clients/${clientId}/membership-payments`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const res = await fetch(`${API_BASE_URL}/api/clients/${clientId}/membership-payments`, { credentials: 'include' });
   const body = await res.json();
   if (!body.success) throw new Error(body.error || 'Error al obtener el historial de pagos.');
   return body.payments;
 }
 
 export async function approveMembershipPayment(clientId: string, paymentId: string): Promise<ClientDetail> {
-  const token = getSessionToken();
   const res = await fetch(`${API_BASE_URL}/api/clients/${clientId}/membership-payments/${paymentId}/approve`, {
     method: 'POST',
-    headers: { Authorization: `Bearer ${token}` },
+    credentials: 'include',
   });
   const body = await res.json();
   if (!body.success) throw new Error(body.error || 'Error al aprobar el pago.');
   return body.client;
 }
-

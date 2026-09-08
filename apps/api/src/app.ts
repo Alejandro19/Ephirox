@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import compression from 'compression';
+import helmet from 'helmet';
 import type { Request, Response, NextFunction } from 'express';
 import { authRouter } from './routes/auth.routes.js';
 import { clientsRouter } from './routes/clients.routes.js';
@@ -44,11 +45,35 @@ export function createApp() {
   const app = express();
   app.set('trust proxy', 1);
 
-  // CORS universal — sin `credentials: true`: el navegador prohíbe combinar
-  // origin: '*' con credentials: true (rechaza la respuesta completa). La
-  // app no usa cookies de sesión, autentica por JWT en el header
-  // Authorization, así que no hace falta credentials aquí.
-  app.use(cors({ origin: '*' }));
+  // CORS con lista específica de orígenes + credentials: true — ya no puede
+  // ser origin: '*' (el navegador prohíbe combinarlo con credentials: true)
+  // desde que el login pasó a fijar la sesión en una cookie httpOnly en vez
+  // de solo devolver el token en el body (ver auditoría de seguridad: un
+  // token legible por JS en sessionStorage es robable por cualquier XSS en
+  // cualquier parte del sitio). CORS_ORIGINS es una lista separada por comas;
+  // el default cubre los dominios conocidos de este proyecto.
+  const CORS_ORIGINS = (
+    process.env.CORS_ORIGINS ||
+    'https://ephirox.com,https://www.ephirox.com,https://app.ephirox.com,http://localhost:3000'
+  ).split(',').map((o) => o.trim());
+  app.use(cors({
+    origin(origin, callback) {
+      // Sin header Origin (curl, server-to-server, health checks) — permitir;
+      // no hay navegador de por medio que necesite protección de CORS acá.
+      if (!origin || CORS_ORIGINS.includes(origin)) return callback(null, true);
+      return callback(new Error('Origen no permitido por CORS.'));
+    },
+    credentials: true,
+  }));
+
+  // Headers de seguridad — helmet ya estaba en package.json pero nunca se
+  // montó (ver auditoría de seguridad). CSP por defecto no tiene mucho
+  // efecto sobre una API JSON pura, pero X-Content-Type-Options, HSTS y el
+  // resto de defaults sí aplican. `crossOriginResourcePolicy: false` porque
+  // el default (`same-origin`) rompería fetch() desde app.ephirox.com (otro
+  // origin) contra esta API — ya cubierto explícitamente por el CORS de
+  // arriba, esa es la capa que decide qué orígenes pueden leer la respuesta.
+  app.use(helmet({ crossOriginResourcePolicy: false }));
 
   // gzip/brotli en todas las respuestas — las de listados (evolution,
   // achievements, etc.) son JSON repetitivo, comprimen muy bien.

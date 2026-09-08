@@ -2,9 +2,6 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import NutritionPage from '../app/(app)/nutrition/page';
 
-vi.mock('../lib/api-client', () => ({
-  getSessionToken: () => 'header.eyJpZCI6ImNsaWVudC0xIn0.signature',
-}));
 vi.mock('../lib/auth-context', () => ({
   useAuth: () => ({ role: 'cliente', user: { id: 'client-1', name: '', email: '' } }),
 }));

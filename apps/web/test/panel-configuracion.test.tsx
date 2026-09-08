@@ -46,7 +46,7 @@ beforeEach(() => {
     acceptedAt: '2026-01-15T00:00:00Z',
   });
   vi.mocked(wearableClient.getWearableEstado).mockResolvedValue([]);
-  vi.mocked(wearableClient.getWearableConnectUrl).mockReturnValue('http://localhost:3003/api/wearable/oura/connect');
+  vi.mocked(wearableClient.getWearableConnectUrl).mockResolvedValue('http://localhost:3003/api/wearable/oura/connect');
 });
 
 describe('PanelConfiguracion', () => {

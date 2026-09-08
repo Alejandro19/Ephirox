@@ -1,26 +1,23 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { getSessionToken, decodeTokenPayload } from '@/lib/api-client';
+import { useEffect } from 'react';
+import { useAuth } from '@/lib/auth-context';
 import { TherapistShell } from '@/components/blindspot/TherapistShell';
 
 export default function TherapistPage() {
-  const [ready, setReady] = useState(false);
+  const { isLoading, isAuthenticated, mustChangePassword } = useAuth();
 
   useEffect(() => {
-    const token = getSessionToken();
-    if (!token) {
+    if (isLoading) return;
+    if (!isAuthenticated) {
       window.location.href = '/therapist-login';
       return;
     }
-    const payload = decodeTokenPayload<{ mustChangePassword?: boolean }>(token);
-    if (payload?.mustChangePassword) {
+    if (mustChangePassword) {
       window.location.href = '/therapist/set-password';
-      return;
     }
-    setReady(true);
-  }, []);
+  }, [isLoading, isAuthenticated, mustChangePassword]);
 
-  if (!ready) return null;
+  if (isLoading || !isAuthenticated || mustChangePassword) return null;
   return <TherapistShell />;
 }

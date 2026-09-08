@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback, type FormEvent } from 'react';
 import {
-  loginRequest, saveSession, type LoginResult,
+  loginRequest, type LoginResult,
   fetchGoogleClientId, googleLoginRequest,
   fetchAppleClientId, appleLoginRequest,
   forgotPasswordRequest,
@@ -151,7 +151,6 @@ export default function LoginPage(): React.ReactElement {
           setLoginError(result.error || 'No se pudo iniciar sesión con Google.');
           return;
         }
-        saveSession(result.token);
         navigating = true;
         window.location.href = getSafeRedirectTarget();
       } finally {
@@ -247,7 +246,6 @@ export default function LoginPage(): React.ReactElement {
           setLoginError(result.error || 'No se pudo iniciar sesión con Apple.');
           return;
         }
-        saveSession(result.token);
         navigating = true;
         window.location.href = getSafeRedirectTarget();
       } finally {
@@ -276,7 +274,6 @@ export default function LoginPage(): React.ReactElement {
         } else {
           window.localStorage.removeItem(REMEMBER_EMAIL_KEY);
         }
-        saveSession(result.token);
         // Igual que el login con Google: el anillo cubre el tramo hasta que
         // "/" termine de cargar, en vez de un instante de login sin cambios.
         setEnteringLabel('Calibrando…');

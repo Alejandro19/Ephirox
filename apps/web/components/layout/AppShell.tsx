@@ -67,7 +67,7 @@ function ErrorFallback({ error, onReset }: { error: Error; onReset: () => void }
 export default function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { role, isLoading, planExpired, token } = useAuth();
+  const { role, isLoading, planExpired, isAuthenticated } = useAuth();
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [boundaryError, setBoundaryError] = useState<Error | null>(null);
 
@@ -118,10 +118,10 @@ export default function AppShell({ children }: { children: ReactNode }) {
   // usuario viendo la misma página con estado vacío en vez de mandarlo a
   // /login. Cubre logout y expiración/invalidez de token (refreshAuth falla).
   useEffect(() => {
-    if (!isLoading && !token) router.push("/login");
-  }, [isLoading, token, router]);
+    if (!isLoading && !isAuthenticated) router.push("/login");
+  }, [isLoading, isAuthenticated, router]);
 
-  if (!isLoading && !token) return null;
+  if (!isLoading && !isAuthenticated) return null;
 
   // ── Error boundary ──
   if (boundaryError) {

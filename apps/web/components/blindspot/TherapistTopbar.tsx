@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { getSessionToken, decodeTokenPayload, clearSession } from '@/lib/api-client';
+import { useAuth } from '@/lib/auth-context';
 import Isotipo from '../ui/Isotipo';
 import { THERAPIST_NAV, type TherapistModuleKey } from './therapist-nav';
 
@@ -17,13 +17,13 @@ export default function TherapistTopbar({
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const accountRef = useRef<HTMLDivElement>(null);
+  const { user, logout } = useAuth();
 
-  const token = getSessionToken();
-  const name = (token && decodeTokenPayload<{ name?: string }>(token)?.name) || 'Terapeuta';
+  const name = user?.name || 'Terapeuta';
   const initial = name.charAt(0).toUpperCase();
 
   function handleLogout() {
-    clearSession();
+    logout();
     window.location.href = '/therapist-login';
   }
 

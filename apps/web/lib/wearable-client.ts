@@ -1,12 +1,10 @@
-import { getSessionToken } from './api-client';
-
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3003';
 
 async function authorizedRequest<T>(path: string, method: string, body?: unknown): Promise<T> {
-  const token = getSessionToken();
   const res = await fetch(`${API_BASE_URL}${path}`, {
     method,
-    headers: { Authorization: `Bearer ${token}`, ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}) },
+    credentials: 'include',
+    headers: { ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}) },
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
   return res.json();
@@ -64,8 +62,18 @@ export async function getMetricas(
   return { total: body.total, promedios: body.promedios, data: body.data };
 }
 
-export function getWearableConnectUrl(dispositivo: Dispositivo, clientId: string): string {
-  return `${API_BASE_URL}/api/wearable/${dispositivo}/connect?clienteId=${clientId}`;
+// Autenticada a propósito (antes era un link público con el clienteId en la
+// URL, sin verificar sesión — cualquiera podía enlazar su propio wearable a
+// la cuenta de otra persona con solo conocer su id). El backend arma la URL
+// de autorización del proveedor a partir del id ya verificado por
+// ownerOrAdmin, no de un valor que mande el cliente.
+export async function getWearableConnectUrl(dispositivo: Dispositivo, clientId: string): Promise<string> {
+  const body = await authorizedRequest<{ success: boolean; url?: string; error?: string }>(
+    `/api/clients/${clientId}/wearable/${dispositivo}/connect-url`,
+    'GET'
+  );
+  if (!body.success || !body.url) throw new Error(body.error || 'No pudimos iniciar la conexión con el dispositivo.');
+  return body.url;
 }
 
 export async function syncWearable(clientId: string, dispositivo: Dispositivo): Promise<{ success: boolean; sincronizados?: number; error?: string }> {

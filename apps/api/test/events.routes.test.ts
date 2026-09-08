@@ -6,8 +6,14 @@ import { db } from '../src/db/index.js';
 import { clients, communityEvents, eventReservations } from '../src/models/schema.js';
 import { signToken } from '../src/services/auth.service.js';
 
-// Ensure test DB is used
-process.env.DATABASE_URL = process.env.TEST_DATABASE_URL || 'postgresql://postgres.ranfumrqwqnvpvxilacw:kxgIxv8WT10wsx6X@aws-1-us-west-2.pooler.supabase.com:5432/postgres_test';
+// Ensure test DB is used — nunca un fallback hardcodeado a una URL real acá
+// (ver session-memory.md: credencial de Supabase que estuvo commiteada en
+// este archivo). Si TEST_DATABASE_URL no está definida, fallar fuerte en vez
+// de arriesgar correr contra la base equivocada.
+if (!process.env.TEST_DATABASE_URL) {
+  throw new Error('TEST_DATABASE_URL no está configurada — no se puede correr este test.');
+}
+process.env.DATABASE_URL = process.env.TEST_DATABASE_URL;
 
 describe('events routes', () => {
   const app = createApp();

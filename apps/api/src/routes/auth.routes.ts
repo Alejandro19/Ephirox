@@ -20,6 +20,7 @@ export const authRouter = Router();
 authRouter.post('/login', loginLimiter, validateBody(LoginInputSchema), asyncHandler(authController.login));
 authRouter.post('/therapist/login', loginLimiter, validateBody(LoginInputSchema), asyncHandler(authController.therapistLogin));
 authRouter.get('/me', authMiddleware, asyncHandler(authController.me));
+authRouter.post('/logout', asyncHandler(authController.logout));
 authRouter.post('/change-password', authMiddleware, validateBody(ChangePasswordInputSchema), asyncHandler(authController.changePassword));
 authRouter.post('/google', validateBody(GoogleAuthInputSchema), asyncHandler(authController.googleLogin));
 authRouter.post('/apple', validateBody(AppleAuthInputSchema), asyncHandler(authController.appleLogin));

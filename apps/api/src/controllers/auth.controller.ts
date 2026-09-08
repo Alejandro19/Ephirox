@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import type { LoginInput, ChangePasswordInput, GoogleAuthInput, AppleAuthInput, ForgotPasswordInput, ResetPasswordInput, AcceptInvitationInput } from '@latribu/shared-types';
 import * as authService from '../services/auth.service.js';
+import { setSessionCookie, clearSessionCookie } from '../middleware/auth.middleware.js';
 import * as clientsService from '../services/clients.service.js';
 import * as adminsService from '../services/admins.service.js';
 import * as therapistsService from '../services/therapists.service.js';
@@ -48,16 +49,23 @@ export async function login(req: Request, res: Response) {
     const valid = await authService.verifyPassword(password, admin.passwordHash);
     if (!valid) return err(res, 'Credenciales incorrectas.', 401);
     const token = authService.signToken({ id: admin.id, role: 'admin', name: admin.name, email: admin.email });
+    setSessionCookie(res, token);
     return ok(res, { token, role: 'admin', user: { id: admin.id, name: admin.name, email: admin.email } });
   }
 
   const client = await clientsService.findClientByEmail(emailLower);
-  if (!client) return err(res, 'Credenciales incorrectas.', 401);
+  if (!client) {
+    // Paga el mismo costo de bcrypt que el camino de abajo — ver
+    // DUMMY_PASSWORD_HASH.
+    await authService.verifyPassword(password, authService.DUMMY_PASSWORD_HASH);
+    return err(res, 'Credenciales incorrectas.', 401);
+  }
   if (client.status === 'inactive') return err(res, 'Tu cuenta está inactiva. Contacta al administrador.', 403);
   const valid = await authService.verifyPassword(password, client.passwordHash ?? '');
   if (!valid) return err(res, 'Credenciales incorrectas.', 401);
 
   const token = authService.signToken({ id: client.id, role: 'cliente', name: client.name, email: client.email, plan: client.plan, clientType: client.clientType });
+  setSessionCookie(res, token);
   const clientInfo = await getPersonalInfoByClientId(client.id);
   const moduleAccess = await getResolvedModuleAccess(client.clientType, client.permissions);
   return ok(res, {
@@ -80,7 +88,10 @@ export async function therapistLogin(req: Request, res: Response) {
   const emailLower = email.toLowerCase().trim();
 
   const therapist = await therapistsService.findTherapistByEmail(emailLower);
-  if (!therapist) return err(res, 'Credenciales incorrectas.', 401);
+  if (!therapist) {
+    await authService.verifyPassword(password, authService.DUMMY_PASSWORD_HASH);
+    return err(res, 'Credenciales incorrectas.', 401);
+  }
   if (!therapist.active) return err(res, 'Tu cuenta está inactiva. Contacta al administrador.', 403);
   const valid = await authService.verifyPassword(password, therapist.passwordHash);
   if (!valid) return err(res, 'Credenciales incorrectas.', 401);
@@ -92,12 +103,21 @@ export async function therapistLogin(req: Request, res: Response) {
     email: therapist.email,
     mustChangePassword: therapist.mustChangePassword,
   });
+  setSessionCookie(res, token);
   return ok(res, {
     token,
     role: 'terapeuta',
     mustChangePassword: therapist.mustChangePassword,
     user: { id: therapist.id, name: therapist.name, email: therapist.email, specialty: therapist.specialty },
   });
+}
+
+// No existía antes — no hacía falta con sessionStorage (el frontend
+// simplemente borraba la clave). Con una cookie httpOnly, JS ya no puede
+// borrarla — tiene que pedírselo al servidor.
+export async function logout(_req: Request, res: Response) {
+  clearSessionCookie(res);
+  return ok(res, { message: 'Sesión cerrada.' });
 }
 
 export async function me(req: Request, res: Response) {
@@ -112,6 +132,13 @@ export async function me(req: Request, res: Response) {
     return ok(res, {
       role: 'terapeuta',
       user: { id: therapist.id, name: therapist.name, email: therapist.email, specialty: therapist.specialty },
+      // Antes esto se leía decodificando el JWT guardado en el cliente — con
+      // la cookie httpOnly el frontend ya no puede verlo, así que /me pasa a
+      // ser la única fuente de verdad. Además queda MÁS correcto que antes:
+      // el claim del JWT queda congelado desde que se emitió, mientras que
+      // esto se lee fresco de la base en cada llamada (ver
+      // therapist/page.tsx).
+      mustChangePassword: therapist.mustChangePassword,
     });
   }
   const client = await clientsService.findClientById(req.user!.id);
@@ -144,6 +171,7 @@ export async function changePassword(req: Request, res: Response) {
     // Se reemite el token sin mustChangePassword — el que tenía el terapeuta
     // en sesión sigue cargando el claim viejo hasta que se le da uno nuevo.
     const token = authService.signToken({ id: therapist.id, role: 'terapeuta', name: therapist.name, email: therapist.email, mustChangePassword: false });
+    setSessionCookie(res, token);
     return ok(res, { message: 'Contraseña actualizada.', token });
   }
 
@@ -232,6 +260,7 @@ export async function acceptInvitation(req: Request, res: Response) {
   if (!client) return err(res, 'No encontrado.', 404);
 
   const tokenJwt = authService.signToken({ id: client.id, role: 'cliente', name: client.name, email: client.email, plan: client.plan, clientType: client.clientType });
+  setSessionCookie(res, tokenJwt);
   const moduleAccess = await getResolvedModuleAccess(client.clientType, client.permissions);
   return ok(res, {
     token: tokenJwt,
@@ -263,6 +292,7 @@ export async function googleLogin(req: Request, res: Response) {
   if (admin) {
     if (!admin.googleId) await adminsService.updateAdminGoogleId(admin.id, googleId);
     const token = authService.signToken({ id: admin.id, role: 'admin', name: admin.name, email: admin.email });
+    setSessionCookie(res, token);
     return ok(res, { token, role: 'admin', user: { id: admin.id, name: admin.name, email: admin.email } });
   }
 
@@ -277,6 +307,7 @@ export async function googleLogin(req: Request, res: Response) {
     if (client.status === 'rejected') return err(res, 'No existe una cuenta asociada a este correo. Contacta al administrador para que te dé acceso.', 403);
     if (!client.googleId) await clientsService.updateClientGoogleId(client.id, googleId);
     const token = authService.signToken({ id: client.id, role: 'cliente', name: client.name, email: client.email, plan: client.plan, clientType: client.clientType });
+    setSessionCookie(res, token);
     const moduleAccess = await getResolvedModuleAccess(client.clientType, client.permissions);
     return ok(res, {
       token,
@@ -311,6 +342,7 @@ export async function appleLogin(req: Request, res: Response) {
   if (admin) {
     if (!admin.appleId) await adminsService.updateAdminAppleId(admin.id, appleId);
     const token = authService.signToken({ id: admin.id, role: 'admin', name: admin.name, email: admin.email });
+    setSessionCookie(res, token);
     return ok(res, { token, role: 'admin', user: { id: admin.id, name: admin.name, email: admin.email } });
   }
 
@@ -322,6 +354,7 @@ export async function appleLogin(req: Request, res: Response) {
     if (client.status === 'rejected') return err(res, 'No existe una cuenta asociada a este correo. Contacta al administrador para que te dé acceso.', 403);
     if (!client.appleId) await clientsService.updateClientAppleId(client.id, appleId);
     const token = authService.signToken({ id: client.id, role: 'cliente', name: client.name, email: client.email, plan: client.plan, clientType: client.clientType });
+    setSessionCookie(res, token);
     const moduleAccess = await getResolvedModuleAccess(client.clientType, client.permissions);
     return ok(res, {
       token,

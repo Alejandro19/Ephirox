@@ -27,13 +27,24 @@ const storageClient = createClient(requireSupabaseUrl(), requireSupabaseServiceR
   auth: { persistSession: false },
 });
 
+// El nombre original lo manda el cliente — sin esto, un nombre con "/" o
+// "../" podría hacer que el object key resultante se salga del prefijo
+// `clientId/...` esperado dentro del mismo bucket (ver auditoría de
+// seguridad). No hay traversal al filesystem del host posible (esto es un
+// object key de Supabase Storage, no una ruta de disco), pero igual conviene
+// no confiar en el nombre tal cual.
+function sanitizeFilename(name: string): string {
+  const base = name.replace(/[/\\]/g, '_').replace(/\.\./g, '_');
+  return base.slice(-150) || 'archivo';
+}
+
 export async function uploadFile(
   pathPrefix: string,
   buffer: Buffer,
   contentType: string,
   originalName: string
 ): Promise<string> {
-  const filename = `${pathPrefix}/${randomUUID()}_${originalName}`;
+  const filename = `${pathPrefix}/${randomUUID()}_${sanitizeFilename(originalName)}`;
   const { error } = await storageClient.storage.from(BUCKET).upload(filename, buffer, { contentType });
   if (error) throw error;
   const { data } = storageClient.storage.from(BUCKET).getPublicUrl(filename);

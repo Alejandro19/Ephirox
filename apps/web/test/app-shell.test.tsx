@@ -33,7 +33,7 @@ function mockExpiredClient() {
     isLoading: false,
     planExpired: true,
     planEndDate: '2020-01-01',
-    token: 'token-123',
+    isAuthenticated: true,
     user: { id: 'client-1', name: 'Ana', email: 'ana@example.com' },
     clientType: 'coaching_1_1',
     onboardingComplete: true,
@@ -57,7 +57,7 @@ describe('AppShell', () => {
       role: null,
       isLoading: false,
       planExpired: false,
-      token: null,
+      isAuthenticated: false,
     } as ReturnType<typeof useAuth>);
 
     render(
@@ -90,7 +90,7 @@ describe('AppShell', () => {
     usePathnameMock.mockReturnValue('/training');
     vi.mocked(useAuth).mockReturnValue({
       role: 'cliente', isLoading: false, planExpired: false, planEndDate: '2099-01-01',
-      token: 'token-123', user: { id: 'client-1', name: 'Ana', email: 'ana@example.com' },
+      isAuthenticated: true, user: { id: 'client-1', name: 'Ana', email: 'ana@example.com' },
       clientType: 'coaching_1_1', onboardingComplete: true, moduleAccess: {}, logout: vi.fn(),
     } as unknown as ReturnType<typeof useAuth>);
 
@@ -122,7 +122,7 @@ describe('AppShell', () => {
     vi.mocked(getLegalAcceptance).mockResolvedValue(null);
     vi.mocked(useAuth).mockReturnValue({
       role: 'cliente', isLoading: false, planExpired: false, planEndDate: '2099-01-01',
-      token: 'token-123', user: { id: 'client-1', name: 'Ana', email: 'ana@example.com' },
+      isAuthenticated: true, user: { id: 'client-1', name: 'Ana', email: 'ana@example.com' },
       clientType: 'coaching_1_1', onboardingComplete: true, moduleAccess: {}, logout: vi.fn(),
     } as unknown as ReturnType<typeof useAuth>);
 
@@ -138,7 +138,7 @@ describe('AppShell', () => {
 
   it('never calls getLegalAcceptance for an admin — the gate only applies to clients', async () => {
     vi.mocked(useAuth).mockReturnValue({
-      role: 'admin', isLoading: false, planExpired: false, token: 'token-123',
+      role: 'admin', isLoading: false, planExpired: false, isAuthenticated: true,
       user: { id: 'admin-1', name: 'Admin', email: 'admin@example.com' },
     } as unknown as ReturnType<typeof useAuth>);
 

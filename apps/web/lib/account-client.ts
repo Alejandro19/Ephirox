@@ -1,4 +1,4 @@
-import { getSessionToken, PermissionDeniedError } from './api-client';
+import { PermissionDeniedError } from './api-client';
 import type { ClientDetail, NotificationPreferences } from './clients-client';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3003';
@@ -6,12 +6,11 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3
 // Todas las rutas de /api/account son "mi cuenta" — el backend siempre usa
 // req.user.id, nunca reciben un clientId por parámetro.
 async function authorizedRequest<T>(path: string, method: string, body?: unknown): Promise<T> {
-  const token = getSessionToken();
   const isFormData = body instanceof FormData;
   const res = await fetch(`${API_BASE_URL}${path}`, {
     method,
+    credentials: 'include',
     headers: {
-      Authorization: `Bearer ${token}`,
       ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
     },
     body: isFormData ? body : body != null ? JSON.stringify(body) : undefined,

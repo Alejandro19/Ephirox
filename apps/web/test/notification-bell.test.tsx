@@ -4,7 +4,6 @@ import NotificationBell from '../components/layout/NotificationBell';
 import { useAuth } from '../lib/auth-context';
 
 vi.mock('../lib/auth-context', () => ({ useAuth: vi.fn() }));
-vi.mock('../lib/api-client', () => ({ getSessionToken: () => 'token' }));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
 function mockNotifications(notifications: Array<{ id: string; message: string; createdAt: string; read: boolean }>) {

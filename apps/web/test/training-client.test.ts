@@ -1,9 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import * as apiClient from '../lib/api-client';
 import { listExercises, createExercise, reorderExercise, confirmSession, getStreak, useProtector, getAchievements, getPhraseByContext } from '../lib/training-client';
 
 beforeEach(() => {
-  vi.spyOn(apiClient, 'getSessionToken').mockReturnValue('fake-token');
   global.fetch = vi.fn();
 });
 

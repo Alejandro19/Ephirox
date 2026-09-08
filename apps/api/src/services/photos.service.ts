@@ -5,6 +5,18 @@ import { uploadFile } from '../storage/index.js';
 import { findAnthropometricById } from './anthropometrics.service.js';
 import type { PhotoUploadMetadata } from '@latribu/shared-types';
 
+// Mismo patrón que personal-info.service.ts::InvalidFileTypeError — este
+// upload no tenía NINGÚN chequeo de tipo antes (ver auditoría de seguridad),
+// a diferencia de los checkups que ya validaban contra una whitelist.
+export class InvalidFileTypeError extends Error {
+  constructor() {
+    super('Formato inválido. Usa JPG o PNG.');
+    this.name = 'InvalidFileTypeError';
+  }
+}
+
+const ALLOWED_PHOTO_MIMETYPES = ['image/jpeg', 'image/png'];
+
 export async function listPhotos(clientId: string): Promise<ProgressPhoto[]> {
   return db.select().from(progressPhotos).where(eq(progressPhotos.clientId, clientId)).orderBy(desc(progressPhotos.fecha));
 }
@@ -14,6 +26,9 @@ export async function createPhoto(
   file: { buffer: Buffer; mimetype: string; originalname: string },
   metadata: PhotoUploadMetadata
 ): Promise<ProgressPhoto> {
+  if (!ALLOWED_PHOTO_MIMETYPES.includes(file.mimetype)) {
+    throw new InvalidFileTypeError();
+  }
   const photoUrl = await uploadFile(`${clientId}/photos`, file.buffer, file.mimetype, file.originalname);
 
   let anthropometricRecordId: string | null = metadata.anthropometric_record_id ?? null;

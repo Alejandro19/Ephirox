@@ -9,8 +9,6 @@ import {
   type ReactNode,
 } from "react";
 import {
-  getSessionToken,
-  saveSession,
   clearSession,
   fetchAuthMe,
   loginRequest,
@@ -26,7 +24,12 @@ type AuthUser = {
 };
 
 type AuthState = {
-  token: string | null;
+  // Antes era `token: string | null` — el string en sí nunca se usaba fuera
+  // de acá (ni AppShell.tsx ni nada más lo mandaban a ningún lado), solo se
+  // chequeaba su presencia. Ahora la sesión vive en una cookie httpOnly que
+  // el frontend nunca ve, así que el campo pasa a ser lo que siempre fue en
+  // la práctica: un booleano.
+  isAuthenticated: boolean;
   role: "admin" | "cliente" | "terapeuta" | null;
   user: AuthUser | null;
   permissions: Record<string, boolean>;
@@ -37,6 +40,8 @@ type AuthState = {
   planEndDate: string | null;
   // Idioma de la interfaz fija (Configuración > Idioma) — 'es' | 'en', 'es' por defecto.
   language: string;
+  // Solo relevante para terapeutas — ver auth.controller.ts::me.
+  mustChangePassword: boolean;
   isLoading: boolean;
   isAuthLoading: boolean;
 };
@@ -56,7 +61,7 @@ type AuthContextValue = AuthState & {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 const initialState: AuthState = {
-  token: null,
+  isAuthenticated: false,
   role: null,
   user: null,
   permissions: {},
@@ -66,6 +71,7 @@ const initialState: AuthState = {
   planExpired: false,
   planEndDate: null,
   language: "es",
+  mustChangePassword: false,
   isLoading: true,
   isAuthLoading: false,
 };
@@ -88,31 +94,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(() => {
-    clearSession();
+    void clearSession();
     setState({ ...initialState, isLoading: false, isAuthLoading: false });
   }, []);
 
   const refreshAuth = useCallback(async () => {
-    const token = getSessionToken();
-    if (!token) {
-      setState((prev) => ({ ...prev, isLoading: false, isAuthLoading: false }));
-      return;
-    }
-    // Justo después de un login (ej. redirect de NFC a través de un túnel),
-    // esta primera llamada a /auth/me puede fallar por un motivo transitorio
-    // (red, cold-start del túnel) sin que el token en sí sea inválido —
-    // tratarlo igual que un 401 real cerraba una sesión recién iniciada y
-    // obligaba a loguearse dos veces. Solo un AuthInvalidError (401/403)
-    // cierra sesión de inmediato; cualquier otro fallo reintenta un par de
-    // veces antes de darse por vencido.
+    // Ya no hay forma de chequear "hay sesión" del lado del cliente antes de
+    // preguntar — la cookie es httpOnly. Este mismo hook corre en TODAS las
+    // páginas (incluida la landing pública, montado en el layout raíz), así
+    // que un 401 acá es el estado normal de un visitante anónimo, no un
+    // error: nunca redirige por su cuenta. Las páginas protegidas ya se
+    // cubren solas — middleware.ts del lado del servidor antes de renderizar
+    // nada, y AppShell.tsx (`!isAuthenticated`) si el estado cambia a
+    // "no autenticado" mientras el usuario ya está adentro.
     const MAX_ATTEMPTS = 5;
     for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
       try {
         const data = await fetchAuthMe();
         setState({
-          token,
+          isAuthenticated: true,
           role: data.role ?? null,
-          user: data.user ?? decodeUserFromToken(token),
+          user: data.user ?? null,
           permissions: data.permissions ?? {},
           moduleAccess: data.moduleAccess ?? {},
           clientType: data.clientType ?? null,
@@ -120,25 +122,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           planExpired: !!data.planExpired,
           planEndDate: data.planEndDate ?? null,
           language: data.language ?? "es",
+          mustChangePassword: !!data.mustChangePassword,
           isLoading: false,
           isAuthLoading: false,
         });
         return;
       } catch (e: unknown) {
         const isAuthInvalid = e instanceof AuthInvalidError;
+        // Justo después de un login (ej. redirect de NFC a través de un
+        // túnel), esta primera llamada a /auth/me puede fallar por un motivo
+        // transitorio (red, cold-start del túnel) sin que la sesión en sí
+        // sea inválida — tratarlo igual que un 401 real cerraba una sesión
+        // recién iniciada y obligaba a loguearse dos veces. Solo un
+        // AuthInvalidError (401/403, sesión real y verdaderamente inválida)
+        // corta de inmediato; cualquier otro fallo reintenta antes de
+        // darse por vencido.
         if (!isAuthInvalid && attempt < MAX_ATTEMPTS) {
           await new Promise((resolve) => setTimeout(resolve, 500 * attempt));
           continue;
         }
-        // Token realmente inválido (JWT_SECRET diferente entre APIs, expirado,
-        // cuenta inactiva) o fallo transitorio persistente tras reintentar:
-        // limpiar sesión y forzar redirect a login para que el middleware de
-        // Next.js redirija correctamente. Sin window.location.href, las
-        // páginas protegidas harían flash del contenido antes de redirigir.
-        clearSession();
-        if (typeof window !== 'undefined') {
-          window.location.href = '/login';
-        }
+        // Best-effort — si la cookie ya está vencida/ausente esto no hace
+        // nada útil, pero si quedó una cookie inválida pero presente, la
+        // limpia. No es crítico: es de sesión, se va sola al cerrar el
+        // navegador de todos modos.
+        void clearSession();
         setState({ ...initialState, isLoading: false, isAuthLoading: false });
         return;
       }
@@ -147,12 +154,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async (email: string, password: string) => {
     const result = await loginRequest(email, password);
-    if (result.success && result.token) {
-      saveSession(result.token);
+    if (result.success) {
       setState({
-        token: result.token,
+        isAuthenticated: true,
         role: result.role ?? null,
-        user: result.user ?? decodeUserFromToken(result.token),
+        // result.token viene en el body además de la cookie (para tooling y
+        // compatibilidad de tests del backend) — usarlo acá para el fallback
+        // es seguro porque es un valor transitorio de esta respuesta, nunca
+        // se guarda en ningún lado persistente.
+        user: result.user ?? (result.token ? decodeUserFromToken(result.token) : null),
         permissions: result.permissions ?? {},
         moduleAccess: result.moduleAccess ?? {},
         clientType: result.clientType ?? null,
@@ -160,6 +170,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         planExpired: !!result.planExpired,
         planEndDate: result.planEndDate ?? null,
         language: result.language ?? "es",
+        mustChangePassword: !!result.mustChangePassword,
         isLoading: false,
         isAuthLoading: false,
       });

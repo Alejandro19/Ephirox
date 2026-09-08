@@ -16,13 +16,62 @@ function unauthorized(res: Response, message: string, status = 401) {
   return res.status(status).json({ success: false, error: message });
 }
 
+// Cookie httpOnly como mecanismo principal de sesión (ver auditoría de
+// seguridad: antes el JWT vivía en sessionStorage + una cookie legible por
+// JS, robable por cualquier XSS en cualquier parte del sitio — ahora el
+// frontend nunca ve el token, el navegador la adjunta solo). Sesión, no
+// persistente (sin maxAge/expires): se borra al cerrar el navegador, mismo
+// comportamiento que tenía sessionStorage antes; el JWT igual expira solo
+// del lado del servidor (JWT_EXPIRES_IN) sin importar cuánto dure la cookie.
+const isProd = process.env.NODE_ENV === 'production';
+// Sin domain explícito, una cookie queda atada al host EXACTO que la fija —
+// api.ephirox.com nunca sería visible para app.ephirox.com (que es quien
+// necesita leerla, ver middleware.ts). Default seguro en producción para que
+// esto funcione de fábrica sin depender de que alguien recuerde configurar
+// la variable de entorno — mismo criterio que CORS_ORIGINS en app.ts.
+const COOKIE_DOMAIN = process.env.COOKIE_DOMAIN || (isProd ? '.ephirox.com' : undefined);
+const SESSION_COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: isProd,
+  sameSite: 'lax' as const,
+  domain: COOKIE_DOMAIN,
+  path: '/',
+};
+
+export function setSessionCookie(res: Response, token: string): void {
+  res.cookie('latribu_token', token, SESSION_COOKIE_OPTIONS);
+}
+
+export function clearSessionCookie(res: Response): void {
+  res.clearCookie('latribu_token', SESSION_COOKIE_OPTIONS);
+}
+
+// El header Authorization sigue soportado (llamadas server-to-server, tests)
+// pero el frontend ya no lo arma a mano — manda la cookie automáticamente
+// vía `credentials: 'include'`. Una navegación de página completa (ej. el
+// redirect a un proveedor OAuth de wearables, ver wearable.routes.ts)
+// tampoco podría llevar headers custom de todos modos, solo cookies.
+function readCookieToken(req: Request): string | null {
+  const raw = req.headers.cookie;
+  if (!raw) return null;
+  for (const part of raw.split(';')) {
+    const eq = part.indexOf('=');
+    if (eq === -1) continue;
+    if (part.slice(0, eq).trim() === 'latribu_token') {
+      return decodeURIComponent(part.slice(eq + 1).trim());
+    }
+  }
+  return null;
+}
+
 export async function authMiddleware(req: Request, res: Response, next: NextFunction) {
   const header = req.headers.authorization;
-  if (!header || !header.startsWith('Bearer ')) return unauthorized(res, 'Token requerido.');
+  const token = header?.startsWith('Bearer ') ? header.slice(7) : readCookieToken(req);
+  if (!token) return unauthorized(res, 'Token requerido.');
 
   let payload: TokenPayload;
   try {
-    payload = verifyToken(header.slice(7));
+    payload = verifyToken(token);
   } catch {
     return unauthorized(res, 'Token inválido o expirado.');
   }

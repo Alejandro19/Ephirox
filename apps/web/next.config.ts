@@ -5,6 +5,26 @@ import fs from 'fs';
 const nextConfig: NextConfig = {
   reactStrictMode: true,
 
+  // Headers de seguridad — no había ninguno configurado (ver auditoría de
+  // seguridad). Se deja CSP afuera a propósito: este sitio carga Stripe.js,
+  // el botón de Google Sign-In y Google Fonts, y armar una whitelist
+  // correcta sin probar cada flujo (pagos, login) a fondo arriesga romper
+  // producción — mejor un follow-up dedicado que agregarla a ciegas acá.
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
+          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+        ],
+      },
+    ];
+  },
+
   webpack: (config, { isServer }) => {
     // Next.js 15 genera por defecto archivos del Pages Router (_document.js,
     // _app.js, _error.js) incluso en proyectos App Router puros. Durante
