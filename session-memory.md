@@ -1,6 +1,6 @@
 # session-memory.md
 
-> **Última actualización:** 2026-09-07
+> **Última actualización:** 2026-09-08
 > **Propósito:** Resumen ejecutivo por sesión (orden cronológico) y plan de continuidad inmediato para la siguiente sesión.
 
 ---
@@ -878,6 +878,46 @@ Alejandro pidió explícitamente revisar todo antes de commitear ("revisemos que
 
 Dos commits, pusheados directo a `origin/main`: `6d2cb26` (fix suelto del hero mobile que había quedado pendiente de la sesión anterior, separado a propósito por no tener relación con seguridad) y `955eadf` (toda la auditoría — 81 archivos).
 
+## Resumen Ejecutivo — Sesión 2026-09-08 (continuación) — Fix real de hero en iPhone, submódulo de leads, identidad del panel de terapeuta, y rediseño de la cortina de scroll de la landing
+
+Continuación de la misma fecha, después de la auditoría de seguridad. Varios pedidos encadenados de Alejandro, cada uno probado antes de pasar al siguiente.
+
+### 1. Hero de la landing seguía dejando ver la sección siguiente en un iPhone real (3 iteraciones)
+
+Reportado con capturas reales del celular, dos veces seguidas ("el fix mejoró pero..." / "lo veo igual"). `min(92vh,920px)` → `100vh;100dvh` no alcanzaba porque `dvh` no siempre se reajusta bien en Safari real después de que la barra ya se asentó. `100svh` (el piso "toda la barra visible") falló al revés: en la segunda captura la barra ya se había colapsado/ocultado del todo, así que el viewport real creció más allá de lo que `svh` reserva y volvió a quedar corto. Fix final: `100lvh` (el techo, tamaño con la barra completamente colapsada) — en iOS la barra de Safari flota SOBRE el contenido en vez de empujarlo, así que con el hero a `100lvh` nunca queda un hueco en ningún estado de la barra, como mucho un scroll mínimo imperceptible. Pusheado como `f90d8c9`. La "línea oscura" que se seguía viendo detrás de la barra de direcciones en una tercera captura se confirmó que es el blur nativo tipo "vidrio esmerilado" de Safari sobre el hero oscuro — comportamiento nativo de iOS, no hay nada que la página pueda controlar ahí.
+
+### 2. Submódulo admin "Leads por Contactar" (pedido después de preguntar si la auditoría cubrió la landing)
+
+Al preguntarle si la auditoría de seguridad había cubierto la landing, se revisó el endpoint público `POST /enterprise-leads` (sí tenía rate-limit y validación Zod, pero **sin límite de largo en los campos de texto** — un solo request podía llenar la base con basura). Se agregaron límites (`nombre`/`empresa`/`rol` ≤200, `correo` ≤320, `celular` ≤40) y, a pedido explícito, se construyó un submódulo admin completo:
+- Columna `estado` en `enterprise_leads` (migración manual aplicada a `DATABASE_URL` y `TEST_DATABASE_URL`), pipeline `nuevo → contactado → preparando_propuesta → propuesta_entregada → cerrado`.
+- Endpoints `GET/PATCH /admin/enterprise-leads` (autenticados, solo admin).
+- Página `/admin/leads` con tabla + selector de estado por fila, agregada a `ADMIN_HUB_SUBITEMS`.
+- Verificado end-to-end con curl (auth requerida, estado inválido rechazado con 400) — no se pudo probar la UI logueado como admin real por falta de credenciales, pero el compilado y el redirect son idénticos al de `/admin/phrases`, que sí funciona.
+
+### 3. Identidad y tema del panel de terapeuta
+
+El login de terapeutas tenía su propio diseño reducido (isotipo chico, sin tagline "Redefining limits.", sin "Sistema de Optimización Ejecutiva") en vez de la identidad completa del login de clientes — se igualó byte a byte el JSX/CSS del panel de marca, quitando el título "Acceso terapeutas" para que arranque igual, directo en el campo Email. Se agregó también el toggle claro/oscuro (`ThemeToggle`) al topbar de terapeuta, que antes vivía fijo en `dark-brand` — hubo que marcar `/therapist` como pantalla "toggleable" en `lib/theme.ts` (exact match, no prefix — `/therapist-login` y `/therapist/set-password` se quedan bloqueadas en `dark-brand`, mismo criterio que `/login`/`/set-password` del lado cliente).
+
+**Bug real encontrado en el camino:** el middleware mandaba a CUALQUIER sesión vencida a `/login` (el de clientes) sin importar la ruta pedida — un terapeuta que entraba a `/therapist` sin sesión terminaba en el formulario de clientes, mandando su contraseña al endpoint equivocado (`/api/auth/login` en vez de `/api/auth/therapist/login`) y recibiendo "credenciales incorrectas" sin ninguna razón aparente aunque la contraseña fuera correcta. Corregido: `middleware.ts` ahora detecta rutas `/therapist*` y redirige a `/therapist-login` en su lugar.
+
+### 4. Reescritura completa de la cortina de scroll de "Cómo lo medimos" (varias iteraciones, bug de fondo real)
+
+Pedido original: reemplazar el crossfade de opacity por un efecto de cortina con `clip-path`. La primera versión (transición CSS de 0.8s disparada por un índice discreto + lógica de "avanzar de a un paso" para scrolls fuertes) seguía mostrando texto entrelazado durante scroll continuo/sostenido — confirmado con scroll real simulado vía CDP (wheel events continuos, no saltos discretos), que reveló que el bug NO era de timing: dos bloques con fondo transparente revelando "su propio % inferior" desde el MISMO borde quedan anidados (uno cae siempre dentro del otro), nunca adyacentes, así que hay superposición garantizada en cualquier punto intermedio de la transición sin importar qué tan lento o rápido se scrollee.
+
+**Fix real:** el bloque que sale se recorta desde ARRIBA (bottom-inset creciendo) mientras el que entra se recorta desde ABAJO (top-inset bajando) — así las dos regiones visibles quedan pegadas, nunca superpuestas, sin importar la altura real de cada bloque de texto. El clip-path se recalcula en cada frame de scroll directamente proporcional a la posición (sin `transition` de por medio) — cualquier animación por tiempo ahí competiría contra el scroll y podía quedar atrasada. Para el TEXTO específicamente (no la imagen) se agregó un swap binario de golpe en vez de seguir el mismo recorte continuo: un párrafo cortado a la mitad se lee como frase incompleta aunque geométricamente no haya traslape de píxeles — el punto de cambio se ajustó de 50% a 96% de la ventana de la cortina después de que Alejandro reportara que el texto cambiaba antes de que la imagen terminara de asentarse.
+
+También se encontró y corrigió un `min-height` insuficiente en `.pasos-text-wrap` (`230px`/`30vh` → `280px`/`32vh`) — en viewports cortos (ventana no maximizada) el contenido más largo se recortaba a la mitad sin haber scrolleado nada, con `overflow:hidden` ocultando el resto en silencio.
+
+### 5. "Cómo Opera el Sistema" — de grid estático a card con texto rotando (muchas iteraciones de diseño en vivo)
+
+Pasó de un grid de 3 columnas siempre visibles a una sola card con texto que rota (`useAutoRotate`, mismo hook de la card de estadísticas del hero) cada 5s (subido desde 1.8s → 3.4s → 5s a pedido). Mismo bug de traslape que el punto 4 apareció acá también (crossfade de opacity en `.dif-text`) — mismo fix: sin `transition`, cambio de golpe.
+
+El fondo pasó por varias vueltas de diseño en vivo con Alejandro iterando sobre capturas reales: sección oscura → sección clara de punta a punta → sección con el mismo degradado dorado-crema que antes vivía solo dentro de la card, con la card ahora blanca/nítida con borde dorado de 2px para destacar contra ese fondo cálido (en vez de destacar por ser "lo único claro" en un entorno oscuro). Se agregó y luego se quitó un botón CTA con borde dorado dentro de la card a pedido explícito en ambas direcciones. **Patrón de trabajo de esta sección:** Alejandro itera visualmente rápido con capturas — no asumir que la última decisión de diseño es definitiva, confirmar en cada vuelta.
+
+### 6. Verificación técnica usada en esta sesión
+
+Sin Chrome DevTools MCP disponible: Chrome headless (`--headless=new --remote-debugging-port=NNNN`) + un script Node corto por WebSocket hablando el protocolo CDP directo (`Page.navigate`, `Runtime.evaluate`, `Input.dispatchMouseEvent` con `type:'mouseWheel'` para simular scroll continuo real, `Page.captureScreenshot`) — más preciso que `--screenshot` de una sola pasada porque permite scrollear, esperar, y capturar en el punto exacto de una transición. `window.scrollTo()` vía `Runtime.evaluate` sin disparar además un evento `scroll` sintético no siempre dispara el handler `onScroll` de React de forma confiable en este entorno — usar `Input.dispatchMouseEvent` (wheel real) para cualquier prueba que dependa de que el scroll handler se ejecute.
+
 ## Próximas actividades — Siguiente sesión (actualizada 2026-09-03, 2026-09-04)
 
 ### Actividad 1 — Confirmar que el login desde el celular ya funciona
@@ -971,6 +1011,12 @@ Dos commits, pusheados directo a `origin/main`: `6d2cb26` (fix suelto del hero m
 - **Purgar el historial de git** (con `git filter-repo` o BFG, seguido de un force-push) sigue bloqueado en dos cosas: que Alejandro confirme que ya rotó la contraseña (rotarla primero es lo que de verdad neutraliza el riesgo — purgar el historial sin rotar no sirve de nada, la clave vieja ya pudo haber sido vista), y su confirmación explícita aparte para el force-push en sí (operación destructiva sobre el historial compartido, reescribe todos los hashes de commit posteriores al 5 de agosto).
 - **Confirmar en real que la migración de sesión a cookie httpOnly funciona con cuentas reales**, no solo con la cuenta de prueba que se usó para verificarlo (creada y borrada en la sesión 2026-09-08). Probar: login de admin, de cliente y de terapeuta (son código separado, `/login` vs `/therapist-login`); que cerrar sesión funcione limpio; que una sesión sobreviva un refresh de página. Alejandro quedó con los servidores de dev corriendo (`localhost:3000`/`:3003`) para probarlo él mismo, pero no llegó a confirmar el resultado antes de pedir el commit — vale la pena preguntar si ya lo probó, o hacerlo en esta sesión si no.
 - **drizzle-orm** sigue en `0.36.4` (el bump a `0.45.2` se revirtió por romper el parseo de columnas `numeric`, ver resumen de esta sesión) y **vitest** sigue en `2.x` (CVE crítico pero de bajo riesgo real, ver resumen) — ambos diferidos a propósito, no son bloqueantes, pero valdría la pena retomarlos en una sesión dedicada si hay tiempo.
+
+### Actividad 23 — Confirmar en real el submódulo de leads, el panel de terapeuta, y la nueva cortina de la landing (nueva, 2026-09-08 continuación)
+
+- **`/admin/leads` nunca se probó logueado como admin real** (solo se verificó por curl con un JWT firmado a mano) — entrar con `dev-admin@latribu.test` y confirmar que la tabla carga, que cambiar el estado de un lead persiste, y que el filtro "Abiertos/Todos" funciona.
+- **Panel de terapeuta:** confirmar visualmente que el toggle claro/oscuro nuevo se ve bien en `/therapist` con una cuenta real (`terapeuta.demo@latribu.com`), y que el login ya no confunde con el de clientes al entrar sin sesión.
+- **Cortina de scroll de "Cómo lo medimos" y card de "Cómo Opera el Sistema":** todo lo de esta sesión se verificó con scroll simulado vía CDP (headless), nunca con un dedo/mouse real en un navegador con GUI. Vale la pena que Alejandro lo pruebe scrolleando de verdad, rápido y lento, antes de darlo por cerrado del todo.
 
 ---
 
