@@ -37,10 +37,19 @@ export const ADMIN_NAV: NavItem[] = [
 
 export const ADMIN_HUB_SUBITEMS: NavItem[] = [
   { key: "admin-clients", label: "Clientes" },
+  { key: "admin-leads", label: "Leads por Contactar" },
   { key: "admin-quotes", label: "Frases" },
   { key: "admin-roles", label: "Roles y Perfiles" },
   { key: "admin-membership-prices", label: "Precios de Membresía" },
 ];
+
+export const ENTERPRISE_LEAD_ESTADO_LABELS: Record<string, string> = {
+  nuevo: "Nuevo",
+  contactado: "Contactado",
+  preparando_propuesta: "Preparando propuesta",
+  propuesta_entregada: "Propuesta entregada",
+  cerrado: "Cerrado",
+};
 
 export const CLIENT_TYPE_LABELS: Record<string, string> = {
   coaching_1_1: "Cliente 1:1",
@@ -111,6 +120,7 @@ export const VIEW_TO_PATH: Record<string, string> = {
   blindspot: "/blindspot",
   "personal-info": "/onboarding",
   "admin-clients": "/admin/clients",
+  "admin-leads": "/admin/leads",
   "admin-quotes": "/admin/phrases",
   "admin-roles": "/admin/roles",
   "admin-membership-prices": "/admin/membership-prices",
@@ -127,6 +137,7 @@ export const PATH_TO_VIEW: Record<string, string> = {
   "/onboarding": "personal-info",
   "/admin": "admin-hub",
   "/admin/clients": "admin-clients",
+  "/admin/leads": "admin-leads",
   "/admin/phrases": "admin-quotes",
   "/admin/roles": "admin-roles",
   "/admin/membership-prices": "admin-membership-prices",

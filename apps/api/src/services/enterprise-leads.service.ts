@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
-import type { EnterpriseLeadInput } from '@latribu/shared-types';
+import { desc, eq } from 'drizzle-orm';
+import type { EnterpriseLeadInput, EnterpriseLeadEstadoUpdate } from '@latribu/shared-types';
 import { db } from '../db/index.js';
 import { enterpriseLeads, adminNotifications, type EnterpriseLeadRow } from '../models/schema.js';
 import { renderEmailHtml } from './email-template.js';
@@ -7,6 +8,23 @@ import { renderEmailHtml } from './email-template.js';
 export async function createEnterpriseLead(input: EnterpriseLeadInput): Promise<EnterpriseLeadRow> {
   const [row] = await db.insert(enterpriseLeads).values(input).returning();
   await Promise.all([notifyEnterpriseLead(row), createAdminAlert(row)]);
+  return row;
+}
+
+// Submódulo admin "Leads por contactar".
+export async function listEnterpriseLeads(): Promise<EnterpriseLeadRow[]> {
+  return db.select().from(enterpriseLeads).orderBy(desc(enterpriseLeads.createdAt));
+}
+
+export async function updateEnterpriseLeadEstado(
+  id: string,
+  estado: EnterpriseLeadEstadoUpdate['estado']
+): Promise<EnterpriseLeadRow | undefined> {
+  const [row] = await db
+    .update(enterpriseLeads)
+    .set({ estado })
+    .where(eq(enterpriseLeads.id, id))
+    .returning();
   return row;
 }
 

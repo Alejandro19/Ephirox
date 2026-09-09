@@ -1018,6 +1018,8 @@ export const enterpriseLeads = pgTable('enterprise_leads', {
   celular: text('celular'),
   tamano: text('tamano'),
   quien: text('quien'),
+  // Pipeline del submódulo admin "Leads por contactar".
+  estado: text('estado').notNull().default('nuevo'), // nuevo | contactado | preparando_propuesta | propuesta_entregada | cerrado
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 });
 

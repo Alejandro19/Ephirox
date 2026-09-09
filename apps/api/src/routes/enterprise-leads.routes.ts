@@ -1,8 +1,9 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
-import { EnterpriseLeadInputSchema } from '@latribu/shared-types';
+import { EnterpriseLeadInputSchema, EnterpriseLeadEstadoUpdateSchema } from '@latribu/shared-types';
 import { validateBody } from '../middleware/validate.js';
 import { asyncHandler } from '../middleware/async-handler.js';
+import { authMiddleware, adminOnly } from '../middleware/auth.middleware.js';
 import * as enterpriseLeadsController from '../controllers/enterprise-leads.controller.js';
 
 // Endpoint público (sin auth) expuesto a internet desde la landing de
@@ -22,4 +23,19 @@ enterpriseLeadsRouter.post(
   leadsLimiter,
   validateBody(EnterpriseLeadInputSchema),
   asyncHandler(enterpriseLeadsController.create),
+);
+
+// Submódulo admin "Leads por contactar" — panel interno, requiere sesión de admin.
+enterpriseLeadsRouter.get(
+  '/admin/enterprise-leads',
+  authMiddleware,
+  adminOnly,
+  asyncHandler(enterpriseLeadsController.list),
+);
+enterpriseLeadsRouter.patch(
+  '/admin/enterprise-leads/:id/estado',
+  authMiddleware,
+  adminOnly,
+  validateBody(EnterpriseLeadEstadoUpdateSchema),
+  asyncHandler(enterpriseLeadsController.updateEstado),
 );
