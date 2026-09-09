@@ -33,6 +33,7 @@ export function JuntaSection() {
         </div>
       </div>
       <div className="junta-rows">
+        <p className="rows-hint">Selecciona cada punto para ver el detalle.</p>
         {JUNTA.map((j, i) => {
           const isActive = i === active;
           const pick = () => setActive(i);

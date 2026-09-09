@@ -12,6 +12,7 @@ export function Dia90Rail() {
         <div className="dia90-rail-fill" style={{ height: `${((active + 1) / HITOS.length) * 100}%` }} />
       </div>
       <div className="dia90-rows">
+        <p className="rows-hint">Selecciona cada punto para ver el detalle.</p>
         {HITOS.map((h, i) => {
           const isActive = i === active;
           const pick = () => setActive(i);

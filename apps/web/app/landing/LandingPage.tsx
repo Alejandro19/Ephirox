@@ -171,8 +171,10 @@ export function LandingPage() {
         </section>
 
         <div className="medimos-intro">
-          <span className="eyebrow">CÓMO LO MEDIMOS</span>
-          <h2>No es una sensación. Es un registro.</h2>
+          <ScrollReveal>
+            <span className="eyebrow">CÓMO LO MEDIMOS</span>
+            <h2>No es una sensación. Es un registro.</h2>
+          </ScrollReveal>
         </div>
 
         <PasosSticky />

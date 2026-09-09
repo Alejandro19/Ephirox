@@ -108,21 +108,50 @@
 .eph-landing2 .leer-block .frase { margin: 0; font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: clamp(21px, 2.4vw, 30px); line-height: 1.4; max-width: 52ch; text-wrap: pretty; }
 .eph-landing2 .leer-block .disclaimer { margin: 0; font-size: 13px; line-height: 1.6; color: rgba(23,19,14,0.5); max-width: 62ch; }
 
-.eph-landing2 .medimos-intro { background: var(--bg-light); color: var(--ink); padding: clamp(56px, 8vh, 96px) clamp(22px, 6vw, 92px) 0; text-align: center; }
+.eph-landing2 .medimos-intro {
+  background: var(--bg-light);
+  color: var(--ink);
+  padding: clamp(56px, 8vh, 96px) clamp(22px, 6vw, 92px) clamp(48px, 7vh, 88px);
+  text-align: center;
+}
 .eph-landing2 .medimos-intro .eyebrow { font-size: 12px; letter-spacing: 0.14em; color: rgba(23,19,14,0.42); }
 .eph-landing2 .medimos-intro h2 { margin: 12px 0 0; font-family: 'Cormorant Garamond', serif; font-weight: 300; font-style: italic; font-size: clamp(26px, 3.4vw, 40px); color: var(--ink); }
 
-.eph-landing2 section.pasos-sticky { position: relative; height: 300vh; background: var(--bg-light); padding: 0 clamp(22px, 6vw, 92px); }
+/* PRUEBA: mismo gris translúcido con blur que .hero-stat-card, en vez de un
+   café sólido — así el "telón" que se asoma entre cards durante el scroll
+   también queda translúcido en vez de un bloque de color opaco. */
+.eph-landing2 section.pasos-sticky { position: relative; height: 300vh; background: linear-gradient(165deg, rgba(24,21,17,0.9) 0%, rgba(11,10,8,0.9) 100%); backdrop-filter: blur(12px); padding: 0 clamp(22px, 6vw, 92px); }
 .eph-landing2 .pasos-inner { position: sticky; top: 0; height: 100vh; display: grid; align-content: center; overflow: hidden; }
-.eph-landing2 .telon { position: absolute; left: 0; right: 0; bottom: 0; height: 0%; background: rgba(16,14,11,0.86); border-radius: 40px 40px 0 0; pointer-events: none; transition: height 180ms linear, background 300ms ease-out; }
 .eph-landing2 .pasos-grid { position: relative; max-width: 1120px; width: 100%; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: clamp(30px, 5vw, 80px); align-items: center; }
-.eph-landing2 .pasos-text-wrap { position: relative; display: grid; align-content: center; justify-items: center; padding: 0 clamp(4px, 2vw, 24px); min-height: clamp(230px, 30vh, 300px); }
-.eph-landing2 .paso-block { grid-area: 1 / 1; display: grid; gap: 18px; align-content: center; justify-items: stretch; transition: opacity 520ms ease-out, transform 620ms cubic-bezier(0.16,1,0.3,1); }
-.eph-landing2 .paso-ord { justify-self: start; display: grid; place-items: center; width: 46px; height: 46px; border-radius: 999px; border: 1px solid rgba(140,106,47,0.4); font-family: 'Cormorant Garamond', serif; font-weight: 400; font-size: 19px; color: #8C6A2F; font-variant-numeric: lining-nums; transition: color 420ms ease-out, border-color 420ms ease-out; }
-.eph-landing2 .paso-titulo { margin: 0; font-family: 'Cormorant Garamond', serif; font-weight: 400; font-size: clamp(30px, 4vw, 46px); line-height: 1.08; max-width: 20ch; text-wrap: balance; transition: color 420ms ease-out; }
-.eph-landing2 .paso-texto { margin: 0; font-size: 17px; line-height: 1.65; max-width: 40ch; text-wrap: pretty; transition: color 420ms ease-out; }
-.eph-landing2 .pasos-media { position: relative; width: 100%; aspect-ratio: 4 / 3; border-radius: 20px; overflow: hidden; background: var(--ink); }
-.eph-landing2 .pasos-media-layer { position: absolute; inset: 0; opacity: 0; transition: opacity 620ms ease-out, transform 900ms cubic-bezier(0.16,1,0.3,1); }
+/* El piso subió de 230 a 280px: en viewports más cortos (ventana no
+   maximizada, laptop de poca altura) 30vh podía resolver por debajo de lo
+   que el paso más largo (4 líneas de párrafo) necesita — con overflow
+   hidden, la última línea quedaba cortada a la mitad sin haber scrolleado
+   nada todavía. */
+.eph-landing2 .pasos-text-wrap { position: relative; overflow: hidden; display: grid; align-content: center; justify-items: center; padding: 0 clamp(4px, 2vw, 24px); min-height: clamp(280px, 32vh, 320px); }
+/* position:absolute + inset:0 a propósito (mismo criterio que
+   .pasos-media-layer): cada paso-block tiene una altura de contenido
+   distinta (títulos/párrafos más cortos o más largos). Con grid-area:1/1
+   cada uno recortaba su propio clip-path a una altura distinta, así que
+   durante la transición el párrafo saliente (más alto) y el entrante (más
+   bajo) se pisaban un instante. Con cajas idénticas (inset:0) el corte cae
+   siempre en el mismo punto de pantalla para los dos. */
+/* Sin transition ni opacity a propósito: el clip-path se recalcula en cada
+   frame de scroll (ver PasosSticky.tsx), directamente proporcional a la
+   posición — cualquier transición por tiempo acá competiría contra el
+   scroll y podía quedar "atrasada" mostrando dos pasos superpuestos. Con
+   opacity < 1 en el bloque que entra, el bloque anterior (que se queda
+   permanentemente opaco detrás, cubierto por el que entra) se transparenta
+   y deja ver el texto de abajo — de ahí salía el texto entrelazado. El
+   bloque que cubre siempre va a opacidad completa; solo el clip-path
+   decide cuánto se alcanza a ver. */
+.eph-landing2 .paso-block { position: absolute; inset: 0; display: grid; place-items: center; will-change: clip-path; }
+.eph-landing2 .paso-block-inner { display: grid; gap: 18px; justify-items: stretch; }
+.eph-landing2 .paso-ord { justify-self: start; display: grid; place-items: center; width: 46px; height: 46px; border-radius: 999px; border: 1px solid rgba(201,166,107,0.45); font-family: 'Cormorant Garamond', serif; font-weight: 400; font-size: 19px; color: var(--gold); font-variant-numeric: lining-nums; }
+.eph-landing2 .paso-titulo { margin: 0; font-family: 'Cormorant Garamond', serif; font-weight: 400; font-size: clamp(30px, 4vw, 46px); line-height: 1.08; max-width: 20ch; text-wrap: balance; color: var(--cream); }
+.eph-landing2 .paso-texto { margin: 0; font-size: 17px; line-height: 1.65; max-width: 40ch; text-wrap: pretty; color: var(--cream-soft); }
+.eph-landing2 .pasos-media { position: relative; width: 100%; aspect-ratio: 4 / 3; border-radius: 20px; overflow: hidden; background: rgba(11,10,8,0.55); }
+.eph-landing2 .pasos-media-layer { position: absolute; inset: 0; will-change: clip-path; }
 .eph-landing2 .pasos-media-layer img { width: 100%; height: 100%; object-fit: cover; }
 .eph-landing2 .mac-wrap { width: 100%; height: 100%; background: #0d0b09; display: grid; align-content: center; justify-items: center; gap: 14px; padding: clamp(18px, 2.6vw, 34px); }
 .eph-landing2 .mac-body { width: 100%; max-width: 380px; display: grid; justify-items: center; }
@@ -183,14 +212,14 @@
 }
 
 .eph-landing2 #beneficios { background: var(--bg-light); color: var(--ink); }
-.eph-landing2 .cambia-section { padding: clamp(72px, 12vh, 140px) clamp(22px, 6vw, 92px) clamp(50px, 7vh, 80px); }
-.eph-landing2 .cambia-wrap { max-width: 1120px; margin: 0 auto; display: grid; gap: clamp(36px, 5vw, 58px); }
+.eph-landing2 .cambia-section { padding: clamp(56px, 9vh, 104px) clamp(22px, 6vw, 92px) clamp(40px, 5.5vh, 64px); }
+.eph-landing2 .cambia-wrap { max-width: 1120px; margin: 0 auto; display: grid; gap: clamp(26px, 3.6vw, 42px); }
 .eph-landing2 .cambia-head { display: grid; gap: 14px; }
 .eph-landing2 .cambia-head .eyebrow { font-size: 12px; letter-spacing: 0.14em; color: rgba(23,19,14,0.42); }
 .eph-landing2 .cambia-head h2 { margin: 0; font-weight: 200; font-size: clamp(30px, 4.4vw, 54px); line-height: 1.08; letter-spacing: -0.015em; max-width: 24ch; text-wrap: pretty; }
 .eph-landing2 .cambia-head h2 em { font-family: 'Cormorant Garamond', serif; font-weight: 400; font-style: italic; font-size: 1.12em; color: var(--gold-dark); }
 .eph-landing2 .shifts-list { display: grid; gap: 0; }
-.eph-landing2 .shift-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: clamp(12px, 3vw, 56px); align-items: baseline; padding: clamp(24px, 3vw, 38px) 0; border-top: 1px solid rgba(23,19,14,0.14); }
+.eph-landing2 .shift-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: clamp(10px, 2.4vw, 40px); align-items: baseline; padding: clamp(16px, 2.2vw, 26px) 0; border-top: 1px solid rgba(23,19,14,0.14); }
 .eph-landing2 .shift-row .antes { margin: 0; font-size: 17px; line-height: 1.5; color: rgba(23,19,14,0.6); font-style: italic; max-width: 30ch; }
 .eph-landing2 .shift-row .despues { margin: 0; font-family: 'Cormorant Garamond', serif; font-weight: 400; font-size: clamp(24px, 2.9vw, 34px); line-height: 1.25; max-width: 26ch; text-wrap: pretty; }
 
@@ -219,7 +248,7 @@
   text-align: right;
 }
 
-.eph-landing2 .dia90-section { background: var(--bg-panel); color: var(--cream); padding: clamp(56px, 9vh, 104px) clamp(22px, 6vw, 92px) clamp(80px, 13vh, 150px); }
+.eph-landing2 .dia90-section { background: var(--bg-dark-2); color: var(--cream); padding: clamp(56px, 9vh, 104px) clamp(22px, 6vw, 92px) clamp(80px, 13vh, 150px); }
 .eph-landing2 .dia90-wrap { max-width: 1120px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: clamp(30px, 5vw, 76px); align-items: start; }
 .eph-landing2 .dia90-head { display: grid; gap: 20px; align-content: start; }
 .eph-landing2 .dia90-head .eyebrow { font-size: 12px; letter-spacing: 0.14em; color: rgba(245,241,232,0.4); }
@@ -228,8 +257,10 @@
 .eph-landing2 .dia90-rail-grid { display: grid; grid-template-columns: 2px 1fr; gap: clamp(18px, 2.4vw, 30px); }
 .eph-landing2 .dia90-rail-track { position: relative; background: rgba(245,241,232,0.12); border-radius: 2px; }
 .eph-landing2 .dia90-rail-fill { position: absolute; left: 0; top: 0; width: 100%; height: 25%; background: var(--gold); border-radius: 2px; transition: height 520ms cubic-bezier(0.16,1,0.3,1); }
+.eph-landing2 .rows-hint { display: flex; align-items: center; gap: 6px; margin: 0 0 clamp(10px, 1.6vw, 16px); font-size: 12px; letter-spacing: 0.02em; color: rgba(245,241,232,0.4); }
+.eph-landing2 .rows-hint::before { content: '↳'; color: var(--gold); }
 .eph-landing2 .dia90-rows { display: grid; gap: 0; }
-.eph-landing2 .dia90-row { padding: clamp(16px, 2vw, 22px) 0; border-bottom: 1px solid rgba(245,241,232,0.12); cursor: default; outline-offset: 4px; transition: transform 420ms cubic-bezier(0.16,1,0.3,1), opacity 320ms ease-out; opacity: 0.72; }
+.eph-landing2 .dia90-row { padding: clamp(16px, 2vw, 22px) 0; border-bottom: 1px solid rgba(245,241,232,0.12); cursor: pointer; outline-offset: 4px; transition: transform 420ms cubic-bezier(0.16,1,0.3,1), opacity 320ms ease-out; opacity: 0.72; }
 .eph-landing2 .dia90-row .t { display: block; font-family: 'Cormorant Garamond', serif; font-weight: 400; font-size: clamp(22px, 2.3vw, 27px); line-height: 1.2; color: var(--cream); transition: color 320ms ease-out; }
 .eph-landing2 .dia90-row .d {
   display: block;
@@ -244,7 +275,7 @@
 }
 .eph-landing2 .dia90-row.is-active .d { max-height: 90px; margin-top: 4px; opacity: 1; }
 
-.eph-landing2 .junta-section { padding: clamp(60px, 9vh, 110px) clamp(22px, 6vw, 92px); border-top: 1px solid rgba(245,241,232,0.08); }
+.eph-landing2 .junta-section { background: var(--bg-dark-2); padding: clamp(60px, 9vh, 110px) clamp(22px, 6vw, 92px); border-top: 1px solid rgba(245,241,232,0.08); }
 .eph-landing2 .junta-wrap { max-width: 1120px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: clamp(32px, 5vw, 70px); align-items: start; }
 .eph-landing2 .junta-left { display: grid; gap: clamp(28px, 3.4vw, 44px); align-content: start; }
 .eph-landing2 .junta-left h2 { margin: 0; font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: clamp(30px, 4.2vw, 48px); line-height: 1.08; max-width: 20ch; text-wrap: pretty; }
@@ -253,7 +284,7 @@
 .eph-landing2 .junta-bar { flex: 1; min-width: 0; border-radius: 2px 2px 0 0; background: rgba(201,166,107,0.3); transition: height 620ms cubic-bezier(0.16,1,0.3,1), background 480ms ease-out; }
 .eph-landing2 .junta-pie { font-size: 13px; line-height: 1.6; color: rgba(245,241,232,0.4); max-width: 40ch; }
 .eph-landing2 .junta-rows { display: grid; gap: 0; }
-.eph-landing2 .junta-row { padding: 22px 0; border-top: 1px solid rgba(255,255,255,0.07); cursor: default; outline-offset: 4px; opacity: 0.66; transition: opacity 320ms ease-out, border-color 320ms ease-out; }
+.eph-landing2 .junta-row { padding: 22px 0; border-top: 1px solid rgba(255,255,255,0.07); cursor: pointer; outline-offset: 4px; opacity: 0.66; transition: opacity 320ms ease-out, border-color 320ms ease-out; }
 .eph-landing2 .junta-row .t { display: block; font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: clamp(23px, 2.4vw, 28px); line-height: 1.2; color: var(--cream); transition: color 320ms ease-out; }
 .eph-landing2 .junta-row .x {
   display: block;
@@ -269,26 +300,90 @@
 }
 .eph-landing2 .junta-row.is-active .x { max-height: 170px; margin-top: 4px; opacity: 1; }
 
+/* Sección clara de extremo a extremo, pero subiste que se estaba volviendo
+   demasiado grande/dominante — padding recortado y card compacta otra vez.
+   La idea es un corte SUTIL en el color, no una sección tan alta como las
+   de al lado. */
+/* Todo el ancho de la sección toma el mismo tono cálido que antes vivía
+   solo dentro de la card — la card ahora necesita destacar por SU CUENTA
+   (blanco/crema claro contra este fondo dorado), no por ser "lo único
+   claro" alrededor. */
 .eph-landing2 .dif-section {
-  padding: clamp(56px, 9vh, 104px) clamp(22px, 6vw, 92px);
-  background: linear-gradient(180deg, var(--bg-dark-2) 0%, var(--bg-dark) 100%);
-  border-top: 1px solid rgba(245,241,232,0.08);
+  padding: clamp(28px, 4vh, 48px) clamp(22px, 6vw, 92px);
+  background: linear-gradient(165deg, #FBF3E2 0%, #F3E4C4 55%, #FBF3E2 100%);
+  color: var(--ink);
+  border-top: 1px solid rgba(140,106,47,0.18);
 }
 .eph-landing2 .dif-wrap { max-width: 1120px; margin: 0 auto; display: grid; }
-.eph-landing2 .dif-outer { width: 100%; max-width: 900px; margin: 0 auto; }
-.eph-landing2 .dif-card { border: 1px solid rgba(201,166,107,0.22); background: rgba(201,166,107,0.04); border-radius: 16px; padding: clamp(24px, 3.4vw, 34px); display: grid; gap: clamp(18px, 2.4vw, 26px); }
-.eph-landing2 .dif-card .eyebrow { display: block; text-align: center; font-size: 12px; letter-spacing: 0.18em; color: rgba(201,166,107,0.75); }
-.eph-landing2 .dif-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
-.eph-landing2 .dif-item { padding: 0 22px; border-left: 1px solid rgba(201,166,107,0.2); }
-.eph-landing2 .dif-item:first-child { border-left: 0; padding-left: 0; }
-.eph-landing2 .dif-text { margin: 0; font-size: 14px; line-height: 1.5; color: rgba(245,241,232,0.7); }
-@media (max-width: 640px) {
-  .eph-landing2 .dif-grid { grid-template-columns: 1fr; gap: 18px; }
-  .eph-landing2 .dif-item { border-left: 0; padding: 0; }
-  .eph-landing2 .dif-item:not(:first-child) { border-top: 1px solid rgba(201,166,107,0.2); padding-top: 18px; }
+.eph-landing2 .dif-outer { width: 100%; max-width: 480px; margin: 0 auto; }
+/* Blanca y nítida a propósito — ahora que TODA la sección tomó el tono
+   cálido que antes solo tenía la card, esta necesita contrastar por sí
+   sola (clara sobre dorado) en vez de ser "la única cosa clara" del
+   entorno oscuro de antes. Borde y sombra más marcados para que se sienta
+   como una pieza que flota, no una más. */
+.eph-landing2 .dif-card {
+  position: relative;
+  overflow: hidden;
+  background: var(--cream);
+  border: 2px solid var(--gold-dark);
+  border-radius: 18px;
+  padding: clamp(18px, 2.4vw, 24px);
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  text-align: center;
+  box-shadow: 0 22px 44px -16px rgba(23,19,14,0.4), 0 0 0 6px rgba(255,255,255,0.5);
+}
+.eph-landing2 .dif-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 10%;
+  right: 10%;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: linear-gradient(90deg, transparent 0%, var(--gold-dark) 50%, transparent 100%);
+}
+.eph-landing2 .dif-card-head { position: relative; display: grid; gap: 12px; justify-items: center; }
+.eph-landing2 .dif-card .eyebrow { display: block; font-size: 12px; letter-spacing: 0.22em; color: var(--gold-dark); font-weight: 500; }
+.eph-landing2 .dif-dots { display: flex; gap: 6px; }
+.eph-landing2 .dif-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(140,106,47,0.25); transition: background 300ms ease-out, transform 300ms ease-out; }
+.eph-landing2 .dif-dot.is-active { background: var(--gold-dark); transform: scale(1.3); }
+/* Un solo texto a la vez, cross-fade — el resto del array (ver DIF en
+   content.ts) rota vía useAutoRotate, mismo hook que ya usaba la card de
+   estadísticas del hero. min-height fijo evita que la card "salte" de alto
+   cuando el texto activo es más corto o más largo. */
+.eph-landing2 .dif-rotator { position: relative; width: 100%; max-width: 38ch; min-height: 3.2em; }
+/* Sin transition a propósito: con opacity animada, mientras el que sale
+   todavía no llega a 0 y el que entra ya pasó de 0, los dos quedan
+   parcialmente visibles a la vez — dos párrafos de largo distinto
+   transparentándose uno sobre el otro, exactamente el traslape que ya
+   habíamos resuelto en .paso-block con el mismo mecanismo. Acá el cambio
+   es de golpe: nunca hay dos textos a medio mostrar al mismo tiempo. */
+.eph-landing2 .dif-text {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 400;
+  font-style: italic;
+  font-size: clamp(16px, 2vw, 20px);
+  line-height: 1.5;
+  color: var(--ink);
+  opacity: 0;
+}
+.eph-landing2 .dif-text.is-active { opacity: 1; }
+.eph-landing2 .dif-progress { position: relative; width: 100%; max-width: 140px; height: 2px; background: rgba(140,106,47,0.18); border-radius: 999px; overflow: hidden; }
+.eph-landing2 .dif-progress-fill { display: block; height: 100%; width: 100%; background: var(--gold-dark); transform-origin: left; animation-name: dif-fill; animation-timing-function: linear; }
+@keyframes dif-fill {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .eph-landing2 .dif-progress-fill { animation: none; transform: scaleX(1); }
 }
 
-.eph-landing2 section.llevarlo { padding: clamp(74px, 12vh, 140px) clamp(22px, 6vw, 92px) clamp(50px, 8vh, 90px); }
+.eph-landing2 section.llevarlo { background: var(--bg-dark); padding: clamp(74px, 12vh, 140px) clamp(22px, 6vw, 92px) clamp(50px, 8vh, 90px); }
 .eph-landing2 .llevarlo-wrap { max-width: 1120px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: clamp(38px, 6vw, 84px); align-items: start; }
 .eph-landing2 .llevarlo-copy { display: grid; gap: 22px; align-content: start; }
 .eph-landing2 .llevarlo-copy h2 { margin: 0; font-weight: 200; font-size: clamp(30px, 4.4vw, 52px); line-height: 1.08; letter-spacing: -0.015em; max-width: 18ch; text-wrap: pretty; }
@@ -310,7 +405,7 @@
 .eph-landing2 .submit-btn { justify-self: start; margin-top: 4px; font-size: 15px; letter-spacing: 0.04em; background: var(--gold); color: #0b0a08; border: 0; border-radius: 999px; padding: 17px 32px; cursor: pointer; transition: background 180ms ease-out; font-family: inherit; }
 .eph-landing2 .submit-btn:hover { background: var(--gold-light); }
 
-.eph-landing2 footer.site-footer { border-top: 1px solid rgba(255,255,255,0.07); padding: clamp(48px, 7vh, 76px) clamp(22px, 6vw, 92px) 34px; }
+.eph-landing2 footer.site-footer { background: var(--bg-dark); border-top: 1px solid rgba(255,255,255,0.07); padding: clamp(48px, 7vh, 76px) clamp(22px, 6vw, 92px) 34px; }
 .eph-landing2 .footer-grid { max-width: 1120px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); gap: clamp(34px, 5vw, 64px); align-items: start; }
 .eph-landing2 .footer-brand { display: grid; gap: 18px; align-content: start; max-width: 34ch; }
 .eph-landing2 .footer-brand .brandline { display: flex; align-items: center; gap: 13px; }
