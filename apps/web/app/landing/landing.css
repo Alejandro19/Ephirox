@@ -22,10 +22,28 @@
 
 @keyframes eph-ring { from { opacity: 0; transform: rotate(-14deg) scale(0.94); } to { opacity: 1; transform: none; } }
 @keyframes eph-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+/* "Respiración" continua del anillo del hero — sutil, sobre el SVG hijo
+   (no sobre .hero-ring, que ya usa su propio `animation` para la entrada
+   una sola vez vía .eph-ring; poner otra animación en el mismo elemento
+   pisaría esa). Referencia: el arco de fondo de fountainlife.com se mueve
+   apenas de forma continua, no es estático. */
+/* Patrón de respiración real (inhala-sostiene-exhala), no un simple
+   sube-baja continuo — sobre 17s: inhala hasta el 29% (~5s), se queda
+   quieto en el pico hasta el 59% (~5s más de sostenido), exhala el resto
+   (~7s) de vuelta al inicio. Los tiempos exactos no importan, la
+   estructura de 3 fases sí. */
+@keyframes eph-ring-breathe {
+  0% { transform: scale(1) rotate(0deg); }
+  29% { transform: scale(1.045) rotate(1.2deg); }
+  59% { transform: scale(1.045) rotate(1.2deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+.eph-landing2 .hero-ring svg { transform-origin: 50% 50%; animation: eph-ring-breathe 17s ease-in-out infinite; }
 .eph-landing2 .eph-a { opacity: 0; animation: eph-rise 900ms cubic-bezier(0.16,1,0.3,1) forwards; }
 .eph-landing2 .eph-ring { opacity: 0; animation: eph-ring 1500ms cubic-bezier(0.16,1,0.3,1) 80ms forwards; }
 @media (prefers-reduced-motion: reduce) {
   .eph-landing2 .eph-a, .eph-landing2 .eph-ring { animation: none; opacity: 1; transform: none; }
+  .eph-landing2 .hero-ring svg { animation: none; }
 }
 
 .eph-landing2 .reveal-on-scroll {
@@ -120,7 +138,11 @@
 /* PRUEBA: mismo gris translúcido con blur que .hero-stat-card, en vez de un
    café sólido — así el "telón" que se asoma entre cards durante el scroll
    también queda translúcido en vez de un bloque de color opaco. */
-.eph-landing2 section.pasos-sticky { position: relative; height: 300vh; background: linear-gradient(165deg, rgba(24,21,17,0.9) 0%, rgba(11,10,8,0.9) 100%); backdrop-filter: blur(12px); padding: 0 clamp(22px, 6vw, 92px); }
+/* 600vh en vez de 300vh (200vh por paso en vez de 100vh) — el efecto está
+   atado 1:1 a la posición de scroll (ver PasosSticky.tsx), así que
+   "más lento" acá significa más distancia de scroll por paso, no una
+   animación por tiempo. */
+.eph-landing2 section.pasos-sticky { position: relative; height: 600vh; background: linear-gradient(165deg, rgba(24,21,17,0.9) 0%, rgba(11,10,8,0.9) 100%); backdrop-filter: blur(12px); padding: 0 clamp(22px, 6vw, 92px); }
 .eph-landing2 .pasos-inner { position: sticky; top: 0; height: 100vh; display: grid; align-content: center; overflow: hidden; }
 .eph-landing2 .pasos-grid { position: relative; max-width: 1120px; width: 100%; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: clamp(30px, 5vw, 80px); align-items: center; }
 /* El piso subió de 230 a 280px: en viewports más cortos (ventana no
@@ -216,12 +238,12 @@
 .eph-landing2 .cambia-wrap { max-width: 1120px; margin: 0 auto; display: grid; gap: clamp(26px, 3.6vw, 42px); }
 .eph-landing2 .cambia-head { display: grid; gap: 14px; }
 .eph-landing2 .cambia-head .eyebrow { font-size: 12px; letter-spacing: 0.14em; color: rgba(23,19,14,0.42); }
-.eph-landing2 .cambia-head h2 { margin: 0; font-weight: 200; font-size: clamp(30px, 4.4vw, 54px); line-height: 1.08; letter-spacing: -0.015em; max-width: 24ch; text-wrap: pretty; }
+.eph-landing2 .cambia-head h2 { margin: 0; font-weight: 200; font-size: clamp(26px, 3.6vw, 42px); line-height: 1.12; letter-spacing: -0.015em; max-width: 24ch; text-wrap: pretty; }
 .eph-landing2 .cambia-head h2 em { font-family: 'Cormorant Garamond', serif; font-weight: 400; font-style: italic; font-size: 1.12em; color: var(--gold-dark); }
 .eph-landing2 .shifts-list { display: grid; gap: 0; }
 .eph-landing2 .shift-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: clamp(10px, 2.4vw, 40px); align-items: baseline; padding: clamp(16px, 2.2vw, 26px) 0; border-top: 1px solid rgba(23,19,14,0.14); }
-.eph-landing2 .shift-row .antes { margin: 0; font-size: 17px; line-height: 1.5; color: rgba(23,19,14,0.6); font-style: italic; max-width: 30ch; }
-.eph-landing2 .shift-row .despues { margin: 0; font-family: 'Cormorant Garamond', serif; font-weight: 400; font-size: clamp(24px, 2.9vw, 34px); line-height: 1.25; max-width: 26ch; text-wrap: pretty; }
+.eph-landing2 .shift-row .antes { margin: 0; font-size: 15px; line-height: 1.5; color: rgba(23,19,14,0.6); font-style: italic; max-width: 30ch; }
+.eph-landing2 .shift-row .despues { margin: 0; font-family: 'Cormorant Garamond', serif; font-weight: 400; font-size: clamp(20px, 2.4vw, 28px); line-height: 1.3; max-width: 26ch; text-wrap: pretty; }
 
 .eph-landing2 .divider-banner { position: relative; height: clamp(220px, 34vw, 420px); overflow: hidden; }
 .eph-landing2 .divider-banner img { object-position: 50% 28%; }
@@ -236,6 +258,15 @@
   align-items: flex-start;
   justify-content: flex-end;
   padding: clamp(28px, 4vw, 44px) clamp(24px, 6vw, 92px) 0;
+}
+/* En escritorio "Redefining limits." quedaba prácticamente pegado a la
+   cabeza de la persona de la derecha — menos padding-top acá (no en
+   mobile, que ya estaba bien) lo sube más cerca del borde superior del
+   banner, donde solo hay ventana/pared detrás. padding-right más chico lo
+   corre más hacia el borde derecho. Tiene que ir DESPUÉS de la regla base
+   de arriba para ganarle al padding del clamp. */
+@media (min-width: 769px) {
+  .eph-landing2 .divider-banner-text { padding-top: 14px; padding-right: clamp(12px, 3vw, 40px); }
 }
 .eph-landing2 .divider-banner-text p {
   margin: 0;
@@ -304,27 +335,23 @@
    demasiado grande/dominante — padding recortado y card compacta otra vez.
    La idea es un corte SUTIL en el color, no una sección tan alta como las
    de al lado. */
-/* Todo el ancho de la sección toma el mismo tono cálido que antes vivía
-   solo dentro de la card — la card ahora necesita destacar por SU CUENTA
-   (blanco/crema claro contra este fondo dorado), no por ser "lo único
-   claro" alrededor. */
+/* Vuelta al criterio original: sección oscura (mismo tono que
+   .junta-section, var(--bg-dark-2)) y la card se queda con el degradado
+   dorado-crema que antes tenía la sección entera — ahora la card destaca
+   por ser la única cosa cálida/clara sobre un fondo oscuro otra vez, en
+   vez de competir por contraste contra un fondo igual de claro. */
 .eph-landing2 .dif-section {
   padding: clamp(28px, 4vh, 48px) clamp(22px, 6vw, 92px);
-  background: linear-gradient(165deg, #FBF3E2 0%, #F3E4C4 55%, #FBF3E2 100%);
-  color: var(--ink);
-  border-top: 1px solid rgba(140,106,47,0.18);
+  background: var(--bg-dark-2);
+  color: var(--cream);
+  border-top: 1px solid rgba(245,241,232,0.08);
 }
 .eph-landing2 .dif-wrap { max-width: 1120px; margin: 0 auto; display: grid; }
 .eph-landing2 .dif-outer { width: 100%; max-width: 480px; margin: 0 auto; }
-/* Blanca y nítida a propósito — ahora que TODA la sección tomó el tono
-   cálido que antes solo tenía la card, esta necesita contrastar por sí
-   sola (clara sobre dorado) en vez de ser "la única cosa clara" del
-   entorno oscuro de antes. Borde y sombra más marcados para que se sienta
-   como una pieza que flota, no una más. */
 .eph-landing2 .dif-card {
   position: relative;
   overflow: hidden;
-  background: var(--cream);
+  background: linear-gradient(165deg, #FBF3E2 0%, #F3E4C4 55%, #FBF3E2 100%);
   border: 2px solid var(--gold-dark);
   border-radius: 18px;
   padding: clamp(18px, 2.4vw, 24px);
@@ -332,7 +359,7 @@
   gap: 10px;
   justify-items: center;
   text-align: center;
-  box-shadow: 0 22px 44px -16px rgba(23,19,14,0.4), 0 0 0 6px rgba(255,255,255,0.5);
+  box-shadow: 0 22px 44px -16px rgba(0,0,0,0.55), 0 0 0 1px rgba(201,166,107,0.18);
 }
 .eph-landing2 .dif-card::before {
   content: '';

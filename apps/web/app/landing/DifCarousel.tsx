@@ -13,7 +13,7 @@ export function DifCarousel() {
     <ScrollReveal className="dif-outer" threshold={0.35} distance={12}>
       <div className="dif-card">
         <div className="dif-card-head">
-          <span className="eyebrow">CÓMO OPERA EL SISTEMA</span>
+          <span className="eyebrow">¿CÓMO OPERA EL SISTEMA?</span>
           <div className="dif-dots">
             {DIF.map((txt, i) => (
               <span key={txt} className={`dif-dot${i === active ? ' is-active' : ''}`} />
