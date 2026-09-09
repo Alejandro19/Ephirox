@@ -40,8 +40,8 @@ export function LeadForm() {
   if (enviado) {
     return (
       <div className="form-done">
-        <span className="headline">{nombre.split(' ')[0] || 'Listo'}, preparamos tu propuesta interna.</span>
-        <p>Te escribimos en 48 horas con el material listo para presentar, no con un correo de ventas.</p>
+        <span className="headline">{nombre.split(' ')[0] || 'Listo'}, gracias por tu interés en Ephirox.</span>
+        <p>En las próximas 48 horas te llamamos — un par de preguntas para entender el contexto de tu empresa — y con eso armamos la propuesta oficial.</p>
       </div>
     );
   }
