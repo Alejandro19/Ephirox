@@ -34,11 +34,13 @@
    estructura de 3 fases sí. */
 @keyframes eph-ring-breathe {
   0% { transform: scale(1) rotate(0deg); }
-  29% { transform: scale(1.045) rotate(1.2deg); }
-  59% { transform: scale(1.045) rotate(1.2deg); }
+  28% { transform: scale(1.045) rotate(1.2deg); }
+  44% { transform: scale(1.045) rotate(1.2deg); }
   100% { transform: scale(1) rotate(0deg); }
 }
-.eph-landing2 .hero-ring svg { transform-origin: 50% 50%; animation: eph-ring-breathe 17s ease-in-out infinite; }
+/* Inhala ~5s, sostiene ~3s (recortado del ~5s anterior), exhala ~10s —
+   total 18s. */
+.eph-landing2 .hero-ring svg { transform-origin: 50% 50%; animation: eph-ring-breathe 18s ease-in-out infinite; }
 .eph-landing2 .eph-a { opacity: 0; animation: eph-rise 900ms cubic-bezier(0.16,1,0.3,1) forwards; }
 .eph-landing2 .eph-ring { opacity: 0; animation: eph-ring 1500ms cubic-bezier(0.16,1,0.3,1) 80ms forwards; }
 @media (prefers-reduced-motion: reduce) {
