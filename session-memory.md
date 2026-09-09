@@ -944,13 +944,15 @@ Pedido explícito con referencia a fountainlife.com (un arco de fondo que se mue
 
 **Detalle técnico que vale la pena recordar:** la animación de respiración se aplicó al `<svg>` HIJO de `.hero-ring`, no al div `.hero-ring` en sí — ese div ya tiene su propia `animation` (una sola vez, al cargar la página, vía la clase `.eph-ring`) para la entrada con fade+rotate+scale. Poner una segunda animación en el mismo elemento la habría reemplazado (la propiedad `animation` no se combina sola entre selectores distintos que apliquen al mismo elemento). Mismo patrón a tener en cuenta si se anima cualquier otro elemento que ya tenga una animación de entrada existente en este archivo.
 
+**Dos vueltas más de afinado del ritmo, después de que Alejandro lo probó él mismo (no solo verificado por CDP):** exhalada más larga (~7s→~10s, ciclo a 20s) y, en la vuelta siguiente, sostenido más corto (~5s→~3s, ciclo final a **18s**: inhala~5s / sostiene~3s / exhala~10s). Cada ajuste se reverificó muestreando `getComputedStyle().transform` en varios puntos del tiempo antes de darlo por bueno — confirma que el patrón de "probar con la matemática, no solo mirar el CSS" sigue siendo la única forma confiable de verificar timing de animación en este proyecto sin un navegador con GUI a mano.
+
 ### 6. Otro corte del servidor de dev
 
 El servidor de `apps/web` (`next dev`, corriendo desde el día anterior) dejó de responder a mitad de esta sesión (`curl` colgado indefinido) — mismo síntoma que otras veces, sin causa raíz identificada más allá de "llevaba mucho tiempo corriendo". Se mató y se relanzó limpio, sin pérdida de nada. Si vuelve a pasar seguido, podría valer la pena investigar por qué (memory leak del propio `next dev`, o algo del entorno) en vez de seguir reiniciando sin más.
 
 ### 7. Commit y push
 
-Un commit, pusheado directo a `origin/main`: `6cef72d` (2 archivos, `DifCarousel.tsx` + `landing.css`).
+Tres commits, pusheados directo a `origin/main`: `6cef72d` (el pulido grande — dif-card, banner, tamaños, cadencia del scroll, primera versión de la respiración), `eda35ad` (este resumen en `session-memory.md`), y `d00df74` (las dos vueltas de afinado del ritmo de respiración, ya con feedback real de Alejandro probándolo).
 
 ## Próximas actividades — Siguiente sesión (actualizada 2026-09-03, 2026-09-04)
 
@@ -1052,10 +1054,10 @@ Un commit, pusheado directo a `origin/main`: `6cef72d` (2 archivos, `DifCarousel
 - **Panel de terapeuta:** confirmar visualmente que el toggle claro/oscuro nuevo se ve bien en `/therapist` con una cuenta real (`terapeuta.demo@latribu.com`), y que el login ya no confunde con el de clientes al entrar sin sesión.
 - **Cortina de scroll de "Cómo lo medimos" y card de "Cómo Opera el Sistema":** todo lo de esta sesión se verificó con scroll simulado vía CDP (headless), nunca con un dedo/mouse real en un navegador con GUI. Vale la pena que Alejandro lo pruebe scrolleando de verdad, rápido y lento, antes de darlo por cerrado del todo.
 
-### Actividad 24 — Confirmar la sensación real de la respiración del anillo del hero y la nueva cadencia del scroll (nueva, 2026-09-09)
+### Actividad 24 — Confirmar la nueva cadencia del scroll de la landing (actualizada 2026-09-09)
 
-- **Respiración del anillo (`.hero-ring svg`):** verificada matemáticamente (mismo valor de `transform` sostenido varios segundos en el pico), pero nunca vista "sintiéndola" en un navegador real por un humano — confirmar que el ritmo de 5s inhala / 5s sostiene / 7s exhala se siente bien, o si Alejandro prefiere otra proporción.
-- **`height:600vh` de `.pasos-sticky`:** duplicar la distancia de scroll resuelve "cambia muy rápido", pero podría sentirse ahora demasiado lento/pesado de scrollear — pedir confirmación explícita antes de asumir que el número quedó bien.
+- **Respiración del anillo (`.hero-ring svg`):** ✅ resuelta — Alejandro la probó en real y pidió dos ajustes de ritmo (exhalada más larga, después sostenido más corto), ambos aplicados. Ciclo final: inhala~5s / sostiene~3s / exhala~10s, total 18s.
+- **`height:600vh` de `.pasos-sticky`:** duplicar la distancia de scroll resuelve "cambia muy rápido", pero nunca se confirmó con Alejandro scrolleando de verdad si el número final se siente bien (ni muy lento ni muy rápido) — pedir confirmación explícita.
 - El servidor de dev de `apps/web` se colgó otra vez a mitad de sesión (ver resumen de esta sesión, punto 6) — si vuelve a pasar seguido vale la pena investigar la causa en vez de solo reiniciar.
 
 ---
