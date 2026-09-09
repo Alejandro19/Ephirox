@@ -1,6 +1,6 @@
 # session-memory.md
 
-> **Última actualización:** 2026-09-08
+> **Última actualización:** 2026-09-09
 > **Propósito:** Resumen ejecutivo por sesión (orden cronológico) y plan de continuidad inmediato para la siguiente sesión.
 
 ---
@@ -918,6 +918,40 @@ El fondo pasó por varias vueltas de diseño en vivo con Alejandro iterando sobr
 
 Sin Chrome DevTools MCP disponible: Chrome headless (`--headless=new --remote-debugging-port=NNNN`) + un script Node corto por WebSocket hablando el protocolo CDP directo (`Page.navigate`, `Runtime.evaluate`, `Input.dispatchMouseEvent` con `type:'mouseWheel'` para simular scroll continuo real, `Page.captureScreenshot`) — más preciso que `--screenshot` de una sola pasada porque permite scrollear, esperar, y capturar en el punto exacto de una transición. `window.scrollTo()` vía `Runtime.evaluate` sin disparar además un evento `scroll` sintético no siempre dispara el handler `onScroll` de React de forma confiable en este entorno — usar `Input.dispatchMouseEvent` (wheel real) para cualquier prueba que dependa de que el scroll handler se ejecute.
 
+## Resumen Ejecutivo — Sesión 2026-09-09 — Pulido final de la landing: dif-card, banner de junta, tamaños de texto, cadencia del scroll y "respiración" del hero
+
+Sesión corta de ajustes finos sobre la landing, con Alejandro iterando en vivo sobre capturas reales del navegador (patrón ya documentado en la sesión anterior — sigue aplicando).
+
+### 1. Última vuelta de la card "¿Cómo Opera el Sistema?"
+
+Después de varias iteraciones en la sesión previa (sección oscura → clara → degradado dorado), terminó así: la SECCIÓN completa toma el mismo café oscuro que `.junta-section` (`var(--bg-dark-2)`), y la CARD se queda con el degradado dorado-crema que antes tenía la sección entera (`linear-gradient(165deg, #FBF3E2, #F3E4C4, #FBF3E2)`) — vuelta al criterio original de "card clara destaca sobre fondo oscuro", pero con la card más rica visualmente que la primera versión (blanca lisa). El eyebrow pasó a ser pregunta real: "¿CÓMO OPERA EL SISTEMA?" (con los dos signos, no solo el de cierre).
+
+### 2. "Redefining limits." seguía encima de una cabeza en desktop (segunda vuelta)
+
+El fix de la sesión anterior no alcanzó — confirmado reproduciendo a 1100px de ancho (no a 1440px, donde sí había espacio de sobra) que el texto quedaba pegado a la cabeza de la persona de la derecha. Causa: el `padding-top` de `.divider-banner-text` ya estaba en el máximo de su `clamp` (44px) y no podía subir más por ahí. Se agregó un override específico de desktop (`@media (min-width:769px)`, **después** de la regla base para poder pisar el `clamp`) bajando `padding-top` a 14px y `padding-right` a `clamp(12px,3vw,40px)` (antes hasta 92px) — el texto quedó más arriba y más a la derecha, mobile intacto.
+
+### 3. Tamaños de texto reducidos, dos rondas
+
+"El control que creías haber perdido, vuelve." bajó de `clamp(30px,4.4vw,54px)` a `clamp(26px,3.6vw,42px)`, y después las filas antes/después de esa misma sección también (`.antes` 17px→15px, `.despues` de `clamp(24-34px)` a `clamp(20-28px)`) — pedido explícito de que se lea "de una sola mirada".
+
+### 4. Cadencia de la cortina de "Cómo lo medimos"
+
+Reportado como "cambia muy rápido" al scrollear. Como el efecto está atado 1:1 a la posición de scroll (no a una animación por tiempo, ver sesión anterior), "más lento" se resuelve con más distancia de scroll, no con curvas de easing: `section.pasos-sticky` pasó de `height:300vh` a `600vh` (de 100vh a 200vh por paso) — confirmado con `getBoundingClientRect()` real que la altura efectivamente se duplicó (2439px → 4878px).
+
+### 5. Anillo del hero con "respiración" real (inhala-sostiene-exhala)
+
+Pedido explícito con referencia a fountainlife.com (un arco de fondo que se mueve sutilmente) y a un ejercicio de regulación del sistema nervioso (inhalar-sostener-exhalar). Primer intento fue un `scale`/`rotate` sinusoidal continuo (0%→50%→100%, sin pausa) — Alejandro pidió que se sintiera como una respiración real, con un tramo de quietud en el pico, no un sube-baja constante. Segundo intento con keyframes de 4 paradas sobre un ciclo de 17s (`0% inicio, 29% pico, 59% mismo pico — ahí el "sostenido", 100% vuelta al inicio`) — verificado con `getComputedStyle().transform` muestreado en 5 puntos del tiempo, confirmando el mismo valor exacto de matriz durante los ~5s de sostenido en el pico.
+
+**Detalle técnico que vale la pena recordar:** la animación de respiración se aplicó al `<svg>` HIJO de `.hero-ring`, no al div `.hero-ring` en sí — ese div ya tiene su propia `animation` (una sola vez, al cargar la página, vía la clase `.eph-ring`) para la entrada con fade+rotate+scale. Poner una segunda animación en el mismo elemento la habría reemplazado (la propiedad `animation` no se combina sola entre selectores distintos que apliquen al mismo elemento). Mismo patrón a tener en cuenta si se anima cualquier otro elemento que ya tenga una animación de entrada existente en este archivo.
+
+### 6. Otro corte del servidor de dev
+
+El servidor de `apps/web` (`next dev`, corriendo desde el día anterior) dejó de responder a mitad de esta sesión (`curl` colgado indefinido) — mismo síntoma que otras veces, sin causa raíz identificada más allá de "llevaba mucho tiempo corriendo". Se mató y se relanzó limpio, sin pérdida de nada. Si vuelve a pasar seguido, podría valer la pena investigar por qué (memory leak del propio `next dev`, o algo del entorno) en vez de seguir reiniciando sin más.
+
+### 7. Commit y push
+
+Un commit, pusheado directo a `origin/main`: `6cef72d` (2 archivos, `DifCarousel.tsx` + `landing.css`).
+
 ## Próximas actividades — Siguiente sesión (actualizada 2026-09-03, 2026-09-04)
 
 ### Actividad 1 — Confirmar que el login desde el celular ya funciona
@@ -1017,6 +1051,12 @@ Sin Chrome DevTools MCP disponible: Chrome headless (`--headless=new --remote-de
 - **`/admin/leads` nunca se probó logueado como admin real** (solo se verificó por curl con un JWT firmado a mano) — entrar con `dev-admin@latribu.test` y confirmar que la tabla carga, que cambiar el estado de un lead persiste, y que el filtro "Abiertos/Todos" funciona.
 - **Panel de terapeuta:** confirmar visualmente que el toggle claro/oscuro nuevo se ve bien en `/therapist` con una cuenta real (`terapeuta.demo@latribu.com`), y que el login ya no confunde con el de clientes al entrar sin sesión.
 - **Cortina de scroll de "Cómo lo medimos" y card de "Cómo Opera el Sistema":** todo lo de esta sesión se verificó con scroll simulado vía CDP (headless), nunca con un dedo/mouse real en un navegador con GUI. Vale la pena que Alejandro lo pruebe scrolleando de verdad, rápido y lento, antes de darlo por cerrado del todo.
+
+### Actividad 24 — Confirmar la sensación real de la respiración del anillo del hero y la nueva cadencia del scroll (nueva, 2026-09-09)
+
+- **Respiración del anillo (`.hero-ring svg`):** verificada matemáticamente (mismo valor de `transform` sostenido varios segundos en el pico), pero nunca vista "sintiéndola" en un navegador real por un humano — confirmar que el ritmo de 5s inhala / 5s sostiene / 7s exhala se siente bien, o si Alejandro prefiere otra proporción.
+- **`height:600vh` de `.pasos-sticky`:** duplicar la distancia de scroll resuelve "cambia muy rápido", pero podría sentirse ahora demasiado lento/pesado de scrollear — pedir confirmación explícita antes de asumir que el número quedó bien.
+- El servidor de dev de `apps/web` se colgó otra vez a mitad de sesión (ver resumen de esta sesión, punto 6) — si vuelve a pasar seguido vale la pena investigar la causa en vez de solo reiniciar.
 
 ---
 
