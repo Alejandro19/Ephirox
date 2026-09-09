@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import Isotipo from '../ui/Isotipo';
+import ThemeToggle from '../layout/ThemeToggle';
 import { THERAPIST_NAV, type TherapistModuleKey } from './therapist-nav';
 
 const COLLAPSE_BREAKPOINT = 1280;
@@ -112,7 +113,9 @@ export default function TherapistTopbar({
           })}
         </nav>
 
-        <div className="therapist-topbar-actions" style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, marginLeft: 'auto' }}>
+        <div className="therapist-topbar-actions" style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0, marginLeft: 'auto' }}>
+          <ThemeToggle />
+          <span style={{ width: 1, height: 20, background: 'var(--eph-line-2)', margin: '0 2px' }} />
           <div ref={accountRef} style={{ position: 'relative' }}>
             <button
               onClick={() => setAccountOpen((v) => !v)}
@@ -189,9 +192,14 @@ export default function TherapistTopbar({
           display: 'flex', flexDirection: 'column', gap: 4,
         }}
       >
-        <span className="font-display" style={{ fontSize: 17, textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--eph-text)', marginBottom: 16 }}>
-          Ephirox
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+          <span className="font-display" style={{ fontSize: 17, textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--eph-text)' }}>
+            Ephirox
+          </span>
+          {/* Tema vive acá porque .therapist-topbar-actions (donde vive en
+              desktop) se oculta entero en mobile. */}
+          <ThemeToggle />
+        </div>
         {THERAPIST_NAV.map((item) => {
           const active = activeModule === item.key;
           return (

@@ -62,7 +62,12 @@ export function middleware(request: NextRequest) {
     request.headers.get("Authorization")?.replace("Bearer ", "");
 
   if (!token) {
-    const loginUrl = new URL("/login", request.url);
+    // Sin esto, entrar sin sesión a /therapist rebotaba al login de
+    // clientes — un terapeuta que escribía bien su contraseña ahí recibía
+    // "Credenciales incorrectas" porque ese formulario pega contra
+    // /api/auth/login (tabla clients), nunca contra /api/auth/therapist/login.
+    const isTherapistPath = pathname === "/therapist" || pathname.startsWith("/therapist/");
+    const loginUrl = new URL(isTherapistPath ? "/therapist-login" : "/login", request.url);
     // Se preserva también el query string (no solo el pathname) — sin esto,
     // un cliente que tapea el sticker NFC (/training?m=entrenamiento&a=confirmar)
     // con la sesión vencida perdía la acción pendiente al pasar por /login.
