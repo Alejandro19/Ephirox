@@ -41,14 +41,13 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
 }
 .eph-login-mark .eph-login-ring {
   width: clamp(76px, 9vw, 104px) !important;
   height: clamp(76px, 9vw, 104px) !important;
 }
 .eph-login-wordmark {
-  margin: 0;
+  margin: 18px 0 0;
   font-weight: 300;
   font-size: clamp(28px, 3.6vw, 40px);
   letter-spacing: 0.18em;
@@ -56,7 +55,9 @@
   color: #fbf8f1;
 }
 .eph-login-tagline {
-  margin: 0;
+  /* Pegado al wordmark a propósito (piden que se lea como un solo bloque,
+     no dos líneas sueltas) — separado del wordmark, no de .eph-login-mark. */
+  margin: 4px 0 0;
   font-style: italic;
   font-weight: 500;
   font-size: clamp(17px, 2vw, 21px);
