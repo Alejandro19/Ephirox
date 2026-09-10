@@ -1,6 +1,6 @@
 # session-memory.md
 
-> **Última actualización:** 2026-09-09
+> **Última actualización:** 2026-09-10
 > **Propósito:** Resumen ejecutivo por sesión (orden cronológico) y plan de continuidad inmediato para la siguiente sesión.
 
 ---
@@ -954,6 +954,48 @@ El servidor de `apps/web` (`next dev`, corriendo desde el día anterior) dejó d
 
 Tres commits, pusheados directo a `origin/main`: `6cef72d` (el pulido grande — dif-card, banner, tamaños, cadencia del scroll, primera versión de la respiración), `eda35ad` (este resumen en `session-memory.md`), y `d00df74` (las dos vueltas de afinado del ritmo de respiración, ya con feedback real de Alejandro probándolo).
 
+## Resumen Ejecutivo — Sesión 2026-09-10 — Tarjeta de share-preview, rediseño completo del login, y fix de un flash real sin estilo
+
+### 1. Tarjeta de preview elegante al compartir el link (og:image dinámico)
+
+`ephirox.com` no tenía `og:image` — al compartir el link en WhatsApp/iMessage se veía solo texto plano, con el título cortado a mitad de frase (el título viejo era una sola oración larga). Se creó `apps/web/app/landing/opengraph-image.tsx` (convención de Next.js, usa `next/og` `ImageResponse`) que genera en el momento una card 1200×630 con la misma identidad del login: isotipo, wordmark y tagline dorada sobre fondo carbón, cargando Cormorant Garamond y JetBrains Mono reales vía la API de Google Fonts (patrón documentado de Vercel). Se agregó `metadataBase` al layout raíz (necesario para que la URL de la imagen resuelva absoluta) y `openGraph`/`twitter` metadata en `app/landing/page.tsx`.
+
+El título/descripción se iteró varias veces en vivo con Alejandro hasta la versión final: título **"Ephirox — Redefining limits."**, descripción combinando el titular y subtítulo actuales del hero ("Tu empresa llega hasta donde tu cuerpo te lo permite. Ephirox mide lo que sucede dentro de ti — antes de que pase factura."). Cada iteración se verificó pusheando y sondeando producción con `curl` cada 15s hasta ver el cambio reflejado (el deploy tardó consistentemente ~1 minuto en propagar).
+
+### 2. Bug real encontrado: `ephirox.com/landing` rebotaba al dominio del producto
+
+Mientras se probaba el cache-busting del preview nuevo, Alejandro reportó que agregar un carácter a la URL (sin `?`) lo mandaba a `app.ephirox.com`. Causa: en `middleware.ts`, solo `pathname === "/"` se reescribía a `/landing` en el dominio de marketing — visitar o compartir `/landing` directamente (no la raíz) caía en la regla catch-all que manda cualquier otra ruta al dominio del producto. Se agregó `/landing` a la lista de rutas públicas servidas tal cual en esa rama, junto a `/terminos`/`/privacidad`.
+
+### 3. Rediseño completo del login (cliente y terapeuta) — spec pixel a pixel
+
+Alejandro entregó una spec detallada (estructura, tokens, medidas exactas) pidiendo corregir: la pantalla partida en dos bloques en móvil con campos tapados por la barra de Safari, el logo ocupando más de media pantalla, inputs sin caja visible, y texto de bajo contraste. Se reescribió `app/(auth)/login/page.tsx` y `app/(therapist)/therapist-login/page.tsx` (misma identidad, sin Google/Apple ni pie de "Solicitar cohorte" en el de terapeuta) como una sola implementación responsive **sin media queries** — panel de marca y panel de formulario con `flex: 1 1 400px` que se apilan solos por `flex-wrap`. Sin cambios de lógica: mismos handlers/endpoints/estados de error en ambos formularios. Verificado con `tsc`, y visualmente a 320/375/414/768/1024/1280/1600px vía Chrome headless + CDP (cero overflow horizontal en cualquier ancho).
+
+Cuatro rondas de ajuste en vivo después de ver el resultado:
+- **Quitar el halo** dorado detrás del isotipo (Alejandro quería verlo sin ese efecto).
+- **Bajar y rediseñar la leyenda** "Sistema de Optimización Ejecutiva" — vivía pegada al tagline dentro del mismo SVG del lockup; se sacó como texto HTML aparte, anclado al fondo del panel con líneas doradas a los lados.
+- **"Redefining limits." no se leía con claridad** — estaba dibujado como paths vectorizados dentro del SVG del lockup, y al escalar la imagen a los tamaños chicos del login los trazos finos de la itálica perdían nitidez. Se sacó del asset y se renderiza como texto HTML con Cormorant Garamond real.
+- **En mobile el wordmark "EPHIROX" quedaba casi del mismo tamaño que el subtítulo** — ambos estaban atados a la escala del lockup completo, que en mobile toca su mínimo de `clamp()`. Se terminó de desarmar el asset SVG (ya no queda nada de texto adentro, solo el anillo) y se volvió a usar el componente `<Isotipo>` existente para el anillo, con "EPHIROX" como texto HTML independiente — ahora cada elemento escala con su propio `clamp()`, jerarquía correcta en cualquier ancho.
+
+### 4. Bug real: flash sin estilo en hard-refresh (cmd+shift+R)
+
+Alejandro mandó captura de la pantalla sin ningún estilo aplicado (todo apilado, sin card, sin cajas en los inputs) justo después de un hard-refresh. Causa: los estilos vivían en `<style jsx>` (styled-jsx), que en `next dev` se inyecta vía JS y puede pintar un frame antes de aplicarse — visible solo en un hard-refresh real porque bypasea la caché y hace más lenta la carga. Se movieron todos los estilos a un CSS normal (`apps/web/app/eph-login-shared.css`, compartido entre ambos logins para que no diverjan) que se bundlea junto con `globals.css` y llega en el HTML inicial, sin esa ventana. Verificado simulando un hard-reload real vía CDP (`Page.reload({ignoreCache:true})`) con la red throttleada — cero frames sin estilo capturados desde los 80ms.
+
+### 5. Fix real: el Ritual Diario no daba ninguna señal de por qué "Guardar" no hacía nada
+
+Alejandro reportó que el botón "Guardar ritual" no funcionaba. No era un bug de guardado: el botón está deshabilitado hasta elegir una cara en "¿Cómo te sientes hoy?" (`components/rituals/DailyRitualCard.tsx`), pero esa fila no avisaba que era obligatoria ni mostraba con claridad cuál opción quedaba marcada (un outline de 2px casi invisible entre círculos ya coloreados, a diferencia de las 3 preguntas de abajo que sí destacan su selección). Se agrandó/marcó con un anillo grueso la opción elegida (las demás se atenúan) y se agregó un texto explicando el requisito mientras no haya selección. Verificado con `tsc` + la suite existente (4/4 tests, sin regresiones).
+
+### 6. Investigación: "error" al cancelar el login con Google
+
+Alejandro reportó una pantalla roja de Next.js al cancelar el selector de cuentas de Google (Esc/Cancelar), con el mensaje `[GSI_LOGGER]: FedCM get() rejects with NetworkError`. Investigado y confirmado que **no es un bug propio**: ese log lo genera internamente el script de Google (`gsi/client`) cada vez que alguien cancela el prompt — comportamiento documentado y esperado. Se ve como pantalla completa solo porque el overlay de errores de `next dev` intercepta cualquier `console.error`, incluso de scripts de terceros; ese overlay no existe en producción, ningún cliente real lo vería. De paso se tipó correctamente `isDismissedMoment` (cancelar a propósito) en el listener del prompt, documentando por qué no debe disparar el mensaje de error que sí aplica a `isNotDisplayed`/`isSkippedMoment` (fallas reales, ej. cookies de terceros bloqueadas) — el comportamiento ya era correcto, solo quedaba sin tipar/documentar.
+
+### 7. Se levantó `apps/api` en esta sesión (no estaba corriendo)
+
+Al investigar por qué el botón de Google aparecía inactivo, se encontró que solo `apps/web` (`:3000`) estaba corriendo — `apps/api` (`:3003`) no, así que `/api/config` nunca respondía y `googleClientId` se quedaba en `null`. Se levantó con `npm run dev:api` desde la raíz; confirmado que el botón de Google queda activo (`appleClientId` sigue `null` en este entorno, así que Apple se queda deshabilitado a propósito, eso sí es esperado).
+
+### 8. Commit y push
+
+12 commits, pusheados directo a `origin/main`: `68192b1`, `cdaee93`, `039cc1c`, `507573e`, `96ac0ed`, `6c92f28` (share-preview + fix de `/landing`), `fac24ce`, `ac26200`, `4a15a8e`, `eada6b1` (rediseño del login y sus 3 rondas de ajuste + fix del FOUC), `dfe216a` (fix del Ritual Diario), `c49538d` (tipado de `isDismissedMoment`).
+
 ## Próximas actividades — Siguiente sesión (actualizada 2026-09-03, 2026-09-04)
 
 ### Actividad 1 — Confirmar que el login desde el celular ya funciona
@@ -1060,6 +1102,14 @@ Tres commits, pusheados directo a `origin/main`: `6cef72d` (el pulido grande —
 - **`height:600vh` de `.pasos-sticky`:** duplicar la distancia de scroll resuelve "cambia muy rápido", pero nunca se confirmó con Alejandro scrolleando de verdad si el número final se siente bien (ni muy lento ni muy rápido) — pedir confirmación explícita.
 - El servidor de dev de `apps/web` se colgó otra vez a mitad de sesión (ver resumen de esta sesión, punto 6) — si vuelve a pasar seguido vale la pena investigar la causa en vez de solo reiniciar.
 
+### Actividad 25 — Confirmar visualmente el login rediseñado y el fix del FOUC con hardware/red reales (nueva, 2026-09-10)
+
+- Todo el rediseño del login (sección 3 y 4 del resumen de esta sesión) se verificó con Chrome headless vía CDP — anchos exactos, hard-reload simulado con red throttleada, pero nunca con el dedo/mouse real de Alejandro en un navegador con GUI, ni en un iPhone real. Pedir que confirme: que el login se ve bien en su celular real (no solo en las capturas), que ya no ve ningún flash sin estilo al hacer cmd+shift+R varias veces seguidas, y que el botón de Google/Apple funciona con sesión real (no solo que quedó habilitado).
+
+### Actividad 26 — Confirmar que el fix del Ritual Diario resolvió el guardado real (nueva, 2026-09-10)
+
+- Ver sección 5 del resumen de esta sesión. El fix (visibilidad de la selección de ánimo + texto de ayuda) se verificó con `tsc` y la suite de tests existente, pero no se probó en vivo con una sesión de cliente real guardando el ritual completo (ánimo + las 3 preguntas de energía/tensión/claridad si tiene acceso a Stress) y confirmando que persiste tras refrescar.
+
 ---
 
 ## Notas adicionales
@@ -1105,3 +1155,8 @@ Tres commits, pusheados directo a `origin/main`: `6cef72d` (el pulido grande —
 - **Correr la suite completa de tests del frontend (82+ archivos) de una sola vez produce fallos falsos por contención de CPU en tests que manejan formularios grandes** (sesión 2026-09-08, `wizard-shell-finalize.test.tsx` con timeouts que no reproducen corriendo el mismo archivo solo o en pares) — mismo patrón ya documentado para el backend en sesiones anteriores, confirmado ahora también en el frontend. Antes de investigar un fallo de test como regresión real, re-correr ese archivo solo (o con máximo 1-2 archivos más) antes de asumir que algo se rompió.
 - **`vi.mock('../lib/api-client', () => ({ getSessionToken: ... }))` no da error de TypeScript aunque `getSessionToken` ya no exista como export real** (sesión 2026-09-08) — los factories de `vi.mock` no se chequean contra el shape real del módulo. Un mock de una función eliminada puede quedar como cruft muerto e invisible durante meses sin que ningún test falle ni `tsc` se queje; solo aparece con un `grep` deliberado del nombre de la función eliminada en todo `apps/web`.
 - **Un link "volver al inicio"/logo en una página que se sirve igual en `ephirox.com` y `app.ephirox.com` no debe usar `href="/"` relativo** (mismo caso de arriba) — en `app.ephirox.com`, "/" es el producto (gate de login), no la landing de marketing. Usar la URL absoluta del dominio de marketing (mismo criterio que `APP_LOGIN_URL` en `content.ts`, que ya apunta absoluto a `app.ephirox.com` en el sentido contrario).
+- **En el dominio de marketing del middleware, reescribir solo `pathname === "/"` a `/landing` no alcanza — la ruta real (`/landing`) también necesita su propia excepción explícita** (sesión 2026-09-10) — si no, visitar o compartir esa URL directamente (no la raíz) cae en la regla catch-al que manda cualquier otra ruta a `app.ephirox.com`. Mismo patrón de "revisar en DOS lugares" ya anotado arriba para rutas públicas nuevas — acá el segundo lugar es la propia ruta de destino del rewrite, no solo `PUBLIC_PATHS`.
+- **`<style jsx>` (styled-jsx) puede pintar un frame sin estilo en un hard-refresh real (`cmd+shift+R`) en `next dev`** (sesión 2026-09-10, login rediseñado) — se inyecta vía JS y esa inyección puede llegar después del primer paint cuando el navegador bypasea la caché. Un CSS normal importado (`import './archivo.css'`) se bundlea junto con `globals.css` y llega en el `<link>` del HTML inicial, sin esa ventana — para cualquier pantalla donde el primer pintado importe (login, landing, checkout), preferir CSS normal sobre `styled-jsx` desde el principio. Verificar con `Page.reload({ignoreCache:true})` vía CDP + `Network.emulateNetworkConditions` (latencia alta) para forzar la ventana a ser visible/reproducible en vez de confiar en que "no se ve en el reload normal".
+- **El overlay de errores de `next dev` intercepta CUALQUIER `console.error`, incluido el de scripts de terceros cargados con `next/script`** (sesión 2026-09-10, Google Identity Services) — un mensaje interno y esperado del SDK de Google al cancelar el selector de cuentas (`FedCM get() rejects with NetworkError`) se ve como una pantalla roja de error bloqueante en local, pero no existe en producción (`next build`). Antes de tratar un mensaje así como bug propio, confirmar de dónde viene el log (¿nuestro código o un script externo?) y si el proyecto corre con `next dev` — ese overlay es exclusivo de desarrollo.
+- **Un botón deshabilitado por una validación silenciosa (`disabled={condición}`) sin ninguna pista visible de qué falta se reporta como "el botón no funciona"** (sesión 2026-09-10, `DailyRitualCard.tsx` — faltaba elegir una cara en la escala de ánimo, sin aviso ni feedback de selección claro). Cualquier campo requerido que bloquee un submit necesita o (a) un estado seleccionado obviamente distinto del no-seleccionado, o (b) un texto explicando qué falta mientras el botón siga inactivo — nunca solo un `disabled` silencioso, aunque la lógica de validación en sí sea correcta.
+- **Antes de diagnosticar un botón de login social (Google/Apple) como "inactivo"/bug de código, confirmar que `apps/api` esté corriendo** (sesión 2026-09-10) — el botón depende de `fetch('/api/config')` para el client ID; si solo `apps/web` está levantado (`npm run dev:web` sin su contraparte `dev:api`), esa llamada falla en silencio y el botón se queda deshabilitado para siempre, indistinguible visualmente de un problema real de credenciales.
