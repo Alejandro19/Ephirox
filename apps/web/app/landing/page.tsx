@@ -1,9 +1,11 @@
 import type { Metadata } from 'next';
 import { LandingPage } from './LandingPage';
 
-const TITLE = 'Ephirox — Redefining limits.';
-const DESCRIPTION =
-  'Diriges tu empresa con el cuerpo que menos cuidas. Ephirox mide lo que pasa dentro de ti — antes de que se note en una decisión que ya no puedas deshacer.';
+// Mismo titular/subtítulo que el hero de la landing (LandingPage.tsx) —
+// si ese texto cambia, actualizar acá también para que el share-preview
+// no quede desincronizado.
+const TITLE = 'Ephirox — Tu empresa llega hasta donde tu cuerpo te lo permite.';
+const DESCRIPTION = 'Ephirox mide lo que sucede dentro de ti — antes de que pase factura.';
 
 export const metadata: Metadata = {
   title: TITLE,
