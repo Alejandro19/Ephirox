@@ -610,7 +610,10 @@
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.88) 100%);
+    /* Empieza a oscurecer más arriba (antes 0%) — le da al texto un fondo
+       sólido más grande detrás, en vez de una franja delgada al pie, para
+       que pese más frente a la foto. */
+    background: linear-gradient(180deg, rgba(0,0,0,0) 30%, rgba(0,0,0,0.92) 100%);
     pointer-events: none;
   }
   .eph-landing2 .costos-mobile-text {
@@ -619,20 +622,21 @@
     right: 0;
     bottom: 0;
     z-index: 1;
-    padding: 24px;
+    padding: 26px;
     display: grid;
-    gap: 8px;
+    gap: 10px;
   }
   .eph-landing2 .costos-mobile-text .num {
     font-family: 'Cormorant Garamond', serif;
-    font-weight: 400;
-    font-size: clamp(40px, 10vw, 44px);
+    font-weight: 500;
+    font-size: clamp(48px, 13vw, 58px);
     line-height: 1;
     color: #caa057;
     font-variant-numeric: lining-nums tabular-nums;
+    text-shadow: 0 2px 14px rgba(0,0,0,0.5);
   }
-  .eph-landing2 .costos-mobile-text p { margin: 0; font-size: 14px; line-height: 1.5; color: rgba(245,241,232,0.9); text-wrap: pretty; }
-  .eph-landing2 .costos-mobile-text .src { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(245,241,232,0.45); }
+  .eph-landing2 .costos-mobile-text p { margin: 0; font-size: 16px; font-weight: 400; line-height: 1.55; color: rgba(255,255,255,0.96); text-wrap: pretty; }
+  .eph-landing2 .costos-mobile-text .src { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(245,241,232,0.5); }
   .eph-landing2 .costos-mobile-dots { max-width: 160px; margin: 0 auto; }
   /* .hero-progress-track por defecto es un blanco tenue (pensado para el
      fondo oscuro del hero) — acá el carrusel vive en .contexto, de fondo
