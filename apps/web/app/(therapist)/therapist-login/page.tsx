@@ -103,12 +103,16 @@ export default function TherapistLoginPage(): React.ReactElement {
 
           {/* ========== PANEL DE MARCA (izquierda en desktop, arriba en móvil) ========== */}
           <div className="eph-login-brand">
-            <div aria-hidden="true" className="eph-login-halo" />
             <img
               src="/brand/ephirox-lockup-vertical-oro.svg"
               alt="Ephirox — Redefining limits."
               className="eph-login-lockup"
             />
+            <div className="font-body eph-login-caption">
+              <span className="eph-login-caption-line" />
+              Sistema de Optimización Ejecutiva
+              <span className="eph-login-caption-line" />
+            </div>
           </div>
 
           {/* ========== PANEL DE FORMULARIO (derecha en desktop, abajo en móvil) ========== */}
@@ -280,22 +284,31 @@ export default function TherapistLoginPage(): React.ReactElement {
           padding: clamp(38px, 6vw, 64px) 32px;
           min-height: clamp(240px, 34vw, 620px);
         }
-        .eph-login-halo {
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -55%);
-          width: 720px;
-          height: 720px;
-          border-radius: 50%;
-          background: radial-gradient(closest-side, rgba(201, 166, 107, 0.15), rgba(201, 166, 107, 0));
-          pointer-events: none;
-        }
         .eph-login-lockup {
           position: relative;
           width: clamp(180px, 26vw, 300px);
           height: auto;
           display: block;
+        }
+        .eph-login-caption {
+          position: absolute;
+          left: 50%;
+          bottom: clamp(20px, 5vw, 40px);
+          transform: translateX(-50%);
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          white-space: nowrap;
+          font-weight: 300;
+          font-size: 11px;
+          letter-spacing: 0.22em;
+          text-transform: uppercase;
+          color: rgba(245, 241, 232, 0.55);
+        }
+        .eph-login-caption-line {
+          width: 28px;
+          height: 1px;
+          background: rgba(201, 166, 107, 0.5);
         }
         .eph-login-form-panel {
           flex: 1 1 400px;
