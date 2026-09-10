@@ -102,20 +102,33 @@ export function DailyRitualCard({ clientId }: { clientId: string }) {
       <div>
         <p className="m-0 mb-2.5 text-[13px] font-semibold" style={{ color: 'var(--eph-text)' }}>¿Cómo te sientes hoy?</p>
         <div className="flex gap-2.5" role="group" aria-label="¿Cómo te sientes hoy?">
-          {PULSO_OPTIONS.map((opt) => (
-            <button
-              key={opt.value}
-              type="button"
-              aria-label={opt.label}
-              aria-pressed={mood === opt.value}
-              onClick={() => setMood(opt.value)}
-              className="flex h-10 w-10 items-center justify-center rounded-full text-[13px] font-bold text-white transition-transform hover:scale-105"
-              style={{ background: opt.color, outline: mood === opt.value ? '2px solid var(--eph-accent)' : 'none', outlineOffset: 2 }}
-            >
-              {opt.value}
-            </button>
-          ))}
+          {PULSO_OPTIONS.map((opt) => {
+            const selected = mood === opt.value;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                aria-label={opt.label}
+                aria-pressed={selected}
+                onClick={() => setMood(opt.value)}
+                className="flex h-10 w-10 items-center justify-center rounded-full text-[13px] font-bold text-white transition-all hover:scale-105"
+                style={{
+                  background: opt.color,
+                  opacity: mood == null || selected ? 1 : 0.45,
+                  transform: selected ? 'scale(1.15)' : 'scale(1)',
+                  boxShadow: selected ? '0 0 0 3px var(--eph-accent), 0 0 0 5px var(--eph-bg)' : 'none',
+                }}
+              >
+                {opt.value}
+              </button>
+            );
+          })}
         </div>
+        {mood == null && (
+          <p className="font-body m-0 mt-2 text-[12px]" style={{ color: 'var(--eph-faint)' }}>
+            Elige una opción para poder guardar el ritual.
+          </p>
+        )}
       </div>
 
       {hasCortisolAccess && (
