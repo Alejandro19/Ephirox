@@ -35,20 +35,28 @@ function mockFetches({
   clientType = 'mentoring',
   metrics = sampleMetrics,
   protocol = null,
-  ultimaSyncMinutesAgo = 12,
+  // Días atrás por default (no minutos): el auto-sync ahora es "una vez por
+  // día calendario local", no "una vez cada 5 minutos" — ver ClientRestPanel.tsx.
+  ultimaSyncDaysAgo = 2,
+  ultimaSyncHoursAgo,
   dispositivosConectados = ['oura'] as wearableClient.Dispositivo[],
 }: {
   clientType?: string;
   metrics?: wearableClient.WearableMetrica[];
   protocol?: sleepClient.SleepProtocol;
-  ultimaSyncMinutesAgo?: number;
+  ultimaSyncDaysAgo?: number;
+  // Mismo día real, unas horas antes — para probar "ya sincronizado hoy".
+  ultimaSyncHoursAgo?: number;
   dispositivosConectados?: wearableClient.Dispositivo[];
 } = {}) {
   vi.mocked(wearableClient.getMetricas).mockResolvedValue({ total: metrics.length, promedios: {}, data: metrics });
   vi.mocked(wearableClient.getWearableEstado).mockResolvedValue(
     dispositivosConectados.map((dispositivo) => ({
       dispositivo, conectado: true, conectadoEn: '2026-07-01T00:00:00Z',
-      ultimaSync: new Date(Date.now() - ultimaSyncMinutesAgo * 60000).toISOString(), tokenExpirado: false,
+      ultimaSync: ultimaSyncHoursAgo != null
+        ? new Date(Date.now() - ultimaSyncHoursAgo * 60 * 60000).toISOString()
+        : new Date(Date.now() - ultimaSyncDaysAgo * 24 * 60 * 60000).toISOString(),
+      tokenExpirado: false,
     }))
   );
   vi.mocked(wearableClient.syncWearable).mockResolvedValue({ success: true, sincronizados: 1 });
@@ -152,15 +160,15 @@ describe('ClientRestPanel', () => {
     expect(await screen.findByText('Disponible en Premium')).toBeInTheDocument();
   });
 
-  it('auto-syncs in the background on open when the last sync is stale, so the client never has to remember to sync', async () => {
-    mockFetches({ ultimaSyncMinutesAgo: 12 });
+  it('auto-syncs in the background on open when the last sync was not today, so the client never has to remember to sync', async () => {
+    mockFetches({ ultimaSyncDaysAgo: 2 });
     render(<ClientRestPanel clientId="client-1" />);
     await screen.findByText('86');
     await waitFor(() => expect(wearableClient.syncWearable).toHaveBeenCalledWith('client-1', 'oura'));
   });
 
-  it('does not auto-sync again if the last sync was very recent (avoids hammering the provider)', async () => {
-    mockFetches({ ultimaSyncMinutesAgo: 1 });
+  it('does not auto-sync again if the last sync already happened earlier today (even hours ago), avoiding redundant provider calls on every re-open', async () => {
+    mockFetches({ ultimaSyncHoursAgo: 3 });
     render(<ClientRestPanel clientId="client-1" />);
     await screen.findByText('86');
     expect(wearableClient.syncWearable).not.toHaveBeenCalled();
@@ -168,7 +176,7 @@ describe('ClientRestPanel', () => {
 
   it('lets the client force a sync with the "Sincronizar ahora" button', async () => {
     const user = userEvent.setup();
-    mockFetches({ ultimaSyncMinutesAgo: 1 }); // sin auto-sync de fondo, para aislar el click manual
+    mockFetches({ ultimaSyncHoursAgo: 3 }); // sin auto-sync de fondo, para aislar el click manual
     render(<ClientRestPanel clientId="client-1" />);
     await screen.findByText('86');
 
@@ -178,7 +186,7 @@ describe('ClientRestPanel', () => {
 
   it('shows an error message next to the button when a manual sync fails, without wiping the data already shown', async () => {
     const user = userEvent.setup();
-    mockFetches({ ultimaSyncMinutesAgo: 1 });
+    mockFetches({ ultimaSyncHoursAgo: 3 });
     vi.mocked(wearableClient.syncWearable).mockResolvedValue({ success: false, error: 'Oura no conectado' });
     render(<ClientRestPanel clientId="client-1" />);
     await screen.findByText('86');
@@ -205,7 +213,7 @@ describe('ClientRestPanel', () => {
     });
 
     it('retries in the background one minute later when the first sync still lacks a complete night for today, and stops once it does', async () => {
-      mockFetches({ ultimaSyncMinutesAgo: 1, metrics: [partialToday, ...sampleMetrics] });
+      mockFetches({ ultimaSyncHoursAgo: 1, metrics: [partialToday, ...sampleMetrics] });
       vi.mocked(wearableClient.getMetricas)
         .mockResolvedValueOnce({ total: 3, promedios: {}, data: [partialToday, ...sampleMetrics] })
         .mockResolvedValueOnce({ total: 3, promedios: {}, data: [partialToday, ...sampleMetrics] })
@@ -239,7 +247,7 @@ describe('ClientRestPanel', () => {
     });
 
     it('stops retrying after 4 background attempts even if the night never completes', async () => {
-      mockFetches({ ultimaSyncMinutesAgo: 1, metrics: [partialToday, ...sampleMetrics] });
+      mockFetches({ ultimaSyncHoursAgo: 1, metrics: [partialToday, ...sampleMetrics] });
       vi.mocked(wearableClient.getMetricas).mockResolvedValue({ total: 3, promedios: {}, data: [partialToday, ...sampleMetrics] });
 
       render(<ClientRestPanel clientId="client-1" />);

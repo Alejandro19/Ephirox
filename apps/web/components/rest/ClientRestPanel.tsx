@@ -339,11 +339,15 @@ async function fetchRestBundle(clientId: string) {
   };
 }
 
-// Umbral para no re-sincronizar en cada montaje si ya hubo un sync muy
-// reciente (cron, webhook, u otra pestaña) — evita llamadas redundantes al
-// proveedor sin perder el objetivo real: que la data esté fresca cada vez
-// que el cliente abre Sleep, sin que tenga que acordarse de sincronizar.
-const AUTO_SYNC_SKIP_IF_RECENT_MS = 5 * 60_000;
+// Ya sincronizado "hoy" (día calendario local del navegador) — evita
+// llamadas redundantes al proveedor cada vez que el cliente reabre Sleep en
+// el mismo día (ej. entra en la mañana, sincroniza, y vuelve a entrar en la
+// tarde/noche: no debe volver a sincronizar). Comparación en hora local del
+// dispositivo (no UTC) a propósito — es una decisión puramente del
+// navegador, sin ida y vuelta al servidor.
+function isSameLocalDay(a: Date, b: Date): boolean {
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+}
 
 // Reintentos automáticos tras un sync: Oura suele publicar el readiness de
 // hoy antes que el detalle de sueño de esa misma noche (ver commit del fix
@@ -422,10 +426,18 @@ export function ClientRestPanel({ clientId }: { clientId: string }) {
   // acordarse de sincronizar manualmente. Silencioso (sin mensaje de error
   // visible): si falla, el cron nocturno y el webhook siguen como respaldo,
   // y el cliente igual puede forzarlo con el botón "Sincronizar ahora".
+  //
+  // `autoSyncedRef` se marca ANTES de evaluar si toca sincronizar (no solo
+  // cuando sí se sincroniza) a propósito: este chequeo debe correr una sola
+  // vez por montaje ("al abrir Sleep"), nunca de nuevo si `data` cambia de
+  // referencia más tarde (ej. el `mutate()` de un sync manual) — si no, un
+  // click en "Sincronizar ahora" podía disparar una segunda evaluación del
+  // auto-sync bajo esta misma sesión, reintroduciendo una sincronización de
+  // fondo redundante.
   useEffect(() => {
     if (!data || autoSyncedRef.current || data.dispositivosConectados.length === 0) return;
-    if (data.ultimaSync && Date.now() - new Date(data.ultimaSync).getTime() < AUTO_SYNC_SKIP_IF_RECENT_MS) return;
     autoSyncedRef.current = true;
+    if (data.ultimaSync && isSameLocalDay(new Date(data.ultimaSync), new Date())) return;
     void syncAndRetryUntilReady(data.dispositivosConectados, 0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, clientId, mutate]);
