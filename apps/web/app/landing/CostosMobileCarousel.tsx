@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 import { COSTOS_MOBILE } from './content';
 
@@ -10,11 +11,6 @@ import { COSTOS_MOBILE } from './content';
 // orden de DOM). El indicador de abajo reutiliza las mismas clases que el
 // "1 de 3" del hero (HeroStatCard.tsx: .hero-progress/-track/-fill), solo
 // que acá el relleno refleja la tarjeta centrada por scroll, no un timer.
-//
-// Fondo: mientras no haya foto definitiva para cada tarjeta, placeholder de
-// color de marca (.costos-mobile-bg) — cuando llegue la imagen, reemplazar
-// ese div por <Image fill style={{objectFit:'cover'}} .../> ahí mismo, el
-// overlay de gradiente ya está listo para que el texto siga legible encima.
 export function CostosMobileCarousel() {
   const trackRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
@@ -55,7 +51,7 @@ export function CostosMobileCarousel() {
       <div className="costos-mobile-track" ref={trackRef}>
         {COSTOS_MOBILE.map((c) => (
           <div className="costos-mobile-card" key={c.num}>
-            <div className="costos-mobile-bg" />
+            <Image src={c.img} alt={c.alt} fill quality={82} sizes="90vw" style={{ objectFit: 'cover' }} className="costos-mobile-bg" />
             <div className="costos-mobile-text">
               <span className="num">{c.num}</span>
               <p>{c.texto}</p>

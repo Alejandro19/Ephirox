@@ -601,16 +601,16 @@
     overflow: hidden;
     scroll-snap-align: center;
   }
-  /* Placeholder de color de marca hasta que haya foto definitiva por
-     tarjeta — reemplazar por <Image fill style={{objectFit:'cover'}} .../>
-     ahí mismo cuando llegue; el overlay de gradiente (::after) ya deja el
-     texto legible encima de cualquier foto oscura/moody. */
-  .eph-landing2 .costos-mobile-bg { position: absolute; inset: 0; background: #161210; }
+  /* <Image fill> (costos-mobile-bg) ya trae su propio position:absolute;
+     inset:0 inline — acá solo el fondo de respaldo por si la imagen tarda
+     en cargar. El overlay de gradiente (::after) es lo que mantiene el
+     texto legible encima de estas fotos (todas oscuras/moody a propósito). */
+  .eph-landing2 .costos-mobile-bg { background: #161210; }
   .eph-landing2 .costos-mobile-card::after {
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.75) 100%);
+    background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.88) 100%);
     pointer-events: none;
   }
   .eph-landing2 .costos-mobile-text {
