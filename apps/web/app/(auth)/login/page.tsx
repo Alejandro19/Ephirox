@@ -25,6 +25,12 @@ type GoogleCredentialResponse = { credential: string };
 type GoogleMomentNotification = {
   isNotDisplayed: () => boolean;
   isSkippedMoment: () => boolean;
+  // El usuario cancela el selector nativo de cuentas (Esc, click afuera,
+  // botón Cancelar) → esto, NO isNotDisplayed/isSkippedMoment (esos cubren
+  // que el prompt nunca llegó a mostrarse, ej. cookies de terceros
+  // bloqueadas). Cancelar es una decisión válida del usuario, no un error:
+  // no debe mostrarle el mensaje de "no se pudo iniciar sesión".
+  isDismissedMoment: () => boolean;
 };
 interface GoogleIdentityNamespace {
   accounts: {
@@ -138,6 +144,8 @@ export default function LoginPage(): React.ReactElement {
     if (typeof window === 'undefined' || !window.google?.accounts) return;
     setLoginError(null);
     window.google.accounts.id.prompt((notification) => {
+      // isDismissedMoment (cancelar a propósito) queda afuera a propósito —
+      // ver comentario en GoogleMomentNotification.
       if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
         setLoginError('No se pudo abrir el inicio de sesión con Google. Revisa que las cookies de terceros no estén bloqueadas e intenta de nuevo.');
       }
