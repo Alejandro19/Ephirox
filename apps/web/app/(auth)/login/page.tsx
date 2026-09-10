@@ -347,11 +347,14 @@ export default function LoginPage(): React.ReactElement {
 
           {/* ========== PANEL DE MARCA (izquierda en desktop, arriba en móvil) ========== */}
           <div className="eph-login-brand">
-            <img
-              src="/brand/ephirox-lockup-vertical-oro.svg"
-              alt="Ephirox — Redefining limits."
-              className="eph-login-lockup"
-            />
+            <div className="eph-login-mark">
+              <img
+                src="/brand/ephirox-lockup-vertical-oro.svg"
+                alt="Ephirox"
+                className="eph-login-lockup"
+              />
+              <p className="font-display eph-login-tagline">Redefining limits.</p>
+            </div>
             <div className="font-body eph-login-caption">
               <span className="eph-login-caption-line" />
               Sistema de Optimización Ejecutiva
@@ -559,11 +562,24 @@ export default function LoginPage(): React.ReactElement {
           padding: clamp(38px, 6vw, 64px) 32px;
           min-height: clamp(240px, 34vw, 620px);
         }
+        .eph-login-mark {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 18px;
+        }
         .eph-login-lockup {
-          position: relative;
           width: clamp(180px, 26vw, 300px);
           height: auto;
           display: block;
+        }
+        .eph-login-tagline {
+          margin: 0;
+          font-style: italic;
+          font-weight: 500;
+          font-size: clamp(17px, 2vw, 21px);
+          letter-spacing: 0.01em;
+          color: ${GOLD};
         }
         .eph-login-caption {
           position: absolute;
