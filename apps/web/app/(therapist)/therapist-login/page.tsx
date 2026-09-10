@@ -3,18 +3,15 @@
 import React, { useEffect, useState, type FormEvent } from 'react';
 import { therapistLogin } from '@/lib/blindspot-client';
 import { forgotPasswordRequest } from '@/lib/api-client';
-import Isotipo from '@/components/ui/Isotipo';
-import Button from '@/components/ui/Button';
 
 // Misma identidad visual que (auth)/login/page.tsx (panel de marca, tarjeta,
 // inputs, botón) — a propósito: un terapeuta no debe ver una pantalla de
 // login que "se sienta distinta" a la de un cliente. Única diferencia real:
-// sin Google/Apple (ese flujo OAuth es solo para clientes).
-const LOGIN_PANEL_BG = 'var(--eph-bg)';
-const FORM_INK_MUTED = 'var(--eph-muted)';
-const FORM_BORDER = 'var(--eph-line-2)';
-const FORM_ACCENT = 'var(--eph-accent)';
-const LOGIN_PRIMARY_BUTTON_STYLE: React.CSSProperties = { minHeight: 0, padding: '19px', fontSize: 11, letterSpacing: '0.26em' };
+// sin Google/Apple (ese flujo OAuth es solo para clientes) y sin el pie de
+// "Solicitar cohorte" (ese CTA es para prospectos B2B, no para terapeutas).
+const PAGE_BG = '#0B0907';
+const GOLD = '#C9A66B';
+const ERROR_COLOR = '#E0A88A';
 
 // Igual que en el login de clientes: solo se recuerda el email, nunca la
 // contraseña — el gestor de contraseñas del navegador ya cubre eso de forma segura.
@@ -28,6 +25,7 @@ export default function TherapistLoginPage(): React.ReactElement {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [enteringLabel, setEnteringLabel] = useState<string | null>(null);
 
   const [forgotEmail, setForgotEmail] = useState('');
@@ -85,164 +83,370 @@ export default function TherapistLoginPage(): React.ReactElement {
     }
   }
 
-  const inputClasses =
-    'block w-full border-0 border-b border-[var(--eph-line-2)] rounded-none bg-transparent px-0 pt-2 pb-3 font-body text-[18px] font-normal text-[var(--eph-text)] outline-none transition-colors placeholder:text-[var(--eph-muted)] placeholder:opacity-70 focus:border-[var(--eph-accent)]';
-  const labelClasses =
-    'block font-mono text-[10px] font-normal uppercase tracking-[0.2em] text-[var(--eph-body)]';
-
   return (
     <>
       {enteringLabel && (
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-5" style={{ background: LOGIN_PANEL_BG }}>
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-5" style={{ background: PAGE_BG }}>
           <svg className="animate-spin" viewBox="0 0 100 100" width="56" height="56" aria-hidden="true" style={{ animationDuration: '1.4s' }}>
-            <circle cx="50" cy="50" r="40" fill="none" strokeWidth="6" stroke="rgba(237,230,220,0.14)" />
-            <circle cx="50" cy="50" r="40" fill="none" strokeWidth="6" strokeLinecap="butt" strokeDasharray="70 251" stroke={FORM_ACCENT} />
+            <circle cx="50" cy="50" r="40" fill="none" strokeWidth="6" stroke="rgba(245,241,232,0.14)" />
+            <circle cx="50" cy="50" r="40" fill="none" strokeWidth="6" strokeLinecap="butt" strokeDasharray="70 251" stroke={GOLD} />
           </svg>
           <div className="flex flex-col items-center gap-1.5">
-            <p className="font-display text-xl" style={{ color: 'var(--eph-text)' }}>Ephirox</p>
-            <p className="font-mono text-[10px] uppercase tracking-[0.16em]" style={{ color: FORM_INK_MUTED }}>{enteringLabel}</p>
+            <p className="font-display text-xl" style={{ color: '#FBF8F1' }}>Ephirox</p>
+            <p className="font-body text-[10px] uppercase tracking-[0.16em]" style={{ color: 'rgba(245,241,232,0.6)' }}>{enteringLabel}</p>
           </div>
         </div>
       )}
 
-      <div className="min-h-screen w-full flex items-center justify-center p-4" style={{ background: LOGIN_PANEL_BG }}>
-        {/* md:min-h fija el mismo tamaño estándar de tarjeta que el login de clientes. */}
-        <div className="max-w-4xl w-full md:min-h-[600px] grid grid-cols-1 md:grid-cols-2 rounded-none border overflow-hidden" style={{ borderColor: 'var(--eph-line-2)', boxShadow: 'var(--eph-shadow)' }}>
+      <div className="eph-login-page">
+        <div className="eph-login-card">
 
-          {/* ========== LADO IZQUIERDO — IDENTIDAD EPHIROX ========== */}
-          <div className="relative overflow-hidden p-12 flex flex-col items-center justify-center text-center gap-[34px]" style={{ background: 'var(--eph-panel)' }}>
-            <Isotipo size={118} />
-            <div style={{ textAlign: 'center' }}>
-              <div
-                className="font-display uppercase"
-                style={{ fontWeight: 300, fontSize: 'clamp(34px, 4vw, 46px)', letterSpacing: '0.2em', textIndent: '0.2em', color: 'var(--eph-text)' }}
-              >
-                Ephirox
-              </div>
-              <div
-                className="font-display italic"
-                style={{ fontWeight: 400, fontSize: 22, letterSpacing: '0.02em', color: 'var(--eph-accent)', marginTop: 16 }}
-              >
-                Redefining limits.
-              </div>
-            </div>
-            <div
-              className="font-mono text-center"
-              style={{ fontSize: 9, letterSpacing: '0.22em', textTransform: 'uppercase', color: FORM_INK_MUTED, lineHeight: 2.1, marginTop: 8 }}
-            >
-              Sistema de Optimización Ejecutiva
-            </div>
+          {/* ========== PANEL DE MARCA (izquierda en desktop, arriba en móvil) ========== */}
+          <div className="eph-login-brand">
+            <div aria-hidden="true" className="eph-login-halo" />
+            <img
+              src="/brand/ephirox-lockup-vertical-oro.svg"
+              alt="Ephirox — Redefining limits."
+              className="eph-login-lockup"
+            />
           </div>
 
-          {/* ========== LADO DERECHO — FORMULARIO ========== */}
-          <div className="p-12 flex flex-col justify-center gap-[30px]" style={{ background: 'var(--eph-auth)', borderLeft: '1px solid var(--eph-line-2)' }}>
-            {view === 'forgot' && (
-              <h2 className="font-display text-[28px] font-normal" style={{ color: 'var(--eph-text)' }}>
-                Recuperar contraseña
-              </h2>
-            )}
-
+          {/* ========== PANEL DE FORMULARIO (derecha en desktop, abajo en móvil) ========== */}
+          <div className="eph-login-form-panel">
             {view === 'forgot' ? (
-              <form onSubmit={handleForgotPassword} className="w-full space-y-4" noValidate>
+              <form onSubmit={handleForgotPassword} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
+                <h1 className="font-display eph-login-title">Recuperar contraseña</h1>
+
                 {forgotError && (
-                  <div role="alert" className="rounded-none border px-4 py-3 font-body text-sm" style={{ borderColor: 'var(--eph-danger)', background: 'rgba(138,74,60,0.14)', color: 'var(--eph-text)' }}>
-                    {forgotError}
-                  </div>
+                  <p role="alert" className="font-body eph-login-error-text">{forgotError}</p>
                 )}
+
                 {forgotSent ? (
-                  <div role="status" className="rounded-none border px-4 py-3 font-body text-sm" style={{ borderColor: 'var(--eph-line-2)', background: 'var(--eph-surface)', color: 'var(--eph-text)' }}>
+                  <p role="status" className="font-body" style={{ margin: 0, fontSize: 14, lineHeight: 1.5, color: 'rgba(245,241,232,0.8)' }}>
                     Si el correo existe, enviaremos instrucciones para restablecer tu contraseña.
-                  </div>
+                  </p>
                 ) : (
                   <>
-                    <div className="space-y-1.5">
-                      <label htmlFor="therapist-forgot-email" className={labelClasses}>Email</label>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+                      <label htmlFor="therapist-forgot-email" className="font-body eph-login-label">EMAIL</label>
                       <input
                         id="therapist-forgot-email"
                         type="email"
+                        inputMode="email"
                         autoComplete="email"
                         required
                         value={forgotEmail}
                         onChange={(e) => setForgotEmail(e.target.value)}
-                        placeholder="tucorreo@ejemplo.com"
-                        className={inputClasses}
+                        placeholder="nombre@empresa.com"
+                        className={`font-body eph-login-input${forgotError ? ' has-error' : ''}`}
                       />
                     </div>
-                    <Button type="submit" variant="primary" disabled={forgotLoading} className="w-full" style={LOGIN_PRIMARY_BUTTON_STYLE}>
+                    <button type="submit" disabled={forgotLoading} className="font-body eph-login-submit">
                       {forgotLoading ? 'Enviando…' : 'Enviar instrucciones'}
-                    </Button>
+                    </button>
                   </>
                 )}
-                <div className="text-center mt-6">
-                  <Button
-                    type="button"
-                    variant="tertiary"
-                    onClick={() => { setView('login'); setForgotError(null); setForgotSent(false); }}
-                  >
-                    Volver a iniciar sesión
-                  </Button>
-                </div>
+
+                <button
+                  type="button"
+                  onClick={() => { setView('login'); setForgotError(null); setForgotSent(false); }}
+                  className="font-body eph-login-forgot-link"
+                  style={{ alignSelf: 'center' }}
+                >
+                  Volver a iniciar sesión
+                </button>
               </form>
             ) : (
-              <form onSubmit={handleSubmit} className="w-full grid" style={{ gap: 30 }} noValidate>
-                {error && (
-                  <div role="alert" className="rounded-none border px-4 py-3 font-body text-sm" style={{ borderColor: 'var(--eph-danger)', background: 'rgba(138,74,60,0.14)', color: 'var(--eph-text)' }}>
-                    {error}
-                  </div>
-                )}
-                <div className="grid" style={{ gap: 26 }}>
-                  <div className="space-y-2.5">
-                    <label htmlFor="therapist-email" className={labelClasses}>Email</label>
-                    <input id="therapist-email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="tucorreo@ejemplo.com" className={inputClasses} />
-                  </div>
-                  <div className="space-y-2.5">
-                    <label htmlFor="therapist-password" className={labelClasses}>Contraseña</label>
-                    <input id="therapist-password" type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className={inputClasses} />
-                  </div>
+              <form onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
+                <h1 className="font-display eph-login-title">Acceso de terapeutas</h1>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+                  <label htmlFor="therapist-email" className="font-body eph-login-label">EMAIL</label>
+                  <input
+                    id="therapist-email"
+                    type="email"
+                    inputMode="email"
+                    autoComplete="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="nombre@empresa.com"
+                    className={`font-body eph-login-input${error ? ' has-error' : ''}`}
+                  />
                 </div>
-                <div className="flex items-center justify-between gap-4 flex-wrap">
-                  <label className="flex items-center gap-3 font-body cursor-pointer select-none" style={{ color: FORM_INK_MUTED, fontSize: 16, lineHeight: 1 }}>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' }}>
+                    <label htmlFor="therapist-password" className="font-body eph-login-label">CONTRASEÑA</label>
+                    <button
+                      type="button"
+                      onClick={() => { setView('forgot'); setError(null); }}
+                      className="font-body eph-login-forgot-link"
+                    >
+                      ¿La olvidaste?
+                    </button>
+                  </div>
+                  <div style={{ position: 'relative' }}>
                     <input
-                      type="checkbox"
-                      checked={rememberMe}
-                      onChange={(e) => setRememberMe(e.target.checked)}
-                      className="peer sr-only"
+                      id="therapist-password"
+                      type={showPassword ? 'text' : 'password'}
+                      autoComplete="current-password"
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className={`font-body eph-login-input${error ? ' has-error' : ''}`}
+                      style={{ paddingRight: 66 }}
                     />
-                    <span
-                      aria-hidden="true"
-                      className="block peer-checked:bg-[var(--eph-accent)] peer-checked:border-[var(--eph-accent)]"
-                      style={{ width: 15, height: 15, border: `1px solid ${FORM_BORDER}`, background: 'transparent' }}
-                    />
-                    Recuérdame
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => { setView('forgot'); setError(null); }}
-                    className="font-body transition-colors duration-150 hover:text-[var(--eph-text)] hover:border-[var(--eph-accent-line)]"
-                    style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontSize: 16, lineHeight: 1, color: FORM_INK_MUTED, borderBottom: '1px solid var(--eph-line)' }}
-                  >
-                    ¿Olvidaste tu contraseña?
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((v) => !v)}
+                      className="font-body eph-login-pwd-toggle"
+                      aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                    >
+                      {showPassword ? 'OCULTAR' : 'VER'}
+                    </button>
+                  </div>
+                  {error && (
+                    <p role="alert" className="font-body eph-login-error-text">{error}</p>
+                  )}
                 </div>
-                <Button type="submit" variant="primary" disabled={loading} className="w-full" style={LOGIN_PRIMARY_BUTTON_STYLE}>
+
+                <label className="eph-login-checkbox-row">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="sr-only eph-login-checkbox-input"
+                  />
+                  <span aria-hidden="true" className={`eph-login-checkbox-box${rememberMe ? ' is-checked' : ''}`}>
+                    {rememberMe && (
+                      <svg width="12" height="10" viewBox="0 0 12 10" fill="none" aria-hidden="true">
+                        <path d="M1 5L4.2 8.5L11 1" stroke="#17130E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    )}
+                  </span>
+                  <span className="font-body" style={{ fontSize: 14, fontWeight: 300, color: 'rgba(245,241,232,0.8)' }}>
+                    Mantener sesión iniciada
+                  </span>
+                </label>
+
+                <button type="submit" disabled={loading} className="font-body eph-login-submit">
                   {loading ? (
-                    <span className="flex items-center gap-2">
-                      <svg className="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                      <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <circle cx="12" cy="12" r="10" stroke="#17130E" strokeOpacity="0.3" strokeWidth="4" />
+                        <path fill="#17130E" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
                       </svg>
                       Ingresando…
                     </span>
-                  ) : (
-                    'Entrar'
-                  )}
-                </Button>
+                  ) : 'Entrar'}
+                </button>
               </form>
             )}
           </div>
 
         </div>
       </div>
+
+      <style jsx>{`
+        .eph-login-page {
+          min-height: 100dvh;
+          width: 100%;
+          background: ${PAGE_BG};
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: clamp(0px, 4vw, 56px) clamp(0px, 4vw, 48px);
+        }
+        .eph-login-card {
+          max-width: 1060px;
+          width: 100%;
+          display: flex;
+          flex-wrap: wrap;
+          border-radius: clamp(0px, 2vw, 22px);
+          overflow: hidden;
+          border: 1px solid rgba(201, 166, 107, 0.16);
+          box-shadow: 0 60px 120px -60px rgba(0, 0, 0, 0.95);
+        }
+        .eph-login-brand {
+          flex: 1 1 400px;
+          position: relative;
+          overflow: hidden;
+          background: #100d0a;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: clamp(38px, 6vw, 64px) 32px;
+          min-height: clamp(240px, 34vw, 620px);
+        }
+        .eph-login-halo {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -55%);
+          width: 720px;
+          height: 720px;
+          border-radius: 50%;
+          background: radial-gradient(closest-side, rgba(201, 166, 107, 0.15), rgba(201, 166, 107, 0));
+          pointer-events: none;
+        }
+        .eph-login-lockup {
+          position: relative;
+          width: clamp(180px, 26vw, 300px);
+          height: auto;
+          display: block;
+        }
+        .eph-login-form-panel {
+          flex: 1 1 400px;
+          background: #1a160f;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          gap: 22px;
+          padding: clamp(30px, 5vw, 56px) clamp(24px, 4.4vw, 52px) calc(clamp(30px, 5vw, 56px) + env(safe-area-inset-bottom));
+        }
+        .eph-login-title {
+          margin: 0;
+          font-weight: 300;
+          font-size: clamp(26px, 3.4vw, 34px);
+          line-height: 1.1;
+          color: #fbf8f1;
+        }
+        .eph-login-label {
+          font-weight: 400;
+          font-size: 10px;
+          letter-spacing: 0.2em;
+          color: ${GOLD};
+        }
+        .eph-login-input {
+          box-sizing: border-box;
+          width: 100%;
+          height: 52px;
+          padding: 0 16px;
+          border-radius: 10px;
+          border: 1px solid rgba(245, 241, 232, 0.16);
+          background: #221c15;
+          color: #f5f1e8;
+          font-weight: 300;
+          font-size: 16px;
+          outline: none;
+          transition: border-color 0.15s ease, background 0.15s ease;
+        }
+        .eph-login-input::placeholder {
+          color: rgba(245, 241, 232, 0.42);
+        }
+        .eph-login-input:focus {
+          border-color: ${GOLD};
+          background: #261f16;
+        }
+        .eph-login-input.has-error {
+          border-color: ${ERROR_COLOR};
+        }
+        .eph-login-error-text {
+          margin: 0;
+          font-size: 13px;
+          font-weight: 300;
+          color: ${ERROR_COLOR};
+        }
+        .eph-login-pwd-toggle {
+          position: absolute;
+          top: 50%;
+          right: 8px;
+          transform: translateY(-50%);
+          height: 40px;
+          min-width: 52px;
+          padding: 0 8px;
+          background: transparent;
+          border: none;
+          font-weight: 400;
+          font-size: 11px;
+          letter-spacing: 0.12em;
+          color: ${GOLD};
+          cursor: pointer;
+        }
+        .eph-login-pwd-toggle:hover {
+          color: #e4c88f;
+        }
+        .eph-login-forgot-link {
+          background: none;
+          border: none;
+          padding: 0;
+          margin: 0;
+          font-weight: 300;
+          font-size: 13px;
+          color: ${GOLD};
+          cursor: pointer;
+          min-height: 44px;
+          display: inline-flex;
+          align-items: center;
+        }
+        .eph-login-forgot-link:hover {
+          color: #e4c88f;
+        }
+        .eph-login-checkbox-row {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          min-height: 44px;
+          cursor: pointer;
+          user-select: none;
+        }
+        .eph-login-checkbox-box {
+          flex-shrink: 0;
+          width: 20px;
+          height: 20px;
+          border-radius: 5px;
+          border: 1px solid rgba(201, 166, 107, 0.65);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: background 0.15s ease, border-color 0.15s ease;
+        }
+        .eph-login-checkbox-box.is-checked {
+          background: ${GOLD};
+          border-color: ${GOLD};
+        }
+        .eph-login-checkbox-input:focus-visible + .eph-login-checkbox-box {
+          outline: 2px solid ${GOLD};
+          outline-offset: 2px;
+        }
+        .eph-login-submit {
+          width: 100%;
+          height: 56px;
+          border-radius: 10px;
+          border: none;
+          background: linear-gradient(180deg, #d9b87c, #c09a5c);
+          color: #17130e;
+          font-weight: 500;
+          font-size: 13px;
+          letter-spacing: 0.26em;
+          text-indent: 0.26em;
+          box-shadow: 0 16px 34px -20px rgba(201, 166, 107, 0.9);
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: background 0.15s ease, transform 0.1s ease;
+        }
+        .eph-login-submit:hover:not(:disabled) {
+          background: linear-gradient(180deg, #e4c88f, #cba669);
+        }
+        .eph-login-submit:active:not(:disabled) {
+          transform: translateY(1px);
+        }
+        .eph-login-submit:disabled {
+          cursor: not-allowed;
+          opacity: 0.85;
+        }
+        .eph-login-forgot-link:focus-visible,
+        .eph-login-pwd-toggle:focus-visible,
+        .eph-login-submit:focus-visible,
+        .eph-login-input:focus-visible {
+          outline: 2px solid ${GOLD};
+          outline-offset: 2px;
+        }
+      `}</style>
     </>
   );
 }

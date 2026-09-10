@@ -8,8 +8,6 @@ import {
   forgotPasswordRequest,
 } from '@/lib/api-client';
 import { getSafeRedirectTarget, getSetPasswordUrl } from '@/lib/login-redirect';
-import Isotipo from '@/components/ui/Isotipo';
-import Button from '@/components/ui/Button';
 
 // "Recuérdame" solo guarda el email localmente (nunca la contraseña — un
 // checkbox de la app no debe controlar si se persiste texto plano de una
@@ -56,27 +54,46 @@ declare global {
 }
 
 // ============================================================
-// PÁGINA DE LOGIN — Split Screen, identidad Ephirox (reskin, ver plan de
-// reskin): fondo --eph-bg en toda la pantalla, sin variante día/noche.
-// Los valores de abajo apuntan a los tokens --eph-* (no son hex fijos) —
-// se usan vía `style` porque las clases Tailwind arbitrarias construidas
-// con interpolación de variables JS (`` `border-[${X}]` ``) no generan CSS
-// real: el content-scanner de Tailwind lee el texto fuente sin evaluar, así
-// que nunca ve el valor final. Donde se necesita una clase (no un `style`),
-// el token va escrito literal en el string (ver inputClasses/labelClasses).
+// PÁGINA DE LOGIN — rediseño a pedido de Alejandro (spec pixel a pixel):
+// una sola implementación responsive SIN media queries — la card
+// `panel-marca` / `panel-form` se apila sola vía flex-wrap cuando no caben
+// los 400px mínimos de cada panel. Tokens hardcodeados en hex (no --eph-*)
+// porque la spec los da como valores fijos, distintos de los tokens de
+// tema del resto de la app.
 // ============================================================
 
-const LOGIN_PANEL_BG = 'var(--eph-bg)';
-const FORM_INK_MUTED = 'var(--eph-muted)';
-const FORM_BORDER = 'var(--eph-line-2)';
-const FORM_ACCENT = 'var(--eph-accent)';
-// Anula el padding/tracking por defecto de Button (pensados para pantallas
-// de contenido) solo en el login — el CTA de Login es full-width con su
-// propio padding/tracking exactos (prototipo aprobado §1), sin tocar el
-// componente compartido.
-const LOGIN_PRIMARY_BUTTON_STYLE: React.CSSProperties = { minHeight: 0, padding: '19px', fontSize: 11, letterSpacing: '0.26em' };
+const PAGE_BG = '#0B0907';
+const GOLD = '#C9A66B';
+const ERROR_COLOR = '#E0A88A';
 
 type LoginView = 'login' | 'forgot';
+
+function GoogleIcon() {
+  return (
+    <svg width="17" height="17" viewBox="0 0 18 18" aria-hidden="true">
+      <path fill="#4285F4" d="M17.64 9.2045c0-.6381-.0573-1.2518-.1636-1.8409H9v3.4814h4.8436c-.2086 1.125-.8427 2.0782-1.7959 2.7164v2.2581h2.9087c1.7018-1.5668 2.6836-3.874 2.6836-6.615z" />
+      <path fill="#34A853" d="M9 18c2.43 0 4.4673-.8059 5.9564-2.1805l-2.9087-2.2581c-.8059.54-1.8368.8591-3.0477.8591-2.344 0-4.3282-1.5831-5.036-3.7104H.9573v2.3318C2.4382 15.9832 5.4818 18 9 18z" />
+      <path fill="#FBBC05" d="M3.964 10.71c-.18-.54-.2822-1.1168-.2822-1.71s.1023-1.17.2823-1.71V4.9582H.9573A8.9965 8.9965 0 000 9c0 1.4523.3477 2.8259.9573 4.0418L3.964 10.71z" />
+      <path fill="#EA4335" d="M9 3.5795c1.3214 0 2.5077.4541 3.4405 1.346l2.5814-2.5814C13.4632.8918 11.426 0 9 0 5.4818 0 2.4382 2.0168.9573 4.9582L3.964 7.29C4.6718 5.1627 6.656 3.5795 9 3.5795z" />
+    </svg>
+  );
+}
+
+function AppleIcon() {
+  return (
+    <svg width="16" height="19" viewBox="0 0 384 512" fill="#F5F1E8" aria-hidden="true">
+      <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76-19.7C64.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z" />
+    </svg>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg width="12" height="10" viewBox="0 0 12 10" fill="none" aria-hidden="true">
+      <path d="M1 5L4.2 8.5L11 1" stroke="#17130E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
 
 export default function LoginPage(): React.ReactElement {
   const [view, setView] = useState<LoginView>('login');
@@ -87,6 +104,7 @@ export default function LoginPage(): React.ReactElement {
   const [loginError, setLoginError] = useState<string | null>(null);
   const [loginLoading, setLoginLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // --- Recuperar contraseña ---
   const [forgotEmail, setForgotEmail] = useState('');
@@ -106,16 +124,14 @@ export default function LoginPage(): React.ReactElement {
   const [enteringLabel, setEnteringLabel] = useState<string | null>(null);
 
   // --- Google Sign-In ---
-  // Botón propio (texto plano, mismo trato visual que Apple) en vez del
-  // widget renderButton() de Google — ese iframe siempre trae el logo G por
-  // política de marca de Google, y el prototipo pide "dos botones iguales,
-  // solo texto". Se dispara prompt() (One Tap/FedCM) al clic; si el
+  // Botón propio (icono + texto) en vez del widget renderButton() de
+  // Google — ese iframe siempre trae su propia caja de marca por política
+  // de Google. Se dispara prompt() (One Tap/FedCM) al clic; si el
   // navegador lo bloquea (cookies de terceros, popups) o el usuario lo
   // descartó hace poco (cooldown de Google), el moment listener lo avisa en
   // vez de dejar el botón mudo.
   const googleInitializedRef = useRef(false);
   const [googleReady, setGoogleReady] = useState(false);
-  const GOOGLE_APPLE_BUTTON_HEIGHT = 36;
 
   const handleGoogleClick = useCallback(() => {
     if (typeof window === 'undefined' || !window.google?.accounts) return;
@@ -307,215 +323,443 @@ export default function LoginPage(): React.ReactElement {
     }
   }
 
-  const inputClasses =
-    'block w-full border-0 border-b border-[var(--eph-line-2)] rounded-none bg-transparent px-0 pt-2 pb-3 font-body text-[18px] font-normal text-[var(--eph-text)] outline-none transition-colors placeholder:text-[var(--eph-muted)] placeholder:opacity-70 focus:border-[var(--eph-accent)]';
-  const labelClasses =
-    'block font-mono text-[10px] font-normal uppercase tracking-[0.2em] text-[var(--eph-body)]';
-
-  const socialButtonClasses =
-    'w-full rounded-none border font-body flex items-center justify-center disabled:cursor-not-allowed disabled:opacity-60 transition-colors duration-150 hover:border-[var(--eph-accent-line)] hover:text-[var(--eph-text)]';
-  const socialButtonStyle: React.CSSProperties = {
-    background: 'transparent', color: FORM_INK_MUTED, borderColor: FORM_BORDER,
-    height: GOOGLE_APPLE_BUTTON_HEIGHT, fontSize: 15,
-  };
-
-  const socialButtons = (
-    <>
-      <div className="flex items-center gap-4 my-4">
-        <span className="flex-1 h-px" style={{ background: 'var(--eph-line)' }} />
-        <span className="font-mono text-[9px] uppercase tracking-[0.22em]" style={{ color: FORM_INK_MUTED }}>o continúa con</span>
-        <span className="flex-1 h-px" style={{ background: 'var(--eph-line)' }} />
-      </div>
-      {/* Fila de 2 botones idénticos, solo texto (prototipo aprobado): el
-          widget nativo de Google (renderButton) siempre trae el logo G por
-          política de marca — reemplazado por un botón propio que dispara
-          prompt() (ver handleGoogleClick), igual de "custom" que el de
-          Apple (que nunca tuvo un widget visual, solo auth.signIn()). */}
-      <div className="grid grid-cols-2 gap-3">
-        <button
-          type="button"
-          onClick={googleReady ? handleGoogleClick : undefined}
-          disabled={!googleReady}
-          title={googleReady ? undefined : 'Cargando…'}
-          aria-disabled={!googleReady}
-          className={socialButtonClasses}
-          style={socialButtonStyle}
-        >
-          Google
-        </button>
-        <button
-          type="button"
-          onClick={appleReady ? handleAppleClick : undefined}
-          disabled={!appleReady}
-          title={appleReady ? undefined : 'Próximamente'}
-          aria-disabled={!appleReady}
-          className={socialButtonClasses}
-          style={socialButtonStyle}
-        >
-          Apple
-        </button>
-      </div>
-    </>
-  );
-
   return (
     <>
-
-      {/* Pantalla transitoria mientras se procesa el login (con Google o con
-          email/contraseña) y se entra a la plataforma — cubre el tramo hasta
-          la navegación a "/", que si no se cubre se ve como si "regresara"
-          al login sin cambios por un instante. */}
+      {/* Pantalla transitoria mientras se procesa el login (con Google, con
+          Apple o con email/contraseña) y se entra a la plataforma — cubre el
+          tramo hasta la navegación a "/", que si no se cubre se ve como si
+          "regresara" al login sin cambios por un instante. */}
       {enteringLabel && (
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-5" style={{ background: LOGIN_PANEL_BG }}>
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-5" style={{ background: PAGE_BG }}>
           <svg className="animate-spin" viewBox="0 0 100 100" width="56" height="56" aria-hidden="true" style={{ animationDuration: '1.4s' }}>
-            <circle cx="50" cy="50" r="40" fill="none" strokeWidth="6" stroke="rgba(237,230,220,0.14)" />
-            <circle cx="50" cy="50" r="40" fill="none" strokeWidth="6" strokeLinecap="butt" strokeDasharray="70 251" stroke={FORM_ACCENT} />
+            <circle cx="50" cy="50" r="40" fill="none" strokeWidth="6" stroke="rgba(245,241,232,0.14)" />
+            <circle cx="50" cy="50" r="40" fill="none" strokeWidth="6" strokeLinecap="butt" strokeDasharray="70 251" stroke={GOLD} />
           </svg>
           <div className="flex flex-col items-center gap-1.5">
-            <p className="font-display text-xl" style={{ color: 'var(--eph-text)' }}>Ephirox</p>
-            <p className="font-mono text-[10px] uppercase tracking-[0.16em]" style={{ color: FORM_INK_MUTED }}>{enteringLabel}</p>
+            <p className="font-display text-xl" style={{ color: '#FBF8F1' }}>Ephirox</p>
+            <p className="font-body text-[10px] uppercase tracking-[0.16em]" style={{ color: 'rgba(245,241,232,0.6)' }}>{enteringLabel}</p>
           </div>
         </div>
       )}
 
-      <div className="min-h-screen w-full flex items-center justify-center p-4" style={{ background: LOGIN_PANEL_BG }}>
-        {/* md:min-h fija un tamaño de tarjeta estándar — no debe crecer o
-            encogerse según cuántos botones tenga cada formulario (login,
-            registro, recuperar contraseña). */}
-        <div className="max-w-4xl w-full md:min-h-[600px] grid grid-cols-1 md:grid-cols-2 rounded-none border overflow-hidden" style={{ borderColor: 'var(--eph-line-2)', boxShadow: 'var(--eph-shadow)' }}>
+      <div className="eph-login-page">
+        <div className="eph-login-card">
 
-          {/* ========== LADO IZQUIERDO — IDENTIDAD EPHIROX ========== */}
-          {/* Sin halo ni anillos decorativos alrededor (Prompt 03 §3): el
-              halo es un recurso gráfico aparte, nunca parte del logo. */}
-          <div className="relative overflow-hidden p-12 flex flex-col items-center justify-center text-center gap-[34px]" style={{ background: 'var(--eph-panel)' }}>
-            <Isotipo size={118} />
-            <div style={{ textAlign: 'center' }}>
-              <div
-                className="font-display uppercase"
-                style={{ fontWeight: 300, fontSize: 'clamp(34px, 4vw, 46px)', letterSpacing: '0.2em', textIndent: '0.2em', color: 'var(--eph-text)' }}
-              >
-                Ephirox
-              </div>
-              <div
-                className="font-display italic"
-                style={{ fontWeight: 400, fontSize: 22, letterSpacing: '0.02em', color: 'var(--eph-accent)', marginTop: 16 }}
-              >
-                Redefining limits.
-              </div>
-            </div>
-            <div
-              className="font-mono text-center"
-              style={{ fontSize: 9, letterSpacing: '0.22em', textTransform: 'uppercase', color: FORM_INK_MUTED, lineHeight: 2.1, marginTop: 8 }}
-            >
-              Sistema de Optimización Ejecutiva
-            </div>
+          {/* ========== PANEL DE MARCA (izquierda en desktop, arriba en móvil) ========== */}
+          <div className="eph-login-brand">
+            <div aria-hidden="true" className="eph-login-halo" />
+            <img
+              src="/brand/ephirox-lockup-vertical-oro.svg"
+              alt="Ephirox — Redefining limits."
+              className="eph-login-lockup"
+            />
           </div>
 
-          {/* ========== LADO DERECHO — FORMULARIO ========== */}
-          {/* --eph-auth (carbón) en vez del mismo fondo que el panel de marca
-              — así se lee como una pieza aparte, con su propio hairline. */}
-          <div className="p-12 flex flex-col justify-center gap-[30px]" style={{ background: 'var(--eph-auth)', borderLeft: '1px solid var(--eph-line-2)' }}>
-            {/* Vista de login: sin título propio — el panel arranca directo en
-                el campo Email, centrado en vertical (prototipo aprobado). */}
-            {view === 'forgot' && (
-              <h2 className="font-display text-[28px] font-normal" style={{ color: 'var(--eph-text)' }}>
-                Recuperar contraseña
-              </h2>
-            )}
-
+          {/* ========== PANEL DE FORMULARIO (derecha en desktop, abajo en móvil) ========== */}
+          <div className="eph-login-form-panel">
             {view === 'forgot' ? (
-              <form onSubmit={handleForgotPassword} className="w-full space-y-4" noValidate>
+              <form onSubmit={handleForgotPassword} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
+                <h1 className="font-display eph-login-title">Recuperar contraseña</h1>
+
                 {forgotError && (
-                  <div role="alert" className="rounded-none border px-4 py-3 font-body text-sm" style={{ borderColor: 'var(--eph-danger)', background: 'rgba(138,74,60,0.14)', color: 'var(--eph-text)' }}>
-                    {forgotError}
-                  </div>
+                  <p role="alert" className="font-body eph-login-error-text">{forgotError}</p>
                 )}
+
                 {forgotSent ? (
-                  <div role="status" className="rounded-none border px-4 py-3 font-body text-sm" style={{ borderColor: 'var(--eph-line-2)', background: 'var(--eph-surface)', color: 'var(--eph-text)' }}>
+                  <p role="status" className="font-body" style={{ margin: 0, fontSize: 14, lineHeight: 1.5, color: 'rgba(245,241,232,0.8)' }}>
                     Si el correo existe, enviaremos instrucciones para restablecer tu contraseña.
-                  </div>
+                  </p>
                 ) : (
                   <>
-                    <div className="space-y-1.5">
-                      <label htmlFor="forgot-email" className={labelClasses}>Email</label>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+                      <label htmlFor="forgot-email" className="font-body eph-login-label">EMAIL</label>
                       <input
                         id="forgot-email"
                         type="email"
+                        inputMode="email"
                         autoComplete="email"
                         required
                         value={forgotEmail}
                         onChange={(e) => setForgotEmail(e.target.value)}
-                        placeholder="tucorreo@ejemplo.com"
-                        className={inputClasses}
+                        placeholder="nombre@empresa.com"
+                        className={`font-body eph-login-input${forgotError ? ' has-error' : ''}`}
                       />
                     </div>
-                    <Button type="submit" variant="primary" disabled={forgotLoading} className="w-full" style={LOGIN_PRIMARY_BUTTON_STYLE}>
+                    <button type="submit" disabled={forgotLoading} className="font-body eph-login-submit">
                       {forgotLoading ? 'Enviando…' : 'Enviar instrucciones'}
-                    </Button>
+                    </button>
                   </>
                 )}
-                <div className="text-center mt-6">
-                  <Button
-                    type="button"
-                    variant="tertiary"
-                    onClick={() => { setView('login'); setForgotError(null); setForgotSent(false); }}
-                  >
-                    Volver a iniciar sesión
-                  </Button>
-                </div>
+
+                <button
+                  type="button"
+                  onClick={() => { setView('login'); setForgotError(null); setForgotSent(false); }}
+                  className="font-body eph-login-forgot-link"
+                  style={{ alignSelf: 'center' }}
+                >
+                  Volver a iniciar sesión
+                </button>
               </form>
             ) : (
-              <form onSubmit={handleLogin} className="w-full grid" style={{ gap: 30 }} noValidate>
-                {loginError && (
-                  <div role="alert" className="rounded-none border px-4 py-3 font-body text-sm" style={{ borderColor: 'var(--eph-danger)', background: 'rgba(138,74,60,0.14)', color: 'var(--eph-text)' }}>
-                    {loginError}
-                  </div>
-                )}
-                <div className="grid" style={{ gap: 26 }}>
-                  <div className="space-y-2.5">
-                    <label htmlFor="login-email" className={labelClasses}>Email</label>
-                    <input id="login-email" type="email" autoComplete="email" required value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} placeholder="tucorreo@ejemplo.com" className={inputClasses} />
-                  </div>
-                  <div className="space-y-2.5">
-                    <label htmlFor="login-password" className={labelClasses}>Contraseña</label>
-                    <input id="login-password" type="password" autoComplete="current-password" required value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} placeholder="••••••••" className={inputClasses} />
-                  </div>
+              <form onSubmit={handleLogin} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
+                <h1 className="font-display eph-login-title">Acceso de miembros</h1>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+                  <label htmlFor="login-email" className="font-body eph-login-label">EMAIL</label>
+                  <input
+                    id="login-email"
+                    type="email"
+                    inputMode="email"
+                    autoComplete="email"
+                    required
+                    value={loginEmail}
+                    onChange={(e) => setLoginEmail(e.target.value)}
+                    placeholder="nombre@empresa.com"
+                    className={`font-body eph-login-input${loginError ? ' has-error' : ''}`}
+                  />
                 </div>
-                <div className="flex items-center justify-between gap-4 flex-wrap">
-                  <label className="flex items-center gap-3 font-body cursor-pointer select-none" style={{ color: FORM_INK_MUTED, fontSize: 16, lineHeight: 1 }}>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' }}>
+                    <label htmlFor="login-password" className="font-body eph-login-label">CONTRASEÑA</label>
+                    <button
+                      type="button"
+                      onClick={() => { setView('forgot'); setLoginError(null); }}
+                      className="font-body eph-login-forgot-link"
+                    >
+                      ¿La olvidaste?
+                    </button>
+                  </div>
+                  <div style={{ position: 'relative' }}>
                     <input
-                      type="checkbox"
-                      checked={rememberMe}
-                      onChange={(e) => setRememberMe(e.target.checked)}
-                      className="peer sr-only"
+                      id="login-password"
+                      type={showPassword ? 'text' : 'password'}
+                      autoComplete="current-password"
+                      required
+                      value={loginPassword}
+                      onChange={(e) => setLoginPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className={`font-body eph-login-input${loginError ? ' has-error' : ''}`}
+                      style={{ paddingRight: 66 }}
                     />
-                    <span
-                      aria-hidden="true"
-                      className="block peer-checked:bg-[var(--eph-accent)] peer-checked:border-[var(--eph-accent)]"
-                      style={{ width: 15, height: 15, border: `1px solid ${FORM_BORDER}`, background: 'transparent' }}
-                    />
-                    Recuérdame
-                  </label>
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((v) => !v)}
+                      className="font-body eph-login-pwd-toggle"
+                      aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                    >
+                      {showPassword ? 'OCULTAR' : 'VER'}
+                    </button>
+                  </div>
+                  {loginError && (
+                    <p role="alert" className="font-body eph-login-error-text">{loginError}</p>
+                  )}
+                </div>
+
+                <label className="eph-login-checkbox-row">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="sr-only eph-login-checkbox-input"
+                  />
+                  <span aria-hidden="true" className={`eph-login-checkbox-box${rememberMe ? ' is-checked' : ''}`}>
+                    {rememberMe && <CheckIcon />}
+                  </span>
+                  <span className="font-body" style={{ fontSize: 14, fontWeight: 300, color: 'rgba(245,241,232,0.8)' }}>
+                    Mantener sesión iniciada
+                  </span>
+                </label>
+
+                <button type="submit" disabled={loginLoading} className="font-body eph-login-submit">
+                  {loginLoading ? (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                      <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <circle cx="12" cy="12" r="10" stroke="#17130E" strokeOpacity="0.3" strokeWidth="4" />
+                        <path fill="#17130E" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                      </svg>
+                      Ingresando…
+                    </span>
+                  ) : 'Entrar'}
+                </button>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                  <span className="eph-login-divider-line" />
+                  <span className="font-body" style={{ fontSize: 11, fontWeight: 300, letterSpacing: '0.16em', color: 'rgba(245,241,232,0.6)', whiteSpace: 'nowrap' }}>
+                    O CONTINÚA CON
+                  </span>
+                  <span className="eph-login-divider-line" />
+                </div>
+
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
                   <button
                     type="button"
-                    onClick={() => { setView('forgot'); setLoginError(null); }}
-                    className="font-body transition-colors duration-150 hover:text-[var(--eph-text)] hover:border-[var(--eph-accent-line)]"
-                    style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontSize: 16, lineHeight: 1, color: FORM_INK_MUTED, borderBottom: '1px solid var(--eph-line)' }}
+                    onClick={googleReady ? handleGoogleClick : undefined}
+                    disabled={!googleReady}
+                    title={googleReady ? undefined : 'Cargando…'}
+                    aria-disabled={!googleReady}
+                    className="font-body eph-login-social-btn"
                   >
-                    ¿Olvidaste tu contraseña?
+                    <GoogleIcon /> Google
+                  </button>
+                  <button
+                    type="button"
+                    onClick={appleReady ? handleAppleClick : undefined}
+                    disabled={!appleReady}
+                    title={appleReady ? undefined : 'Próximamente'}
+                    aria-disabled={!appleReady}
+                    className="font-body eph-login-social-btn"
+                  >
+                    <AppleIcon /> Apple
                   </button>
                 </div>
-                <Button type="submit" variant="primary" disabled={loginLoading} className="w-full" style={LOGIN_PRIMARY_BUTTON_STYLE}>
-                  {loginLoading ? (<span className="flex items-center gap-2"><svg className="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>Ingresando…</span>) : 'Entrar'}
-                </Button>
 
-                {socialButtons}
+                <p className="font-body" style={{ textAlign: 'center', margin: 0, fontSize: 14, fontWeight: 300, color: 'rgba(245,241,232,0.62)' }}>
+                  ¿Sin acceso todavía? <a href="https://ephirox.com/#llevarlo" className="eph-login-footer-link">Solicitar cohorte</a>
+                </p>
               </form>
             )}
           </div>
 
         </div>
       </div>
+
+      <style jsx>{`
+        .eph-login-page {
+          min-height: 100dvh;
+          width: 100%;
+          background: ${PAGE_BG};
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: clamp(0px, 4vw, 56px) clamp(0px, 4vw, 48px);
+        }
+        .eph-login-card {
+          max-width: 1060px;
+          width: 100%;
+          display: flex;
+          flex-wrap: wrap;
+          border-radius: clamp(0px, 2vw, 22px);
+          overflow: hidden;
+          border: 1px solid rgba(201, 166, 107, 0.16);
+          box-shadow: 0 60px 120px -60px rgba(0, 0, 0, 0.95);
+        }
+        .eph-login-brand {
+          flex: 1 1 400px;
+          position: relative;
+          overflow: hidden;
+          background: #100d0a;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: clamp(38px, 6vw, 64px) 32px;
+          min-height: clamp(240px, 34vw, 620px);
+        }
+        .eph-login-halo {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -55%);
+          width: 720px;
+          height: 720px;
+          border-radius: 50%;
+          background: radial-gradient(closest-side, rgba(201, 166, 107, 0.15), rgba(201, 166, 107, 0));
+          pointer-events: none;
+        }
+        .eph-login-lockup {
+          position: relative;
+          width: clamp(180px, 26vw, 300px);
+          height: auto;
+          display: block;
+        }
+        .eph-login-form-panel {
+          flex: 1 1 400px;
+          background: #1a160f;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          gap: 22px;
+          padding: clamp(30px, 5vw, 56px) clamp(24px, 4.4vw, 52px) calc(clamp(30px, 5vw, 56px) + env(safe-area-inset-bottom));
+        }
+        .eph-login-title {
+          margin: 0;
+          font-weight: 300;
+          font-size: clamp(26px, 3.4vw, 34px);
+          line-height: 1.1;
+          color: #fbf8f1;
+        }
+        .eph-login-label {
+          font-weight: 400;
+          font-size: 10px;
+          letter-spacing: 0.2em;
+          color: ${GOLD};
+        }
+        .eph-login-input {
+          box-sizing: border-box;
+          width: 100%;
+          height: 52px;
+          padding: 0 16px;
+          border-radius: 10px;
+          border: 1px solid rgba(245, 241, 232, 0.16);
+          background: #221c15;
+          color: #f5f1e8;
+          font-weight: 300;
+          font-size: 16px;
+          outline: none;
+          transition: border-color 0.15s ease, background 0.15s ease;
+        }
+        .eph-login-input::placeholder {
+          color: rgba(245, 241, 232, 0.42);
+        }
+        .eph-login-input:focus {
+          border-color: ${GOLD};
+          background: #261f16;
+        }
+        .eph-login-input.has-error {
+          border-color: ${ERROR_COLOR};
+        }
+        .eph-login-error-text {
+          margin: 0;
+          font-size: 13px;
+          font-weight: 300;
+          color: ${ERROR_COLOR};
+        }
+        .eph-login-pwd-toggle {
+          position: absolute;
+          top: 50%;
+          right: 8px;
+          transform: translateY(-50%);
+          height: 40px;
+          min-width: 52px;
+          padding: 0 8px;
+          background: transparent;
+          border: none;
+          font-weight: 400;
+          font-size: 11px;
+          letter-spacing: 0.12em;
+          color: ${GOLD};
+          cursor: pointer;
+        }
+        .eph-login-pwd-toggle:hover {
+          color: #e4c88f;
+        }
+        .eph-login-forgot-link {
+          background: none;
+          border: none;
+          padding: 0;
+          margin: 0;
+          font-weight: 300;
+          font-size: 13px;
+          color: ${GOLD};
+          cursor: pointer;
+          min-height: 44px;
+          display: inline-flex;
+          align-items: center;
+        }
+        .eph-login-forgot-link:hover {
+          color: #e4c88f;
+        }
+        .eph-login-checkbox-row {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          min-height: 44px;
+          cursor: pointer;
+          user-select: none;
+        }
+        .eph-login-checkbox-box {
+          flex-shrink: 0;
+          width: 20px;
+          height: 20px;
+          border-radius: 5px;
+          border: 1px solid rgba(201, 166, 107, 0.65);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: background 0.15s ease, border-color 0.15s ease;
+        }
+        .eph-login-checkbox-box.is-checked {
+          background: ${GOLD};
+          border-color: ${GOLD};
+        }
+        .eph-login-checkbox-input:focus-visible + .eph-login-checkbox-box {
+          outline: 2px solid ${GOLD};
+          outline-offset: 2px;
+        }
+        .eph-login-submit {
+          width: 100%;
+          height: 56px;
+          border-radius: 10px;
+          border: none;
+          background: linear-gradient(180deg, #d9b87c, #c09a5c);
+          color: #17130e;
+          font-weight: 500;
+          font-size: 13px;
+          letter-spacing: 0.26em;
+          text-indent: 0.26em;
+          box-shadow: 0 16px 34px -20px rgba(201, 166, 107, 0.9);
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: background 0.15s ease, transform 0.1s ease;
+        }
+        .eph-login-submit:hover:not(:disabled) {
+          background: linear-gradient(180deg, #e4c88f, #cba669);
+        }
+        .eph-login-submit:active:not(:disabled) {
+          transform: translateY(1px);
+        }
+        .eph-login-submit:disabled {
+          cursor: not-allowed;
+          opacity: 0.85;
+        }
+        .eph-login-divider-line {
+          flex: 1;
+          height: 1px;
+          background: rgba(245, 241, 232, 0.14);
+        }
+        .eph-login-social-btn {
+          flex: 1 1 140px;
+          height: 52px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          border-radius: 10px;
+          border: 1px solid rgba(245, 241, 232, 0.18);
+          background: transparent;
+          color: #f5f1e8;
+          font-weight: 300;
+          font-size: 15px;
+          cursor: pointer;
+          transition: border-color 0.15s ease, background 0.15s ease;
+        }
+        .eph-login-social-btn:hover:not(:disabled) {
+          border-color: rgba(201, 166, 107, 0.6);
+          background: rgba(201, 166, 107, 0.06);
+        }
+        .eph-login-social-btn:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+        .eph-login-footer-link {
+          color: ${GOLD};
+          text-decoration: none;
+        }
+        .eph-login-footer-link:hover {
+          text-decoration: underline;
+        }
+        .eph-login-forgot-link:focus-visible,
+        .eph-login-pwd-toggle:focus-visible,
+        .eph-login-submit:focus-visible,
+        .eph-login-social-btn:focus-visible,
+        .eph-login-input:focus-visible,
+        .eph-login-footer-link:focus-visible {
+          outline: 2px solid ${GOLD};
+          outline-offset: 2px;
+        }
+      `}</style>
     </>
   );
 }
