@@ -135,7 +135,6 @@
 .eph-landing2 .costos-mobile-wrap { display: none; min-width: 0; }
 .eph-landing2 .leer-block { display: grid; gap: clamp(20px, 3vw, 30px); justify-items: start; border-top: 1px solid rgba(23,19,14,0.14); padding-top: clamp(30px, 4vw, 48px); }
 .eph-landing2 .leer-block .frase { margin: 0; font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: clamp(21px, 2.4vw, 30px); line-height: 1.4; max-width: 52ch; text-wrap: pretty; }
-.eph-landing2 .leer-block .disclaimer { margin: 0; font-size: 13px; line-height: 1.6; color: rgba(23,19,14,0.5); max-width: 62ch; }
 
 .eph-landing2 .medimos-intro {
   background: var(--bg-light);

@@ -167,7 +167,6 @@ export function LandingPage() {
 
             <div className="leer-block">
               <WordReveal text={FRASE} />
-              <p className="disclaimer">Ephirox mide y ayuda a gestionar hábitos. No previene ni trata ninguna condición médica.</p>
             </div>
           </div>
         </section>
