@@ -8,12 +8,14 @@ function ok(res: Response, data: Record<string, unknown>) {
 }
 
 export async function getTodayMorningCheckin(req: Request, res: Response) {
-  const checkin = await morningCheckinService.getTodayMorningCheckin(req.params.id);
+  const tz = typeof req.query.tz === 'string' ? req.query.tz : undefined;
+  const checkin = await morningCheckinService.getTodayMorningCheckin(req.params.id, tz);
   return ok(res, { checkin });
 }
 
 export async function postMorningCheckin(req: Request, res: Response) {
-  const checkin = await morningCheckinService.upsertTodayMorningCheckin(req.params.id, req.body as MorningCheckinInput);
+  const { tz, ...input } = req.body as MorningCheckinInput;
+  const checkin = await morningCheckinService.upsertTodayMorningCheckin(req.params.id, input, tz);
   return ok(res, { checkin });
 }
 

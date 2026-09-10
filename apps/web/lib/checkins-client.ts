@@ -1,6 +1,11 @@
 import { PermissionDeniedError } from './api-client';
+import { clientTz } from './client-tz';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3003';
+
+function withTz(path: string): string {
+  return `${path}?tz=${encodeURIComponent(clientTz())}`;
+}
 
 async function authorizedRequest<T>(path: string, method: string, body?: unknown): Promise<T> {
   const res = await fetch(`${API_BASE_URL}${path}`, {
@@ -49,24 +54,27 @@ export type WeeklyReflectionRecord = {
 } | null;
 
 export async function getCheckinsStatus(clientId: string): Promise<CheckinsStatus> {
-  const body = await authorizedRequest<{ success: boolean } & CheckinsStatus>(`/api/clients/${clientId}/checkins-status`, 'GET');
-  return body;
+  const body = await authorizedRequest<{ success: boolean; error?: string } & Partial<CheckinsStatus>>(withTz(`/api/clients/${clientId}/checkins-status`), 'GET');
+  if (!body.success) throw new Error(body.error || 'Error al obtener el estado de los rituales.');
+  return body as CheckinsStatus;
 }
 
 export async function getTodayCheckin(clientId: string): Promise<DailyCheckinRecord> {
-  const body = await authorizedRequest<{ success: boolean; checkin: DailyCheckinRecord }>(`/api/clients/${clientId}/daily-checkin/today`, 'GET');
+  const body = await authorizedRequest<{ success: boolean; checkin: DailyCheckinRecord; error?: string }>(withTz(`/api/clients/${clientId}/daily-checkin/today`), 'GET');
+  if (!body.success) throw new Error(body.error || 'Error al obtener el ritual diario.');
   return body.checkin;
 }
 
 export async function postDailyCheckin(clientId: string, pulsoAnimo: number): Promise<void> {
-  await authorizedRequest(`/api/clients/${clientId}/daily-checkin`, 'POST', { pulsoAnimo });
+  await authorizedRequest(`/api/clients/${clientId}/daily-checkin`, 'POST', { pulsoAnimo, tz: clientTz() });
 }
 
 export async function getCurrentWeekReflection(clientId: string): Promise<WeeklyReflectionRecord> {
-  const body = await authorizedRequest<{ success: boolean; reflection: WeeklyReflectionRecord }>(`/api/clients/${clientId}/weekly-reflection/current`, 'GET');
+  const body = await authorizedRequest<{ success: boolean; reflection: WeeklyReflectionRecord; error?: string }>(withTz(`/api/clients/${clientId}/weekly-reflection/current`), 'GET');
+  if (!body.success) throw new Error(body.error || 'Error al obtener la reflexión semanal.');
   return body.reflection;
 }
 
 export async function postWeeklyReflection(clientId: string, input: WeeklyReflectionInput): Promise<void> {
-  await authorizedRequest(`/api/clients/${clientId}/weekly-reflection`, 'POST', input);
+  await authorizedRequest(`/api/clients/${clientId}/weekly-reflection`, 'POST', { ...input, tz: clientTz() });
 }

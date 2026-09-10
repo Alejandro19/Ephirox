@@ -7,33 +7,15 @@ import { db } from '../db/index.js';
 import { dailyCheckins, weeklyReflections, type DailyCheckin, type WeeklyReflection } from '../models/schema.js';
 import { getPersonalInfoByClientId } from './personal-info.service.js';
 import { isPeriodConfirmationDue } from './insights/fase-ciclo.js';
+import { addDaysISO, todayInTz, weekStartInTz, isWeekendInTz } from './timezone.js';
 
-// Lunes de la semana ISO vigente (UTC) — mismo cálculo que wellness-index.service.ts:83-89.
-function currentWeekStartUTC(today: Date = new Date()): string {
-  const day = today.getUTCDay();
-  const diffToMonday = day === 0 ? -6 : 1 - day;
-  const monday = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() + diffToMonday));
-  return monday.toISOString().slice(0, 10);
-}
-
-function todayISO(): string {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function addDaysISO(iso: string, days: number): string {
-  const [y, m, d] = iso.split('-').map(Number);
-  const dt = new Date(Date.UTC(y, m - 1, d + days));
-  return dt.toISOString().slice(0, 10);
-}
-
-// Sábado (6) o domingo (0) — ventana del Ritual Semanal. El bloque queda
-// visible toda la semana (Alejandro pidió que nunca desaparezca, genera
-// retentiva verlo aunque esté bloqueado), pero solo es interactuable en fin
-// de semana.
-function isWeekendUTC(today: Date = new Date()): boolean {
-  const day = today.getUTCDay();
-  return day === 0 || day === 6;
-}
+// "Hoy"/"esta semana" se calculan en la tz del cliente (ver timezone.ts) —
+// antes usaban el día calendario UTC puro, lo que hacía que el corte de día
+// cayera a las 7pm hora Bogotá en vez de medianoche local: un check-in
+// respondido después de esa hora quedaba guardado con `fecha` del día
+// siguiente, y al volver a abrir el ritual esa misma noche/madrugada parecía
+// "no respondido todavía" aunque el cliente ya lo había llenado unas horas
+// antes.
 
 // Mismo patrón que computeConsecutiveDaysOverThreshold (cognitive-load-logic.ts):
 // función pura, derivada en lectura, sin contador persistido.
@@ -60,22 +42,22 @@ export function computeWeeklyReflectionStreak(semanaInicios: string[], currentWe
   return streak;
 }
 
-export async function getTodayCheckin(clientId: string): Promise<DailyCheckin | null> {
-  const rows = await db.select().from(dailyCheckins).where(and(eq(dailyCheckins.clientId, clientId), eq(dailyCheckins.fecha, todayISO()))).limit(1);
+export async function getTodayCheckin(clientId: string, tz?: string): Promise<DailyCheckin | null> {
+  const rows = await db.select().from(dailyCheckins).where(and(eq(dailyCheckins.clientId, clientId), eq(dailyCheckins.fecha, todayInTz(tz)))).limit(1);
   return rows[0] ?? null;
 }
 
-export async function upsertDailyCheckin(clientId: string, pulsoAnimo: number): Promise<DailyCheckin> {
+export async function upsertDailyCheckin(clientId: string, pulsoAnimo: number, tz?: string): Promise<DailyCheckin> {
   const [row] = await db
     .insert(dailyCheckins)
-    .values({ clientId, fecha: todayISO(), pulsoAnimo })
+    .values({ clientId, fecha: todayInTz(tz), pulsoAnimo })
     .onConflictDoUpdate({ target: [dailyCheckins.clientId, dailyCheckins.fecha], set: { pulsoAnimo } })
     .returning();
   return row;
 }
 
-export async function getCurrentWeekReflection(clientId: string): Promise<WeeklyReflection | null> {
-  const rows = await db.select().from(weeklyReflections).where(and(eq(weeklyReflections.clientId, clientId), eq(weeklyReflections.semanaInicio, currentWeekStartUTC()))).limit(1);
+export async function getCurrentWeekReflection(clientId: string, tz?: string): Promise<WeeklyReflection | null> {
+  const rows = await db.select().from(weeklyReflections).where(and(eq(weeklyReflections.clientId, clientId), eq(weeklyReflections.semanaInicio, weekStartInTz(tz)))).limit(1);
   return rows[0] ?? null;
 }
 
@@ -85,8 +67,8 @@ export type UpsertWeeklyReflectionInput = {
   despertaresNocturnosSemana?: string | null;
 };
 
-export async function upsertWeeklyReflection(clientId: string, input: UpsertWeeklyReflectionInput): Promise<WeeklyReflection> {
-  const semanaInicio = currentWeekStartUTC();
+export async function upsertWeeklyReflection(clientId: string, input: UpsertWeeklyReflectionInput, tz?: string): Promise<WeeklyReflection> {
+  const semanaInicio = weekStartInTz(tz);
   const values = {
     estresCronico: input.estresCronico,
     tecnicasManejoUsadas: input.tecnicasManejoUsadas ?? null,
@@ -117,9 +99,9 @@ export type CheckinsStatus = {
   weeklyRitualWindowOpen: boolean;
 };
 
-export async function getCheckinsStatus(clientId: string): Promise<CheckinsStatus> {
-  const today = todayISO();
-  const currentWeekStart = currentWeekStartUTC();
+export async function getCheckinsStatus(clientId: string, tz?: string): Promise<CheckinsStatus> {
+  const today = todayInTz(tz);
+  const currentWeekStart = weekStartInTz(tz);
 
   const [
     todayCheckin,
@@ -130,8 +112,8 @@ export async function getCheckinsStatus(clientId: string): Promise<CheckinsStatu
     allDailyFechas,
     allWeeklyStarts,
   ] = await Promise.all([
-    getTodayCheckin(clientId),
-    getCurrentWeekReflection(clientId),
+    getTodayCheckin(clientId, tz),
+    getCurrentWeekReflection(clientId, tz),
     getPersonalInfoByClientId(clientId),
     db.select().from(dailyCheckins).where(eq(dailyCheckins.clientId, clientId)).orderBy(desc(dailyCheckins.fecha)).limit(1),
     getLatestWeeklyReflection(clientId),
@@ -160,6 +142,6 @@ export async function getCheckinsStatus(clientId: string): Promise<CheckinsStatu
     lastResponseAt,
     dailyStreakDays: computeDailyCheckinStreak(allDailyFechas.map((r) => r.fecha), today),
     weeklyStreakWeeks: computeWeeklyReflectionStreak(allWeeklyStarts.map((r) => r.semanaInicio), currentWeekStart),
-    weeklyRitualWindowOpen: isWeekendUTC(),
+    weeklyRitualWindowOpen: isWeekendInTz(tz),
   };
 }

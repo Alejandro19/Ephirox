@@ -1,4 +1,5 @@
 import { PermissionDeniedError } from './api-client';
+import { clientTz } from './client-tz';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3003';
 
@@ -143,13 +144,13 @@ export type MorningCheckin = {
 } | null;
 
 export async function getTodayMorningCheckin(clientId: string): Promise<MorningCheckin> {
-  const body = await authorizedRequest<{ success: boolean; checkin: MorningCheckin; error?: string }>(`/api/clients/${clientId}/morning-checkin/today`, 'GET');
+  const body = await authorizedRequest<{ success: boolean; checkin: MorningCheckin; error?: string }>(`/api/clients/${clientId}/morning-checkin/today?tz=${encodeURIComponent(clientTz())}`, 'GET');
   if (!body.success) throw new Error(body.error || 'Error al obtener el check-in matutino.');
   return body.checkin;
 }
 
 export async function postMorningCheckin(clientId: string, input: { energia: number; tension: number; claridad: number }): Promise<MorningCheckin> {
-  const body = await authorizedRequest<{ success: boolean; checkin: MorningCheckin; error?: string }>(`/api/clients/${clientId}/morning-checkin`, 'POST', input);
+  const body = await authorizedRequest<{ success: boolean; checkin: MorningCheckin; error?: string }>(`/api/clients/${clientId}/morning-checkin`, 'POST', { ...input, tz: clientTz() });
   if (!body.success) throw new Error(body.error || 'Error al guardar el check-in matutino.');
   return body.checkin;
 }
