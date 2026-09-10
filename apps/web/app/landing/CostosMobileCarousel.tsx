@@ -2,15 +2,16 @@
 
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
-import { COSTOS_MOBILE } from './content';
+import { COSTOS } from './content';
 
-// Versión mobile de la grilla de 3 costos (desktop: .costos-grid en
-// LandingPage.tsx, sin tocar) — carrusel de scroll-snap nativo en vez de una
-// librería de carrusel con JS, mismo criterio que PasosMobileList.tsx (menos
-// peso, accesible: un lector de pantalla sigue leyendo las 3 tarjetas en
-// orden de DOM). El indicador de abajo reutiliza las mismas clases que el
-// "1 de 3" del hero (HeroStatCard.tsx: .hero-progress/-track/-fill), solo
-// que acá el relleno refleja la tarjeta centrada por scroll, no un timer.
+// Versión mobile del mismo diseño con foto que .costos-grid en
+// LandingPage.tsx (desktop) — ahí es un grid estático, acá es un carrusel
+// de scroll-snap nativo en vez de una librería con JS, mismo criterio que
+// PasosMobileList.tsx (menos peso, accesible: un lector de pantalla sigue
+// leyendo las 3 tarjetas en orden de DOM). El indicador de abajo reutiliza
+// las mismas clases que el "1 de 3" del hero (HeroStatCard.tsx:
+// .hero-progress/-track/-fill), solo que acá el relleno refleja la
+// tarjeta centrada por scroll, no un timer.
 export function CostosMobileCarousel() {
   const trackRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
@@ -49,7 +50,7 @@ export function CostosMobileCarousel() {
   return (
     <div className="costos-mobile-wrap">
       <div className="costos-mobile-track" ref={trackRef}>
-        {COSTOS_MOBILE.map((c) => (
+        {COSTOS.map((c) => (
           <div className="costos-mobile-card" key={c.num}>
             <Image src={c.img} alt={c.alt} fill quality={82} sizes="90vw" style={{ objectFit: 'cover' }} className="costos-mobile-bg" />
             <div className="costos-mobile-text">
@@ -61,7 +62,7 @@ export function CostosMobileCarousel() {
         ))}
       </div>
       <div className="hero-progress costos-mobile-dots" role="tablist" aria-label="Posición del carrusel">
-        {COSTOS_MOBILE.map((c, i) => (
+        {COSTOS.map((c, i) => (
           <button key={c.num} type="button" role="tab" aria-selected={i === active} aria-label={c.num} onClick={() => goTo(i)}>
             <span className="hero-progress-track">
               <span className="hero-progress-fill" style={{ width: i === active ? '100%' : '0%' }} />

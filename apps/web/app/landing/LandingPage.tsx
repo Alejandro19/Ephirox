@@ -154,8 +154,9 @@ export function LandingPage() {
 
             <div className="costos-grid">
               {COSTOS.map((c) => (
-                <div className="cost-outer" key={c.num}>
-                  <div className="cost-card">
+                <div className="cost-card" key={c.num}>
+                  <Image src={c.img} alt={c.alt} fill quality={82} sizes="(min-width: 769px) 30vw, 90vw" style={{ objectFit: 'cover' }} className="cost-card-bg" />
+                  <div className="cost-card-text">
                     <span className="num">{c.num}</span>
                     <p>{c.texto}</p>
                     <span className="src">{c.src}</span>

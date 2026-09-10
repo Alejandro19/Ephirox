@@ -119,11 +119,39 @@
 .eph-landing2 .contexto-wrap h2 em { font-family: 'Cormorant Garamond', serif; font-weight: 400; font-style: italic; font-size: 1.12em; color: var(--gold-dark); }
 .eph-landing2 .contexto-wrap p.body { margin: 0; font-size: 17px; line-height: 1.7; color: var(--ink-soft); max-width: 60ch; text-wrap: pretty; }
 .eph-landing2 .costos-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr)); gap: clamp(20px, 2.6vw, 34px); }
-.eph-landing2 .cost-outer { border-radius: 24px; padding: clamp(7px, 0.8vw, 11px); background: linear-gradient(150deg, rgba(140,106,47,0.3) 0%, rgba(140,106,47,0.06) 46%, rgba(140,106,47,0.18) 100%); }
-.eph-landing2 .cost-card { height: 100%; border-radius: 17px; border: 1px solid rgba(140,106,47,0.18); background: linear-gradient(160deg, #FBF8F1 0%, #F7F2E7 62%, #FBF8F1 100%); padding: clamp(30px, 3.2vw, 44px); display: grid; gap: 14px; align-content: start; box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), 0 22px 46px -28px rgba(23,19,14,0.35); }
-.eph-landing2 .cost-card .num { font-family: 'Cormorant Garamond', serif; font-weight: 400; font-size: clamp(42px, 4.6vw, 62px); line-height: 1; color: var(--gold-dark); font-variant-numeric: lining-nums tabular-nums; letter-spacing: 0.01em; white-space: nowrap; }
-.eph-landing2 .cost-card p { margin: 0; font-size: 17px; line-height: 1.6; color: rgba(23,19,14,0.7); max-width: 30ch; text-wrap: pretty; }
-.eph-landing2 .cost-card .src { font-size: 10px; letter-spacing: 0.1em; color: rgba(23,19,14,0.4); text-transform: uppercase; }
+/* Mismo diseño con foto del carrusel mobile (CostosMobileCarousel.tsx),
+   pero estático — sin scroll-snap ni puntos, cada tarjeta ocupa su propia
+   columna del grid de siempre. Ver ese componente para el porqué de cada
+   decisión (overlay, tamaños, etc.), acá solo se ajustan las medidas a un
+   ancho de columna en vez de 85vw. */
+.eph-landing2 .cost-card {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  border-radius: clamp(17px, 1.6vw, 24px);
+  overflow: hidden;
+  box-shadow: 0 22px 46px -28px rgba(23,19,14,0.5);
+}
+.eph-landing2 .cost-card-bg { background: #161210; }
+.eph-landing2 .cost-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0) 30%, rgba(0,0,0,0.92) 100%);
+  pointer-events: none;
+}
+.eph-landing2 .cost-card-text {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  padding: clamp(22px, 2.6vw, 34px);
+  display: grid;
+  gap: 12px;
+}
+.eph-landing2 .cost-card .num { font-family: 'Cormorant Garamond', serif; font-weight: 500; font-size: clamp(44px, 4.2vw, 58px); line-height: 1; color: #caa057; font-variant-numeric: lining-nums tabular-nums; letter-spacing: 0.01em; white-space: nowrap; text-shadow: 0 2px 14px rgba(0,0,0,0.5); }
+.eph-landing2 .cost-card-text p { margin: 0; font-size: clamp(15px, 1vw, 17px); line-height: 1.55; color: rgba(255,255,255,0.96); max-width: 32ch; text-wrap: pretty; }
+.eph-landing2 .cost-card-text .src { font-size: 10px; letter-spacing: 0.12em; color: rgba(245,241,232,0.5); text-transform: uppercase; }
 /* Carrusel mobile de costos (CostosMobileCarousel.tsx) — oculto en desktop
    por defecto, mismo patrón que .pasos-mobile-list: se activa solo dentro
    del media query de mobile más abajo, junto con ocultar .costos-grid ahí.
