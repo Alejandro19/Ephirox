@@ -15,6 +15,15 @@ export const COSTOS = [
   { num: '55 / 6.9', texto: 'Edad promedio en que se nombra a un CEO, y años que dura hoy en el cargo. Una sube. La otra baja.', src: 'NBER 2026 / KORN FERRY 2020' },
 ] as const;
 
+// Mismos 3 datos que COSTOS, copy acortado a propósito para la tarjeta del
+// carrusel mobile (CostosMobileCarousel.tsx) — tarjeta angosta, no cabe el
+// texto largo del grid de escritorio. No usar en desktop.
+export const COSTOS_MOBILE = [
+  { num: '5X', texto: 'Un ejecutivo en burnout cuesta hasta 5x más que un empleado promedio (US$20.683 vs. US$4.257/año).', src: 'AM. J. OF PREVENTIVE MEDICINE, 2025' },
+  { num: '10 – 40 %', texto: 'Más riesgo cardiovascular por tensión laboral sostenida — 27 estudios, +600.000 personas.', src: 'KIVIMÄKI & KAWACHI, 2015' },
+  { num: '55 / 6.9', texto: 'Edad promedio al nombrar a un CEO, y años que dura hoy en el cargo. Una sube. La otra baja.', src: 'NBER 2026 / KORN FERRY 2020' },
+] as const;
+
 export const FRASE = 'Puedes seguir administrando el desgaste, o puedes empezar a dirigirlo. Esa decisión define qué tan lejos llega lo que construiste.';
 
 export const PASOS = [

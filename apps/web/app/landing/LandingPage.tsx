@@ -8,6 +8,7 @@ import { HeroStatCard } from './HeroStatCard';
 import { WordReveal } from './WordReveal';
 import { PasosSticky } from './PasosSticky';
 import { PasosMobileList } from './PasosMobileList';
+import { CostosMobileCarousel } from './CostosMobileCarousel';
 import { CategoriaTable } from './CategoriaTable';
 import { Dia90Rail } from './Dia90Rail';
 import { JuntaSection } from './JuntaChart';
@@ -162,6 +163,7 @@ export function LandingPage() {
                 </div>
               ))}
             </div>
+            <CostosMobileCarousel />
 
             <div className="leer-block">
               <WordReveal text={FRASE} />
