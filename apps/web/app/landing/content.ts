@@ -35,14 +35,14 @@ type CompareRow = {
 export const COMPARACION: CompareRow[] = [
   {
     indicador: 'Detección temprana de riesgo',
-    trad: '1 de cada 3 trabajadores en Colombia enfrenta desafíos de salud mental que afectan su desempeño.',
+    trad: 'Encuestas de clima o evaluaciones puntuales, sin señales tempranas ni seguimiento individual.',
     eph: 'Biomarcadores sanguíneos + wearable + comportamiento, + edad biológica como señal de riesgo antes del síntoma.',
     dif: 'Sistema preventivo, no reactivo',
   },
   {
     indicador: 'Costo de ausentismo por salud',
-    trad: '34 % de los trabajadores colombianos se ausenta por ansiedad o estrés; el ausentismo le cuesta a las empresas cerca de 10 días por trabajador al año.',
-    tradMobile: '34 % de los trabajadores colombianos se ausenta por ansiedad o estrés; el ausentismo le cuesta a las empresas cerca de 10 días por trabajador al año.',
+    trad: 'El ausentismo por ansiedad o estrés le cuesta a las empresas cerca de 10 días por trabajador al año — y se sabe solo cuando ya ocurrió.',
+    tradMobile: 'El ausentismo por ansiedad o estrés le cuesta a las empresas cerca de 10 días por trabajador al año — y se sabe solo cuando ya ocurrió.',
     eph: 'Stress + Sleep con monitoreo continuo por wearable y check-ins sobre datos reales del ejecutivo.',
     dif: 'Intervención antes de que se traduzca en ausencia',
   },

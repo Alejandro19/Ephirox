@@ -184,7 +184,7 @@ export function LandingPage() {
           <div className="categoria-wrap">
             <ScrollReveal className="categoria-head">
               <h2><span className="a">Anticipamos</span><em className="b">lo que otros descubren demasiado tarde</em></h2>
-              <p className="categoria-intro-p">Reemplazar a un ejecutivo clave le cuesta a una empresa en Colombia hasta el 50 % de su salario anual — mientras las compañías que invierten en detección temprana evitan que ese riesgo se materialice.</p>
+              <p className="categoria-intro-p">Esto es lo que cambia cuando el riesgo se detecta antes de que se materialice — indicador por indicador.</p>
             </ScrollReveal>
             <CategoriaTable />
           </div>
@@ -248,7 +248,7 @@ export function LandingPage() {
           <div className="llevarlo-wrap">
             <div className="llevarlo-copy">
               <h2>Llevar Ephirox a mi <em>empresa</em>.</h2>
-              <p>Te ayudamos a preparar la propuesta correcta para quien tenga que decidir: alcance de cohorte y el reporte con el que se aprueba.</p>
+              <p>Te ayudamos a preparar la propuesta que se aprueba.</p>
             </div>
             <LeadForm />
           </div>
