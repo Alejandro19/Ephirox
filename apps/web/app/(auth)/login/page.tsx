@@ -8,6 +8,8 @@ import {
   forgotPasswordRequest,
 } from '@/lib/api-client';
 import { getSafeRedirectTarget, getSetPasswordUrl } from '@/lib/login-redirect';
+import Isotipo from '@/components/ui/Isotipo';
+import '../../eph-login-shared.css';
 
 // "Recuérdame" solo guarda el email localmente (nunca la contraseña — un
 // checkbox de la app no debe controlar si se persiste texto plano de una
@@ -64,7 +66,6 @@ declare global {
 
 const PAGE_BG = '#0B0907';
 const GOLD = '#C9A66B';
-const ERROR_COLOR = '#E0A88A';
 
 type LoginView = 'login' | 'forgot';
 
@@ -348,11 +349,8 @@ export default function LoginPage(): React.ReactElement {
           {/* ========== PANEL DE MARCA (izquierda en desktop, arriba en móvil) ========== */}
           <div className="eph-login-brand">
             <div className="eph-login-mark">
-              <img
-                src="/brand/ephirox-lockup-vertical-oro.svg"
-                alt="Ephirox"
-                className="eph-login-lockup"
-              />
+              <Isotipo size={100} tone="mono" className="eph-login-ring" />
+              <p className="font-display uppercase eph-login-wordmark">Ephirox</p>
               <p className="font-display eph-login-tagline">Redefining limits.</p>
             </div>
             <div className="font-body eph-login-caption">
@@ -530,265 +528,6 @@ export default function LoginPage(): React.ReactElement {
 
         </div>
       </div>
-
-      <style jsx>{`
-        .eph-login-page {
-          min-height: 100dvh;
-          width: 100%;
-          background: ${PAGE_BG};
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: clamp(0px, 4vw, 56px) clamp(0px, 4vw, 48px);
-        }
-        .eph-login-card {
-          max-width: 1060px;
-          width: 100%;
-          display: flex;
-          flex-wrap: wrap;
-          border-radius: clamp(0px, 2vw, 22px);
-          overflow: hidden;
-          border: 1px solid rgba(201, 166, 107, 0.16);
-          box-shadow: 0 60px 120px -60px rgba(0, 0, 0, 0.95);
-        }
-        .eph-login-brand {
-          flex: 1 1 400px;
-          position: relative;
-          overflow: hidden;
-          background: #100d0a;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: clamp(38px, 6vw, 64px) 32px;
-          min-height: clamp(240px, 34vw, 620px);
-        }
-        .eph-login-mark {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 18px;
-        }
-        .eph-login-lockup {
-          width: clamp(180px, 26vw, 300px);
-          height: auto;
-          display: block;
-        }
-        .eph-login-tagline {
-          margin: 0;
-          font-style: italic;
-          font-weight: 500;
-          font-size: clamp(17px, 2vw, 21px);
-          letter-spacing: 0.01em;
-          color: ${GOLD};
-        }
-        .eph-login-caption {
-          position: absolute;
-          left: 50%;
-          bottom: clamp(20px, 5vw, 40px);
-          transform: translateX(-50%);
-          display: flex;
-          align-items: center;
-          gap: 14px;
-          white-space: nowrap;
-          font-weight: 300;
-          font-size: 11px;
-          letter-spacing: 0.22em;
-          text-transform: uppercase;
-          color: rgba(245, 241, 232, 0.55);
-        }
-        .eph-login-caption-line {
-          width: 28px;
-          height: 1px;
-          background: rgba(201, 166, 107, 0.5);
-        }
-        .eph-login-form-panel {
-          flex: 1 1 400px;
-          background: #1a160f;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          gap: 22px;
-          padding: clamp(30px, 5vw, 56px) clamp(24px, 4.4vw, 52px) calc(clamp(30px, 5vw, 56px) + env(safe-area-inset-bottom));
-        }
-        .eph-login-title {
-          margin: 0;
-          font-weight: 300;
-          font-size: clamp(26px, 3.4vw, 34px);
-          line-height: 1.1;
-          color: #fbf8f1;
-        }
-        .eph-login-label {
-          font-weight: 400;
-          font-size: 10px;
-          letter-spacing: 0.2em;
-          color: ${GOLD};
-        }
-        .eph-login-input {
-          box-sizing: border-box;
-          width: 100%;
-          height: 52px;
-          padding: 0 16px;
-          border-radius: 10px;
-          border: 1px solid rgba(245, 241, 232, 0.16);
-          background: #221c15;
-          color: #f5f1e8;
-          font-weight: 300;
-          font-size: 16px;
-          outline: none;
-          transition: border-color 0.15s ease, background 0.15s ease;
-        }
-        .eph-login-input::placeholder {
-          color: rgba(245, 241, 232, 0.42);
-        }
-        .eph-login-input:focus {
-          border-color: ${GOLD};
-          background: #261f16;
-        }
-        .eph-login-input.has-error {
-          border-color: ${ERROR_COLOR};
-        }
-        .eph-login-error-text {
-          margin: 0;
-          font-size: 13px;
-          font-weight: 300;
-          color: ${ERROR_COLOR};
-        }
-        .eph-login-pwd-toggle {
-          position: absolute;
-          top: 50%;
-          right: 8px;
-          transform: translateY(-50%);
-          height: 40px;
-          min-width: 52px;
-          padding: 0 8px;
-          background: transparent;
-          border: none;
-          font-weight: 400;
-          font-size: 11px;
-          letter-spacing: 0.12em;
-          color: ${GOLD};
-          cursor: pointer;
-        }
-        .eph-login-pwd-toggle:hover {
-          color: #e4c88f;
-        }
-        .eph-login-forgot-link {
-          background: none;
-          border: none;
-          padding: 0;
-          margin: 0;
-          font-weight: 300;
-          font-size: 13px;
-          color: ${GOLD};
-          cursor: pointer;
-          min-height: 44px;
-          display: inline-flex;
-          align-items: center;
-        }
-        .eph-login-forgot-link:hover {
-          color: #e4c88f;
-        }
-        .eph-login-checkbox-row {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          min-height: 44px;
-          cursor: pointer;
-          user-select: none;
-        }
-        .eph-login-checkbox-box {
-          flex-shrink: 0;
-          width: 20px;
-          height: 20px;
-          border-radius: 5px;
-          border: 1px solid rgba(201, 166, 107, 0.65);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: background 0.15s ease, border-color 0.15s ease;
-        }
-        .eph-login-checkbox-box.is-checked {
-          background: ${GOLD};
-          border-color: ${GOLD};
-        }
-        .eph-login-checkbox-input:focus-visible + .eph-login-checkbox-box {
-          outline: 2px solid ${GOLD};
-          outline-offset: 2px;
-        }
-        .eph-login-submit {
-          width: 100%;
-          height: 56px;
-          border-radius: 10px;
-          border: none;
-          background: linear-gradient(180deg, #d9b87c, #c09a5c);
-          color: #17130e;
-          font-weight: 500;
-          font-size: 13px;
-          letter-spacing: 0.26em;
-          text-indent: 0.26em;
-          box-shadow: 0 16px 34px -20px rgba(201, 166, 107, 0.9);
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: background 0.15s ease, transform 0.1s ease;
-        }
-        .eph-login-submit:hover:not(:disabled) {
-          background: linear-gradient(180deg, #e4c88f, #cba669);
-        }
-        .eph-login-submit:active:not(:disabled) {
-          transform: translateY(1px);
-        }
-        .eph-login-submit:disabled {
-          cursor: not-allowed;
-          opacity: 0.85;
-        }
-        .eph-login-divider-line {
-          flex: 1;
-          height: 1px;
-          background: rgba(245, 241, 232, 0.14);
-        }
-        .eph-login-social-btn {
-          flex: 1 1 140px;
-          height: 52px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 10px;
-          border-radius: 10px;
-          border: 1px solid rgba(245, 241, 232, 0.18);
-          background: transparent;
-          color: #f5f1e8;
-          font-weight: 300;
-          font-size: 15px;
-          cursor: pointer;
-          transition: border-color 0.15s ease, background 0.15s ease;
-        }
-        .eph-login-social-btn:hover:not(:disabled) {
-          border-color: rgba(201, 166, 107, 0.6);
-          background: rgba(201, 166, 107, 0.06);
-        }
-        .eph-login-social-btn:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-        }
-        .eph-login-footer-link {
-          color: ${GOLD};
-          text-decoration: none;
-        }
-        .eph-login-footer-link:hover {
-          text-decoration: underline;
-        }
-        .eph-login-forgot-link:focus-visible,
-        .eph-login-pwd-toggle:focus-visible,
-        .eph-login-submit:focus-visible,
-        .eph-login-social-btn:focus-visible,
-        .eph-login-input:focus-visible,
-        .eph-login-footer-link:focus-visible {
-          outline: 2px solid ${GOLD};
-          outline-offset: 2px;
-        }
-      `}</style>
     </>
   );
 }
