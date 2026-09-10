@@ -136,7 +136,10 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(0,0,0,0) 30%, rgba(0,0,0,0.92) 100%);
+  /* Solo se desvanece la franja de abajo (donde va el texto) — el resto de
+     la foto se ve nítida. Arranca más tarde (55% en vez de 30%) y termina
+     más oscuro (0.96) para que el texto resalte más ahí. */
+  background: linear-gradient(180deg, rgba(0,0,0,0) 55%, rgba(0,0,0,0.96) 100%);
   pointer-events: none;
 }
 .eph-landing2 .cost-card-text {
@@ -145,7 +148,9 @@
   right: 0;
   bottom: 0;
   z-index: 1;
-  padding: clamp(22px, 2.6vw, 34px);
+  /* Sin padding arriba a propósito: el bloque de texto queda más bajo,
+     pegado al pie de la tarjeta, en vez de "flotar" a media altura. */
+  padding: 0 clamp(22px, 2.6vw, 34px) clamp(22px, 2.6vw, 34px);
   display: grid;
   gap: 12px;
 }
@@ -637,10 +642,10 @@
     content: '';
     position: absolute;
     inset: 0;
-    /* Empieza a oscurecer más arriba (antes 0%) — le da al texto un fondo
-       sólido más grande detrás, en vez de una franja delgada al pie, para
-       que pese más frente a la foto. */
-    background: linear-gradient(180deg, rgba(0,0,0,0) 30%, rgba(0,0,0,0.92) 100%);
+    /* Solo se desvanece la franja de abajo (donde va el texto) — el resto
+       de la foto se ve nítida. Arranca más tarde (55% en vez de 30%) y
+       termina más oscuro (0.96) para que el texto resalte más ahí. */
+    background: linear-gradient(180deg, rgba(0,0,0,0) 55%, rgba(0,0,0,0.96) 100%);
     pointer-events: none;
   }
   .eph-landing2 .costos-mobile-text {
@@ -649,7 +654,9 @@
     right: 0;
     bottom: 0;
     z-index: 1;
-    padding: 26px;
+    /* Sin padding arriba a propósito: el bloque de texto queda más bajo,
+       pegado al pie de la tarjeta, en vez de "flotar" a media altura. */
+    padding: 0 26px 26px;
     display: grid;
     gap: 10px;
   }
