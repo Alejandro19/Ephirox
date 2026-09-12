@@ -315,7 +315,7 @@
 
 .eph-landing2 .opt-grid { display: flex; flex-wrap: wrap; gap: 24px; }
 .eph-landing2 .opt-card { position: relative; flex: 1 1 220px; max-width: 300px; aspect-ratio: 2 / 3; border-radius: 16px; overflow: hidden; }
-.eph-landing2 .opt-card-bg { background: #161210; }
+.eph-landing2 .opt-card-bg { background: #161210; filter: saturate(0.55) brightness(0.92) contrast(1.02); }
 .eph-landing2 .opt-card::after {
   content: '';
   position: absolute;
@@ -798,7 +798,7 @@
     scroll-snap-align: center;
     background: #161210;
   }
-  .eph-landing2 .opt-mobile-bg { background: #161210; }
+  .eph-landing2 .opt-mobile-bg { background: #161210; filter: saturate(0.55) brightness(0.92) contrast(1.02); }
   .eph-landing2 .opt-mobile-card::after {
     content: '';
     position: absolute;
