@@ -229,7 +229,6 @@ export function LandingPage() {
               <div className="dia90-head">
                 <span className="eyebrow">DÍA 90</span>
                 <h2>Lo que vas a reconocer en ti al tercer mes.</h2>
-                <p>No una promesa de bienestar: el registro de cuatro cambios reales.</p>
               </div>
               <Dia90Rail />
             </div>

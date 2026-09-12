@@ -82,7 +82,7 @@ export const SHIFTS = [
 export const HITOS = [
   { titulo: 'Piensas con la misma nitidez a las 4pm que a las 8am.', detalle: 'Menos caídas de foco, con el registro que lo respalda.' },
   { titulo: 'El día ya no se te acaba a media tarde.', detalle: 'Los días malos dejan de ser un misterio.' },
-  { titulo: 'Sabes en qué estado tomaste cada decisión crítica — y puedes repetirlo a voluntad.', detalle: 'Sueño, estrés y carga, registrados — tu mejor día, listo para repetirse.' },
+  { titulo: 'Sabes en qué estado tomaste cada decisión crítica — y puedes repetirlo a voluntad.', detalle: 'Sueño, estrés y fatiga, registrados — tu mejor día, listo para repetirse.' },
   { titulo: 'Diriges tu capacidad, en vez de improvisar con lo que te queda de ella.', detalle: 'Alertas antes del agotamiento, no explicaciones después de la caída.' },
 ] as const;
 
