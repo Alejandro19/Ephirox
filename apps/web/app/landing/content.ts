@@ -18,7 +18,7 @@ export const COSTOS = [
 ] as const;
 
 export const PASOS = [
-  { ord: '01', titulo: 'Se mide, no se supone.', texto: 'Sueño, recuperación y carga leídos desde tu mano, todos los días. Basta una noche de mal sueño para que tu cerebro procese el riesgo de forma distinta — por eso esto no se mide una vez al año.', img: '/landing/wearable.png', alt: 'Wearable en la mano' },
+  { ord: '01', titulo: 'Se mide, no se supone.', texto: 'Sueño, recuperación y estrés leídos desde tu mano, todos los días. Basta una noche de mal sueño para que tu cerebro procese el riesgo de forma distinta — por eso esto no se mide una vez al año.', img: '/landing/wearable.png', alt: 'Wearable en la mano' },
   { ord: '02', titulo: 'Lo que el wearable no ve, se analiza en sangre.', texto: 'Biomarcadores de laboratorio que dan la parte de la película que ningún dispositivo alcanza.', img: '/landing/vial.png', alt: 'Vial de laboratorio' },
   { ord: '03', titulo: 'Todo cruzado en un solo lugar.', texto: 'Tu estado real, en un tablero del que puedes hablar con datos, no con sensaciones.', img: '/landing/dashboard-preview.png', alt: 'Vista previa del tablero Evolution' },
 ] as const;
