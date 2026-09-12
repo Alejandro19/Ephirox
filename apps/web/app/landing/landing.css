@@ -100,38 +100,44 @@
 .eph-landing2 .hero-cta-row { display: grid; gap: 14px; justify-items: start; margin-top: 2px; }
 .eph-landing2 .hero-cta-row a { font-size: 16px; letter-spacing: 0.02em; color: var(--cream); }
 
+/* Tramo "punto ciego" → "coste para la empresa" (reconocimiento-section +
+   section.contexto): una sola declaración de tamaño titular en las DOS
+   secciones — el h2 de .contexto. La sentencia de acá abajo es voz baja
+   (cursiva, 34px máx.), nunca compite con ese titular. Las dos secciones
+   comparten max-width/padding-inline (1040px / incisos clamp iguales) para
+   que el filete de costura (.costura) quede perfectamente alineado entre
+   una y otra — si cambias uno, cambia el otro. */
 .eph-landing2 .reconocimiento-section { background: var(--bg-dark-2); }
 .eph-landing2 .reconocimiento-wrap {
-  max-width: 940px;
+  max-width: 1040px;
   margin: 0 auto;
-  padding: clamp(52px, 6vw, 84px) clamp(26px, 4vw, 68px);
+  padding: clamp(56px, 6vw, 88px) clamp(26px, 4vw, 64px) 0;
   display: grid;
-  gap: clamp(30px, 3vw, 34px);
+  gap: 36px;
 }
+.eph-landing2 .reconocimiento-llano { margin: 0; font-size: 17px; line-height: 1.75; color: rgba(245,241,232,0.66); max-width: 46ch; text-wrap: pretty; }
 
-.eph-landing2 .reconocimiento-quote { display: grid; gap: 16px; }
-.eph-landing2 .reconocimiento-rule { width: 44px; height: 1px; background: var(--gold); }
-.eph-landing2 .reconocimiento-quote p {
+.eph-landing2 .reconocimiento-bloque { display: grid; gap: 18px; justify-items: start; }
+.eph-landing2 .reconocimiento-rule { width: clamp(44px, 6vw, 52px); height: 1px; background: var(--gold); }
+.eph-landing2 .reconocimiento-sentencia {
   margin: 0;
   font-family: 'Cormorant Garamond', serif;
   font-weight: 300;
-  font-size: clamp(32px, 3.8vw, 52px);
-  line-height: 1.12;
-  max-width: 26ch;
+  font-style: italic;
+  font-size: clamp(26px, 2.6vw, 34px);
+  line-height: 1.3;
+  max-width: 38ch;
   text-wrap: pretty;
-  color: #FBF8F1;
+  color: rgba(251,248,241,0.92);
 }
-.eph-landing2 .reconocimiento-quote em.serif { color: var(--gold); }
+.eph-landing2 .reconocimiento-sentencia-accent { color: var(--gold); }
 
-.eph-landing2 .reconocimiento-cols { display: flex; flex-wrap: wrap; gap: 30px 46px; }
-.eph-landing2 .reconocimiento-cols p { margin: 0; flex: 1 1 300px; font-size: 17px; line-height: 1.72; text-wrap: pretty; }
-.eph-landing2 .reconocimiento-col-left { color: rgba(245,241,232,0.66); }
-.eph-landing2 .reconocimiento-col-right { color: rgba(245,241,232,0.86); }
-.eph-landing2 .reconocimiento-col-right em.serif { font-size: 20px; color: var(--gold); }
-
-.eph-landing2 .reconocimiento-cierre { border-top: 1px solid rgba(245,241,232,0.1); padding-top: 26px; }
-.eph-landing2 .reconocimiento-cierre p { margin: 0; font-size: 18px; line-height: 1.6; max-width: 50ch; color: #F5F1E8; text-wrap: pretty; }
-.eph-landing2 .reconocimiento-cierre-accent { color: var(--gold); }
+/* Costura: un filete de 1px que cose el cambio de fondo entre las dos
+   secciones. Nace invisible al pie de la oscura y entra con cuerpo al
+   inicio de la crema — visualmente un solo trazo continuo. */
+.eph-landing2 .costura { width: 1px; justify-self: start; }
+.eph-landing2 .costura-baja { height: clamp(44px, 8vw, 64px); background: linear-gradient(180deg, rgba(201,166,107,0), #C9A66B); }
+.eph-landing2 .costura-entra { height: clamp(44px, 8vw, 64px); background: linear-gradient(180deg, #8C6A2F, rgba(140,106,47,0)); }
 
 .eph-landing2 .hero-stat-card { position: absolute; right: clamp(20px, 5vw, 64px); bottom: clamp(60px, 10vh, 104px); width: 236px; box-sizing: border-box; aspect-ratio: 3 / 4; border-radius: 14px; border: 1px solid rgba(201,166,107,0.2); background: linear-gradient(165deg, rgba(24,21,17,0.9) 0%, rgba(11,10,8,0.9) 100%); backdrop-filter: blur(12px); padding: clamp(18px, 1.9vw, 24px); display: grid; grid-template-rows: 1fr auto; gap: 16px; box-shadow: 0 28px 70px rgba(0,0,0,0.55); overflow: hidden; }
 .eph-landing2 .hero-card-stack { position: relative; display: grid; min-height: 0; }
@@ -145,61 +151,34 @@
 .eph-landing2 .hero-progress-track { display: block; height: 2px; background: rgba(245,241,232,0.18); border-radius: 999px; overflow: hidden; }
 .eph-landing2 .hero-progress-fill { display: block; height: 100%; background: var(--gold); }
 
-.eph-landing2 section.contexto { background: var(--bg-light); color: var(--ink); padding: clamp(74px, 12vh, 140px) clamp(22px, 6vw, 92px); }
-.eph-landing2 .contexto-wrap { max-width: 1120px; margin: 0 auto; display: grid; gap: clamp(38px, 5vw, 60px); }
-.eph-landing2 .contexto-wrap h2 { margin: 0; font-weight: 200; font-size: clamp(29px, 4.2vw, 50px); line-height: 1.1; letter-spacing: -0.015em; max-width: 26ch; text-wrap: pretty; }
-.eph-landing2 .contexto-wrap h2 em { font-family: 'Cormorant Garamond', serif; font-weight: 400; font-style: italic; font-size: 1.12em; color: var(--gold-dark); }
-.eph-landing2 .contexto-wrap p.body { margin: 0; font-size: 17px; line-height: 1.7; color: var(--ink-soft); max-width: 60ch; text-wrap: pretty; }
-.eph-landing2 .costos-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr)); gap: clamp(20px, 2.6vw, 34px); }
-/* Mismo diseño con foto del carrusel mobile (CostosMobileCarousel.tsx),
-   pero estático — sin scroll-snap ni puntos, cada tarjeta ocupa su propia
-   columna del grid de siempre. Ver ese componente para el porqué de cada
-   decisión (overlay, tamaños, etc.), acá solo se ajustan las medidas a un
-   ancho de columna en vez de 85vw. */
-.eph-landing2 .cost-card {
-  position: relative;
-  aspect-ratio: 4 / 5;
-  border-radius: clamp(17px, 1.6vw, 24px);
-  overflow: hidden;
-  box-shadow: 0 22px 46px -28px rgba(23,19,14,0.5);
-}
-.eph-landing2 .cost-card-bg { background: #161210; }
-.eph-landing2 .cost-card::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  /* Solo se desvanece la franja de abajo (donde va el texto) — el resto de
-     la foto se ve nítida. Arranca más tarde (55% en vez de 30%) y termina
-     más oscuro (0.96) para que el texto resalte más ahí. */
-  background: linear-gradient(180deg, rgba(0,0,0,0) 55%, rgba(0,0,0,0.96) 100%);
-  pointer-events: none;
-}
-.eph-landing2 .cost-card-text {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 1;
-  /* Sin padding arriba a propósito: el bloque de texto queda más bajo,
-     pegado al pie de la tarjeta, en vez de "flotar" a media altura. */
-  padding: 0 clamp(22px, 2.6vw, 34px) clamp(22px, 2.6vw, 34px);
+.eph-landing2 section.contexto { background: #EFE8DA; color: var(--ink); }
+.eph-landing2 .contexto-wrap {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 0 clamp(26px, 4vw, 64px) clamp(56px, 6vw, 88px);
   display: grid;
-  gap: 12px;
+  gap: 32px;
 }
-.eph-landing2 .cost-card .num { font-family: 'Cormorant Garamond', serif; font-weight: 500; font-size: clamp(44px, 4.2vw, 58px); line-height: 1; color: #caa057; font-variant-numeric: lining-nums tabular-nums; letter-spacing: 0.01em; white-space: nowrap; text-shadow: 0 2px 14px rgba(0,0,0,0.5); }
-.eph-landing2 .cost-card-text p { margin: 0; font-size: clamp(15px, 1vw, 17px); line-height: 1.55; color: rgba(255,255,255,0.96); max-width: 32ch; text-wrap: pretty; }
-.eph-landing2 .cost-card-text .src { font-size: 10px; letter-spacing: 0.12em; color: rgba(245,241,232,0.5); text-transform: uppercase; }
-/* Carrusel mobile de costos (CostosMobileCarousel.tsx) — oculto en desktop
-   por defecto, mismo patrón que .pasos-mobile-list: se activa solo dentro
-   del media query de mobile más abajo, junto con ocultar .costos-grid ahí.
-   min-width:0 es necesario porque .contexto-wrap es un CSS Grid de una sola
-   columna implícita — sin esto, el sangrado a los bordes de
-   .costos-mobile-track (margin negativo) fuerza esa columna a crecer para
-   acomodar el desborde ("grid blowout"), empujando todo el ancho de la
-   sección (y el resto de su contenido) más allá del viewport. */
-.eph-landing2 .costos-mobile-wrap { display: none; min-width: 0; }
-.eph-landing2 .leer-block { display: grid; gap: clamp(20px, 3vw, 30px); justify-items: start; border-top: 1px solid rgba(23,19,14,0.14); padding-top: clamp(30px, 4vw, 48px); }
-.eph-landing2 .leer-block .frase { margin: 0; font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: clamp(21px, 2.4vw, 30px); line-height: 1.4; max-width: 52ch; text-wrap: pretty; }
+
+.eph-landing2 .contexto-fila { display: flex; flex-wrap: wrap; align-items: end; gap: 26px 48px; }
+.eph-landing2 .contexto-titulo {
+  flex: 1 1 380px;
+  margin: 0;
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 300;
+  font-size: clamp(34px, 4.2vw, 54px);
+  line-height: 1.04;
+  text-wrap: pretty;
+  color: var(--ink);
+}
+.eph-landing2 .contexto-titulo em { font-style: italic; color: var(--gold-dark); }
+.eph-landing2 .contexto-intro { flex: 1 1 260px; max-width: 42ch; margin: 0; font-size: 17px; line-height: 1.72; color: rgba(23,19,14,0.74); text-wrap: pretty; }
+
+.eph-landing2 .contexto-cards { display: flex; flex-wrap: wrap; gap: 16px; }
+.eph-landing2 .contexto-card { flex: 1 1 210px; background: #17130E; border-radius: 14px; padding: 26px; display: grid; gap: 10px; align-content: start; }
+.eph-landing2 .contexto-card .num { font-family: 'Cormorant Garamond', serif; font-size: clamp(36px, 4vw, 42px); line-height: 1; color: var(--gold); font-variant-numeric: lining-nums tabular-nums; }
+.eph-landing2 .contexto-card p { margin: 0; font-size: 14px; line-height: 1.62; color: rgba(245,241,232,0.82); }
+.eph-landing2 .contexto-card .src { font-size: 9px; letter-spacing: 0.16em; color: rgba(245,241,232,0.5); }
 
 .eph-landing2 .medimos-intro {
   background: var(--bg-light);
@@ -642,72 +621,6 @@
   .eph-landing2 .cambia-section { padding-top: 40px; }
 
   .eph-landing2 .divider-banner-text { align-items: flex-start; padding-top: 26px; }
-
-  .eph-landing2 .costos-grid { display: none; }
-  .eph-landing2 .costos-mobile-wrap { display: block; }
-  .eph-landing2 .costos-mobile-track {
-    display: flex;
-    gap: 14px;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    padding: 4px calc(7.5vw) 18px;
-    margin: 0 calc(-1 * clamp(22px, 6vw, 40px));
-  }
-  .eph-landing2 .costos-mobile-track::-webkit-scrollbar { display: none; }
-  .eph-landing2 .costos-mobile-card {
-    position: relative;
-    flex: 0 0 85vw;
-    aspect-ratio: 4 / 5;
-    border-radius: 24px;
-    overflow: hidden;
-    scroll-snap-align: center;
-  }
-  /* <Image fill> (costos-mobile-bg) ya trae su propio position:absolute;
-     inset:0 inline — acá solo el fondo de respaldo por si la imagen tarda
-     en cargar. El overlay de gradiente (::after) es lo que mantiene el
-     texto legible encima de estas fotos (todas oscuras/moody a propósito). */
-  .eph-landing2 .costos-mobile-bg { background: #161210; }
-  .eph-landing2 .costos-mobile-card::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    /* Solo se desvanece la franja de abajo (donde va el texto) — el resto
-       de la foto se ve nítida. Arranca más tarde (55% en vez de 30%) y
-       termina más oscuro (0.96) para que el texto resalte más ahí. */
-    background: linear-gradient(180deg, rgba(0,0,0,0) 55%, rgba(0,0,0,0.96) 100%);
-    pointer-events: none;
-  }
-  .eph-landing2 .costos-mobile-text {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 1;
-    /* Sin padding arriba a propósito: el bloque de texto queda más bajo,
-       pegado al pie de la tarjeta, en vez de "flotar" a media altura. */
-    padding: 0 26px 26px;
-    display: grid;
-    gap: 10px;
-  }
-  .eph-landing2 .costos-mobile-text .num {
-    font-family: 'Cormorant Garamond', serif;
-    font-weight: 500;
-    font-size: clamp(48px, 13vw, 58px);
-    line-height: 1;
-    color: #caa057;
-    font-variant-numeric: lining-nums tabular-nums;
-    text-shadow: 0 2px 14px rgba(0,0,0,0.5);
-  }
-  .eph-landing2 .costos-mobile-text p { margin: 0; font-size: 16px; font-weight: 400; line-height: 1.55; color: rgba(255,255,255,0.96); text-wrap: pretty; }
-  .eph-landing2 .costos-mobile-text .src { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(245,241,232,0.5); }
-  .eph-landing2 .costos-mobile-dots { max-width: 160px; margin: 0 auto; }
-  /* .hero-progress-track por defecto es un blanco tenue (pensado para el
-     fondo oscuro del hero) — acá el carrusel vive en .contexto, de fondo
-     claro (--bg-light), así que ese mismo tono queda casi invisible.
-     Override solo dentro de .costos-mobile-dots, sin tocar el del hero. */
-  .eph-landing2 .costos-mobile-dots .hero-progress-track { background: rgba(23,19,14,0.16); }
 }
 
 .eph-landing2 .back-to-top {

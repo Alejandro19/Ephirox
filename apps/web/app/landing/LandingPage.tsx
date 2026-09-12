@@ -3,12 +3,10 @@
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import './landing.css';
-import { COSTOS, FRASE, SHIFTS, APP_LOGIN_URL } from './content';
+import { COSTOS, SHIFTS, APP_LOGIN_URL } from './content';
 import { HeroStatCard } from './HeroStatCard';
-import { WordReveal } from './WordReveal';
 import { PasosSticky } from './PasosSticky';
 import { PasosMobileList } from './PasosMobileList';
-import { CostosMobileCarousel } from './CostosMobileCarousel';
 import { CategoriaTable } from './CategoriaTable';
 import { Dia90Rail } from './Dia90Rail';
 import { JuntaSection } from './JuntaChart';
@@ -146,46 +144,37 @@ export function LandingPage() {
 
         <section className="reconocimiento-section">
           <div className="reconocimiento-wrap">
-            <ScrollReveal className="reconocimiento-quote">
+            <ScrollReveal>
+              <p className="reconocimiento-llano">Comes mal, duermes peor, vives en alerta. Ya intentaste el gimnasio, la dieta, el programa de tu empresa. Nada cambió.</p>
+            </ScrollReveal>
+
+            <ScrollReveal className="reconocimiento-bloque">
               <span className="reconocimiento-rule" aria-hidden="true" />
-              <p>No es falta de disciplina. Es que no puedes arreglar <em className="serif">lo que no puedes ver.</em></p>
+              <p className="reconocimiento-sentencia">No es falta de disciplina. Es que no puedes arreglar <span className="reconocimiento-sentencia-accent">lo que no puedes ver.</span></p>
             </ScrollReveal>
 
-            <ScrollReveal className="reconocimiento-cols">
-              <p className="reconocimiento-col-left">Comes mal, duermes peor, vives en alerta. Ya intentaste el gimnasio, la dieta, el programa de tu empresa. Nada cambió.</p>
-              <p className="reconocimiento-col-right">No te frena lo que ya sabes. Te frena tu <em className="serif">punto ciego</em>: lo que tu cuerpo lleva meses diciéndote y ningún chequeo anual te ha mostrado.</p>
-            </ScrollReveal>
-
-            <ScrollReveal className="reconocimiento-cierre">
-              <p>Y lo que tú no ves en ti, tu equipo directivo tampoco. <span className="reconocimiento-cierre-accent">Tarde o temprano, la empresa lo paga.</span></p>
-            </ScrollReveal>
+            <span className="costura costura-baja" aria-hidden="true" />
           </div>
         </section>
 
         <section className="contexto" id="contexto">
           <div className="contexto-wrap">
-            <h2>Lo que sientes tú, ya se lo estás cobrando a tu <em>empresa</em>.</h2>
-            <p className="body">
-              El 34% de los trabajadores en Colombia se ausenta del trabajo por ansiedad o estrés. Pero cuando quien se agota es la persona que toma las decisiones más importantes, esto deja de ser una ausencia: reemplazar ese liderazgo cuesta entre el 30% y el 50% de su salario anual — en algunos casos documentados, hasta nueve meses de salario completo.
-            </p>
+            <span className="costura costura-entra" aria-hidden="true" />
 
-            <div className="costos-grid">
+            <ScrollReveal className="contexto-fila">
+              <h2 className="contexto-titulo">Lo que sientes tú, ya se lo estás cobrando a tu <em>empresa</em>.</h2>
+              <p className="contexto-intro">Cuando el que se agota es quien toma las decisiones, reemplazarlo cuesta entre el 30% y el 50% de su salario anual — en algunos casos documentados, hasta nueve meses de salario completo.</p>
+            </ScrollReveal>
+
+            <ScrollReveal className="contexto-cards">
               {COSTOS.map((c) => (
-                <div className="cost-card" key={c.num}>
-                  <Image src={c.img} alt={c.alt} fill quality={82} sizes="(min-width: 769px) 30vw, 90vw" style={{ objectFit: 'cover' }} className="cost-card-bg" />
-                  <div className="cost-card-text">
-                    <span className="num">{c.num}</span>
-                    <p>{c.texto}</p>
-                    <span className="src">{c.src}</span>
-                  </div>
+                <div className="contexto-card" key={c.num}>
+                  <span className="num">{c.num}</span>
+                  <p>{c.texto}</p>
+                  <span className="src">{c.src}</span>
                 </div>
               ))}
-            </div>
-            <CostosMobileCarousel />
-
-            <div className="leer-block">
-              <WordReveal text={FRASE} />
-            </div>
+            </ScrollReveal>
           </div>
         </section>
 
