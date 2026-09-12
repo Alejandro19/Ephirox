@@ -178,31 +178,35 @@
 .eph-landing2 .cost-card {
   position: relative;
   aspect-ratio: 4 / 5;
-  border-radius: clamp(17px, 1.6vw, 24px);
+  border-radius: 14px;
   overflow: hidden;
-  box-shadow: 0 22px 46px -28px rgba(23,19,14,0.5);
+  background: #17130E;
+  box-shadow: 0 30px 60px -40px rgba(0,0,0,0.9);
 }
-.eph-landing2 .cost-card-bg { background: #161210; }
+.eph-landing2 .cost-card-bg { background: #161210; filter: saturate(0.55) brightness(0.92) contrast(1.02); }
 .eph-landing2 .cost-card::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(0,0,0,0) 55%, rgba(0,0,0,0.96) 100%);
+  background: linear-gradient(180deg,
+    rgba(23,19,14,0.10) 0%,
+    rgba(23,19,14,0.28) 34%,
+    rgba(23,19,14,0.74) 62%,
+    rgba(23,19,14,0.93) 82%,
+    rgba(23,19,14,0.96) 100%);
   pointer-events: none;
 }
 .eph-landing2 .cost-card-text {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  position: relative;
   z-index: 1;
-  padding: 0 clamp(22px, 2.6vw, 34px) clamp(22px, 2.6vw, 34px);
+  pointer-events: none;
+  padding: 150px 26px 26px;
   display: grid;
-  gap: 12px;
+  gap: 10px;
 }
-.eph-landing2 .cost-card .num { font-family: 'Cormorant Garamond', serif; font-weight: 500; font-size: clamp(44px, 4.2vw, 58px); line-height: 1; color: #caa057; font-variant-numeric: lining-nums tabular-nums; letter-spacing: 0.01em; white-space: nowrap; text-shadow: 0 2px 14px rgba(0,0,0,0.5); }
-.eph-landing2 .cost-card-text p { margin: 0; font-size: clamp(15px, 1vw, 17px); line-height: 1.55; color: rgba(255,255,255,0.96); max-width: 32ch; text-wrap: pretty; }
-.eph-landing2 .cost-card-text .src { font-size: 10px; letter-spacing: 0.12em; color: rgba(245,241,232,0.5); text-transform: uppercase; }
+.eph-landing2 .cost-card .num { font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: clamp(36px, 2.92vw, 42px); line-height: 1; color: #E4C88F; letter-spacing: 0.02em; white-space: nowrap; text-shadow: 0 2px 14px rgba(23,19,14,0.8); }
+.eph-landing2 .cost-card-text p { margin: 0; font-family: 'Jost', sans-serif; font-weight: 300; font-size: 14px; line-height: 1.62; color: #F5F1E8; max-width: 32ch; text-wrap: pretty; text-shadow: 0 1px 10px rgba(23,19,14,0.9); }
+.eph-landing2 .cost-card-text .src { font-family: 'Jost', sans-serif; font-weight: 400; font-size: 9px; letter-spacing: 0.16em; color: rgba(245,241,232,0.7); text-transform: uppercase; text-shadow: 0 1px 8px rgba(23,19,14,0.9); }
 .eph-landing2 .costos-mobile-wrap { display: none; min-width: 0; }
 
 .eph-landing2 .medimos-intro {
@@ -668,35 +672,39 @@
     overflow: hidden;
     scroll-snap-align: center;
   }
-  .eph-landing2 .costos-mobile-bg { background: #161210; }
+  .eph-landing2 .costos-mobile-card { background: #17130E; box-shadow: 0 30px 60px -40px rgba(0,0,0,0.9); }
+  .eph-landing2 .costos-mobile-bg { background: #161210; filter: saturate(0.55) brightness(0.92) contrast(1.02); }
   .eph-landing2 .costos-mobile-card::after {
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, rgba(0,0,0,0) 55%, rgba(0,0,0,0.96) 100%);
+    background: linear-gradient(180deg,
+      rgba(23,19,14,0.10) 0%,
+      rgba(23,19,14,0.28) 34%,
+      rgba(23,19,14,0.74) 62%,
+      rgba(23,19,14,0.93) 82%,
+      rgba(23,19,14,0.96) 100%);
     pointer-events: none;
   }
   .eph-landing2 .costos-mobile-text {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    position: relative;
     z-index: 1;
-    padding: 0 26px 26px;
+    pointer-events: none;
+    padding: 150px 26px 26px;
     display: grid;
     gap: 10px;
   }
   .eph-landing2 .costos-mobile-text .num {
     font-family: 'Cormorant Garamond', serif;
-    font-weight: 500;
-    font-size: clamp(48px, 13vw, 58px);
+    font-weight: 300;
+    font-size: 36px;
     line-height: 1;
-    color: #caa057;
-    font-variant-numeric: lining-nums tabular-nums;
-    text-shadow: 0 2px 14px rgba(0,0,0,0.5);
+    color: #E4C88F;
+    letter-spacing: 0.02em;
+    text-shadow: 0 2px 14px rgba(23,19,14,0.8);
   }
-  .eph-landing2 .costos-mobile-text p { margin: 0; font-size: 16px; font-weight: 400; line-height: 1.55; color: rgba(255,255,255,0.96); text-wrap: pretty; }
-  .eph-landing2 .costos-mobile-text .src { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(245,241,232,0.5); }
+  .eph-landing2 .costos-mobile-text p { margin: 0; font-family: 'Jost', sans-serif; font-weight: 300; font-size: 14px; line-height: 1.62; color: #F5F1E8; text-wrap: pretty; text-shadow: 0 1px 10px rgba(23,19,14,0.9); }
+  .eph-landing2 .costos-mobile-text .src { font-family: 'Jost', sans-serif; font-weight: 400; font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(245,241,232,0.7); text-shadow: 0 1px 8px rgba(23,19,14,0.9); }
   .eph-landing2 .costos-mobile-dots { max-width: 160px; margin: 0 auto; }
   .eph-landing2 .costos-mobile-dots .hero-progress-track { background: rgba(23,19,14,0.16); }
 }
