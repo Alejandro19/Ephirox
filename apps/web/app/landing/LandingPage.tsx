@@ -207,7 +207,7 @@ export function LandingPage() {
                 <div className="opt-card" key={o.label}>
                   <Image src={o.img} alt={o.alt} fill quality={82} sizes="(min-width: 769px) 25vw, 90vw" style={{ objectFit: 'cover', objectPosition: 'center' }} className="opt-card-bg" />
                   <div className="opt-card-text">
-                    <span className={`opt-card-label${o.label.length > 14 ? ' is-long' : ''}`}>{o.label}</span>
+                    <span className="opt-card-label">{o.label}</span>
                     <p className="opt-card-desc">{o.texto}</p>
                   </div>
                 </div>

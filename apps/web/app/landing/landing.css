@@ -324,8 +324,7 @@
   pointer-events: none;
 }
 .eph-landing2 .opt-card-text { position: absolute; left: 24px; right: 24px; bottom: 22px; z-index: 1; pointer-events: none; }
-.eph-landing2 .opt-card-label { display: block; font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 28px; letter-spacing: 1.2px; color: #caa057; }
-.eph-landing2 .opt-card-label.is-long { font-size: 24px; }
+.eph-landing2 .opt-card-label { display: block; font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 19px; letter-spacing: 0.8px; white-space: nowrap; color: #caa057; }
 .eph-landing2 .opt-card-desc { margin: 8px 0 0; font-size: 13px; line-height: 1.5; color: #f0ece4; }
 
 .eph-landing2 .opt-mobile-wrap { display: none; min-width: 0; }
@@ -807,7 +806,7 @@
     pointer-events: none;
   }
   .eph-landing2 .opt-mobile-text { position: absolute; left: 24px; right: 24px; bottom: 22px; z-index: 1; pointer-events: none; }
-  .eph-landing2 .opt-mobile-text .label { display: block; font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 28px; letter-spacing: 1.2px; color: #caa057; }
+  .eph-landing2 .opt-mobile-text .label { display: block; font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 19px; letter-spacing: 0.8px; white-space: nowrap; color: #caa057; }
   .eph-landing2 .opt-mobile-text p { margin: 8px 0 0; font-size: 13px; line-height: 1.5; color: #f0ece4; }
   .eph-landing2 .opt-mobile-dots { max-width: 160px; margin: 0 auto; }
   .eph-landing2 .opt-mobile-dots .hero-progress-track { background: rgba(34,28,23,0.16); }
