@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import './landing.css';
-import { COSTOS, SHIFTS, APP_LOGIN_URL } from './content';
+import { COSTOS, OPTIMIZACION, SHIFTS, APP_LOGIN_URL } from './content';
 import { HeroStatCard } from './HeroStatCard';
 import { PasosSticky } from './PasosSticky';
 import { PasosMobileList } from './PasosMobileList';
@@ -195,6 +195,22 @@ export function LandingPage() {
 
         <PasosSticky />
         <PasosMobileList />
+
+        <section className="optimizacion">
+          <div className="optimizacion-wrap">
+            <ScrollReveal>
+              <h2 className="optimizacion-titulo">Optimización personalizada en:</h2>
+            </ScrollReveal>
+            <ScrollReveal className="optimizacion-grid">
+              {OPTIMIZACION.map((o) => (
+                <div className="optimizacion-item" key={o.titulo}>
+                  <h3 className="optimizacion-keyword">{o.titulo}</h3>
+                  <p className="optimizacion-texto">{o.texto}</p>
+                </div>
+              ))}
+            </ScrollReveal>
+          </div>
+        </section>
 
         <section className="categoria" id="categoria">
           <div className="categoria-wrap">

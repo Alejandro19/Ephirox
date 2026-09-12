@@ -23,6 +23,15 @@ export const PASOS = [
   { ord: '03', titulo: 'Todo cruzado en un solo lugar.', texto: 'Tu estado real, en un tablero del que puedes hablar con datos, no con sensaciones.', img: '/landing/dashboard-preview.png', alt: 'Vista previa del tablero Evolution' },
 ] as const;
 
+// Grid de 4 columnas (desktop) / apiladas (mobile) en .optimizacion-grid,
+// entre "¿Cómo lo medimos?" y "Anticipamos" en LandingPage.tsx.
+export const OPTIMIZACION = [
+  { titulo: 'Entrenamiento', texto: 'Diseñado para tu agenda y tu cuerpo, no una rutina de gimnasio genérica.' },
+  { titulo: 'Nutrición', texto: 'Ajustada a tus propios biomarcadores, no una dieta de talla única.' },
+  { titulo: 'Manejo del estrés', texto: 'Técnicas de neuro-wellness calibradas a tu respuesta individual.' },
+  { titulo: 'Sueño', texto: 'Protocolos ajustados a tu cronotipo, no una app de meditación más.' },
+] as const;
+
 type CompareRow = {
   indicador: string;
   trad: string;
