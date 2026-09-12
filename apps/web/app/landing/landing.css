@@ -200,11 +200,11 @@
   position: relative;
   z-index: 1;
   pointer-events: none;
-  padding: 150px 26px 26px;
+  padding: 185px 26px 26px;
   display: grid;
   gap: 10px;
 }
-.eph-landing2 .cost-card .num { font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: clamp(36px, 2.92vw, 42px); line-height: 1; color: #E4C88F; letter-spacing: 0.02em; white-space: nowrap; text-shadow: 0 2px 14px rgba(23,19,14,0.8); }
+.eph-landing2 .cost-card .num { font-family: 'Cormorant Garamond', serif; font-weight: 500; font-size: clamp(38px, 3.1vw, 46px); line-height: 1; color: #E4A64A; letter-spacing: 0.02em; white-space: nowrap; text-shadow: 0 2px 14px rgba(23,19,14,0.8); }
 .eph-landing2 .cost-card-text p { margin: 0; font-family: 'Jost', sans-serif; font-weight: 300; font-size: 14px; line-height: 1.62; color: #F5F1E8; max-width: 32ch; text-wrap: pretty; text-shadow: 0 1px 10px rgba(23,19,14,0.9); }
 .eph-landing2 .cost-card-text .src { font-family: 'Jost', sans-serif; font-weight: 400; font-size: 9px; letter-spacing: 0.16em; color: rgba(245,241,232,0.7); text-transform: uppercase; text-shadow: 0 1px 8px rgba(23,19,14,0.9); }
 .eph-landing2 .costos-mobile-wrap { display: none; min-width: 0; }
@@ -690,16 +690,16 @@
     position: relative;
     z-index: 1;
     pointer-events: none;
-    padding: 150px 26px 26px;
+    padding: 210px 26px 26px;
     display: grid;
     gap: 10px;
   }
   .eph-landing2 .costos-mobile-text .num {
     font-family: 'Cormorant Garamond', serif;
-    font-weight: 300;
-    font-size: 36px;
+    font-weight: 500;
+    font-size: 42px;
     line-height: 1;
-    color: #E4C88F;
+    color: #E4A64A;
     letter-spacing: 0.02em;
     text-shadow: 0 2px 14px rgba(23,19,14,0.8);
   }
