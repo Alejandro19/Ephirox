@@ -13,6 +13,7 @@ import { JuntaSection } from './JuntaChart';
 import { DifCarousel } from './DifCarousel';
 import { LeadForm } from './LeadForm';
 import { ScrollReveal } from './ScrollReveal';
+import { CostosMobileCarousel } from './CostosMobileCarousel';
 
 // Puerto 1:1 de docs/ephirox-landing.html — mismo copy, mismas imágenes
 // (docs/img, copiadas a public/landing), mismas interacciones (tarjeta de
@@ -166,15 +167,19 @@ export function LandingPage() {
               <p className="contexto-intro">Cuando el que se agota es quien toma las decisiones, reemplazarlo cuesta entre el 30% y el 50% de su salario anual — en algunos casos documentados, hasta nueve meses de salario completo.</p>
             </ScrollReveal>
 
-            <ScrollReveal className="contexto-cards">
+            <ScrollReveal className="costos-grid">
               {COSTOS.map((c) => (
-                <div className="contexto-card" key={c.num}>
-                  <span className="num">{c.num}</span>
-                  <p>{c.texto}</p>
-                  <span className="src">{c.src}</span>
+                <div className="cost-card" key={c.num}>
+                  <Image src={c.img} alt={c.alt} fill quality={82} sizes="(min-width: 769px) 30vw, 90vw" style={{ objectFit: 'cover' }} className="cost-card-bg" />
+                  <div className="cost-card-text">
+                    <span className="num">{c.num}</span>
+                    <p>{c.texto}</p>
+                    <span className="src">{c.src}</span>
+                  </div>
                 </div>
               ))}
             </ScrollReveal>
+            <CostosMobileCarousel />
           </div>
         </section>
 

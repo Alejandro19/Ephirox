@@ -174,11 +174,36 @@
 .eph-landing2 .contexto-titulo em { font-style: italic; color: var(--gold-dark); }
 .eph-landing2 .contexto-intro { flex: 1 1 260px; max-width: 42ch; margin: 0; font-size: 17px; line-height: 1.72; color: rgba(23,19,14,0.74); text-wrap: pretty; }
 
-.eph-landing2 .contexto-cards { display: flex; flex-wrap: wrap; gap: 16px; }
-.eph-landing2 .contexto-card { flex: 1 1 210px; background: #17130E; border-radius: 14px; padding: 26px; display: grid; gap: 10px; align-content: start; }
-.eph-landing2 .contexto-card .num { font-family: 'Cormorant Garamond', serif; font-size: clamp(36px, 4vw, 42px); line-height: 1; color: var(--gold); font-variant-numeric: lining-nums tabular-nums; }
-.eph-landing2 .contexto-card p { margin: 0; font-size: 14px; line-height: 1.62; color: rgba(245,241,232,0.82); }
-.eph-landing2 .contexto-card .src { font-size: 9px; letter-spacing: 0.16em; color: rgba(245,241,232,0.5); }
+.eph-landing2 .costos-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: clamp(20px, 2.6vw, 34px); }
+.eph-landing2 .cost-card {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  border-radius: clamp(17px, 1.6vw, 24px);
+  overflow: hidden;
+  box-shadow: 0 22px 46px -28px rgba(23,19,14,0.5);
+}
+.eph-landing2 .cost-card-bg { background: #161210; }
+.eph-landing2 .cost-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0) 55%, rgba(0,0,0,0.96) 100%);
+  pointer-events: none;
+}
+.eph-landing2 .cost-card-text {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  padding: 0 clamp(22px, 2.6vw, 34px) clamp(22px, 2.6vw, 34px);
+  display: grid;
+  gap: 12px;
+}
+.eph-landing2 .cost-card .num { font-family: 'Cormorant Garamond', serif; font-weight: 500; font-size: clamp(44px, 4.2vw, 58px); line-height: 1; color: #caa057; font-variant-numeric: lining-nums tabular-nums; letter-spacing: 0.01em; white-space: nowrap; text-shadow: 0 2px 14px rgba(0,0,0,0.5); }
+.eph-landing2 .cost-card-text p { margin: 0; font-size: clamp(15px, 1vw, 17px); line-height: 1.55; color: rgba(255,255,255,0.96); max-width: 32ch; text-wrap: pretty; }
+.eph-landing2 .cost-card-text .src { font-size: 10px; letter-spacing: 0.12em; color: rgba(245,241,232,0.5); text-transform: uppercase; }
+.eph-landing2 .costos-mobile-wrap { display: none; min-width: 0; }
 
 .eph-landing2 .medimos-intro {
   background: var(--bg-light);
@@ -621,6 +646,59 @@
   .eph-landing2 .cambia-section { padding-top: 40px; }
 
   .eph-landing2 .divider-banner-text { align-items: flex-start; padding-top: 26px; }
+
+  .eph-landing2 .costos-grid { display: none; }
+  .eph-landing2 .costos-mobile-wrap { display: block; }
+  .eph-landing2 .costos-mobile-track {
+    display: flex;
+    gap: 14px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 4px calc(7.5vw) 18px;
+    margin: 0 calc(-1 * clamp(22px, 6vw, 40px));
+  }
+  .eph-landing2 .costos-mobile-track::-webkit-scrollbar { display: none; }
+  .eph-landing2 .costos-mobile-card {
+    position: relative;
+    flex: 0 0 85vw;
+    aspect-ratio: 4 / 5;
+    border-radius: 24px;
+    overflow: hidden;
+    scroll-snap-align: center;
+  }
+  .eph-landing2 .costos-mobile-bg { background: #161210; }
+  .eph-landing2 .costos-mobile-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(0,0,0,0) 55%, rgba(0,0,0,0.96) 100%);
+    pointer-events: none;
+  }
+  .eph-landing2 .costos-mobile-text {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
+    padding: 0 26px 26px;
+    display: grid;
+    gap: 10px;
+  }
+  .eph-landing2 .costos-mobile-text .num {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 500;
+    font-size: clamp(48px, 13vw, 58px);
+    line-height: 1;
+    color: #caa057;
+    font-variant-numeric: lining-nums tabular-nums;
+    text-shadow: 0 2px 14px rgba(0,0,0,0.5);
+  }
+  .eph-landing2 .costos-mobile-text p { margin: 0; font-size: 16px; font-weight: 400; line-height: 1.55; color: rgba(255,255,255,0.96); text-wrap: pretty; }
+  .eph-landing2 .costos-mobile-text .src { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(245,241,232,0.5); }
+  .eph-landing2 .costos-mobile-dots { max-width: 160px; margin: 0 auto; }
+  .eph-landing2 .costos-mobile-dots .hero-progress-track { background: rgba(23,19,14,0.16); }
 }
 
 .eph-landing2 .back-to-top {
