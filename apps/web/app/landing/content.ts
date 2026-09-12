@@ -79,12 +79,12 @@ export const SHIFTS = [
 export const HITOS = [
   { titulo: 'Piensas con la misma nitidez a las 4pm que a las 8am.', detalle: 'Menos caídas de foco, con el registro que lo respalda.' },
   { titulo: 'El día ya no se te acaba a media tarde.', detalle: 'Los días malos dejan de ser un misterio.' },
-  { titulo: 'Sabes en qué estado tomaste cada decisión crítica — y puedes repetirlo a voluntad.', detalle: 'Sueño, estrés y fatiga, registrados — tu mejor día, listo para repetirse.' },
-  { titulo: 'Diriges tu capacidad, en vez de improvisar con lo que te queda de ella.', detalle: 'Alertas antes del agotamiento, no explicaciones después de la caída.' },
+  { titulo: 'Sabes en qué estado tomaste cada decisión crítica — y puedes repetirlo a voluntad.', detalle: 'Sueño, recuperación y estrés, registrados — tu mejor día, listo para repetirse.' },
+  { titulo: 'Diriges tu capacidad, en vez de improvisar con lo que te queda de ella.', detalle: 'Lo que antes era tu punto ciego, ahora tiene alertas — antes del agotamiento, no explicaciones después de la caída.' },
 ] as const;
 
 export const JUNTA = [
-  { titulo: 'Ver el riesgo, no intuirlo', texto: 'Visibilidad agregada y anónima del estado del talento crítico — antes de que se traduzca en una salida inesperada.', barras: [0.22, 0.34, 0.28, 0.78, 0.31, 0.26, 0.82, 0.3, 0.24, 0.86, 0.27, 0.33], pie: 'Señales que hoy no se ven: se destacan solas dentro de la cohorte.' },
+  { titulo: 'Ver el riesgo, no intuirlo', texto: 'El punto ciego que hoy tiene tu Junta sobre el talento crítico se vuelve visibilidad agregada y anónima — antes de que se traduzca en una salida inesperada.', barras: [0.22, 0.34, 0.28, 0.78, 0.31, 0.26, 0.82, 0.3, 0.24, 0.86, 0.27, 0.33], pie: 'Señales que hoy no se ven: se destacan solas dentro de la cohorte.' },
   { titulo: 'Retorno que se paga solo', texto: 'Reemplazar a un ejecutivo clave cuesta hasta el 50 % de su salario anual. Evitar una sola salida cubre la inversión de la cohorte completa.', barras: [0.3, 0.36, 0.42, 0.47, 0.55, 0.6, 0.66, 0.73, 0.78, 0.84, 0.9, 0.96], pie: 'Retorno proyectado por cohorte, trimestre a trimestre. Representación ilustrativa.' },
   { titulo: 'Antes del riesgo, no después', texto: 'Mientras la póliza de hombre clave indemniza cuando el riesgo ya ocurrió, esto lo detecta mientras aún se puede intervenir.', barras: [0.9, 0.82, 0.74, 0.68, 0.6, 0.54, 0.48, 0.42, 0.36, 0.32, 0.28, 0.24], pie: 'Probabilidad de salida inesperada, a la baja con el tiempo. Representación ilustrativa.' },
   { titulo: 'Ventaja de retención', texto: '42 % de los ejecutivos rechazaría un ascenso si perjudica su bienestar. Ofrecerlo es una ventaja de retención, no un costo adicional.', barras: [0.88, 0.9, 0.86, 0.91, 0.89, 0.92, 0.87, 0.9, 0.93, 0.89, 0.91, 0.9], pie: 'Continuidad sostenida en lugar de caídas sin aviso.' },
