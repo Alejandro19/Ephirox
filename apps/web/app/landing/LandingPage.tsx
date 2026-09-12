@@ -14,6 +14,7 @@ import { DifCarousel } from './DifCarousel';
 import { LeadForm } from './LeadForm';
 import { ScrollReveal } from './ScrollReveal';
 import { CostosMobileCarousel } from './CostosMobileCarousel';
+import { OptimizacionMobileCarousel } from './OptimizacionMobileCarousel';
 
 // Puerto 1:1 de docs/ephirox-landing.html — mismo copy, mismas imágenes
 // (docs/img, copiadas a public/landing), mismas interacciones (tarjeta de
@@ -199,16 +200,20 @@ export function LandingPage() {
         <section className="optimizacion">
           <div className="optimizacion-wrap">
             <ScrollReveal>
-              <h2 className="optimizacion-titulo">Optimización personalizada en:</h2>
+              <h2 className="optimizacion-titulo">Con tu estado ya medido, esto es lo que se ajusta en ti:</h2>
             </ScrollReveal>
-            <ScrollReveal className="optimizacion-grid">
+            <ScrollReveal className="opt-grid">
               {OPTIMIZACION.map((o) => (
-                <div className="optimizacion-item" key={o.titulo}>
-                  <h3 className="optimizacion-keyword">{o.titulo}</h3>
-                  <p className="optimizacion-texto">{o.texto}</p>
+                <div className="opt-card" key={o.label}>
+                  <Image src={o.img} alt={o.alt} fill quality={82} sizes="(min-width: 769px) 25vw, 90vw" style={{ objectFit: 'cover', objectPosition: 'center' }} className="opt-card-bg" />
+                  <div className="opt-card-text">
+                    <span className={`opt-card-label${o.label.length > 14 ? ' is-long' : ''}`}>{o.label}</span>
+                    <p className="opt-card-desc">{o.texto}</p>
+                  </div>
                 </div>
               ))}
             </ScrollReveal>
+            <OptimizacionMobileCarousel />
           </div>
         </section>
 

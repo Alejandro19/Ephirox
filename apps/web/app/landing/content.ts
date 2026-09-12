@@ -23,13 +23,15 @@ export const PASOS = [
   { ord: '03', titulo: 'Todo cruzado en un solo lugar.', texto: 'Tu estado real, en un tablero del que puedes hablar con datos, no con sensaciones.', img: '/landing/dashboard-preview.png', alt: 'Vista previa del tablero Evolution' },
 ] as const;
 
-// Grid de 4 columnas (desktop) / apiladas (mobile) en .optimizacion-grid,
-// entre "¿Cómo lo medimos?" y "Anticipamos" en LandingPage.tsx.
+// Cards con foto de "Con tu estado ya medido..." (.opt-grid en
+// LandingPage.tsx) — mismo patrón visual que COSTOS (foto + overlay +
+// texto), grid estático en desktop y carrusel en mobile
+// (OptimizacionMobileCarousel.tsx).
 export const OPTIMIZACION = [
-  { titulo: 'Entrenamiento', texto: 'Diseñado para tu agenda y tu cuerpo, no una rutina de gimnasio genérica.' },
-  { titulo: 'Nutrición', texto: 'Ajustada a tus propios biomarcadores, no una dieta de talla única.' },
-  { titulo: 'Manejo del estrés', texto: 'Técnicas de neuro-wellness calibradas a tu respuesta individual.' },
-  { titulo: 'Sueño', texto: 'Protocolos ajustados a tu cronotipo, no una app de meditación más.' },
+  { label: 'ENTRENAMIENTO', texto: 'Diseñado para tu agenda y tu cuerpo, no una rutina de gimnasio genérica.', img: '/landing/opt-entrenamiento.jpg', alt: 'Entrenamiento' },
+  { label: 'NUTRICIÓN', texto: 'Ajustada a tus propios biomarcadores, no una dieta de talla única.', img: '/landing/opt-nutricion.jpg', alt: 'Nutrición' },
+  { label: 'MANEJO DEL ESTRÉS', texto: 'Técnicas de neuro-wellness calibradas a tu respuesta individual.', img: '/landing/opt-estres.jpg', alt: 'Manejo del estrés' },
+  { label: 'SUEÑO', texto: 'Protocolos ajustados a tu cronotipo, no una app de meditación más.', img: '/landing/opt-sueno.jpg', alt: 'Sueño' },
 ] as const;
 
 type CompareRow = {
