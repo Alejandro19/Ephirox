@@ -30,7 +30,7 @@ export const PASOS = [
 export const OPTIMIZACION = [
   { label: 'ENTRENAMIENTO', texto: 'Diseñado para tu agenda y tu cuerpo, no una rutina de gimnasio genérica.', img: '/landing/opt-entrenamiento.jpg', alt: 'Entrenamiento' },
   { label: 'NUTRICIÓN', texto: 'Ajustada a tus propios biomarcadores, no una dieta de talla única.', img: '/landing/opt-nutricion.jpg', alt: 'Nutrición' },
-  { label: 'MANEJO DEL ESTRÉS', texto: 'Técnicas de neuro-wellness calibradas a tu respuesta individual.', img: '/landing/opt-estres.jpg', alt: 'Manejo del estrés' },
+  { label: 'GESTIÓN DEL ESTRÉS', texto: 'Técnicas de neuro-wellness calibradas a tu respuesta individual.', img: '/landing/opt-estres.jpg', alt: 'Gestión del estrés' },
   { label: 'SUEÑO', texto: 'Protocolos ajustados a tu cronotipo, no una app de meditación más.', img: '/landing/opt-sueno.jpg', alt: 'Sueño' },
 ] as const;
 
