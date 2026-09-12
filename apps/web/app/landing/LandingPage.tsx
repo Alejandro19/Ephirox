@@ -146,12 +146,12 @@ export function LandingPage() {
         <section className="reconocimiento-section">
           <div className="reconocimiento-wrap">
             <ScrollReveal>
-              <p className="reconocimiento-llano">Comes mal, duermes peor, vives en alerta. Ya intentaste el gimnasio, la dieta, el programa de tu empresa. Nada cambió.</p>
+              <p className="reconocimiento-llano">Lo sabes. Vida sedentaria. Comes mal, duermes peor, vives en alerta constante. Ya intentaste el gimnasio, la dieta, el programa de bienestar de tu empresa. Nada cambió.</p>
             </ScrollReveal>
 
             <ScrollReveal className="reconocimiento-bloque">
               <span className="reconocimiento-rule" aria-hidden="true" />
-              <p className="reconocimiento-sentencia">No es falta de disciplina. Es que no puedes arreglar <span className="reconocimiento-sentencia-accent">lo que no puedes ver.</span></p>
+              <p className="reconocimiento-sentencia">No es falta de disciplina. Es que no puedes arreglar <span className="reconocimiento-sentencia-accent">lo que no puedes ver</span> — tu punto ciego: lo que tu cuerpo lleva meses diciéndote, y que ningún chequeo anual te ha mostrado todavía.</p>
             </ScrollReveal>
 
             <span className="costura costura-baja" aria-hidden="true" />
@@ -163,7 +163,7 @@ export function LandingPage() {
             <span className="costura costura-entra" aria-hidden="true" />
 
             <ScrollReveal className="contexto-fila">
-              <h2 className="contexto-titulo">Lo que sientes tú, ya se lo estás cobrando a tu <em>empresa</em>.</h2>
+              <h2 className="contexto-titulo">Lo que tú cargas en silencio, tu equipo directivo también — y tu <em>empresa</em> ya lo está pagando.</h2>
               <p className="contexto-intro">Cuando el que se agota es quien toma las decisiones, reemplazarlo cuesta entre el 30% y el 50% de su salario anual — en algunos casos documentados, hasta nueve meses de salario completo.</p>
             </ScrollReveal>
 
