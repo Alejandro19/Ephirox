@@ -146,11 +146,18 @@ export function LandingPage() {
 
         <section className="reconocimiento-section">
           <div className="reconocimiento-wrap">
-            <ScrollReveal>
-              <p>Lo sabes. Vida sedentaria. Comes mal, duermes peor y vives en alerta constante. Ya intentaste el gimnasio, la dieta de moda, el programa de bienestar genérico de la empresa — y nada cambió.</p>
-              <p>No es falta de disciplina. Es que no puedes arreglar lo que no puedes ver.</p>
-              <p>Lo que de verdad te frena no es lo que ya sabes que está mal — es tu <em className="serif">punto ciego</em>: lo que tu cuerpo lleva meses diciéndote, y que ningún chequeo anual te ha mostrado todavía.</p>
-              <p>Y lo que tú no ves en ti, tu equipo directivo tampoco lo ve en sí mismo. Tarde o temprano, la empresa lo paga.</p>
+            <ScrollReveal className="reconocimiento-quote">
+              <span className="reconocimiento-rule" aria-hidden="true" />
+              <p>No es falta de disciplina. Es que no puedes arreglar <em className="serif">lo que no puedes ver.</em></p>
+            </ScrollReveal>
+
+            <ScrollReveal className="reconocimiento-cols">
+              <p className="reconocimiento-col-left">Lo sabes. Vida sedentaria. Comes mal, duermes peor y vives en alerta constante. Ya intentaste el gimnasio, la dieta de moda, el programa de bienestar genérico de la empresa — y nada cambió.</p>
+              <p className="reconocimiento-col-right">Lo que de verdad te frena no es lo que ya sabes que está mal — es tu <em className="serif">punto ciego</em>: lo que tu cuerpo lleva meses diciéndote, y que ningún chequeo anual te ha mostrado todavía.</p>
+            </ScrollReveal>
+
+            <ScrollReveal className="reconocimiento-cierre">
+              <p>Y lo que tú no ves en ti, tu equipo directivo tampoco lo ve en sí mismo. <span className="reconocimiento-cierre-accent">Tarde o temprano, la empresa lo paga.</span></p>
             </ScrollReveal>
           </div>
         </section>
