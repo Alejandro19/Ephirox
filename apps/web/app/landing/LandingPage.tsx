@@ -145,13 +145,16 @@ export function LandingPage() {
 
         <section className="reconocimiento-section">
           <div className="reconocimiento-wrap">
-            <ScrollReveal>
-              <p className="reconocimiento-llano">Lo sabes. Vida sedentaria. Comes mal, duermes peor, vives en alerta constante. Ya intentaste el gimnasio, la dieta, el bienestar corporativo — nada cambió.</p>
+            <ScrollReveal className="reconocimiento-p1" distance={12}>
+              <p className="reconocimiento-mini">Lo sabes.</p>
+              <p className="reconocimiento-medio">Vida sedentaria. Comes mal, duermes peor, vives en alerta constante.</p>
+              <p className="reconocimiento-apoyo">Ya intentaste el gimnasio, la dieta, el bienestar corporativo — nada cambió.</p>
             </ScrollReveal>
 
-            <ScrollReveal className="reconocimiento-bloque">
+            <ScrollReveal className="reconocimiento-bloque" distance={12}>
               <span className="reconocimiento-rule" aria-hidden="true" />
-              <p className="reconocimiento-sentencia">No es falta de disciplina. Es <span className="reconocimiento-sentencia-accent">tu punto ciego</span>: lo que tu cuerpo lleva meses diciéndote, y que ningún chequeo te ha mostrado.</p>
+              <p className="reconocimiento-sentencia">No es falta de disciplina. Es <span className="reconocimiento-sentencia-accent">tu punto ciego</span>:</p>
+              <p className="reconocimiento-apoyo">lo que tu cuerpo lleva meses diciéndote, y que ningún chequeo te ha mostrado.</p>
             </ScrollReveal>
 
             <span className="costura costura-baja" aria-hidden="true" />
