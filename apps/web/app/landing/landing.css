@@ -104,19 +104,19 @@
 .eph-landing2 .reconocimiento-wrap {
   max-width: 940px;
   margin: 0 auto;
-  padding: clamp(44px, 5vw, 76px) clamp(26px, 4vw, 68px);
+  padding: clamp(52px, 6vw, 84px) clamp(26px, 4vw, 68px);
   display: grid;
-  gap: 40px;
+  gap: clamp(30px, 3vw, 34px);
 }
 
-.eph-landing2 .reconocimiento-quote { display: grid; gap: 20px; }
-.eph-landing2 .reconocimiento-rule { width: 52px; height: 1px; background: var(--gold); }
+.eph-landing2 .reconocimiento-quote { display: grid; gap: 16px; }
+.eph-landing2 .reconocimiento-rule { width: 44px; height: 1px; background: var(--gold); }
 .eph-landing2 .reconocimiento-quote p {
   margin: 0;
   font-family: 'Cormorant Garamond', serif;
   font-weight: 300;
-  font-size: clamp(30px, 3.8vw, 52px);
-  line-height: 1.1;
+  font-size: clamp(32px, 3.8vw, 52px);
+  line-height: 1.12;
   max-width: 26ch;
   text-wrap: pretty;
   color: #FBF8F1;
@@ -124,13 +124,13 @@
 .eph-landing2 .reconocimiento-quote em.serif { color: var(--gold); }
 
 .eph-landing2 .reconocimiento-cols { display: flex; flex-wrap: wrap; gap: 30px 46px; }
-.eph-landing2 .reconocimiento-cols p { margin: 0; flex: 1 1 280px; font-size: 15px; line-height: 1.78; text-wrap: pretty; }
-.eph-landing2 .reconocimiento-col-left { color: rgba(245,241,232,0.62); }
-.eph-landing2 .reconocimiento-col-right { color: rgba(245,241,232,0.78); }
-.eph-landing2 .reconocimiento-col-right em.serif { font-size: 18px; color: var(--gold); }
+.eph-landing2 .reconocimiento-cols p { margin: 0; flex: 1 1 300px; font-size: 17px; line-height: 1.72; text-wrap: pretty; }
+.eph-landing2 .reconocimiento-col-left { color: rgba(245,241,232,0.66); }
+.eph-landing2 .reconocimiento-col-right { color: rgba(245,241,232,0.86); }
+.eph-landing2 .reconocimiento-col-right em.serif { font-size: 20px; color: var(--gold); }
 
-.eph-landing2 .reconocimiento-cierre { border-top: 1px solid rgba(245,241,232,0.1); padding-top: 30px; }
-.eph-landing2 .reconocimiento-cierre p { margin: 0; font-size: 19px; line-height: 1.65; max-width: 50ch; color: #F5F1E8; text-wrap: pretty; }
+.eph-landing2 .reconocimiento-cierre { border-top: 1px solid rgba(245,241,232,0.1); padding-top: 26px; }
+.eph-landing2 .reconocimiento-cierre p { margin: 0; font-size: 18px; line-height: 1.6; max-width: 50ch; color: #F5F1E8; text-wrap: pretty; }
 .eph-landing2 .reconocimiento-cierre-accent { color: var(--gold); }
 
 .eph-landing2 .hero-stat-card { position: absolute; right: clamp(20px, 5vw, 64px); bottom: clamp(60px, 10vh, 104px); width: 236px; box-sizing: border-box; aspect-ratio: 3 / 4; border-radius: 14px; border: 1px solid rgba(201,166,107,0.2); background: linear-gradient(165deg, rgba(24,21,17,0.9) 0%, rgba(11,10,8,0.9) 100%); backdrop-filter: blur(12px); padding: clamp(18px, 1.9vw, 24px); display: grid; grid-template-rows: 1fr auto; gap: 16px; box-shadow: 0 28px 70px rgba(0,0,0,0.55); overflow: hidden; }

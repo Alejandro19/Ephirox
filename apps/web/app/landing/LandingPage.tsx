@@ -152,12 +152,12 @@ export function LandingPage() {
             </ScrollReveal>
 
             <ScrollReveal className="reconocimiento-cols">
-              <p className="reconocimiento-col-left">Lo sabes. Vida sedentaria. Comes mal, duermes peor y vives en alerta constante. Ya intentaste el gimnasio, la dieta de moda, el programa de bienestar genérico de la empresa — y nada cambió.</p>
-              <p className="reconocimiento-col-right">Lo que de verdad te frena no es lo que ya sabes que está mal — es tu <em className="serif">punto ciego</em>: lo que tu cuerpo lleva meses diciéndote, y que ningún chequeo anual te ha mostrado todavía.</p>
+              <p className="reconocimiento-col-left">Comes mal, duermes peor, vives en alerta. Ya intentaste el gimnasio, la dieta, el programa de tu empresa. Nada cambió.</p>
+              <p className="reconocimiento-col-right">No te frena lo que ya sabes. Te frena tu <em className="serif">punto ciego</em>: lo que tu cuerpo lleva meses diciéndote y ningún chequeo anual te ha mostrado.</p>
             </ScrollReveal>
 
             <ScrollReveal className="reconocimiento-cierre">
-              <p>Y lo que tú no ves en ti, tu equipo directivo tampoco lo ve en sí mismo. <span className="reconocimiento-cierre-accent">Tarde o temprano, la empresa lo paga.</span></p>
+              <p>Y lo que tú no ves en ti, tu equipo directivo tampoco. <span className="reconocimiento-cierre-accent">Tarde o temprano, la empresa lo paga.</span></p>
             </ScrollReveal>
           </div>
         </section>
