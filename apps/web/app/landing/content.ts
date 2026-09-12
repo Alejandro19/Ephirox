@@ -4,7 +4,6 @@
 export const HERO_STATS = [
   { cifra: '1 de 3', texto: 'Trabajadores en Colombia enfrenta hoy desafíos de salud mental que afectan su desempeño.', fuente: 'FUENTE: SURA / COMPENSAR, 2025' },
   { cifra: '37%', texto: 'Más probabilidad de problemas cognitivos después de los 45 si vives con estrés alto sostenido.', fuente: 'FUENTE: JAMA NETWORK OPEN, 2023 (24.448 PERSONAS)' },
-  { cifra: '42%', texto: 'De los ejecutivos rechazaría un ascenso si perjudicara su bienestar personal.', fuente: 'FUENTE: PAGE EXECUTIVE, TALENT TRENDS 2026' },
   { cifra: '65%', texto: 'De los altos ejecutivos en Latinoamérica prioriza bienestar y beneficios personalizados por encima de un aumento de salario.', fuente: 'FUENTE: MERCER, GLOBAL TALENT TRENDS 2023' },
 ] as const;
 export const HERO_INTERVAL_MS = 6200;

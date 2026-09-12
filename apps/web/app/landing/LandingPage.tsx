@@ -138,11 +138,21 @@ export function LandingPage() {
             </p>
             <div className="hero-cta-row eph-a" style={{ animationDelay: '680ms' }}>
               <a className="link-hover underline-link" href="#llevarlo" onClick={handleAnchorClick}>Llevar Ephirox a mi empresa</a>
-              <span className="micro">Acceso reservado por cohorte, no individual. No sustituye diagnóstico ni tratamiento médico.</span>
             </div>
           </div>
 
           <HeroStatCard className="eph-a" style={{ animationDelay: '760ms' }} />
+        </section>
+
+        <section className="reconocimiento-section">
+          <div className="reconocimiento-wrap">
+            <ScrollReveal>
+              <p>Lo sabes. Vida sedentaria. Comes mal, duermes peor y vives en alerta constante. Ya intentaste el gimnasio, la dieta de moda, el programa de bienestar genérico de la empresa — y nada cambió.</p>
+              <p>No es falta de disciplina. Es que no puedes arreglar lo que no puedes ver.</p>
+              <p>Lo que de verdad te frena no es lo que ya sabes que está mal — es tu <em className="serif">punto ciego</em>: lo que tu cuerpo lleva meses diciéndote, y que ningún chequeo anual te ha mostrado todavía.</p>
+              <p>Y lo que tú no ves en ti, tu equipo directivo tampoco lo ve en sí mismo. Tarde o temprano, la empresa lo paga.</p>
+            </ScrollReveal>
+          </div>
         </section>
 
         <section className="contexto" id="contexto">
