@@ -210,10 +210,10 @@
 .eph-landing2 .contexto-titulo em { font-style: italic; color: var(--gold-dark); }
 .eph-landing2 .contexto-intro { flex: 1 1 260px; max-width: 42ch; margin: 0; font-size: 17px; line-height: 1.72; color: rgba(23,19,14,0.74); text-wrap: pretty; }
 
-.eph-landing2 .costos-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: clamp(20px, 2.6vw, 34px); }
+.eph-landing2 .costos-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: clamp(18px, 2vw, 26px); }
 .eph-landing2 .cost-card {
   position: relative;
-  aspect-ratio: 4 / 5;
+  aspect-ratio: 3 / 4;
   border-radius: 14px;
   overflow: hidden;
   background: #17130E;
@@ -731,7 +731,7 @@
   .eph-landing2 .costos-mobile-card {
     position: relative;
     flex: 0 0 85vw;
-    aspect-ratio: 4 / 5;
+    aspect-ratio: 3 / 4;
     border-radius: 24px;
     overflow: hidden;
     scroll-snap-align: center;
