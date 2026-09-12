@@ -163,7 +163,7 @@ export function LandingPage() {
             <span className="costura costura-entra" aria-hidden="true" />
 
             <ScrollReveal className="contexto-fila">
-              <h2 className="contexto-titulo">Lo que tú cargas en silencio, tu equipo directivo también — y tu <em>empresa</em> ya lo está pagando.</h2>
+              <h2 className="contexto-titulo">Lo que cargas en silencio, tu equipo también — y tu <em>empresa</em> ya lo está pagando.</h2>
               <p className="contexto-intro">Cuando el que se agota es quien toma las decisiones, reemplazarlo cuesta entre el 30% y el 50% de su salario anual — en algunos casos documentados, hasta nueve meses de salario completo.</p>
             </ScrollReveal>
 
