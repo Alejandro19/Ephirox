@@ -104,13 +104,13 @@
    + section.contexto): una sola declaración de tamaño titular en las DOS
    secciones — el h2 de .contexto. La sentencia de acá abajo es voz baja
    (cursiva, 34px máx.), nunca compite con ese titular. Las dos secciones
-   comparten max-width/padding-inline (1040px / incisos clamp iguales) para
+   comparten max-width/padding-inline (1200px / incisos clamp iguales) para
    que el filete de costura (.costura) quede perfectamente alineado entre
    una y otra — si cambias uno, cambia el otro. Sin media queries en todo
    el tramo: el apilado en mobile sale solo de flex-wrap. */
 .eph-landing2 .reconocimiento-section { background: #17130E; }
 .eph-landing2 .reconocimiento-wrap {
-  max-width: 1040px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: clamp(48px, 5vw, 76px) clamp(26px, 4vw, 64px) 0;
   display: grid;
@@ -172,17 +172,18 @@
 
 .eph-landing2 section.contexto { background: #EFE8DA; color: #17130E; }
 .eph-landing2 .contexto-wrap {
-  max-width: 1040px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 0 clamp(26px, 4vw, 64px) clamp(48px, 5vw, 76px);
   display: grid;
   gap: 32px;
 }
 
-.eph-landing2 .contexto-fila { display: flex; flex-wrap: wrap; align-items: end; gap: 26px 48px; }
+.eph-landing2 .contexto-fila { display: grid; gap: 14px; }
+.eph-landing2 .contexto-eyebrow { font-size: 12px; letter-spacing: 0.14em; color: rgba(23,19,14,0.42); }
 .eph-landing2 .contexto-titulo {
-  flex: 1 1 380px;
   margin: 0;
+  max-width: 700px;
   font-family: 'Cormorant Garamond', serif;
   font-weight: 300;
   font-size: clamp(34px, 4.2vw, 54px);
@@ -202,6 +203,11 @@
   box-shadow: 0 30px 60px -40px rgba(0,0,0,0.9);
 }
 .eph-landing2 .cost-card-bg { background: #161210; filter: saturate(0.55) brightness(0.92) contrast(1.02); }
+/* La foto de la card 10X (senior.jpg) tiene luz cálida de atardecer, más
+   luminosa que las otras 2 fotos de esta fila — el filtro estándar no
+   basta para igualar el tono apagado/oscuro del resto, así que lleva una
+   corrección extra. */
+.eph-landing2 .cost-card-bg.is-bright-source { filter: saturate(0.4) brightness(0.62) contrast(1.05); }
 .eph-landing2 .cost-card::after {
   content: '';
   position: absolute;
@@ -214,16 +220,21 @@
     rgba(23,19,14,0.96) 100%);
   pointer-events: none;
 }
+/* Ancladas desde un % fijo del alto de la card (no desde bottom:0): así el
+   número arranca en la misma posición en las 3 cards sin importar cuántas
+   líneas ocupe la descripción — con bottom-anchor, una frase más larga
+   empuja el número hacia arriba y las cifras quedan desalineadas entre sí. */
 .eph-landing2 .cost-card-text {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 0;
+  top: 56%;
   z-index: 1;
   pointer-events: none;
   padding: 0 26px 26px;
   display: grid;
   gap: 10px;
+  align-content: start;
 }
 .eph-landing2 .cost-card .num { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: clamp(46px, 4vw, 58px); line-height: 1; color: #E4A64A; letter-spacing: -0.015em; font-variant-numeric: lining-nums tabular-nums; white-space: nowrap; text-shadow: 0 2px 14px rgba(23,19,14,0.8); }
 .eph-landing2 .cost-card-text p { margin: 0; font-family: 'Jost', sans-serif; font-weight: 300; font-size: 14px; line-height: 1.62; color: #F5F1E8; max-width: 32ch; text-wrap: pretty; text-shadow: 0 1px 10px rgba(23,19,14,0.9); }
@@ -694,6 +705,7 @@
   }
   .eph-landing2 .costos-mobile-card { background: #17130E; box-shadow: 0 30px 60px -40px rgba(0,0,0,0.9); }
   .eph-landing2 .costos-mobile-bg { background: #161210; filter: saturate(0.55) brightness(0.92) contrast(1.02); }
+  .eph-landing2 .costos-mobile-bg.is-bright-source { filter: saturate(0.4) brightness(0.62) contrast(1.05); }
   .eph-landing2 .costos-mobile-card::after {
     content: '';
     position: absolute;

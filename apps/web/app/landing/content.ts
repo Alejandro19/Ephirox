@@ -18,7 +18,7 @@ export const YA_INTENTASTE = ['el gimnasio', 'la dieta', 'el programa de tu empr
 export const COSTOS = [
   { num: '5X', texto: 'Un ejecutivo en burnout cuesta hasta 5x más que un empleado promedio y reemplazarlo, hasta el 50% de su salario anual.', src: 'AM. J. OF PREVENTIVE MEDICINE, 2025', img: '/landing/costo-burnout.jpg', alt: 'Ejecutivo agotado, cabeza entre las manos' },
   { num: '10 – 40 %', texto: 'Más riesgo cardiovascular por tensión laboral sostenida — 27 estudios, +600.000 personas.', src: 'KIVIMÄKI & KAWACHI, 2015', img: '/landing/costo-ecg.jpg', alt: 'Monitor de ritmo cardíaco (ECG)' },
-  { num: '55 / 6.9', texto: 'Edad promedio al nombrar a un CEO, y años que dura hoy en el cargo. Una sube. La otra baja.', src: 'NBER 2026 / KORN FERRY 2020', img: '/landing/costo-junta.jpg', alt: 'Ejecutivo presentando a su equipo en sala de juntas' },
+  { num: '10X', texto: 'Un líder que nunca se ausenta, pero rinde por debajo de su capacidad, le cuesta a la empresa 10 veces más que uno que sí se ausenta.', src: 'GLOBAL CORPORATE CHALLENGE / OMS (HPQ)', img: '/landing/costo-senior.jpg', alt: 'Ejecutivo agotado en su oficina' },
 ] as const;
 
 export const PASOS = [

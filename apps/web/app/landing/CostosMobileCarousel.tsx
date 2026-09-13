@@ -52,7 +52,7 @@ export function CostosMobileCarousel() {
       <div className="costos-mobile-track" ref={trackRef}>
         {COSTOS.map((c) => (
           <div className="costos-mobile-card" key={c.num}>
-            <Image src={c.img} alt={c.alt} fill quality={82} sizes="90vw" style={{ objectFit: 'cover' }} className="costos-mobile-bg" />
+            <Image src={c.img} alt={c.alt} fill quality={82} sizes="90vw" style={{ objectFit: 'cover' }} className={`costos-mobile-bg${c.num === '10X' ? ' is-bright-source' : ''}`} />
             <div className="costos-mobile-text">
               <span className="num">{c.num}</span>
               <p>{c.texto}</p>

@@ -171,13 +171,14 @@ export function LandingPage() {
             <span className="costura costura-entra" aria-hidden="true" />
 
             <ScrollReveal className="contexto-fila">
+              <span className="eyebrow contexto-eyebrow">EL COSTO</span>
               <h2 className="contexto-titulo">Lo que sientes tú, ya se lo estás cobrando a tu <em>empresa</em>.</h2>
             </ScrollReveal>
 
             <ScrollReveal className="costos-grid">
               {COSTOS.map((c) => (
                 <div className="cost-card" key={c.num}>
-                  <Image src={c.img} alt={c.alt} fill quality={82} sizes="(min-width: 769px) 30vw, 90vw" style={{ objectFit: 'cover' }} className="cost-card-bg" />
+                  <Image src={c.img} alt={c.alt} fill quality={82} sizes="(min-width: 769px) 30vw, 90vw" style={{ objectFit: 'cover' }} className={`cost-card-bg${c.num === '10X' ? ' is-bright-source' : ''}`} />
                   <div className="cost-card-text">
                     <span className="num">{c.num}</span>
                     <p>{c.texto}</p>
