@@ -134,7 +134,7 @@ export function LandingPage() {
               Tu empresa llega hasta donde tu <em className="serif">cuerpo</em> te lo permite.
             </h1>
             <p className="lead eph-a" style={{ animationDelay: '520ms' }}>
-              Ephirox mide lo que sucede dentro de ti — antes de que pase factura.
+              Ephirox mide lo que sucede dentro de ti — antes de que te pase factura.
             </p>
             <div className="hero-cta-row eph-a" style={{ animationDelay: '680ms' }}>
               <a className="link-hover underline-link" href="#llevarlo" onClick={handleAnchorClick}>Llevar Ephirox a mi empresa</a>
