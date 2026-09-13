@@ -1054,7 +1054,14 @@ Prompt completo (`docs/EPHIROX - Prompt Seccion Junta 10a.md`) reemplazó el aco
 
 Alrededor de 33 commits en total entre las dos fechas de esta sesión, empezando en `aaee9b6` (sección Optimización, versión texto) y terminando en `d9f8844` (alineado final del punto 02 de Junta) — pusheados a producción en varias tandas, siempre tras confirmación explícita de Alejandro en cada turno de push.
 
-## Próximas actividades — Siguiente sesión (actualizada 2026-09-03, 2026-09-04, 2026-09-12)
+### 9. Continuación 2026-09-13 — fondo oscuro de `PasosMobileList` y compactado del índice de Junta en mobile
+
+Dos fixes puntuales más, mismo patrón de verificación (CDP en 390px) y push solo tras "si" explícito:
+
+- **`.pasos-mobile-list` (mobile de "¿Cómo lo medimos?") usaba `var(--bg-light)` (fondo crema) con texto oscuro, mientras que su equivalente de escritorio (`section.pasos-sticky`) siempre fue oscuro** — se pidió igualar el fondo oscuro en mobile. Fix: mismo degradado oscuro (`linear-gradient(165deg, rgba(24,21,17,0.9)…, rgba(11,10,8,0.9)…)`) y `color:var(--cream)`, quitando los overrides de color oscuro en `.paso-titulo`/`.paso-texto` que ya no hacían falta (esas clases son crema/cream-soft por defecto, correctas para fondo oscuro). Commit `c8bcadd`.
+- **Índice de Junta en mobile obligaba a recorrer las 5 filas completas antes de ver el panel de detalle** (reportado con captura: el punto activo, al fondo de la pantalla, apenas se alcanzaba a ver el título). Causa: en mobile el índice y el panel se apilan (ya no van lado a lado como en desktop), y el panel llevaba un `min-height:460px` fijo pensado solo para el layout de escritorio (evitar que el alto cambie y empuje la card de al lado). Fix, dentro del mismo bloque `@media (max-width:768px)` ya existente: filas del índice más compactas (padding 17px→11px, tipografía del título 22px→17px), gaps de `.junta-wrap`/`.junta-body` reducidos, y `min-height` del panel liberado a `0` solo en mobile. Verificado con CDP: índice completo + panel del punto activo visibles juntos en el viewport tras el scroll normal a la sección, sin overflow horizontal nuevo. Commit `c7450f3`.
+
+## Próximas actividades — Siguiente sesión (actualizada 2026-09-03, 2026-09-04, 2026-09-12, 2026-09-13)
 
 ### Actividad 1 — Confirmar que el login desde el celular ya funciona
 
@@ -1170,7 +1177,7 @@ Alrededor de 33 commits en total entre las dos fechas de esta sesión, empezando
 
 ### Actividad 27 — Confirmar en un navegador/celular real todo el trabajo de landing de esta sesión (actualizada 2026-09-13)
 
-- Todo el trabajo de la sesión 2026-09-12→13 (nueva sección "Optimización personalizada", tramo "ya lo intentaste"/"coste para la empresa" con la costura visual, cards 5X/10-40%/10X realineadas, y el rediseño completo de "El reporte que le llevas a tu Junta" con índice+panel fijo y 5 gráficos distintos) se verificó exhaustivamente con Chrome headless vía CDP en 390/768/1440px, pero nunca con el dedo/mouse real de Alejandro ni en un iPhone real. Pedir que confirme: que los carruseles de "Optimización personalizada" y de las cards de coste responden bien al swipe táctil real (no solo al scroll simulado), que la costura entre las dos secciones y el índice de Junta se ven bien en su propio dispositivo, que las fotos de las 3 cards de coste (incluida `costo-senior.jpg`, con el filtro de brillo extra) se ven con tonalidad consistente entre sí en una pantalla real, y que el nuevo índice de Junta (botones reales, sin acordeón) es cómodo de usar con el dedo en mobile.
+- Todo el trabajo de la sesión 2026-09-12→13 (nueva sección "Optimización personalizada", tramo "ya lo intentaste"/"coste para la empresa" con la costura visual, cards 5X/10-40%/10X realineadas, el rediseño completo de "El reporte que le llevas a tu Junta" con índice+panel fijo y 5 gráficos distintos, el fondo oscuro de `PasosMobileList` en mobile, y el índice de Junta compactado en mobile) se verificó exhaustivamente con Chrome headless vía CDP en 390/768/1440px, pero nunca con el dedo/mouse real de Alejandro ni en un iPhone real. Pedir que confirme: que los carruseles de "Optimización personalizada" y de las cards de coste responden bien al swipe táctil real (no solo al scroll simulado), que la costura entre las dos secciones y el índice de Junta se ven bien en su propio dispositivo, que las fotos de las 3 cards de coste (incluida `costo-senior.jpg`, con el filtro de brillo extra) se ven con tonalidad consistente entre sí en una pantalla real, que el nuevo índice de Junta (botones reales, sin acordeón, ahora compactado en mobile) es cómodo de usar con el dedo, y que "¿Cómo lo medimos?" en mobile se ve con el mismo fondo oscuro que en escritorio.
 
 ---
 
