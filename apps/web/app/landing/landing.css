@@ -960,6 +960,7 @@
      flex-basis en % en vez de px) y se ajustan paddings/gaps para que la
      tarjeta se vea más compacta y de un vistazo. */
   .eph-landing2 .llevarlo-copy, .eph-landing2 .llevarlo-form { padding: 28px 18px; }
+  .eph-landing2 .llevarlo-copy p { display: none; }
   .eph-landing2 form.contact-form { gap: 16px 8px; }
   /* Basis en % (no 0 + flex-grow: eso les quita la señal de tamaño que
      fuerza el wrap a 2 por fila, y Empresa/Rol terminaban en una sola fila
