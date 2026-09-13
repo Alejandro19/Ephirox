@@ -231,14 +231,18 @@
   top: 56%;
   z-index: 1;
   pointer-events: none;
-  padding: 0 26px 26px;
+  padding: 0 26px;
   display: grid;
   gap: 10px;
   align-content: start;
 }
 .eph-landing2 .cost-card .num { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: clamp(46px, 4vw, 58px); line-height: 1; color: #E4A64A; letter-spacing: -0.015em; font-variant-numeric: lining-nums tabular-nums; white-space: nowrap; text-shadow: 0 2px 14px rgba(23,19,14,0.8); }
 .eph-landing2 .cost-card-text p { margin: 0; font-family: 'Jost', sans-serif; font-weight: 300; font-size: 14px; line-height: 1.62; color: #F5F1E8; max-width: 32ch; text-wrap: pretty; text-shadow: 0 1px 10px rgba(23,19,14,0.9); }
-.eph-landing2 .cost-card-text .src { font-family: 'Jost', sans-serif; font-weight: 400; font-size: 9px; letter-spacing: 0.16em; color: rgba(245,241,232,0.7); text-transform: uppercase; text-shadow: 0 1px 8px rgba(23,19,14,0.9); }
+/* Anclada al fondo de la card por separado del bloque número+frase: así la
+   fuente queda al mismo nivel en las 3 cards sin importar cuántas líneas
+   ocupe la frase de cada una (con las 3 en un solo bloque, una frase más
+   corta dejaba la fuente más arriba que en las otras). */
+.eph-landing2 .cost-card-src { position: absolute; left: 26px; right: 26px; bottom: 26px; z-index: 1; pointer-events: none; font-family: 'Jost', sans-serif; font-weight: 400; font-size: 9px; letter-spacing: 0.16em; color: rgba(245,241,232,0.7); text-transform: uppercase; text-shadow: 0 1px 8px rgba(23,19,14,0.9); }
 .eph-landing2 .costos-mobile-wrap { display: none; min-width: 0; }
 
 .eph-landing2 .medimos-intro {

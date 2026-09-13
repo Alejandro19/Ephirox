@@ -182,8 +182,8 @@ export function LandingPage() {
                   <div className="cost-card-text">
                     <span className="num">{c.num}</span>
                     <p>{c.texto}</p>
-                    <span className="src">{c.src}</span>
                   </div>
+                  <span className="cost-card-src">{c.src}</span>
                 </div>
               ))}
             </ScrollReveal>
