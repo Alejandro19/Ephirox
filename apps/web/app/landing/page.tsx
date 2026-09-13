@@ -1,13 +1,13 @@
 import type { Metadata } from 'next';
 import { LandingPage } from './LandingPage';
 
-// Título = tagline de marca (igual al panel de /login); descripción =
-// subtítulo + descripción del hero de la landing (LandingPage.tsx)
-// combinados en una sola frase — si ese texto cambia, actualizar acá
-// también para que el share-preview no quede desincronizado.
-const TITLE = 'Ephirox — Redefining limits.';
+// Título/descripción de SEO y share-preview — independientes del copy
+// visible del hero (LandingPage.tsx): abren con la categoría real
+// (plataforma de bienestar élite) y la audiencia (founders/C-levels/top
+// sellers) en vez de repetir el gancho emocional del hero.
+const TITLE = 'Ephirox — Bienestar Élite para Founders y C-Levels';
 const DESCRIPTION =
-  'Tu empresa llega hasta donde tu cuerpo te lo permite. Ephirox mide lo que sucede dentro de ti — antes de que pase factura.';
+  'Plataforma de bienestar élite para talento de alto impacto: founders, C-levels y top sellers. Salud, rendimiento y prevención del burnout, con IA.';
 
 export const metadata: Metadata = {
   title: TITLE,
