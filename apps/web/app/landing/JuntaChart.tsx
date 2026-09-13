@@ -58,8 +58,10 @@ export function JuntaSection() {
 
           <div className="junta-panel-cifra">
             <span className="junta-cifra">{current.cifra}</span>
-            <p className="junta-glosa">{current.glosa}</p>
-            {current.fuente && <span className="junta-fuente">{current.fuente}</span>}
+            <div className="junta-glosa-col">
+              <p className="junta-glosa">{current.glosa}</p>
+              {current.fuente && <span className="junta-fuente">{current.fuente}</span>}
+            </div>
           </div>
 
           {current.chart !== 'none' && (

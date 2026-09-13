@@ -138,7 +138,7 @@ export const JUNTA_PUNTOS: JuntaPunto[] = [
     num: '02',
     kicker: 'COSTE EVITADO',
     titulo: 'Retorno que se paga solo',
-    texto: 'Reemplazar a un directivo sin sucesión planeada cuesta entre el 30% y el 50% de su salario anual. Evitar una sola salida así puede cubrir el programa completo para toda tu cohorte, durante un año.',
+    texto: 'Reemplazar a un directivo sin sucesión planeada cuesta entre el 30% y el 50% de su salario anual. Evitar una sola salida así cubre el programa anual completo de 5 a 10 personas en tu cohorte.',
     cifra: '30–50%',
     glosa: 'del salario anual de un ejecutivo — lo que cuesta reemplazarlo sin sucesión planeada.',
     fuente: 'AM. J. OF PREVENTIVE MEDICINE, 2025',
