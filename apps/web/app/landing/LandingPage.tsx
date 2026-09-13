@@ -235,6 +235,10 @@ export function LandingPage() {
                 <h2>El control que creías haber perdido, <em>vuelve</em>.</h2>
               </ScrollReveal>
               <div className="shifts-list">
+                <div className="shift-labels" aria-hidden="true">
+                  <span className="label-antes">Antes</span>
+                  <span className="label-despues">Después</span>
+                </div>
                 {SHIFTS.map((s, i) => (
                   <ScrollReveal className="shift-row" delayMs={i * 90} key={s.antes}>
                     <p className="antes">{s.antes}</p>
