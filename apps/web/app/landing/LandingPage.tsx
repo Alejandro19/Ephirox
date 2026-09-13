@@ -361,7 +361,7 @@ export function LandingPage() {
         </div>
 
         <div className="footer-bottom">
-          <span className="copy">© 2026 Ephirox. Programa de optimización de hábitos y rendimiento. No constituye diagnóstico ni tratamiento médico.</span>
+          <span className="copy">© 2026 Ephirox. Programa de optimización de hábitos y alto rendimiento. No constituye diagnóstico ni tratamiento médico.</span>
           <div className="legal">
             <a className="link-hover" href="/terminos">Términos</a>
             <a className="link-hover" href="/privacidad">Privacidad</a>
