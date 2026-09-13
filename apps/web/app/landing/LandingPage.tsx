@@ -200,7 +200,7 @@ export function LandingPage() {
         <section className="optimizacion">
           <div className="optimizacion-wrap">
             <ScrollReveal>
-              <h2 className="optimizacion-titulo">Con tu estado ya medido, esto es lo que se ajusta en ti:</h2>
+              <h2 className="optimizacion-titulo">Con tu estado ya medido, optimizamos:</h2>
             </ScrollReveal>
             <ScrollReveal className="opt-grid">
               {OPTIMIZACION.map((o) => (
