@@ -148,7 +148,7 @@ export const JUNTA_PUNTOS: JuntaPunto[] = [
     num: '03',
     kicker: 'ANTICIPACIÓN',
     titulo: 'Antes del riesgo, no después',
-    texto: 'Las señales aparecen meses antes del evento. Se interviene mientras todavía es reversible, no cuando ya hay una baja médica sobre la mesa.',
+    texto: 'Mientras la póliza de hombre clave indemniza cuando el riesgo ya ocurrió, esto lo detecta meses antes mientras aún es reversible, no cuando ya hay una baja médica sobre la mesa.',
     cifra: '−6 meses',
     glosa: 'de aviso frente al chequeo anual.',
     pie: 'Franja dorada: ventana en que aún es reversible. El chequeo anual llega al final.',
