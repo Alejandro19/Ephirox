@@ -665,10 +665,22 @@
 }
 .eph-landing2 form.contact-form input::placeholder { color: rgba(23,19,14,0.34); }
 .eph-landing2 form.contact-form input:focus { border-bottom-color: var(--gold-dark); }
+/* iOS/Safari pinta un fondo amarillo propio sobre cualquier input que
+   reconoce como autocompletable (tel/email) apenas se empieza a escribir,
+   sin que el usuario haya aceptado ningún autofill — se sobreescribe para
+   que se mantenga la crema de la tarjeta. */
+.eph-landing2 form.contact-form input:-webkit-autofill,
+.eph-landing2 form.contact-form input:-webkit-autofill:hover,
+.eph-landing2 form.contact-form input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--ink);
+  -webkit-box-shadow: 0 0 0px 1000px #EFE8DA inset;
+  box-shadow: 0 0 0px 1000px #EFE8DA inset;
+  transition: background-color 9999s ease-in-out 0s;
+}
 
 .eph-landing2 .field-full { flex: 1 1 100%; }
-.eph-landing2 .field-180 { flex: 1 1 180px; }
-.eph-landing2 .field-150 { flex: 1 1 150px; }
+.eph-landing2 .field-180, .eph-landing2 .field-correo { flex: 1 1 180px; }
+.eph-landing2 .field-150, .eph-landing2 .field-celular { flex: 1 1 150px; }
 
 .eph-landing2 .team-size-field { display: grid; gap: 11px; }
 .eph-landing2 .team-size-field > span { font-family: 'Jost', sans-serif; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(23,19,14,0.6); }
@@ -950,13 +962,16 @@
   .eph-landing2 .llevarlo-copy, .eph-landing2 .llevarlo-form { padding: 28px 18px; }
   .eph-landing2 form.contact-form { gap: 16px 8px; }
   /* Basis en % (no 0 + flex-grow: eso les quita la señal de tamaño que
-     fuerza el wrap a 2 por fila, y los 4 campos terminaban en una sola
-     fila apretadísima). 53/47 porque a 50/50 el placeholder de Correo
-     ("nombre@empresa.com") se recortaba, y a un split más parejo el de Rol
-     ("CEO, Founder, CFO") — medido con canvas.measureText contra el ancho
-     real de cada columna, no solo por ojo. */
+     fuerza el wrap a 2 por fila, y Empresa/Rol terminaban en una sola fila
+     apretadísima junto con Correo/Celular). 53/47 porque a 50/50 el
+     placeholder de Rol ("CEO, Founder, CFO") se recortaba — medido con
+     canvas.measureText contra el ancho real de cada columna, no solo por
+     ojo. Correo/Celular vuelven a 100%: en la práctica un correo real
+     (no el placeholder) suele ser más largo que "nombre@empresa.com" y
+     quedaba apretado incluso con margen calculado para el placeholder. */
   .eph-landing2 .field-180 { flex: 1 1 calc(53% - 4px); }
   .eph-landing2 .field-150 { flex: 1 1 calc(47% - 4px); }
+  .eph-landing2 .field-correo, .eph-landing2 .field-celular { flex: 1 1 100%; }
   .eph-landing2 .chips { gap: 6px; }
   .eph-landing2 .chip { padding: 0 14px; }
 }

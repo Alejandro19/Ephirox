@@ -52,11 +52,11 @@ export function LeadForm() {
         <span>Nombre</span>
         <input name="nombre" required placeholder="Nombre y apellido" />
       </label>
-      <label className="field-180">
+      <label className="field-correo">
         <span>Correo</span>
         <input name="correo" type="email" required placeholder="nombre@empresa.com" />
       </label>
-      <label className="field-150">
+      <label className="field-celular">
         <span>Celular</span>
         <input name="celular" type="tel" required placeholder="+57 300 123 4567" />
       </label>
