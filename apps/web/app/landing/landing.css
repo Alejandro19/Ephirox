@@ -873,6 +873,22 @@
   .eph-landing2 .opt-mobile-text p { margin: 8px 0 0; font-size: 13px; line-height: 1.5; color: #f0ece4; }
   .eph-landing2 .opt-mobile-dots { max-width: 160px; margin: 0 auto; }
   .eph-landing2 .opt-mobile-dots .hero-progress-track { background: rgba(34,28,23,0.16); }
+
+  /* En mobile el índice y el panel se apilan (ya no van lado a lado), así
+     que las 5 filas del índice quedan TODAS antes del panel — hay que
+     recorrerlas para llegar al detalle. Se compactan filas/panel y se
+     libera min-height fija (solo hacía falta para no empujar la card de
+     al lado en el layout de escritorio, lado a lado) para acortar ese
+     scroll sin volverlo un acordeón. */
+  .eph-landing2 .junta-wrap { gap: 26px; }
+  .eph-landing2 .junta-body { gap: 20px; }
+  .eph-landing2 .junta-index-row { padding: 11px 0; gap: 14px; }
+  .eph-landing2 .junta-index-titulo { font-size: 17px; line-height: 1.22; }
+  .eph-landing2 .junta-panel { min-height: 0; padding: 22px; gap: 18px; }
+  .eph-landing2 .junta-panel-texto p { font-size: 15px; line-height: 1.62; }
+  .eph-landing2 .junta-panel-cifra, .eph-landing2 .junta-panel-chart { padding-top: 18px; }
+  .eph-landing2 .junta-chart-cohorte { height: 74px; }
+  .eph-landing2 .junta-chart-ciclos { height: 44px; }
 }
 
 .eph-landing2 .back-to-top {
