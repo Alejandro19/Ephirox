@@ -172,7 +172,6 @@ export function LandingPage() {
 
             <ScrollReveal className="contexto-fila">
               <h2 className="contexto-titulo">Lo que sientes tú, ya se lo estás cobrando a tu <em>empresa</em>.</h2>
-              <p className="contexto-intro">Cuando el que se agota es quien toma las decisiones, reemplazarlo cuesta entre el 30% y el 50% de su salario anual.</p>
             </ScrollReveal>
 
             <ScrollReveal className="costos-grid">
