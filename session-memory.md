@@ -1,6 +1,6 @@
 # session-memory.md
 
-> **Última actualización:** 2026-09-10
+> **Última actualización:** 2026-09-12
 > **Propósito:** Resumen ejecutivo por sesión (orden cronológico) y plan de continuidad inmediato para la siguiente sesión.
 
 ---
@@ -996,7 +996,44 @@ Al investigar por qué el botón de Google aparecía inactivo, se encontró que 
 
 12 commits, pusheados directo a `origin/main`: `68192b1`, `cdaee93`, `039cc1c`, `507573e`, `96ac0ed`, `6c92f28` (share-preview + fix de `/landing`), `fac24ce`, `ac26200`, `4a15a8e`, `eada6b1` (rediseño del login y sus 3 rondas de ajuste + fix del FOUC), `dfe216a` (fix del Ritual Diario), `c49538d` (tipado de `isDismissedMoment`).
 
-## Próximas actividades — Siguiente sesión (actualizada 2026-09-03, 2026-09-04)
+## Resumen Ejecutivo — Sesión 2026-09-12 — Sección "Optimización personalizada", tramo "punto ciego"/"coste para la empresa" (varias vueltas), y pulido final de las cards de coste
+
+Sesión larga de iteración en vivo sobre la landing (`apps/web/app/landing/`), con Alejandro dando feedback turno a turno sobre capturas reales — mismo patrón de las últimas sesiones. Todo verificado con `tsc --noEmit` + capturas de Chrome headless vía CDP en 390/768/1440px antes de cada commit; nunca se pusheó sin pedido explícito de ese turno.
+
+### 1. Nueva sección "Optimización personalizada" (entre "¿Cómo lo medimos?" y "Anticipamos")
+
+Primera versión: grid de 4 columnas solo texto (keyword + frase). Un prompt completo (`docs/prompt-optimizacion-personalizada.md`) la reemplazó por cards con foto real (Entrenamiento/Nutrición/Gestión del estrés/Sueño, imágenes en `docs/img/*.JPG` → convertidas a `apps/web/public/landing/opt-*.jpg` vía `sips`), mismo lenguaje visual que las cards de costo (foto + overlay + label dorado), grid estático en desktop y carrusel scroll-snap propio en mobile (`OptimizacionMobileCarousel.tsx`, calcado de `CostosMobileCarousel.tsx`). Iteraciones posteriores: labels más grandes y en negrita pero con `white-space:nowrap` + tamaño reducido a 19px (el tamaño inicial de 28px hacía que "GESTIÓN DEL ESTRÉS" se partiera a 2 líneas), "MANEJO DEL ESTRÉS"→"GESTIÓN DEL ESTRÉS", y varios ajustes de copy en las 4 descripciones.
+
+### 2. Tramo "reconocimiento personal" / "coste para la empresa" — varias reescrituras completas
+
+Esta fue la parte más volátil de la sesión: el mismo tramo (sección oscura justo después del hero + sección crema de las cards de costo) se reescribió por completo **tres veces** en la misma sesión, cada vez con un prompt "reemplaza todo lo anterior, no conserves nada":
+1. Jerarquía tipográfica de 3 niveles (mini-titular/medio/apoyo) con reveal escalonado por fragmento (`transition-delay` 0/100/200ms) — para que alguien que solo escanea en mobile capte el mensaje leyendo solo los fragmentos grandes.
+2. Rediseño final: la sección oscura pasa de prosa a un formato escaneable — etiqueta "YA LO INTENTASTE" + 3 chips tachados (`el gimnasio` · `la dieta` · `el programa de tu empresa`, texto real, no botones) en vez del párrafo de síntomas, seguido de un párrafo llano corto y una sentencia en cursiva ("No es falta de disciplina. Es *tu punto ciego*:") con un filete dorado de 52×1px. La sección crema mantiene un único titular de tamaño grande en todo el tramo (regla explícita: "una sola declaración de tamaño titular en las DOS secciones" — la sentencia oscura nunca debe superar 34px ni pasar a redonda, o se rompe el efecto).
+3. Costura visual entre ambas secciones: un filete de 1px con degradado (`linear-gradient` que nace invisible al pie de la oscura y entra con cuerpo al inicio de la crema) alineado con el margen izquierdo del texto — **requiere que ambos wraps compartan exactamente el mismo `max-width`/`padding-inline`**, documentado como constraint dura en un comentario del CSS ("si cambias uno, cambia el otro").
+
+**Lección de la sesión, con dos idas y vueltas:** en la segunda reescritura, el prompt (literal, con estructura HTML/CSS dada) pedía que las 3 cards de cifra (5X/10-40%/55-6.9) volvieran a un diseño plano sin foto — Alejandro interrumpió a mitad de la implementación ("las cards de 5X no las debes cambiar, dejalas como estaban, con su diseño, texto e imagen") y hubo que revertir solo esa parte (restaurar `CostosMobileCarousel.tsx`, que se había borrado, y el diseño con foto+overlay) manteniendo el resto del rediseño del prompt. **Cuando un prompt "reemplaza todo" incluye una sub-sección que el usuario ya había defendido explícitamente en un turno anterior de la misma sesión, vale la pena flaguearlo antes de aplicarlo literalmente**, en vez de asumir que el prompt nuevo tiene prioridad automática sobre una preferencia ya expresada.
+
+### 3. Pulido final de la sección de coste ("EL COSTO")
+
+Ronda final de ajustes fieles a un pedido estructurado en 4 puntos:
+- Kicker "EL COSTO" (mismo tratamiento que `.cambia-head .eyebrow`) + título limitado a `max-width:700px` (antes se estiraba de borde a borde, único entre las secciones de la landing sin ese patrón).
+- Card "55/6.9" (edad de nombramiento/duración del CEO — una tendencia, no una pérdida) reemplazada por "10X" (nuevo dato de pérdida real, foto `docs/img/senior.JPG`). Esa foto tenía luz cálida de atardecer notablemente más luminosa que las otras 2 (oscuras/apagadas) — el filtro estándar (`saturate(.55) brightness(.92)`) no bastó para igualar el tono; se agregó una clase modificadora (`.is-bright-source`, `saturate(.4) brightness(.62)`) aplicada condicionalmente solo a esa card, en desktop y mobile.
+- Las 2 secciones del tramo comparten `max-width` (deben coincidir por la costura, ver arriba) — se subió de 1040px a 1200px para ganar ~18% de ancho por card sin romper el alineado del filete.
+- **Bug real de alineación con dos causas independientes**, encontrado en dos rondas de feedback sucesivas: (a) el bloque de texto completo (número+frase+fuente) estaba anclado a `bottom:0`, así que una frase más larga en una card empujaba su número hacia arriba respecto a las otras — se ancló desde un `top:56%` fijo (relativo al alto de la card, constante vía `aspect-ratio`) en vez de `bottom`; (b) after fixing eso, la fuente bibliográfica seguía desalineada entre cards porque vivía en el mismo bloque grid que la frase — se separó en un elemento propio (`.cost-card-src`) anclado independientemente a `bottom:26px`. **La lección general: cuando un bloque de texto de altura variable (frase) se ancla junto con otros elementos de posición fija deseada (número arriba, fuente abajo) en un solo contenedor, hay que anclar cada extremo por separado — un solo `bottom:0` o `top:X` compartido para todo el bloque solo garantiza la alineación de UN extremo, no de ambos.**
+
+### 4. Otros ajustes de copy/continuidad narrativa
+
+Un prompt aparte (`docs/prompt-ajustes-flujo-narrativo.md`) conectó las 4 cards de Optimización con las secciones siguientes: primer par antes/después de "Lo que cambia" (era el más genérico, no representaba Entrenamiento/Nutrición), fila "Personalización" de la tabla comparativa (nombra las 4 áreas explícitamente), 2 detalles de DÍA 90, y una nueva línea puente en la sección de Junta directiva que cierra el arco completo de "punto ciego" (persona → equipo → empresa). El prompt tenía una contradicción interna (el resumen final nombraba como "intacto" un punto que las instrucciones explícitas de más arriba pedían cambiar) — se priorizaron las instrucciones explícitas con "Punto:"/"Detalle nuevo:" (más específicas, con la razón dada de identificar por texto y no por posición) sobre la línea de resumen.
+
+### 5. Sección "Lo que cambia" — columnas asimétricas
+
+Reportado como "ocupa demasiado espacio vertical": la columna "después" (texto grande) tenía el mismo ancho que "antes" (grid con columnas `1fr` iguales) pero el texto estaba topado a un `max-width` angosto, envolviendo en 3-4 líneas con toda la celda vacía a la derecha. Se pasó de grid a flex con anchos objetivo distintos por columna (antes ~280px, después ~520px, sin `flex-grow`), tamaño de fuente y `line-height` reducidos, y padding vertical ajustado en dos rondas (48-56px→12-16px→28-36px, "un punto medio"). Ronda final agregó labels "Antes"/"Después" como encabezado de columna (una sola vez, no por fila) y más separación entre columnas.
+
+### 6. Commits (todos en `main`, `origin/Alejandro19/Ephirox`)
+
+Alrededor de 25 commits en esta sesión, empezando en `aaee9b6` (sección Optimización, versión texto) y terminando en `5ac0027` (alineado de fuente bibliográfica) — pusheados a producción al final de la sesión tras confirmación explícita.
+
+## Próximas actividades — Siguiente sesión (actualizada 2026-09-03, 2026-09-04, 2026-09-12)
 
 ### Actividad 1 — Confirmar que el login desde el celular ya funciona
 
@@ -1110,6 +1147,10 @@ Al investigar por qué el botón de Google aparecía inactivo, se encontró que 
 
 - Ver sección 5 del resumen de esta sesión. El fix (visibilidad de la selección de ánimo + texto de ayuda) se verificó con `tsc` y la suite de tests existente, pero no se probó en vivo con una sesión de cliente real guardando el ritual completo (ánimo + las 3 preguntas de energía/tensión/claridad si tiene acceso a Stress) y confirmando que persiste tras refrescar.
 
+### Actividad 27 — Confirmar en un navegador/celular real el tramo nuevo de la landing y la sección de Optimización (nueva, 2026-09-12)
+
+- Todo el trabajo de la sesión del 2026-09-12 (nueva sección "Optimización personalizada", tramo "ya lo intentaste"/"coste para la empresa" con la costura visual, cards 5X/10-40%/10X realineadas) se verificó exhaustivamente con Chrome headless vía CDP en 390/768/1440px, pero nunca con el dedo/mouse real de Alejandro ni en un iPhone real. Pedir que confirme: que el carrusel de "Optimización personalizada" y el de las cards de coste responden bien al swipe táctil real (no solo al scroll simulado), que la costura entre las dos secciones se ve continua en su propio dispositivo, y que las fotos de las 3 cards de coste (incluida la nueva `costo-senior.jpg`, con el filtro de brillo extra) se ven con tonalidad consistente entre sí en una pantalla real (no solo en la captura).
+
 ---
 
 ## Notas adicionales
@@ -1160,3 +1201,5 @@ Al investigar por qué el botón de Google aparecía inactivo, se encontró que 
 - **El overlay de errores de `next dev` intercepta CUALQUIER `console.error`, incluido el de scripts de terceros cargados con `next/script`** (sesión 2026-09-10, Google Identity Services) — un mensaje interno y esperado del SDK de Google al cancelar el selector de cuentas (`FedCM get() rejects with NetworkError`) se ve como una pantalla roja de error bloqueante en local, pero no existe en producción (`next build`). Antes de tratar un mensaje así como bug propio, confirmar de dónde viene el log (¿nuestro código o un script externo?) y si el proyecto corre con `next dev` — ese overlay es exclusivo de desarrollo.
 - **Un botón deshabilitado por una validación silenciosa (`disabled={condición}`) sin ninguna pista visible de qué falta se reporta como "el botón no funciona"** (sesión 2026-09-10, `DailyRitualCard.tsx` — faltaba elegir una cara en la escala de ánimo, sin aviso ni feedback de selección claro). Cualquier campo requerido que bloquee un submit necesita o (a) un estado seleccionado obviamente distinto del no-seleccionado, o (b) un texto explicando qué falta mientras el botón siga inactivo — nunca solo un `disabled` silencioso, aunque la lógica de validación en sí sea correcta.
 - **Antes de diagnosticar un botón de login social (Google/Apple) como "inactivo"/bug de código, confirmar que `apps/api` esté corriendo** (sesión 2026-09-10) — el botón depende de `fetch('/api/config')` para el client ID; si solo `apps/web` está levantado (`npm run dev:web` sin su contraparte `dev:api`), esa llamada falla en silencio y el botón se queda deshabilitado para siempre, indistinguible visualmente de un problema real de credenciales.
+- **En una card con foto de fondo full-bleed + texto superpuesto, anclar el bloque de texto a `bottom:0` desalinea elementos de altura fija (número, fuente bibliográfica) entre cards cuando el texto del medio (la frase/descripción) tiene distinto largo** (sesión 2026-09-12, cards de coste 5X/10-40%/10X de la landing) — una frase más larga empuja todo lo que está debajo de ella (incluida la fuente) hacia abajo y, si el ancla es el fondo, empuja lo de ARRIBA (el número) hacia arriba también. Fix de dos partes: (1) anclar el número+frase desde un `top:X%` fijo (relativo al alto de la card, constante gracias a `aspect-ratio`) en vez de `bottom`, para que el número siempre arranque en la misma posición; (2) sacar la fuente bibliográfica del mismo contenedor grid y anclarla por separado con su propio `bottom:Npx` — un solo ancla compartido para todo el bloque (número+frase+fuente) solo puede garantizar la alineación de UN extremo a la vez, nunca de los dos.
+- **Cuando un prompt trae instrucciones "reemplaza todo lo anterior, no conserves nada" para una sección ya iterada varias veces en la misma sesión, revisar si alguna sub-parte de esa sección ya fue defendida explícitamente por el usuario en un turno previo** (sesión 2026-09-12, landing — un prompt de rediseño completo del tramo "punto ciego"/"coste para la empresa" traía instrucciones literales para volver las cards de cifra a un diseño plano sin foto, pero el usuario ya había pedido explícitamente en un turno anterior de la misma sesión mantener esas cards con foto "exactamente como estaban"). Un prompt nuevo no tiene prioridad automática sobre una preferencia ya expresada en la misma conversación — más vale flaguearlo o preguntar antes de aplicar esa sub-parte literalmente, aunque el resto del prompt sea claro y deba seguirse.
