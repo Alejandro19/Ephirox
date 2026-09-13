@@ -8,6 +8,10 @@ export const HERO_STATS = [
 ] as const;
 export const HERO_INTERVAL_MS = 6200;
 
+// Chips tachados de "ya lo intentaste" en la sección oscura del tramo
+// (.diagnostico-chips en LandingPage.tsx).
+export const YA_INTENTASTE = ['el gimnasio', 'la dieta', 'el programa de tu empresa'] as const;
+
 // Usado por el grid de escritorio (.costos-grid en LandingPage.tsx) y por
 // el carrusel mobile (CostosMobileCarousel.tsx) — mismo diseño con foto en
 // los dos, solo cambia estático/grid vs. scroll-snap/carrusel.

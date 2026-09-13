@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import './landing.css';
-import { COSTOS, OPTIMIZACION, SHIFTS, APP_LOGIN_URL } from './content';
+import { COSTOS, OPTIMIZACION, SHIFTS, YA_INTENTASTE, APP_LOGIN_URL } from './content';
 import { HeroStatCard } from './HeroStatCard';
 import { PasosSticky } from './PasosSticky';
 import { PasosMobileList } from './PasosMobileList';
@@ -13,8 +13,8 @@ import { JuntaSection } from './JuntaChart';
 import { DifCarousel } from './DifCarousel';
 import { LeadForm } from './LeadForm';
 import { ScrollReveal } from './ScrollReveal';
-import { CostosMobileCarousel } from './CostosMobileCarousel';
 import { OptimizacionMobileCarousel } from './OptimizacionMobileCarousel';
+import { CostosMobileCarousel } from './CostosMobileCarousel';
 
 // Puerto 1:1 de docs/ephirox-landing.html — mismo copy, mismas imágenes
 // (docs/img, copiadas a public/landing), mismas interacciones (tarjeta de
@@ -146,16 +146,20 @@ export function LandingPage() {
 
         <section className="reconocimiento-section">
           <div className="reconocimiento-wrap">
-            <ScrollReveal className="reconocimiento-p1" distance={12}>
-              <p className="reconocimiento-mini">Lo sabes.</p>
-              <p className="reconocimiento-medio">Vida sedentaria. Comes mal, duermes peor, vives en alerta constante.</p>
-              <p className="reconocimiento-apoyo">Ya intentaste el gimnasio, la dieta, el bienestar corporativo — nada cambió.</p>
+            <ScrollReveal className="diagnostico">
+              <span className="diagnostico-label">YA LO INTENTASTE</span>
+              <div className="diagnostico-chips">
+                {YA_INTENTASTE.map((c) => (
+                  <span className="chip" key={c}>{c}</span>
+                ))}
+              </div>
+              <p className="diagnostico-llano">Comes mal, duermes peor, vives en alerta. Nada cambió.</p>
             </ScrollReveal>
 
-            <ScrollReveal className="reconocimiento-bloque" distance={12}>
+            <ScrollReveal className="reconocimiento-bloque">
               <span className="reconocimiento-rule" aria-hidden="true" />
               <p className="reconocimiento-sentencia">No es falta de disciplina. Es <span className="reconocimiento-sentencia-accent">tu punto ciego</span>:</p>
-              <p className="reconocimiento-apoyo">lo que tu cuerpo lleva meses diciéndote, y que ningún chequeo te ha mostrado.</p>
+              <p className="reconocimiento-aclaracion">lo que tu cuerpo lleva meses diciéndote, y que ningún chequeo te ha mostrado.</p>
             </ScrollReveal>
 
             <span className="costura costura-baja" aria-hidden="true" />
@@ -167,8 +171,8 @@ export function LandingPage() {
             <span className="costura costura-entra" aria-hidden="true" />
 
             <ScrollReveal className="contexto-fila">
-              <h2 className="contexto-titulo">Lo que cargas en silencio, tu equipo también — y tu <em>empresa</em> ya lo está pagando.</h2>
-              <p className="contexto-intro">Cuando el que se agota es quien toma las decisiones, reemplazarlo cuesta entre el 30% y el 50% de su salario anual — en algunos casos documentados, hasta nueve meses de salario completo.</p>
+              <h2 className="contexto-titulo">Lo que sientes tú, ya se lo estás cobrando a tu <em>empresa</em>.</h2>
+              <p className="contexto-intro">Cuando el que se agota es quien toma las decisiones, reemplazarlo cuesta entre el 30% y el 50% de su salario anual.</p>
             </ScrollReveal>
 
             <ScrollReveal className="costos-grid">
