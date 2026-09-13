@@ -60,7 +60,7 @@ export const COMPARACION: CompareRow[] = [
   {
     indicador: 'Personalización',
     trad: 'El mismo plan de wellness para toda la nómina.',
-    eph: 'Protocolos personalizados por ciclo y por persona.',
+    eph: 'Protocolos personalizados en entrenamiento, nutrición, gestión del estrés y sueño — por ciclo y por persona.',
     dif: '100 % personalizado, no por población.',
     mobileHide: true,
   },
@@ -81,15 +81,15 @@ export const COMPARACION: CompareRow[] = [
 ];
 
 export const SHIFTS = [
-  { antes: 'No sé por qué ya no rindo igual.', despues: 'Sé qué está pasando en mi cuerpo antes de que afecte una decisión importante.' },
+  { antes: 'Entreno si tengo tiempo, y como por intuición.', despues: 'Sé exactamente cómo entrenar y comer para potenciar mi salud y vitalidad — con datos, no por intuición.' },
   { antes: 'Decido sin saber si estoy en mi mejor momento mental.', despues: 'Sé con datos cuándo mi juicio está en su punto más alto, y agendo ahí lo que importa.' },
   { antes: 'El descanso se siente como tiempo perdido.', despues: 'Cada hora de sueño está calibrada para sostener mi ventaja.' },
   { antes: 'Estoy solo en esto.', despues: 'Pertenezco a un círculo de pares que entienden esta presión.' },
 ] as const;
 
 export const HITOS = [
-  { titulo: 'Piensas con la misma nitidez a las 4pm que a las 8am.', detalle: 'Menos caídas de foco, con el registro que lo respalda.' },
-  { titulo: 'El día ya no se te acaba a media tarde.', detalle: 'Los días malos dejan de ser un misterio.' },
+  { titulo: 'Piensas con la misma nitidez a las 4pm que a las 8am.', detalle: 'Sueño y gestión del estrés calibrados a tu cronotipo, no a un horario genérico.' },
+  { titulo: 'El día ya no se te acaba a media tarde.', detalle: 'Entrenamiento y nutrición ajustados a tu propio gasto energético, no a una rutina estándar.' },
   { titulo: 'Sabes en qué estado tomaste cada decisión crítica — y puedes repetirlo a voluntad.', detalle: 'Sueño, recuperación y estrés, registrados — tu mejor día, listo para repetirse.' },
   { titulo: 'Diriges tu capacidad, en vez de improvisar con lo que te queda de ella.', detalle: 'Lo que antes era tu punto ciego, ahora tiene alertas — antes del agotamiento, no explicaciones después de la caída.' },
 ] as const;
