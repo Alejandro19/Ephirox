@@ -384,7 +384,7 @@
 .eph-landing2 .cambia-head { display: grid; gap: 14px; }
 .eph-landing2 .cambia-head .eyebrow { font-size: 12px; letter-spacing: 0.14em; color: rgba(23,19,14,0.42); }
 .eph-landing2 .cambia-head h2 { margin: 0; font-weight: 200; font-size: clamp(26px, 3.6vw, 42px); line-height: 1.12; letter-spacing: -0.015em; max-width: 24ch; text-wrap: pretty; }
-.eph-landing2 .cambia-head h2 em { font-family: 'Cormorant Garamond', serif; font-weight: 400; font-style: italic; font-size: 1em; color: var(--gold-dark); }
+.eph-landing2 .cambia-head h2 em { font-family: 'Cormorant Garamond', serif; font-weight: 400; font-style: italic; font-size: 1.08em; color: var(--gold-dark); }
 .eph-landing2 .shifts-list { display: grid; gap: 0; }
 .eph-landing2 .shift-labels { display: flex; flex-wrap: wrap; gap: clamp(24px, 6vw, 84px); padding-bottom: 10px; }
 .eph-landing2 .shift-labels span { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(23,19,14,0.4); }
