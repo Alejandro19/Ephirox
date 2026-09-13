@@ -98,14 +98,93 @@ export const HITOS = [
   { titulo: 'Diriges tu capacidad, en vez de improvisar con lo que te queda de ella.', detalle: 'Lo que antes era tu punto ciego, ahora tiene alertas — antes del agotamiento, no explicaciones después de la caída.' },
 ] as const;
 
-export const JUNTA = [
-  { titulo: 'Ver el riesgo, no intuirlo', texto: 'El punto ciego que hoy tiene tu Junta sobre el talento crítico se vuelve visibilidad agregada y anónima — antes de que se traduzca en una salida inesperada.', barras: [0.22, 0.34, 0.28, 0.78, 0.31, 0.26, 0.82, 0.3, 0.24, 0.86, 0.27, 0.33], pie: 'Señales que hoy no se ven: se destacan solas dentro de la cohorte.' },
-  { titulo: 'Retorno que se paga solo', texto: 'Reemplazar a un ejecutivo clave cuesta hasta el 50 % de su salario anual. Evitar una sola salida cubre la inversión de la cohorte completa.', barras: [0.3, 0.36, 0.42, 0.47, 0.55, 0.6, 0.66, 0.73, 0.78, 0.84, 0.9, 0.96], pie: 'Retorno proyectado por cohorte, trimestre a trimestre. Representación ilustrativa.' },
-  { titulo: 'Antes del riesgo, no después', texto: 'Mientras la póliza de hombre clave indemniza cuando el riesgo ya ocurrió, esto lo detecta mientras aún se puede intervenir.', barras: [0.9, 0.82, 0.74, 0.68, 0.6, 0.54, 0.48, 0.42, 0.36, 0.32, 0.28, 0.24], pie: 'Probabilidad de salida inesperada, a la baja con el tiempo. Representación ilustrativa.' },
-  { titulo: 'Ventaja de retención', texto: '42 % de los ejecutivos rechazaría un ascenso si perjudica su bienestar. Ofrecerlo es una ventaja de retención, no un costo adicional.', barras: [0.88, 0.9, 0.86, 0.91, 0.89, 0.92, 0.87, 0.9, 0.93, 0.89, 0.91, 0.9], pie: 'Continuidad sostenida en lugar de caídas sin aviso.' },
-  { titulo: 'Riesgo de capital humano', texto: 'Datos agregados y anónimos por cohorte, listos para reportarse a la Junta como parte del riesgo que ya se espera que gobiernen — sin exposición individual ni legal.', barras: [0.24, 0.3, 0.36, 0.43, 0.5, 0.56, 0.62, 0.68, 0.74, 0.8, 0.86, 0.92], pie: 'Cobertura de gobierno de riesgo, creciente por cohorte. Representación ilustrativa.' },
-] as const;
-export const JUNTA_INITIAL_INDEX = 0;
+export type JuntaBarra = { label: string; value: string; width: number; gold: boolean };
+
+export type JuntaPunto = {
+  num: string;
+  kicker: string;
+  titulo: string;
+  texto: string;
+  cifra: string;
+  glosa: string;
+  pie: string;
+} & (
+  | { chart: 'cohorte'; barras: number[]; highlight: number[] }
+  | { chart: 'barras'; filas: JuntaBarra[] }
+  | { chart: 'timeline'; fill: number; leftLabel: string; rightLabel: string }
+  | { chart: 'ciclos'; total: number; activos: number }
+);
+
+// Sección "El reporte que le llevas a tu Junta" — cada punto tiene su propia
+// forma de gráfico (cohorte/barras/timeline/ciclos), no la misma serie
+// repintada. Ver JuntaChart.tsx.
+export const JUNTA_PUNTOS: JuntaPunto[] = [
+  {
+    num: '01',
+    kicker: 'VISIBILIDAD',
+    titulo: 'Ver el riesgo, no intuirlo',
+    texto: 'El punto ciego que hoy tiene tu Junta sobre el talento crítico se vuelve visibilidad agregada y anónima — antes de que se traduzca en una salida inesperada.',
+    cifra: '0 nombres',
+    glosa: 'expuestos: todo se reporta por cohorte.',
+    pie: '12 directivos de una misma cohorte. Dos se apartan del patrón: eso es lo que hoy nadie ve.',
+    chart: 'cohorte',
+    barras: [0.30, 0.34, 0.28, 0.36, 0.32, 0.90, 0.30, 0.34, 0.28, 0.82, 0.32, 0.30],
+    highlight: [5, 9],
+  },
+  {
+    num: '02',
+    kicker: 'COSTE EVITADO',
+    titulo: 'Retorno que se paga solo',
+    texto: 'Una sola salida evitada en el comité directivo cubre el programa completo del año. El resto del efecto — decisiones mejor tomadas — no aparece en la factura.',
+    cifra: '1 : 1',
+    glosa: 'un reemplazo evitado cubre el año.',
+    pie: 'Una sola salida evitada cubre el año. Escala relativa, ilustrativa.',
+    chart: 'barras',
+    filas: [
+      { label: 'Reemplazar a un directivo', value: '30–50% del salario anual', width: 100, gold: true },
+      { label: 'Programa anual, cohorte completa', value: 'una fracción de esa cifra', width: 22, gold: false },
+    ],
+  },
+  {
+    num: '03',
+    kicker: 'ANTICIPACIÓN',
+    titulo: 'Antes del riesgo, no después',
+    texto: 'Las señales aparecen meses antes del evento. Se interviene mientras todavía es reversible, no cuando ya hay una baja médica sobre la mesa.',
+    cifra: '−6 meses',
+    glosa: 'de aviso frente al chequeo anual.',
+    pie: 'La ventana dorada es el margen en que todavía es reversible. El chequeo anual llega al final de la línea.',
+    chart: 'timeline',
+    fill: 62,
+    leftLabel: 'Primeras señales',
+    rightLabel: 'Evento / baja médica',
+  },
+  {
+    num: '04',
+    kicker: 'PERMANENCIA',
+    titulo: 'Ventaja de retención',
+    texto: 'El beneficio que retiene al ejecutivo que ningún aumento retiene: cuidado real de su capacidad, no una prima más en el paquete.',
+    cifra: '6.9 años',
+    glosa: 'dura hoy un CEO en el cargo. El programa trabaja sobre esa cifra.',
+    pie: '28 ciclos de 90 días caben en un mandato medio de 6.9 años. El programa trabaja sobre todos, no sobre el primero.',
+    chart: 'ciclos',
+    total: 28,
+    activos: 4,
+  },
+  {
+    num: '05',
+    kicker: 'GOBIERNO',
+    titulo: 'Riesgo de capital humano',
+    texto: 'Datos agregados y anónimos por cohorte, listos para reportarse a la Junta como parte del riesgo que ya se espera que gobiernen — sin exposición individual ni legal.',
+    cifra: '100%',
+    glosa: 'agregado: sin dato individual identificable.',
+    pie: 'Lo que sube al acta y lo que nunca sale de la relación médico–paciente.',
+    chart: 'barras',
+    filas: [
+      { label: 'Reportable a la Junta', value: '100% agregado por cohorte', width: 100, gold: true },
+      { label: 'Dato individual identificable', value: '0%', width: 0, gold: false },
+    ],
+  },
+];
 
 export const DIF = [
   'Ningún protocolo llega a ti sin que un especialista lo haya validado.',
