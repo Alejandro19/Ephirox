@@ -47,6 +47,25 @@ function RingIcon({ size }: { size: number }) {
   );
 }
 
+function LoginIcon({ size }: { size: number }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      style={{ width: size, height: size }}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+      <polyline points="10 17 15 12 10 7" />
+      <line x1="15" y1="12" x2="3" y2="12" />
+    </svg>
+  );
+}
+
 function handleAnchorClick(e: React.MouseEvent<HTMLAnchorElement>) {
   const href = e.currentTarget.getAttribute('href') || '';
   if (!href.startsWith('#')) return;
@@ -93,10 +112,10 @@ export function LandingPage() {
           <RingIcon size={24} />
           <span>EPHIROX</span>
         </div>
-        <div className="header-actions" style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 18 }}>
-          <a href={APP_LOGIN_URL} className="link-hover eph-a header-login-link" style={{ animationDelay: '160ms', fontSize: 13, color: 'rgba(245,241,232,0.6)' }}>
+        <div className="header-actions" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+          <a href={APP_LOGIN_URL} aria-label="Iniciar sesión" className="link-hover eph-a header-login-link" style={{ animationDelay: '160ms', fontSize: 13, color: 'rgba(245,241,232,0.6)' }}>
             <span className="header-login-full">¿Ya eres miembro? Iniciar sesión →</span>
-            <span className="header-login-short">Entrar →</span>
+            <span className="header-login-short"><LoginIcon size={18} /></span>
           </a>
           <a className="cta-pill link-hover pill-hover eph-a" href="#llevarlo" onClick={handleAnchorClick} style={{ animationDelay: '200ms' }}>
             <span className="cta-pill-full">Llevar Ephirox a mi empresa</span>
@@ -290,10 +309,13 @@ export function LandingPage() {
         <section className="llevarlo" id="llevarlo">
           <div className="llevarlo-wrap">
             <div className="llevarlo-copy">
+              <span className="llevarlo-rule" aria-hidden="true" />
               <h2>Llevar Ephirox a mi <em>empresa</em>.</h2>
               <p>Te ayudamos a preparar la propuesta que se aprueba.</p>
             </div>
-            <LeadForm />
+            <div className="llevarlo-form">
+              <LeadForm />
+            </div>
           </div>
         </section>
       </main>

@@ -7,7 +7,7 @@ import { EQUIPO_TAMANOS } from './content';
 export function LeadForm() {
   const [enviado, setEnviado] = useState(false);
   const [nombre, setNombre] = useState('');
-  const [tamano, setTamano] = useState<string>('');
+  const [tamano, setTamano] = useState<string>(EQUIPO_TAMANOS[1]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -48,46 +48,48 @@ export function LeadForm() {
 
   return (
     <form className="contact-form" onSubmit={handleSubmit}>
-      <label>
+      <label className="field-full">
         <span>Nombre</span>
         <input name="nombre" required placeholder="Nombre y apellido" />
       </label>
-      <div className="field-row-2">
-        <label>
-          <span>Correo</span>
-          <input name="correo" type="email" required placeholder="nombre@empresa.com" />
-        </label>
-        <label>
-          <span>Celular</span>
-          <input name="celular" type="tel" required placeholder="+57 300 123 4567" />
-        </label>
-      </div>
-      <div className="field-row-2">
-        <label>
-          <span>Empresa</span>
-          <input name="empresa" required placeholder="Razón social" />
-        </label>
-        <label>
-          <span>Rol</span>
-          <input name="rol" required placeholder="CEO, Founder, CFO" />
-        </label>
-      </div>
-      <div className="team-size-field">
+      <label className="field-180">
+        <span>Correo</span>
+        <input name="correo" type="email" required placeholder="nombre@empresa.com" />
+      </label>
+      <label className="field-150">
+        <span>Celular</span>
+        <input name="celular" type="tel" required placeholder="+57 300 123 4567" />
+      </label>
+      <label className="field-180">
+        <span>Empresa</span>
+        <input name="empresa" required placeholder="Razón social" />
+      </label>
+      <label className="field-150">
+        <span>Rol</span>
+        <input name="rol" required placeholder="CEO, Founder, CFO" />
+      </label>
+      <div className="team-size-field field-full">
         <span>Equipo a considerar</span>
         <div className="chips">
           {EQUIPO_TAMANOS.map((t) => (
-            <button key={t} type="button" className={`chip${tamano === t ? ' selected' : ''}`} onClick={() => setTamano(t)}>
+            <button
+              key={t}
+              type="button"
+              className={`chip${tamano === t ? ' selected' : ''}`}
+              aria-pressed={tamano === t}
+              onClick={() => setTamano(t)}
+            >
               {t}
             </button>
           ))}
         </div>
       </div>
-      <label>
+      <label className="field-full">
         <span>¿Quién más debería estar en esta conversación?</span>
         <input name="quien" placeholder="Opcional" />
       </label>
-      {error && <p role="alert" style={{ margin: 0, fontSize: 14, color: '#E37B5A' }}>{error}</p>}
-      <button type="submit" className="submit-btn" disabled={saving} style={{ opacity: saving ? 0.6 : 1, cursor: saving ? 'default' : 'pointer' }}>
+      {error && <p role="alert" className="field-full" style={{ margin: 0, fontSize: 14, color: '#B0432C' }}>{error}</p>}
+      <button type="submit" className="submit-btn field-full" disabled={saving} style={{ opacity: saving ? 0.6 : 1, cursor: saving ? 'default' : 'pointer' }}>
         {saving ? 'Enviando…' : 'Preparar la propuesta'}
       </button>
     </form>
