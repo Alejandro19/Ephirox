@@ -16,8 +16,8 @@ export const YA_INTENTASTE = ['el gimnasio', 'la dieta', 'el programa de tu empr
 // el carrusel mobile (CostosMobileCarousel.tsx) — mismo diseño con foto en
 // los dos, solo cambia estático/grid vs. scroll-snap/carrusel.
 export const COSTOS = [
-  { num: '5X', texto: 'Un ejecutivo en burnout cuesta hasta 5x más que un empleado promedio y reemplazarlo, hasta el 50% de su salario anual.', src: 'AM. J. OF PREVENTIVE MEDICINE, 2025', img: '/landing/costo-burnout.jpg', alt: 'Ejecutivo agotado, cabeza entre las manos' },
-  { num: '10 – 40 %', texto: 'Más riesgo cardiovascular por tensión laboral sostenida — 27 estudios, +600.000 personas.', src: 'KIVIMÄKI & KAWACHI, 2015', img: '/landing/costo-ecg.jpg', alt: 'Monitor de ritmo cardíaco (ECG)' },
+  { num: '5X', texto: 'Un ejecutivo en burnout cuesta hasta 5x más que un empleado promedio (US$20.683 vs. US$4.257/año), y reemplazarlo, hasta el 50% de su salario anual.', src: 'AM. J. OF PREVENTIVE MEDICINE, 2025', img: '/landing/costo-burnout.jpg', alt: 'Ejecutivo agotado, cabeza entre las manos' },
+  { num: '10 – 40 %', texto: 'Más riesgo cardiovascular por tensión laboral sostenida en cargos de alta exigencia — 27 estudios, +600.000 personas.', src: 'KIVIMÄKI & KAWACHI, 2015', img: '/landing/costo-ecg.jpg', alt: 'Monitor de ritmo cardíaco (ECG)' },
   { num: '10X', texto: 'Un líder que nunca se ausenta, pero rinde por debajo de su capacidad, le cuesta a la empresa 10 veces más que uno que sí se ausenta.', src: 'GLOBAL CORPORATE CHALLENGE / OMS (HPQ)', img: '/landing/costo-senior.jpg', alt: 'Ejecutivo agotado en su oficina' },
 ] as const;
 
