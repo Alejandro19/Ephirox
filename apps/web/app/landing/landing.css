@@ -119,19 +119,24 @@
 
 .eph-landing2 .diagnostico { display: grid; gap: 20px; justify-items: start; }
 .eph-landing2 .diagnostico-label { font-family: 'Jost', sans-serif; font-size: 10px; letter-spacing: 0.24em; color: rgba(245,241,232,0.42); }
-.eph-landing2 .diagnostico-chips { display: flex; flex-wrap: wrap; gap: 12px; }
-.eph-landing2 .chip {
+/* flex-wrap:nowrap a propósito (ver .diagnostico-chip): las 3 pills deben
+   verse en una sola fila incluso en mobile, nunca apilarse a una segunda
+   línea — por eso el tamaño de fuente/padding de cada chip se achica con
+   el viewport en vez de dejar que el contenedor las envuelva. */
+.eph-landing2 .diagnostico-chips { display: flex; flex-wrap: nowrap; gap: clamp(4px, 1.2vw, 12px); }
+.eph-landing2 .diagnostico-chip {
   font-family: 'Cormorant Garamond', serif;
   font-weight: 300;
-  font-size: 26px;
+  font-size: clamp(11px, 3.2vw, 26px);
   color: rgba(245,241,232,0.4);
   text-decoration: line-through;
   text-decoration-color: #8C6A2F;
   text-decoration-thickness: 1px;
-  padding: 4px 18px;
+  padding: clamp(2px, 0.5vw, 4px) clamp(6px, 1.8vw, 18px);
   border: 1px solid rgba(245,241,232,0.1);
   border-radius: 999px;
-  white-space: normal;
+  white-space: nowrap;
+  flex: 0 1 auto;
 }
 .eph-landing2 .diagnostico-llano { margin: 0; font-family: 'Jost', sans-serif; font-weight: 300; font-size: 17px; line-height: 1.75; color: rgba(245,241,232,0.66); max-width: 46ch; text-wrap: pretty; }
 
@@ -309,6 +314,7 @@
 .eph-landing2 section.optimizacion { background: #F2ECE2; color: #221C17; padding: clamp(48px, 7vh, 56px) clamp(22px, 6vw, 60px); }
 .eph-landing2 .optimizacion-wrap { max-width: 1200px; margin: 0 auto; display: grid; gap: clamp(28px, 4vw, 36px); }
 .eph-landing2 .optimizacion-titulo { margin: 0; font-family: 'Cormorant Garamond', serif; font-weight: 400; font-size: clamp(32px, 4.2vw, 48px); line-height: 1.12; letter-spacing: -0.015em; color: #221C17; max-width: 22ch; text-wrap: pretty; }
+.eph-landing2 .optimizacion-titulo-accent { color: #C9A66B; }
 
 .eph-landing2 .opt-grid { display: flex; flex-wrap: wrap; gap: 24px; }
 .eph-landing2 .opt-card { position: relative; flex: 1 1 220px; max-width: 300px; aspect-ratio: 2 / 3; border-radius: 16px; overflow: hidden; }
@@ -686,6 +692,8 @@
 }
 
 @media (max-width: 768px) {
+  .eph-landing2 .shift-labels { display: none; }
+
   .eph-landing2 .costos-grid { display: none; }
   .eph-landing2 .costos-mobile-wrap { display: block; }
   .eph-landing2 .costos-mobile-track {

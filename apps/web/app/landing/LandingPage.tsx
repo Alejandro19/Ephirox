@@ -150,7 +150,7 @@ export function LandingPage() {
               <span className="diagnostico-label">YA LO INTENTASTE</span>
               <div className="diagnostico-chips">
                 {YA_INTENTASTE.map((c) => (
-                  <span className="chip" key={c}>{c}</span>
+                  <span className="diagnostico-chip" key={c}>{c}</span>
                 ))}
               </div>
               <p className="diagnostico-llano">Comes mal, duermes peor, vives en estado de alerta. Nada cambió.</p>
@@ -204,7 +204,7 @@ export function LandingPage() {
         <section className="optimizacion">
           <div className="optimizacion-wrap">
             <ScrollReveal>
-              <h2 className="optimizacion-titulo">Con tu estado ya medido, optimizamos:</h2>
+              <h2 className="optimizacion-titulo">Con tu <span className="optimizacion-titulo-accent">estado interior</span> medido, optimizamos:</h2>
             </ScrollReveal>
             <ScrollReveal className="opt-grid">
               {OPTIMIZACION.map((o) => (
