@@ -153,7 +153,7 @@ export function LandingPage() {
                   <span className="chip" key={c}>{c}</span>
                 ))}
               </div>
-              <p className="diagnostico-llano">Comes mal, duermes peor, vives en alerta. Nada cambió.</p>
+              <p className="diagnostico-llano">Comes mal, duermes peor, vives en estado de alerta. Nada cambió.</p>
             </ScrollReveal>
 
             <ScrollReveal className="reconocimiento-bloque">
