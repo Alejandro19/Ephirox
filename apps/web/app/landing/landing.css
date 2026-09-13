@@ -459,11 +459,12 @@
 
 .eph-landing2 .junta-head { display: flex; flex-wrap: wrap; gap: 18px 48px; align-items: end; }
 .eph-landing2 .junta-head h2 { flex: 1 1 360px; max-width: 18ch; margin: 0; font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: clamp(32px, 3.6vw, 46px); line-height: 1.06; text-wrap: pretty; color: rgba(251,248,241,0.96); }
-.eph-landing2 .junta-eyebrow { font-family: 'Jost', sans-serif; font-size: 10px; letter-spacing: 0.22em; color: rgba(245,241,232,0.42); }
 
 .eph-landing2 .junta-body { display: flex; flex-wrap: wrap; gap: 44px; }
 
-.eph-landing2 .junta-index { flex: 1 1 300px; display: grid; align-content: start; border-top: 1px solid rgba(245,241,232,0.12); }
+.eph-landing2 .junta-index-col { flex: 1 1 300px; display: grid; align-content: start; }
+.eph-landing2 .junta-index-col .rows-hint { color: rgba(245,241,232,0.4); }
+.eph-landing2 .junta-index { display: grid; align-content: start; border-top: 1px solid rgba(245,241,232,0.12); }
 .eph-landing2 .junta-index-row {
   display: flex;
   gap: 18px;

@@ -14,14 +14,14 @@ export function JuntaSection() {
   const baseId = useId();
 
   return (
-    <section className="junta-section">
-      <div className="junta-wrap">
-        <div className="junta-head">
-          <h2>El reporte que le llevas a tu Junta.</h2>
-          <span className="junta-eyebrow">CINCO PUNTOS DEL ACTA</span>
-        </div>
+    <div className="junta-wrap">
+      <div className="junta-head">
+        <h2>El reporte que le llevas a tu Junta.</h2>
+      </div>
 
-        <div className="junta-body">
+      <div className="junta-body">
+        <div className="junta-index-col">
+          <p className="rows-hint">Selecciona cada punto para ver el detalle.</p>
           <div className="junta-index" role="tablist" aria-label="Puntos del acta">
             {JUNTA_PUNTOS.map((p, i) => {
               const isActive = i === active;
@@ -42,32 +42,32 @@ export function JuntaSection() {
               );
             })}
           </div>
+        </div>
 
-          <div
-            className="junta-panel"
-            role="tabpanel"
-            id={`${baseId}-panel`}
-            aria-labelledby={`${baseId}-tab-${active}`}
-            key={active}
-          >
-            <div className="junta-panel-texto">
-              <span className="junta-panel-kicker">{current.num} — {current.kicker}</span>
-              <p>{current.texto}</p>
-            </div>
+        <div
+          className="junta-panel"
+          role="tabpanel"
+          id={`${baseId}-panel`}
+          aria-labelledby={`${baseId}-tab-${active}`}
+          key={active}
+        >
+          <div className="junta-panel-texto">
+            <span className="junta-panel-kicker">{current.num} — {current.kicker}</span>
+            <p>{current.texto}</p>
+          </div>
 
-            <div className="junta-panel-cifra">
-              <span className="junta-cifra">{current.cifra}</span>
-              <p className="junta-glosa">{current.glosa}</p>
-            </div>
+          <div className="junta-panel-cifra">
+            <span className="junta-cifra">{current.cifra}</span>
+            <p className="junta-glosa">{current.glosa}</p>
+          </div>
 
-            <div className="junta-panel-chart">
-              <JuntaChartVisual punto={current} />
-              <span className="junta-chart-pie">{current.pie}</span>
-            </div>
+          <div className="junta-panel-chart">
+            <JuntaChartVisual punto={current} />
+            <span className="junta-chart-pie">{current.pie}</span>
           </div>
         </div>
       </div>
-    </section>
+    </div>
   );
 }
 
