@@ -7,7 +7,7 @@ import { LandingPage } from './LandingPage';
 // sellers) en vez de repetir el gancho emocional del hero.
 const TITLE = 'Ephirox — Bienestar Élite para Founders y C-Levels';
 const DESCRIPTION =
-  'Plataforma de bienestar élite para talento de alto impacto: founders, C-levels y top sellers. Salud, rendimiento y prevención del burnout, con IA.';
+  'Para el talento de alto impacto — founders, C-levels y top sellers: salud, rendimiento y prevención del burnout, con tecnología de IA.';
 
 export const metadata: Metadata = {
   title: TITLE,
