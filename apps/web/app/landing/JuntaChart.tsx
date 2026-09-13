@@ -15,7 +15,6 @@ export function JuntaSection() {
     <div className="junta-wrap">
       <div className="junta-left">
         <h2>El reporte que le llevas a tu Junta.</h2>
-        <p className="junta-kicker">Lo que antes era tu punto ciego — y luego el de tu equipo — ahora es una señal visible para tu Junta.</p>
         <div className="junta-chart">
           <div className="junta-bars">
             {current.barras.map((h, i) => (

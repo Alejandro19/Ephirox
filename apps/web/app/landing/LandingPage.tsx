@@ -158,7 +158,7 @@ export function LandingPage() {
 
             <ScrollReveal className="reconocimiento-bloque">
               <span className="reconocimiento-rule" aria-hidden="true" />
-              <p className="reconocimiento-sentencia">No es falta de disciplina. Es <span className="reconocimiento-sentencia-accent">tu punto ciego</span>:</p>
+              <p className="reconocimiento-sentencia">No es falta de disciplina.<br />Es <span className="reconocimiento-sentencia-accent">tu punto ciego</span>:</p>
               <p className="reconocimiento-aclaracion">lo que tu cuerpo lleva meses diciéndote, y que ningún chequeo te ha mostrado.</p>
             </ScrollReveal>
 
@@ -225,7 +225,6 @@ export function LandingPage() {
           <div className="categoria-wrap">
             <ScrollReveal className="categoria-head">
               <h2><span className="a">Anticipamos</span><em className="b">lo que otros descubren demasiado tarde</em></h2>
-              <p className="categoria-intro-p">Esto es lo que cambia cuando el riesgo se detecta antes de que se materialice — indicador{' '}por{' '}indicador.</p>
             </ScrollReveal>
             <CategoriaTable />
           </div>

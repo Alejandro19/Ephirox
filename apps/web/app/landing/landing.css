@@ -153,7 +153,7 @@
   text-wrap: pretty;
   color: rgba(251,248,241,0.92);
 }
-.eph-landing2 .reconocimiento-sentencia-accent { color: #C9A66B; }
+.eph-landing2 .reconocimiento-sentencia-accent { color: #C9A66B; white-space: nowrap; }
 .eph-landing2 .reconocimiento-aclaracion { margin: 0; font-family: 'Jost', sans-serif; font-weight: 300; font-size: 17px; line-height: 1.75; max-width: 46ch; color: rgba(245,241,232,0.72); text-wrap: pretty; }
 
 /* Costura: un filete de 1px que cose el cambio de fondo entre las dos
@@ -191,7 +191,7 @@
   max-width: 700px;
   font-family: 'Cormorant Garamond', serif;
   font-weight: 300;
-  font-size: clamp(34px, 4.2vw, 54px);
+  font-size: clamp(30px, 3.8vw, 48px);
   line-height: 1.04;
   text-wrap: pretty;
   color: #17130E;
@@ -313,8 +313,8 @@
 
 .eph-landing2 section.optimizacion { background: #F2ECE2; color: #221C17; padding: clamp(48px, 7vh, 56px) clamp(22px, 6vw, 60px); }
 .eph-landing2 .optimizacion-wrap { max-width: 1200px; margin: 0 auto; display: grid; gap: clamp(28px, 4vw, 36px); }
-.eph-landing2 .optimizacion-titulo { margin: 0; font-family: 'Cormorant Garamond', serif; font-weight: 400; font-size: clamp(32px, 4.2vw, 48px); line-height: 1.12; letter-spacing: -0.015em; color: #221C17; max-width: 22ch; text-wrap: pretty; }
-.eph-landing2 .optimizacion-titulo-accent { color: #C9A66B; }
+.eph-landing2 .optimizacion-titulo { margin: 0; font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: clamp(30px, 3.8vw, 48px); line-height: 1.04; color: #221C17; max-width: 22ch; text-wrap: pretty; }
+.eph-landing2 .optimizacion-titulo-accent { color: #8C6A2F; }
 
 .eph-landing2 .opt-grid { display: flex; flex-wrap: wrap; gap: 24px; }
 .eph-landing2 .opt-card { position: relative; flex: 1 1 220px; max-width: 300px; aspect-ratio: 2 / 3; border-radius: 16px; overflow: hidden; }
@@ -458,7 +458,6 @@
 .eph-landing2 .junta-wrap { max-width: 1120px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: clamp(32px, 5vw, 70px); align-items: start; }
 .eph-landing2 .junta-left { display: grid; gap: clamp(28px, 3.4vw, 44px); align-content: start; }
 .eph-landing2 .junta-left h2 { margin: 0; font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: clamp(30px, 4.2vw, 48px); line-height: 1.08; max-width: 20ch; text-wrap: pretty; }
-.eph-landing2 .junta-kicker { margin: -20px 0 0; font-size: 16px; line-height: 1.6; color: rgba(245,241,232,0.66); max-width: 38ch; text-wrap: pretty; }
 .eph-landing2 .junta-chart { display: grid; gap: 15px; }
 .eph-landing2 .junta-bars { display: flex; align-items: flex-end; gap: clamp(5px, 1vw, 11px); height: clamp(120px, 16vw, 180px); }
 .eph-landing2 .junta-bar { flex: 1; min-width: 0; border-radius: 2px 2px 0 0; background: rgba(201,166,107,0.3); transition: height 620ms cubic-bezier(0.16,1,0.3,1), background 480ms ease-out; }
@@ -600,19 +599,13 @@
 .eph-landing2 .footer-bottom .legal a { font-size: 13px; color: rgba(245,241,232,0.55); }
 
 /* ─── Mobile ───
-   El header roto (link + pill partiéndose en varias líneas dentro de su
-   propia caja) y el scroll pineado de "cómo lo medimos" (poco confiable en
-   navegadores móviles, pensado para mouse) eran los dos puntos reales de
-   quiebre en celular — confirmado midiendo el layout, no solo por ojo. */
+   El header debe quedar en una sola fila junto al logo (pedido explícito) —
+   por eso acá solo se acortan los textos (link/pill a su versión corta) y
+   se reduce el pill, sin flex-wrap ni flex-basis:100% que lo partan a una
+   segunda línea. El scroll pineado de "cómo lo medimos" (poco confiable en
+   navegadores móviles, pensado para mouse) sigue siendo el otro punto real
+   de quiebre en celular — confirmado midiendo el layout, no solo por ojo. */
 @media (max-width: 680px) {
-  .eph-landing2 header.site-header {
-    flex-wrap: wrap;
-    row-gap: 12px;
-  }
-  .eph-landing2 .header-actions {
-    flex-basis: 100%;
-    justify-content: flex-end;
-  }
   .eph-landing2 .header-login-full { display: none; }
   .eph-landing2 .header-login-short { display: inline; }
   .eph-landing2 .cta-pill { font-size: 13px; padding: 9px 16px; }
@@ -683,7 +676,6 @@
     letter-spacing: 0.12em; text-transform: uppercase; color: rgba(23,19,14,0.4); margin-bottom: 4px;
   }
 
-  .eph-landing2 .categoria-intro-p { display: none !important; }
   .eph-landing2 .trad-mobile { display: block !important; }
   .eph-landing2 .trad-full { display: none !important; }
 
