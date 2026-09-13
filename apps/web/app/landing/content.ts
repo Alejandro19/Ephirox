@@ -187,7 +187,7 @@ export const JUNTA_PUNTOS: JuntaPunto[] = [
 
 export const DIF = [
   'Ningún protocolo llega a ti sin que un especialista lo haya validado.',
-  'Es optimización de hábitos y rendimiento, no diagnóstico ni tratamiento.',
+  'Es optimización de hábitos, salud y alto rendimiento, no diagnóstico ni tratamiento.',
   'Se contrata por cohorte dentro de una empresa. No hay registro individual.',
 ] as const;
 
