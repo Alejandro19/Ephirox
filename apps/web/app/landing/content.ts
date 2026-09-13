@@ -138,7 +138,7 @@ export const JUNTA_PUNTOS: JuntaPunto[] = [
     texto: 'Una sola salida evitada en el comité directivo cubre el programa completo del año. El resto del efecto — decisiones mejor tomadas — no aparece en la factura.',
     cifra: '1 : 1',
     glosa: 'un reemplazo evitado cubre el año.',
-    pie: 'Una salida evitada cubre el programa del año. Escala ilustrativa.',
+    pie: 'El 30–50% de reemplazo ejecutivo (AM. J. OF PREVENTIVE MEDICINE, 2025) cubre el programa completo del año. Escala ilustrativa.',
     chart: 'barras',
     filas: [
       { label: 'Reemplazar a un directivo', value: '30–50% del salario anual', width: 100, gold: true },
@@ -162,7 +162,7 @@ export const JUNTA_PUNTOS: JuntaPunto[] = [
     num: '04',
     kicker: 'PERMANENCIA',
     titulo: 'Ventaja de retención',
-    texto: 'El beneficio que retiene al ejecutivo que ningún aumento retiene: cuidado real de su capacidad, no una prima más en el paquete.',
+    texto: 'El beneficio que retiene al ejecutivo que ningún aumento retiene: cuidado real de su salud, no una prima más en el salario.',
     cifra: '6.9 años',
     glosa: 'dura hoy un CEO en el cargo. El programa trabaja sobre esa cifra.',
     pie: '28 ciclos de 90 días por mandato de 6.9 años. El programa cubre los 28, no solo el primero.',

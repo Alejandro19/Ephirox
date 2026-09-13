@@ -384,7 +384,7 @@
 .eph-landing2 .cambia-head { display: grid; gap: 14px; }
 .eph-landing2 .cambia-head .eyebrow { font-size: 12px; letter-spacing: 0.14em; color: rgba(23,19,14,0.42); }
 .eph-landing2 .cambia-head h2 { margin: 0; font-weight: 200; font-size: clamp(26px, 3.6vw, 42px); line-height: 1.12; letter-spacing: -0.015em; max-width: 24ch; text-wrap: pretty; }
-.eph-landing2 .cambia-head h2 em { font-family: 'Cormorant Garamond', serif; font-weight: 400; font-style: italic; font-size: 1.12em; color: var(--gold-dark); }
+.eph-landing2 .cambia-head h2 em { font-family: 'Cormorant Garamond', serif; font-weight: 400; font-style: italic; font-size: 1em; color: var(--gold-dark); }
 .eph-landing2 .shifts-list { display: grid; gap: 0; }
 .eph-landing2 .shift-labels { display: flex; flex-wrap: wrap; gap: clamp(24px, 6vw, 84px); padding-bottom: 10px; }
 .eph-landing2 .shift-labels span { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(23,19,14,0.4); }
@@ -553,13 +553,17 @@
 }
 .eph-landing2 .dif-wrap { max-width: 1120px; margin: 0 auto; display: grid; }
 .eph-landing2 .dif-outer { width: 100%; max-width: 480px; margin: 0 auto; }
+/* Emparentada con .junta-panel (mismo border-radius, mismo criterio de
+   fondo translúcido + sin borde grueso) pero no idéntica: esta sigue
+   siendo la card clara/cálida que destaca sobre el fondo oscuro, con su
+   propio degradado dorado-crema y el filete superior como firma. */
 .eph-landing2 .dif-card {
   position: relative;
   overflow: hidden;
   background: linear-gradient(165deg, #FBF3E2 0%, #F3E4C4 55%, #FBF3E2 100%);
-  border: 2px solid var(--gold-dark);
-  border-radius: 18px;
-  padding: clamp(18px, 2.4vw, 24px);
+  border: 1px solid rgba(201,166,107,0.4);
+  border-radius: 14px;
+  padding: clamp(22px, 2.8vw, 30px);
   display: grid;
   gap: 10px;
   justify-items: center;
