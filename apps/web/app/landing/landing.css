@@ -509,6 +509,7 @@
 .eph-landing2 .junta-panel-cifra { display: flex; flex-wrap: wrap; align-items: baseline; gap: 16px; border-top: 1px solid rgba(245,241,232,0.1); padding-top: 22px; }
 .eph-landing2 .junta-cifra { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: clamp(36px, 3.6vw, 48px); line-height: 1; color: #E4A64A; letter-spacing: -0.015em; font-variant-numeric: lining-nums tabular-nums; white-space: nowrap; text-shadow: 0 2px 14px rgba(23,19,14,0.8); }
 .eph-landing2 .junta-glosa { margin: 0; flex: 1 1 160px; font-family: 'Jost', sans-serif; font-weight: 300; font-size: 13px; line-height: 1.6; color: rgba(245,241,232,0.6); }
+.eph-landing2 .junta-fuente { flex-basis: 100%; font-family: 'Jost', sans-serif; font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(245,241,232,0.4); }
 
 .eph-landing2 .junta-panel-chart { display: grid; gap: 12px; border-top: 1px solid rgba(245,241,232,0.1); padding-top: 22px; }
 .eph-landing2 .junta-chart-pie { font-family: 'Jost', sans-serif; font-size: 10px; line-height: 1.5; color: rgba(245,241,232,0.4); }

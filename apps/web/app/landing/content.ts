@@ -107,12 +107,15 @@ export type JuntaPunto = {
   texto: string;
   cifra: string;
   glosa: string;
-  pie: string;
+  /** Cita de la cifra (ej. "AM. J. OF PREVENTIVE MEDICINE, 2025") — solo
+   * cuando la cifra es un dato real citable, no una escala ilustrativa. */
+  fuente?: string;
 } & (
-  | { chart: 'cohorte'; barras: number[]; highlight: number[] }
-  | { chart: 'barras'; filas: JuntaBarra[] }
-  | { chart: 'timeline'; fill: number; leftLabel: string; rightLabel: string }
-  | { chart: 'ciclos'; total: number; activos: number }
+  | { chart: 'cohorte'; pie: string; barras: number[]; highlight: number[] }
+  | { chart: 'barras'; pie: string; filas: JuntaBarra[] }
+  | { chart: 'timeline'; pie: string; fill: number; leftLabel: string; rightLabel: string }
+  | { chart: 'ciclos'; pie: string; total: number; activos: number }
+  | { chart: 'none' }
 );
 
 // Sección "El reporte que le llevas a tu Junta" — cada punto tiene su propia
@@ -135,15 +138,11 @@ export const JUNTA_PUNTOS: JuntaPunto[] = [
     num: '02',
     kicker: 'COSTE EVITADO',
     titulo: 'Retorno que se paga solo',
-    texto: 'Una sola salida evitada en el comité directivo cubre el programa completo del año. El resto del efecto — decisiones mejor tomadas — no aparece en la factura.',
-    cifra: '1 : 1',
-    glosa: 'un reemplazo evitado cubre el año.',
-    pie: 'El 30–50% de reemplazo ejecutivo (AM. J. OF PREVENTIVE MEDICINE, 2025) cubre el programa completo del año. Escala ilustrativa.',
-    chart: 'barras',
-    filas: [
-      { label: 'Reemplazar a un directivo', value: '30–50% del salario anual', width: 100, gold: true },
-      { label: 'Programa anual, cohorte completa', value: 'una fracción de esa cifra', width: 22, gold: false },
-    ],
+    texto: 'Reemplazar a un directivo sin sucesión planeada cuesta entre el 30% y el 50% de su salario anual. Evitar una sola salida así puede cubrir el programa completo para toda tu cohorte, durante un año.',
+    cifra: '30–50%',
+    glosa: 'del salario anual de un ejecutivo — lo que cuesta reemplazarlo sin sucesión planeada.',
+    fuente: 'AM. J. OF PREVENTIVE MEDICINE, 2025',
+    chart: 'none',
   },
   {
     num: '03',

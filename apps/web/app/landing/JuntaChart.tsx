@@ -59,12 +59,15 @@ export function JuntaSection() {
           <div className="junta-panel-cifra">
             <span className="junta-cifra">{current.cifra}</span>
             <p className="junta-glosa">{current.glosa}</p>
+            {current.fuente && <span className="junta-fuente">{current.fuente}</span>}
           </div>
 
-          <div className="junta-panel-chart">
-            <JuntaChartVisual punto={current} />
-            <span className="junta-chart-pie">{current.pie}</span>
-          </div>
+          {current.chart !== 'none' && (
+            <div className="junta-panel-chart">
+              <JuntaChartVisual punto={current} />
+              <span className="junta-chart-pie">{current.pie}</span>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -81,6 +84,8 @@ function JuntaChartVisual({ punto }: { punto: JuntaPunto }) {
       return <TimelineChart fill={punto.fill} leftLabel={punto.leftLabel} rightLabel={punto.rightLabel} />;
     case 'ciclos':
       return <CiclosChart total={punto.total} activos={punto.activos} />;
+    case 'none':
+      return null;
   }
 }
 
