@@ -939,6 +939,26 @@
   .eph-landing2 .junta-panel-cifra, .eph-landing2 .junta-panel-chart { padding-top: 18px; }
   .eph-landing2 .junta-chart-cohorte { height: 74px; }
   .eph-landing2 .junta-chart-ciclos { height: 44px; }
+
+  /* La tarjeta de "Llevar Ephirox a mi empresa" en mobile: Correo/Celular y
+     Empresa/Rol usan flex-basis en px pensado para su fila en desktop, así
+     que en el ancho angosto de mobile cada campo caía en su propia línea
+     completa (7 líneas sueltas, tarjeta más alta que la pantalla). Se
+     agrupan de a 2 por fila (mismo criterio que ya traían, solo con
+     flex-basis en % en vez de px) y se ajustan paddings/gaps para que la
+     tarjeta se vea más compacta y de un vistazo. */
+  .eph-landing2 .llevarlo-copy, .eph-landing2 .llevarlo-form { padding: 28px 18px; }
+  .eph-landing2 form.contact-form { gap: 16px 8px; }
+  /* Basis en % (no 0 + flex-grow: eso les quita la señal de tamaño que
+     fuerza el wrap a 2 por fila, y los 4 campos terminaban en una sola
+     fila apretadísima). 53/47 porque a 50/50 el placeholder de Correo
+     ("nombre@empresa.com") se recortaba, y a un split más parejo el de Rol
+     ("CEO, Founder, CFO") — medido con canvas.measureText contra el ancho
+     real de cada columna, no solo por ojo. */
+  .eph-landing2 .field-180 { flex: 1 1 calc(53% - 4px); }
+  .eph-landing2 .field-150 { flex: 1 1 calc(47% - 4px); }
+  .eph-landing2 .chips { gap: 6px; }
+  .eph-landing2 .chip { padding: 0 14px; }
 }
 
 .eph-landing2 .back-to-top {
