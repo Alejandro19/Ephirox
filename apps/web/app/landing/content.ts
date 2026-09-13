@@ -88,7 +88,7 @@ export const SHIFTS = [
 ] as const;
 
 export const HITOS = [
-  { titulo: 'Piensas con la misma nitidez a las 4pm que a las 8am.', detalle: 'Sueño y gestión del estrés calibrados a tu cronotipo, no a un horario genérico.' },
+  { titulo: 'Piensas con la misma nitidez a las 4pm que a las 8am.', detalle: 'Menos caídas de foco, con el registro que lo respalda.' },
   { titulo: 'El día ya no se te acaba a media tarde.', detalle: 'Entrenamiento y nutrición ajustados a tu propio gasto energético, no a una rutina estándar.' },
   { titulo: 'Sabes en qué estado tomaste cada decisión crítica — y puedes repetirlo a voluntad.', detalle: 'Sueño, recuperación y estrés, registrados — tu mejor día, listo para repetirse.' },
   { titulo: 'Diriges tu capacidad, en vez de improvisar con lo que te queda de ella.', detalle: 'Lo que antes era tu punto ciego, ahora tiene alertas — antes del agotamiento, no explicaciones después de la caída.' },
