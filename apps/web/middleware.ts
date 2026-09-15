@@ -56,34 +56,47 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(target, 307);
   }
 
+  let response: NextResponse;
+
   // Allow public paths and static assets
   if (
     PUBLIC_PATHS.some((p) => pathname.startsWith(p)) ||
     STATIC_EXTS.test(pathname)
   ) {
-    return NextResponse.next();
+    response = NextResponse.next();
+  } else {
+    // Check for token in cookie or Authorization header
+    const token =
+      request.cookies.get("latribu_token")?.value ||
+      request.headers.get("Authorization")?.replace("Bearer ", "");
+
+    if (!token) {
+      // Sin esto, entrar sin sesión a /therapist rebotaba al login de
+      // clientes — un terapeuta que escribía bien su contraseña ahí recibía
+      // "Credenciales incorrectas" porque ese formulario pega contra
+      // /api/auth/login (tabla clients), nunca contra /api/auth/therapist/login.
+      const isTherapistPath = pathname === "/therapist" || pathname.startsWith("/therapist/");
+      const loginUrl = new URL(isTherapistPath ? "/therapist-login" : "/login", request.url);
+      // Se preserva también el query string (no solo el pathname) — sin esto,
+      // un cliente que tapea el sticker NFC (/training?m=entrenamiento&a=confirmar)
+      // con la sesión vencida perdía la acción pendiente al pasar por /login.
+      loginUrl.searchParams.set("from", pathname + request.nextUrl.search);
+      response = NextResponse.redirect(loginUrl);
+    } else {
+      response = NextResponse.next();
+    }
   }
 
-  // Check for token in cookie or Authorization header
-  const token =
-    request.cookies.get("latribu_token")?.value ||
-    request.headers.get("Authorization")?.replace("Bearer ", "");
-
-  if (!token) {
-    // Sin esto, entrar sin sesión a /therapist rebotaba al login de
-    // clientes — un terapeuta que escribía bien su contraseña ahí recibía
-    // "Credenciales incorrectas" porque ese formulario pega contra
-    // /api/auth/login (tabla clients), nunca contra /api/auth/therapist/login.
-    const isTherapistPath = pathname === "/therapist" || pathname.startsWith("/therapist/");
-    const loginUrl = new URL(isTherapistPath ? "/therapist-login" : "/login", request.url);
-    // Se preserva también el query string (no solo el pathname) — sin esto,
-    // un cliente que tapea el sticker NFC (/training?m=entrenamiento&a=confirmar)
-    // con la sesión vencida perdía la acción pendiente al pasar por /login.
-    loginUrl.searchParams.set("from", pathname + request.nextUrl.search);
-    return NextResponse.redirect(loginUrl);
+  // app.ephirox.com es el producto (login, dashboard, NFC) — no debería
+  // aparecer en resultados de Google, a diferencia del dominio de marketing
+  // de arriba. Header en vez de un <meta robots> porque cubre TODAS las
+  // rutas de este host (incluidas las que redirigen a /login) desde un solo
+  // lugar, sin depender de que cada página lo declare por su cuenta.
+  if (host === "app.ephirox.com") {
+    response.headers.set("X-Robots-Tag", "noindex, nofollow");
   }
 
-  return NextResponse.next();
+  return response;
 }
 
 export const config = {
