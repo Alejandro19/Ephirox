@@ -32,12 +32,18 @@ export function middleware(request: NextRequest) {
     if (pathname === "/") {
       return NextResponse.rewrite(new URL("/landing", request.url));
     }
-    // Términos, Privacidad y /landing (el mismo destino al que "/" ya se
-    // reescribe arriba) son públicos en el dominio de marketing — se sirven
-    // tal cual en vez de mandarse al dominio del producto como el resto de
-    // rutas de acá abajo. Sin esto, compartir o visitar ephirox.com/landing
-    // directamente (en vez de la raíz) rebotaba a app.ephirox.com/login.
-    if (pathname === "/terminos" || pathname === "/privacidad" || pathname === "/landing") {
+    // /landing servía el mismo contenido que "/" (arriba) como una segunda
+    // URL indexable — Google veía ephirox.com/ y ephirox.com/landing como
+    // páginas distintas con contenido idéntico (contenido duplicado). 301
+    // a "/" para que /landing deje de existir como URL viva y todo el
+    // tráfico/señal de indexación se consolide en la raíz.
+    if (pathname === "/landing") {
+      return NextResponse.redirect(new URL("/", request.url), 301);
+    }
+    // Términos y Privacidad son públicos en el dominio de marketing — se
+    // sirven tal cual en vez de mandarse al dominio del producto como el
+    // resto de rutas de acá abajo.
+    if (pathname === "/terminos" || pathname === "/privacidad") {
       return NextResponse.next();
     }
     // Cualquier otra ruta pedida en el dominio de marketing (bookmarks
