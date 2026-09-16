@@ -33,9 +33,13 @@ export async function updateEnterpriseLeadEstado(
 // volvió nullable esa columna, apps/api/drizzle/manual-migrations/
 // 2026-09-06-admin-notifications-nullable-client.sql).
 async function createAdminAlert(lead: EnterpriseLeadRow): Promise<void> {
+  // El formulario público ya no pide empresa/rol (pasó de "preparar
+  // propuesta" a "solicitar demo" — esa calificación se hace en vivo en la
+  // llamada), así que casi siempre vienen vacíos para leads nuevos.
+  const contexto = lead.empresa ? ` — ${lead.empresa}${lead.rol ? ` (${lead.rol})` : ''}` : '';
   await db.insert(adminNotifications).values({
     type: 'enterprise_lead',
-    message: `Nueva empresa interesada: ${lead.empresa} — ${lead.nombre} (${lead.rol})`,
+    message: `Nueva solicitud de demo: ${lead.nombre}${contexto}`,
   });
 }
 
@@ -52,15 +56,18 @@ async function notifyEnterpriseLead(lead: EnterpriseLeadRow): Promise<void> {
   const NOTIFY_TO = process.env.ENTERPRISE_LEADS_NOTIFY_EMAIL || 'contacto@ephirox.com';
   const NOTIFY_CC = process.env.ENTERPRISE_LEADS_NOTIFY_CC || 'g619alejandro@gmail.com';
 
-  const subject = `Nueva empresa interesada: ${lead.empresa}`;
+  const subject = `Nueva solicitud de demo: ${lead.nombre}`;
   const html = renderEmailHtml({
-    preheader: `${lead.nombre} (${lead.rol}) en ${lead.empresa} quiere llevar Ephirox a su equipo.`,
+    preheader: `${lead.nombre} quiere agendar una demo de Ephirox.`,
+    // empresa/rol/tamano/quien ya no los pide el formulario público (pasó de
+    // "preparar propuesta" a "solicitar demo") — se muestran solo si vienen
+    // (leads viejos, o si algún día se vuelven a capturar en otro flujo).
     bodyHtml: `<p style="margin:0 0 6px;"><strong>Nombre:</strong> ${lead.nombre}</p>
 <p style="margin:0 0 6px;"><strong>Correo:</strong> ${lead.correo}</p>
-<p style="margin:0 0 6px;"><strong>Celular:</strong> ${lead.celular}</p>
-<p style="margin:0 0 6px;"><strong>Empresa:</strong> ${lead.empresa}</p>
-<p style="margin:0 0 6px;"><strong>Rol:</strong> ${lead.rol}</p>
-<p style="margin:0 0 6px;"><strong>Equipo a considerar:</strong> ${lead.tamano || 'No especificado'}</p>
+<p style="margin:0 0 6px;"><strong>WhatsApp:</strong> ${lead.celular}</p>
+${lead.empresa ? `<p style="margin:0 0 6px;"><strong>Empresa:</strong> ${lead.empresa}</p>` : ''}
+${lead.rol ? `<p style="margin:0 0 6px;"><strong>Rol:</strong> ${lead.rol}</p>` : ''}
+${lead.tamano ? `<p style="margin:0 0 6px;"><strong>Equipo a considerar:</strong> ${lead.tamano}</p>` : ''}
 ${lead.quien ? `<p style="margin:0;"><strong>Quién más debería estar:</strong> ${lead.quien}</p>` : ''}`,
   });
 

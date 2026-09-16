@@ -639,7 +639,6 @@
 .eph-landing2 .llevarlo-rule { width: 44px; height: 1px; background: var(--gold); }
 .eph-landing2 .llevarlo-copy h2 { margin: 0; font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: clamp(30px, 3.2vw, 40px); line-height: 1.05; max-width: 15ch; text-wrap: pretty; color: rgba(251,248,241,0.96); }
 .eph-landing2 .llevarlo-copy h2 em { font-family: 'Cormorant Garamond', serif; font-weight: 300; font-style: italic; color: var(--gold); }
-.eph-landing2 .llevarlo-copy p { margin: 0; font-family: 'Jost', sans-serif; font-weight: 300; font-size: 15px; line-height: 1.66; max-width: 26ch; color: rgba(245,241,232,0.66); }
 
 .eph-landing2 .llevarlo-form { flex: 1 1 360px; color: var(--ink); padding: clamp(32px, 3.4vw, 48px); display: grid; gap: 22px; align-content: start; }
 
@@ -679,26 +678,8 @@
 }
 
 .eph-landing2 .field-full { flex: 1 1 100%; }
-.eph-landing2 .field-180, .eph-landing2 .field-correo { flex: 1 1 180px; }
-.eph-landing2 .field-150, .eph-landing2 .field-celular { flex: 1 1 150px; }
-
-.eph-landing2 .team-size-field { display: grid; gap: 11px; }
-.eph-landing2 .team-size-field > span { font-family: 'Jost', sans-serif; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(23,19,14,0.6); }
-.eph-landing2 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.eph-landing2 .chip {
-  min-height: 44px;
-  padding: 0 18px;
-  border-radius: 999px;
-  font-size: 14px;
-  font-weight: 300;
-  cursor: pointer;
-  font-family: inherit;
-  background: transparent;
-  border: 1px solid rgba(23,19,14,0.24);
-  color: rgba(23,19,14,0.72);
-  transition: border-color 180ms ease-out, color 180ms ease-out, background 180ms ease-out;
-}
-.eph-landing2 .chip.selected { background: var(--ink); border-color: var(--gold-dark); color: #EFE8DA; }
+.eph-landing2 .field-correo { flex: 1 1 180px; }
+.eph-landing2 .field-celular { flex: 1 1 150px; }
 
 .eph-landing2 .submit-btn { width: 100%; min-height: 54px; margin-top: 4px; font-size: 15px; letter-spacing: 0.04em; background: var(--ink); color: var(--cream); border: 0; border-radius: 999px; cursor: pointer; transition: background 180ms ease-out; font-family: inherit; }
 .eph-landing2 .submit-btn:hover { background: #2A2118; }
@@ -952,29 +933,14 @@
   .eph-landing2 .junta-chart-cohorte { height: 74px; }
   .eph-landing2 .junta-chart-ciclos { height: 44px; }
 
-  /* La tarjeta de "Llevar Ephirox a mi empresa" en mobile: Correo/Celular y
-     Empresa/Rol usan flex-basis en px pensado para su fila en desktop, así
-     que en el ancho angosto de mobile cada campo caía en su propia línea
-     completa (7 líneas sueltas, tarjeta más alta que la pantalla). Se
-     agrupan de a 2 por fila (mismo criterio que ya traían, solo con
-     flex-basis en % en vez de px) y se ajustan paddings/gaps para que la
-     tarjeta se vea más compacta y de un vistazo. */
+  /* La tarjeta de "Llevar Ephirox a mi empresa" en mobile: paddings más
+     ajustados para que se vea compacta de un vistazo. */
   .eph-landing2 .llevarlo-copy, .eph-landing2 .llevarlo-form { padding: 28px 18px; }
-  .eph-landing2 .llevarlo-copy p { display: none; }
   .eph-landing2 form.contact-form { gap: 16px 8px; }
-  /* Basis en % (no 0 + flex-grow: eso les quita la señal de tamaño que
-     fuerza el wrap a 2 por fila, y Empresa/Rol terminaban en una sola fila
-     apretadísima junto con Correo/Celular). 53/47 porque a 50/50 el
-     placeholder de Rol ("CEO, Founder, CFO") se recortaba — medido con
-     canvas.measureText contra el ancho real de cada columna, no solo por
-     ojo. Correo/Celular vuelven a 100%: en la práctica un correo real
-     (no el placeholder) suele ser más largo que "nombre@empresa.com" y
-     quedaba apretado incluso con margen calculado para el placeholder. */
-  .eph-landing2 .field-180 { flex: 1 1 calc(53% - 4px); }
-  .eph-landing2 .field-150 { flex: 1 1 calc(47% - 4px); }
+  /* Correo/WhatsApp van lado a lado en escritorio pero a ancho completo en
+     mobile: un correo real (no un placeholder) suele ser más largo que
+     "nombre@empresa.com" y queda apretado en una columna angosta. */
   .eph-landing2 .field-correo, .eph-landing2 .field-celular { flex: 1 1 100%; }
-  .eph-landing2 .chips { gap: 6px; }
-  .eph-landing2 .chip { padding: 0 14px; }
 }
 
 .eph-landing2 .back-to-top {

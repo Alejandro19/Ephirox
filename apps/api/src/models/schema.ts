@@ -1009,13 +1009,14 @@ export type WellnessIndexHistoryRow = typeof wellnessIndexHistory.$inferSelect;
 export const enterpriseLeads = pgTable('enterprise_leads', {
   id: uuid('id').primaryKey().defaultRandom(),
   nombre: text('nombre').notNull(),
-  empresa: text('empresa').notNull(),
-  rol: text('rol').notNull(),
-  // Nullable a nivel de columna a propósito (leads de antes de 2026-09-07 no
-  // tienen estos datos) aunque el zod schema los exija para envíos nuevos —
-  // mismo criterio que el resto de esta tabla.
+  // empresa/rol eran NOT NULL cuando el formulario público pedía "preparar
+  // una propuesta" (2026-09-07→13) — al pasar a "solicitar una demo" esa
+  // calificación se hace en vivo en la llamada, así que el formulario ya no
+  // las pide y la columna se relajó a nullable (2026-09-15).
   correo: text('correo'),
   celular: text('celular'),
+  empresa: text('empresa'),
+  rol: text('rol'),
   tamano: text('tamano'),
   quien: text('quien'),
   // Pipeline del submódulo admin "Leads por contactar".

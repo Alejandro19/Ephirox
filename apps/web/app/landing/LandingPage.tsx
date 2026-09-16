@@ -310,7 +310,6 @@ export function LandingPage() {
             <div className="llevarlo-copy">
               <span className="llevarlo-rule" aria-hidden="true" />
               <h2>Llevar Ephirox a mi <em>empresa</em>.</h2>
-              <p>Te ayudamos a preparar la propuesta que se aprueba.</p>
             </div>
             <div className="llevarlo-form">
               <LeadForm />

@@ -6,13 +6,15 @@ export const EMPRESA_TAMANOS = ['1 – 10', '11 – 30', '31 – 80', '80 +'] as
 
 export const EnterpriseLeadInputSchema = z.object({
   nombre: z.string().min(1).max(200),
-  empresa: z.string().min(1).max(200),
-  rol: z.string().min(1).max(200),
   correo: z.string().email().max(320),
   celular: z.string().min(1).max(40),
-  // Los chips de tamaño de equipo no son obligatorios en el formulario
-  // original (solo nombre/empresa/rol/correo/celular llevan `required`) —
-  // se guarda si el visitante eligió uno, sin bloquear el envío si no.
+  // El formulario público pasó de "preparar una propuesta" (pedía
+  // empresa/rol/tamaño de equipo por adelantado) a "solicitar una demo"
+  // (esa calificación se hace en vivo, en la llamada) — empresa/rol/tamano/
+  // quien quedan opcionales para no romper leads viejos ni el panel admin,
+  // pero el formulario nuevo ya no los pide.
+  empresa: z.string().max(200).optional(),
+  rol: z.string().max(200).optional(),
   tamano: z.enum(EMPRESA_TAMANOS).optional(),
   quien: z.string().max(200).optional(),
 });

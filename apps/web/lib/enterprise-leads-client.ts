@@ -2,10 +2,13 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3
 
 export type EnterpriseLeadInput = {
   nombre: string;
-  empresa: string;
-  rol: string;
   correo: string;
   celular: string;
+  // El formulario de la landing ya no pide empresa/rol/tamaño de equipo
+  // (pasó de "preparar propuesta" a "solicitar demo") — se dejan opcionales
+  // para no romper el tipo compartido con el resto del backend.
+  empresa?: string;
+  rol?: string;
   tamano?: string;
   quien?: string;
 };

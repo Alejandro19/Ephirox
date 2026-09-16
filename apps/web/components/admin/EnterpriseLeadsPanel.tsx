@@ -132,9 +132,9 @@ export function EnterpriseLeadsPanel() {
             <tbody>
               {visible.map((lead) => (
                 <tr key={lead.id} style={{ borderBottom: '1px solid var(--eph-line)' }}>
-                  <td style={tdStyle}>{lead.empresa}</td>
+                  <td style={tdStyle}>{lead.empresa || '—'}</td>
                   <td style={tdStyle}>{lead.nombre}</td>
-                  <td style={tdStyle}>{lead.rol}</td>
+                  <td style={tdStyle}>{lead.rol || '—'}</td>
                   <td style={tdStyle}>{lead.correo || '—'}</td>
                   <td style={tdStyle}>{lead.celular || '—'}</td>
                   <td style={tdStyle}>{lead.tamano || '—'}</td>

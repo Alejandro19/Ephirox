@@ -191,6 +191,4 @@ export const DIF = [
   'Se contrata por cohorte dentro de una empresa. No hay registro individual.',
 ] as const;
 
-export const EQUIPO_TAMANOS = ['1 – 10', '11 – 30', '31 – 80', '80 +'] as const;
-
 export const APP_LOGIN_URL = 'https://app.ephirox.com/login';
