@@ -70,7 +70,10 @@
 .eph-landing2 .cta-pill { position: relative; font-size: 14px; letter-spacing: 0.02em; color: var(--cream); border: 1px solid rgba(201,166,107,0.45); border-radius: 999px; padding: 10px 20px; cursor: pointer; background: transparent; font-family: inherit; white-space: nowrap; }
 .eph-landing2 .header-actions { gap: 18px; }
 .eph-landing2 .header-login-link { white-space: nowrap; }
-.eph-landing2 .header-login-short { display: none; align-items: center; }
+/* El ícono reemplaza el texto "¿Ya eres miembro? Iniciar sesión →" en
+   TODOS los anchos, no solo mobile — mismo criterio en escritorio. */
+.eph-landing2 .header-login-full { display: none; }
+.eph-landing2 .header-login-short { display: inline-flex; align-items: center; }
 .eph-landing2 .cta-pill-short { display: none; }
 
 /* Dos intentos previos, cada uno corto en el sentido contrario:
@@ -95,6 +98,13 @@
 .eph-landing2 .hero .topgrad { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(11,10,8,0.62) 0%, rgba(11,10,8,0) 28%); }
 .eph-landing2 .hero .botgrad { position: absolute; inset: 0; background: linear-gradient(0deg, rgba(11,10,8,0.55) 0%, rgba(11,10,8,0) 26%); }
 .eph-landing2 .hero-content { position: relative; max-width: 1180px; margin: 0 auto; padding: clamp(120px, 16vw, 172px) clamp(20px, 5vw, 76px) clamp(72px, 10vh, 110px); display: grid; gap: clamp(30px, 3.6vw, 46px); justify-items: start; }
+/* .hero-content es grid con un gap grande y parejo entre TODOS sus hijos
+   (h1/lead/cta-row, a propósito, por diseño) — el kicker nuevo es un hijo
+   más de ese grid, así que hereda ese mismo gap grande respecto al h1 si
+   no se corrige. margin-bottom negativo cancela la mayor parte del gap y
+   deja solo el espacio chico que un kicker necesita, sin tocar el
+   espaciado entre h1/lead/cta-row que ya estaba bien. */
+.eph-landing2 .hero-kicker { display: block; font-family: 'Jost', sans-serif; font-size: 12px; font-weight: 500; letter-spacing: 0.16em; color: #caa057; margin-bottom: calc(8px - clamp(30px, 3.6vw, 46px)); }
 .eph-landing2 .hero-content h1 { margin: 0; font-weight: 200; font-size: clamp(38px, 4.6vw, 66px); line-height: 1.15; letter-spacing: -0.018em; max-width: 14ch; text-wrap: balance; }
 .eph-landing2 .hero-content h1 em { font-size: 1.12em; line-height: 1; color: var(--gold); }
 .eph-landing2 .hero-content .lead { margin: 0; font-size: clamp(17px, 1.9vw, 20px); line-height: 1.6; color: var(--cream-soft); max-width: 44ch; text-wrap: pretty; }
@@ -710,8 +720,6 @@
    navegadores móviles, pensado para mouse) sigue siendo el otro punto real
    de quiebre en celular — confirmado midiendo el layout, no solo por ojo. */
 @media (max-width: 680px) {
-  .eph-landing2 .header-login-full { display: none; }
-  .eph-landing2 .header-login-short { display: inline-flex; }
   .eph-landing2 .cta-pill { font-size: 13px; padding: 9px 16px; }
   /* "Entrar" pasa a solo ícono acá, así que sobra ancho para separarlo más
      del botón de al lado (antes gap:18 los dejaba muy pegados en mobile). */

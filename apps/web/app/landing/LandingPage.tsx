@@ -148,6 +148,9 @@ export function LandingPage() {
           </div>
 
           <div className="hero-content">
+            <span className="hero-kicker eph-a" style={{ animationDelay: '260ms' }}>
+              PLATAFORMA DE BIENESTAR ÉLITE PARA FOUNDERS Y C-LEVELS
+            </span>
             <h1 className="eph-a" style={{ animationDelay: '320ms' }}>
               Tu empresa llega hasta donde tu <em className="serif">cuerpo</em> te lo permite.
             </h1>
