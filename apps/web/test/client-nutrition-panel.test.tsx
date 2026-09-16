@@ -72,6 +72,9 @@ describe('ClientNutritionPanel', () => {
     ]);
     render(<ClientNutritionPanel clientId="client-1" />);
     expect(await screen.findByText('Tips and tricks')).toBeInTheDocument();
+    // Colapsada por defecto — hay que abrirla para ver el contenido.
+    expect(screen.queryByText('Prepara tus comidas con anticipación.')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Tips and tricks' }));
     expect(screen.getByText('Prepara tus comidas con anticipación.')).toBeInTheDocument();
   });
 
@@ -86,6 +89,9 @@ describe('ClientNutritionPanel', () => {
     ]);
     render(<ClientNutritionPanel clientId="client-1" />);
     expect(await screen.findByText('Recetas saludables')).toBeInTheDocument();
+    // Colapsada por defecto — hay que abrirla para ver el contenido.
+    expect(screen.queryByText('Bowl de proteína')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Recetas saludables' }));
     expect(screen.getByText('Bowl de proteína')).toBeInTheDocument();
     const verLink = screen.getByRole('link', { name: 'Ver' });
     expect(verLink).toHaveAttribute('href', 'https://files.example.com/bowl.pdf');
@@ -124,7 +130,11 @@ describe('ClientNutritionPanel', () => {
       { id: 's1', name: 'Creatina', brand: null, dose: '5g', timing: 'Mañana', benefit: null, category: null, active: true },
     ]);
     render(<ClientNutritionPanel clientId="client-1" />);
-    expect(await screen.findByText('Creatina')).toBeInTheDocument();
+    // Colapsada por defecto — hay que abrirla para ver el contenido.
+    await screen.findByText('Esquema de suplementación');
+    expect(screen.queryByText('Creatina')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Esquema de suplementación' }));
+    expect(screen.getByText('Creatina')).toBeInTheDocument();
     expect(screen.getByText('5g · Mañana')).toBeInTheDocument();
     expect(screen.getByText('Mañana', { selector: 'span' })).toBeInTheDocument();
   });

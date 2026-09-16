@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type CSSProperties } from 'react';
+import { useState, type CSSProperties, type ReactNode } from 'react';
 import useSWR from 'swr';
 import { getNutrition, type NutritionPlan, type MenuMeal } from '../../lib/nutrition-client';
 import { listSupplements, type Supplement } from '../../lib/supplements-client';
@@ -295,6 +295,30 @@ async function fetchNutritionBundle(clientId: string) {
   return { plan, supplements, tips, recipes };
 }
 
+// Secciones secundarias (Recomendaciones/Suplementación/Recetas/Tips)
+// colapsadas por defecto — pedido explícito para que la página no llegue
+// tan larga de entrada, con la flecha (mismo signo "⌄" que ya usa
+// "Ver más"/"Ver menos" del menú) como única señal de que hay que hacer
+// clic. La sección de "Vista previa de tu plan" queda afuera a propósito,
+// no fue parte del pedido.
+function CollapsibleSection({ title, children }: { title: string; children: ReactNode }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <section className="rounded-[0] border border-[var(--eph-line)] bg-[var(--eph-surface)] p-6">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="flex w-full items-center justify-between gap-3 text-left"
+      >
+        <h2 className="font-display text-lg font-normal text-[var(--eph-text)]">{title}</h2>
+        <span className={`inline-block flex-shrink-0 text-[var(--eph-muted)] transition-transform ${open ? 'rotate-180' : ''}`} aria-hidden>⌄</span>
+      </button>
+      {open && <div className="mt-4">{children}</div>}
+    </section>
+  );
+}
+
 // Cabecera de página del módulo (spec Prompt 02 §3): centrada, ancho máximo
 // 1320px, ritmo de gap:26px entre bloques en vez de márgenes ad-hoc por sección.
 const PAGE_MAIN_STYLE: CSSProperties = {
@@ -396,29 +420,25 @@ export function ClientNutritionPanel({ clientId, clientType }: { clientId: strin
       </section>
 
       {(recommendations.length > 0 || plan.closingMessage) && (
-        <section className="rounded-[0] border border-[var(--eph-line)] bg-[var(--eph-surface)] p-6">
+        <CollapsibleSection title="Recomendaciones">
           {recommendations.length > 0 && (
-            <>
-              <h2 className="mb-3 font-display text-lg font-normal text-[var(--eph-text)]">Recomendaciones</h2>
-              <ul className="space-y-1.5 text-sm leading-relaxed text-[var(--eph-text)]">
-                {recommendations.map((r, i) => (
-                  <li key={i} className="relative pl-3.5 before:absolute before:left-0 before:top-[8px] before:h-[5px] before:w-[5px] before:rounded-full before:bg-[var(--eph-accent)] before:content-['']">
-                    {r}
-                  </li>
-                ))}
-              </ul>
-            </>
+            <ul className="space-y-1.5 text-sm leading-relaxed text-[var(--eph-text)]">
+              {recommendations.map((r, i) => (
+                <li key={i} className="relative pl-3.5 before:absolute before:left-0 before:top-[8px] before:h-[5px] before:w-[5px] before:rounded-full before:bg-[var(--eph-accent)] before:content-['']">
+                  {r}
+                </li>
+              ))}
+            </ul>
           )}
           {plan.closingMessage && (
             <p className={`font-display text-base italic leading-relaxed text-[var(--eph-text)] ${recommendations.length ? 'mt-4 border-t border-[var(--eph-line)] pt-4' : ''}`}>
               &quot;{plan.closingMessage}&quot;
             </p>
           )}
-        </section>
+        </CollapsibleSection>
       )}
 
-      <section className="rounded-[0] border border-[var(--eph-line)] bg-[var(--eph-surface)] p-6">
-        <h2 className="mb-4 font-display text-lg font-normal text-[var(--eph-text)]">Esquema de suplementación</h2>
+      <CollapsibleSection title="Esquema de suplementación">
         {supplements.length ? (
           <div>
             {supplements.map((s, i) => {
@@ -447,11 +467,10 @@ export function ClientNutritionPanel({ clientId, clientType }: { clientId: strin
         ) : (
           <p className="py-6 text-center text-[var(--eph-muted)]">Aún no tienes suplementos asignados.</p>
         )}
-      </section>
+      </CollapsibleSection>
 
       {recipes.length > 0 && (
-        <section className="rounded-[0] border border-[var(--eph-line)] bg-[var(--eph-surface)] p-6">
-          <h2 className="mb-4 font-display text-lg font-normal text-[var(--eph-text)]">Recetas saludables</h2>
+        <CollapsibleSection title="Recetas saludables">
           <div>
             {recipes.map((recipe: Recipe, i: number) => (
               <div key={recipe.id} className={`flex items-center gap-3 py-3 ${i === 0 ? '' : 'border-t'}`} style={{ borderColor: 'var(--eph-line)', borderTopWidth: i === 0 ? 0 : '0.5px' }}>
@@ -481,12 +500,11 @@ export function ClientNutritionPanel({ clientId, clientType }: { clientId: strin
               </div>
             ))}
           </div>
-        </section>
+        </CollapsibleSection>
       )}
 
       {tips.length > 0 && (
-        <section className="rounded-[0] border border-[var(--eph-line)] bg-[var(--eph-surface)] p-6">
-          <h2 className="mb-4 font-display text-lg font-normal text-[var(--eph-text)]">Tips and tricks</h2>
+        <CollapsibleSection title="Tips and tricks">
           <ul className="space-y-2 text-sm leading-relaxed text-[var(--eph-text)]">
             {tips.map((tip: NutritionTip) => (
               <li key={tip.id} className="relative pl-3.5 before:absolute before:left-0 before:top-[8px] before:h-[5px] before:w-[5px] before:rounded-full before:bg-[var(--eph-accent)] before:content-['']">
@@ -494,7 +512,7 @@ export function ClientNutritionPanel({ clientId, clientType }: { clientId: strin
               </li>
             ))}
           </ul>
-        </section>
+        </CollapsibleSection>
       )}
       <ProtocolDisclaimerFooter />
     </main>
