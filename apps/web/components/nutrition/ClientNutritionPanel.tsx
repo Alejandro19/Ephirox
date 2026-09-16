@@ -80,14 +80,17 @@ function MealBlock({ meal, isFirst }: { meal: MenuMeal; isFirst: boolean }) {
 // de consumo del día — un riel o estado "en rango" fingirían un progreso
 // que no existe. La franja dorada queda fija (acento visual, no medición).
 // Sin macro de Agua: no hay ningún campo de hidratación en NutritionPlan.
-// Padding/gap más chicos en mobile (donde las 3 cards se apilan a ancho
-// completo, gracias al minmax(min(100%,230px),1fr) del grid de abajo) para
-// que no ocupen tanto alto — a partir de sm (640px) vuelve al tamaño
-// original. El fontSize de MetricValue (size="kpi") NO se toca acá: es
-// compartido con Sleep/Ejercicio a propósito, 44px fijo en los 3 módulos.
+// Padding/gap más chicos en mobile — las 3 cards van en 3 columnas iguales
+// SIEMPRE (ver el grid de abajo, ya no colapsan a 1 columna apilada), así
+// que en mobile cada una es una franja angosta y necesita menos aire que
+// en escritorio (padding lateral en particular). A partir de sm (640px)
+// vuelve al tamaño original. El fontSize de MetricValue (size="kpi") NO
+// se toca acá: es compartido con Sleep/Ejercicio a propósito, 44px fijo
+// en los 3 módulos — confirmado en la maqueta que sigue cabiendo bien
+// incluso en la columna angosta de mobile.
 function MacroCard({ label, value, unit }: { label: string; value: number | null | undefined; unit: string }) {
   return (
-    <div className="grid content-start gap-3 p-5 sm:gap-5 sm:p-7" style={{ background: 'var(--eph-surface)' }}>
+    <div className="grid content-start gap-2.5 py-4 px-2.5 sm:gap-5 sm:py-7 sm:px-7" style={{ background: 'var(--eph-surface)' }}>
       <span className="font-mono" style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--eph-steel)' }}>{label}</span>
       <MetricValue value={value ?? '—'} unit={value != null ? unit : undefined} size="kpi" />
       <div style={{ height: 2, background: 'var(--eph-line-2)' }}>
@@ -384,9 +387,14 @@ export function ClientNutritionPanel({ clientId, clientType }: { clientId: strin
     <main style={PAGE_MAIN_STYLE}>
       {header}
 
+      {/* 3 columnas iguales siempre (también en mobile) en vez de colapsar a
+          1 columna apilada bajo ~690px — se confirmó con una maqueta
+          standalone que el número de 44px (MetricValue size="kpi") y el
+          label más largo ("CARBOHIDRATO") caben sin recortarse ni envolver
+          mal incluso a 390px, con el padding reducido de MacroCard. */}
       <div
-        className="grid"
-        style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 230px), 1fr))', gap: 1, background: 'var(--eph-line-2)', border: '1px solid var(--eph-line-2)' }}
+        className="grid grid-cols-3"
+        style={{ gap: 1, background: 'var(--eph-line-2)', border: '1px solid var(--eph-line-2)' }}
       >
         <MacroCard label="Proteína" value={plan.proteinG} unit="G" />
         <MacroCard label="Carbohidrato" value={plan.carbsG} unit="G" />
