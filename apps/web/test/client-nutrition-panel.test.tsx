@@ -49,9 +49,9 @@ describe('ClientNutritionPanel', () => {
     });
     vi.mocked(supplementsClient.listSupplements).mockResolvedValue([]);
     render(<ClientNutritionPanel clientId="client-1" />);
-    expect(await screen.findByText('Proteína')).toBeInTheDocument();
-    expect(screen.getByText('Carbohidrato')).toBeInTheDocument();
-    expect(screen.getByText('Grasa')).toBeInTheDocument();
+    expect(await screen.findByText('Proteínas')).toBeInTheDocument();
+    expect(screen.getByText('Carbohidratos')).toBeInTheDocument();
+    expect(screen.getByText('Grasas')).toBeInTheDocument();
     expect(screen.getByText('160')).toBeInTheDocument();
     expect(screen.getByText('220')).toBeInTheDocument();
     expect(screen.getByText('60')).toBeInTheDocument();

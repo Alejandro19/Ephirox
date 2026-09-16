@@ -396,9 +396,9 @@ export function ClientNutritionPanel({ clientId, clientType }: { clientId: strin
         className="grid grid-cols-3"
         style={{ gap: 1, background: 'var(--eph-line-2)', border: '1px solid var(--eph-line-2)' }}
       >
-        <MacroCard label="Proteína" value={plan.proteinG} unit="G" />
-        <MacroCard label="Carbohidrato" value={plan.carbsG} unit="G" />
-        <MacroCard label="Grasa" value={plan.fatG} unit="G" />
+        <MacroCard label="Proteínas" value={plan.proteinG} unit="G" />
+        <MacroCard label="Carbohidratos" value={plan.carbsG} unit="G" />
+        <MacroCard label="Grasas" value={plan.fatG} unit="G" />
       </div>
 
       <section className="rounded-[0] border border-[var(--eph-line)] bg-[var(--eph-surface)] p-6">
