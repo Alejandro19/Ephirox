@@ -80,9 +80,14 @@ function MealBlock({ meal, isFirst }: { meal: MenuMeal; isFirst: boolean }) {
 // de consumo del día — un riel o estado "en rango" fingirían un progreso
 // que no existe. La franja dorada queda fija (acento visual, no medición).
 // Sin macro de Agua: no hay ningún campo de hidratación en NutritionPlan.
+// Padding/gap más chicos en mobile (donde las 3 cards se apilan a ancho
+// completo, gracias al minmax(min(100%,230px),1fr) del grid de abajo) para
+// que no ocupen tanto alto — a partir de sm (640px) vuelve al tamaño
+// original. El fontSize de MetricValue (size="kpi") NO se toca acá: es
+// compartido con Sleep/Ejercicio a propósito, 44px fijo en los 3 módulos.
 function MacroCard({ label, value, unit }: { label: string; value: number | null | undefined; unit: string }) {
   return (
-    <div style={{ background: 'var(--eph-surface)', padding: '28px 26px', display: 'grid', gap: 20, alignContent: 'start' }}>
+    <div className="grid content-start gap-3 p-5 sm:gap-5 sm:p-7" style={{ background: 'var(--eph-surface)' }}>
       <span className="font-mono" style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--eph-steel)' }}>{label}</span>
       <MetricValue value={value ?? '—'} unit={value != null ? unit : undefined} size="kpi" />
       <div style={{ height: 2, background: 'var(--eph-line-2)' }}>
