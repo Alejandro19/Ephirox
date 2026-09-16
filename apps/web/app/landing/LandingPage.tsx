@@ -59,9 +59,8 @@ function LoginIcon({ size }: { size: number }) {
       strokeLinejoin="round"
       aria-hidden="true"
     >
-      <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
-      <polyline points="10 17 15 12 10 7" />
-      <line x1="15" y1="12" x2="3" y2="12" />
+      <circle cx="12" cy="8" r="3.5" />
+      <path d="M4.5 20c0-4.14 3.36-7 7.5-7s7.5 2.86 7.5 7" />
     </svg>
   );
 }
