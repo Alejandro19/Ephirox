@@ -353,6 +353,10 @@ export function LandingPage() {
               <a className="link-hover" href="mailto:contacto@ephirox.com">contacto@ephirox.com</a>
             </div>
             <div className="footer-contact-item">
+              <span className="label">LinkedIn</span>
+              <a className="link-hover" href="https://www.linkedin.com/company/146593282" target="_blank" rel="noopener">Ephirox</a>
+            </div>
+            <div className="footer-contact-item">
               <span className="label">Instagram</span>
               <a className="link-hover" href="https://instagram.com/ephirox_" target="_blank" rel="noopener">@ephirox_</a>
             </div>
