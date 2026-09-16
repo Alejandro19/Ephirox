@@ -61,7 +61,6 @@
 .eph-landing2 .link-hover { transition: color 200ms ease-out, border-color 200ms ease-out, background 200ms ease-out; }
 .eph-landing2 .link-hover:hover { color: var(--gold-light) !important; border-color: var(--gold) !important; }
 .eph-landing2 .pill-hover:hover { background: rgba(201,166,107,0.14) !important; }
-.eph-landing2 .underline-link { border-bottom: 1px solid rgba(201,166,107,0.5); padding-bottom: 5px; }
 
 .eph-landing2 header.site-header { position: fixed; top: 0; left: 0; right: 0; z-index: 60; display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: clamp(16px, 1.9vw, 24px) clamp(20px, 5vw, 76px); }
 .eph-landing2 .bar-bg { position: absolute; inset: 0; pointer-events: none; opacity: 0; background: var(--bg-dark); border-bottom: 1px solid rgba(245,241,232,0.07); transition: opacity 240ms ease-out; }
@@ -97,19 +96,21 @@
 .eph-landing2 .hero .grad { position: absolute; inset: 0; background: linear-gradient(100deg, rgba(11,10,8,0.88) 0%, rgba(11,10,8,0.52) 38%, rgba(11,10,8,0.12) 64%, rgba(11,10,8,0.02) 100%); }
 .eph-landing2 .hero .topgrad { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(11,10,8,0.62) 0%, rgba(11,10,8,0) 28%); }
 .eph-landing2 .hero .botgrad { position: absolute; inset: 0; background: linear-gradient(0deg, rgba(11,10,8,0.55) 0%, rgba(11,10,8,0) 26%); }
-.eph-landing2 .hero-content { position: relative; max-width: 1180px; margin: 0 auto; padding: clamp(120px, 16vw, 172px) clamp(20px, 5vw, 76px) clamp(72px, 10vh, 110px); display: grid; gap: clamp(30px, 3.6vw, 46px); justify-items: start; }
+/* padding-bottom subido (72–110 → 90–130): el link debajo del subtítulo
+   se eliminó (el CTA del topbar, sticky, ya cubre esa acción) y el lead
+   quedó como último elemento del bloque de texto — necesita más aire
+   antes del resto de la fotografía. */
+.eph-landing2 .hero-content { position: relative; max-width: 1180px; margin: 0 auto; padding: clamp(120px, 16vw, 172px) clamp(20px, 5vw, 76px) clamp(90px, 12vh, 130px); display: grid; gap: clamp(30px, 3.6vw, 46px); justify-items: start; }
 /* .hero-content es grid con un gap grande y parejo entre TODOS sus hijos
-   (h1/lead/cta-row, a propósito, por diseño) — el kicker nuevo es un hijo
-   más de ese grid, así que hereda ese mismo gap grande respecto al h1 si
-   no se corrige. margin-bottom negativo cancela la mayor parte del gap y
-   deja solo el espacio chico que un kicker necesita, sin tocar el
-   espaciado entre h1/lead/cta-row que ya estaba bien. */
-.eph-landing2 .hero-kicker { display: block; font-family: 'Jost', sans-serif; font-size: 12px; font-weight: 500; letter-spacing: 0.16em; color: #caa057; margin-bottom: calc(8px - clamp(30px, 3.6vw, 46px)); }
+   (h1/lead, a propósito, por diseño) — el kicker es un hijo más de ese
+   grid, así que hereda ese mismo gap grande respecto al h1 si no se
+   corrige. margin-bottom negativo cancela la mayor parte del gap y deja
+   solo 4px hacia el h1 (kicker+título deben leerse como una sola
+   unidad), sin tocar el espaciado h1→lead que ya estaba bien. */
+.eph-landing2 .hero-kicker { display: block; font-family: 'Jost', sans-serif; font-size: 12px; font-weight: 500; letter-spacing: 0.16em; color: #caa057; margin-bottom: calc(4px - clamp(30px, 3.6vw, 46px)); }
 .eph-landing2 .hero-content h1 { margin: 0; font-weight: 200; font-size: clamp(38px, 4.6vw, 66px); line-height: 1.15; letter-spacing: -0.018em; max-width: 14ch; text-wrap: balance; }
 .eph-landing2 .hero-content h1 em { font-size: 1.12em; line-height: 1; color: var(--gold); }
 .eph-landing2 .hero-content .lead { margin: 0; font-size: clamp(17px, 1.9vw, 20px); line-height: 1.6; color: var(--cream-soft); max-width: 44ch; text-wrap: pretty; }
-.eph-landing2 .hero-cta-row { display: grid; gap: 14px; justify-items: start; margin-top: 2px; }
-.eph-landing2 .hero-cta-row a { font-size: 16px; letter-spacing: 0.02em; color: var(--cream); }
 
 /* Tramo "ya lo intentaste" → "coste para la empresa" (reconocimiento-section
    + section.contexto): una sola declaración de tamaño titular en las DOS
@@ -727,9 +728,7 @@
 }
 
 /* En pantallas muy angostas la barra fija (~72px acá) queda más justa que a
-   680px — se despeja con un padding fijo en vez del clamp de arriba, y se
-   quita el CTA del hero (la barra fija ya lo muestra siempre) para que el
-   título no compita por espacio con texto redundante. */
+   680px — se despeja con un padding fijo en vez del clamp de arriba. */
 @media (max-width: 640px) {
   .eph-landing2 .hero .bg img { object-position: 82% 8%; }
   /* El texto ocupa casi todo el ancho angosto acá, a diferencia de desktop
@@ -738,7 +737,14 @@
      parte más clara/transparente de la foto y el texto (cream-soft, 60% de
      opacidad) se ve traslúcido e ilegible. */
   .eph-landing2 .hero .grad { background: linear-gradient(100deg, rgba(11,10,8,0.94) 0%, rgba(11,10,8,0.8) 55%, rgba(11,10,8,0.55) 85%, rgba(11,10,8,0.4) 100%); }
-  .eph-landing2 .hero-cta-row { display: none; }
+  /* Kicker más chico acá (12px es ancho de sobra en un teléfono angosto y
+     fuerza un salto de línea largo) y con su propio margen — reusa el
+     mismo truco de cancelar el gap del grid, pero apuntando a ~18px en
+     vez de los 4px de escritorio. H1/lead suman margen ENCIMA del gap del
+     grid (no lo reemplazan): "agregar" espacio, no solo redistribuirlo. */
+  .eph-landing2 .hero-kicker { font-size: 11px; margin-bottom: calc(18px - clamp(30px, 3.6vw, 46px)); }
+  .eph-landing2 .hero-content h1 { line-height: 1.2; margin-bottom: 22px; }
+  .eph-landing2 .hero-content .lead { line-height: 1.5; margin-bottom: 30px; }
   /* El bottom/right en % de viewport de la versión desktop asume harta
      altura disponible — en un iPhone real con la barra de Safari expandida
      (dvh chico) la tarjeta terminaba subiendo lo suficiente para taparse

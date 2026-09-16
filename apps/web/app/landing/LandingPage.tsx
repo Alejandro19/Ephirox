@@ -157,9 +157,6 @@ export function LandingPage() {
             <p className="lead eph-a" style={{ animationDelay: '520ms' }}>
               Ephirox mide lo que sucede dentro de ti — antes de que te pase factura.
             </p>
-            <div className="hero-cta-row eph-a" style={{ animationDelay: '680ms' }}>
-              <a className="link-hover underline-link" href="#llevarlo" onClick={handleAnchorClick}>Llevar Ephirox a mi empresa</a>
-            </div>
           </div>
 
           <HeroStatCard className="eph-a" style={{ animationDelay: '760ms' }} />
