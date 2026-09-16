@@ -114,7 +114,7 @@ export function LandingPage() {
         <div className="header-actions" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
           <a href={APP_LOGIN_URL} aria-label="Iniciar sesión" className="link-hover eph-a header-login-link" style={{ animationDelay: '160ms', fontSize: 13, color: 'rgba(245,241,232,0.6)' }}>
             <span className="header-login-full">¿Ya eres miembro? Iniciar sesión →</span>
-            <span className="header-login-short"><LoginIcon size={18} /></span>
+            <span className="header-login-short"><LoginIcon size={20} /></span>
           </a>
           <a className="cta-pill link-hover pill-hover eph-a" href="#llevarlo" onClick={handleAnchorClick} style={{ animationDelay: '200ms' }}>
             <span className="cta-pill-full">Llevar Ephirox a mi empresa</span>
