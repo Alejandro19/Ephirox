@@ -107,7 +107,7 @@
    corrige. margin-bottom negativo cancela la mayor parte del gap y deja
    solo 4px hacia el h1 (kicker+título deben leerse como una sola
    unidad), sin tocar el espaciado h1→lead que ya estaba bien. */
-.eph-landing2 .hero-kicker { display: block; font-family: 'Jost', sans-serif; font-size: 12px; font-weight: 500; letter-spacing: 0.16em; color: #caa057; margin-bottom: calc(4px - clamp(30px, 3.6vw, 46px)); }
+.eph-landing2 .hero-kicker { display: block; font-family: 'Jost', sans-serif; font-size: 12px; font-weight: 400; letter-spacing: 0.16em; color: rgba(202,160,87,0.62); margin-bottom: calc(4px - clamp(30px, 3.6vw, 46px)); }
 .eph-landing2 .hero-content h1 { margin: 0; font-weight: 200; font-size: clamp(38px, 4.6vw, 66px); line-height: 1.15; letter-spacing: -0.018em; max-width: 14ch; text-wrap: balance; }
 .eph-landing2 .hero-content h1 em { font-size: 1.12em; line-height: 1; color: var(--gold); }
 .eph-landing2 .hero-content .lead { margin: 0; font-size: clamp(17px, 1.9vw, 20px); line-height: 1.6; color: var(--cream-soft); max-width: 44ch; text-wrap: pretty; }
