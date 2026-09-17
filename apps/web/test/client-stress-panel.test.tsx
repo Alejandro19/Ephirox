@@ -39,7 +39,7 @@ function mockFetches({
 }
 
 describe('ClientStressPanel', () => {
-  it('shows the assigned techniques and the tip of the day', async () => {
+  it('shows the assigned protocols and the tip of the day', async () => {
     mockFetches({
       techniques: [
         { id: 't1', title: 'Respiración 4-7-8', type: 'Respiración', duration: '5 min', durationMinutes: 5, durationSeconds: null, description: null, videoUrl: null, videoName: null, youtubeUrl: null, audioUrl: null, audioName: null, emotion: null, precautionNote: null, isRitual: false },
@@ -48,20 +48,24 @@ describe('ClientStressPanel', () => {
     });
 
     render(<ClientStressPanel clientId="client-1" />);
-    // Con una sola técnica asignada, el título aparece dos veces a propósito:
-    // en la card "Recomendada para ti ahora" (siempre la primera técnica,
-    // ver ClientStressPanel.tsx) y en la lista "Tus técnicas" de abajo.
+    // Con un solo protocolo asignado, el título aparece dos veces a propósito:
+    // en la card "Recomendado para ti ahora" (siempre el primero, ver
+    // ClientStressPanel.tsx) y en la librería "Tus protocolos" de abajo.
     await waitFor(() => expect(screen.getAllByText('Respiración 4-7-8').length).toBeGreaterThan(0));
     expect(screen.getByText(/Duerme 8 horas\./)).toBeInTheDocument();
   });
 
-  it('shows a message when no techniques are assigned yet', async () => {
+  it('fills "Tus protocolos" with the 3 example protocols when none are assigned yet, and never shows it empty', async () => {
     mockFetches();
     render(<ClientStressPanel clientId="client-1" />);
-    await waitFor(() => expect(screen.getByText('Aún no tienes técnicas asignadas.')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('Tus protocolos')).toBeInTheDocument());
+    expect(screen.getByText('Respiración 4-7-8')).toBeInTheDocument();
+    expect(screen.getByText('Reset del Sistema Nervioso')).toBeInTheDocument();
+    expect(screen.getByText('Escaneo corporal breve')).toBeInTheDocument();
+    expect(screen.getAllByText('Ejemplo').length).toBe(3);
   });
 
-  it('opens the technique player and marks it as completed today', async () => {
+  it('opens the protocol player and marks it as completed today', async () => {
     const user = userEvent.setup();
     mockFetches({
       techniques: [
@@ -72,12 +76,15 @@ describe('ClientStressPanel', () => {
     render(<ClientStressPanel clientId="client-1" />);
     await waitFor(() => expect(screen.getAllByText('Meditación guiada').length).toBeGreaterThan(0));
 
-    await user.click(screen.getByRole('button', { name: 'Reproducir' }));
+    // Con un solo protocolo asignado ya está destacado en la card "Recomendado
+    // para ti ahora" — se abre desde ahí ("Empezar protocolo"), la librería de
+    // abajo tiene el mismo protocolo como card clickeable.
+    await user.click(screen.getByRole('button', { name: 'Empezar protocolo' }));
     await user.click(screen.getByRole('button', { name: 'Marcar completado' }));
     await waitFor(() => expect(stressClient.markCompletion).toHaveBeenCalledWith('client-1'));
   });
 
-  it('recommends and plays the first assigned technique (no live emotion signal anymore)', async () => {
+  it('recommends and plays the first assigned protocol (no live emotion signal anymore)', async () => {
     const user = userEvent.setup();
     mockFetches({
       techniques: [
@@ -87,11 +94,45 @@ describe('ClientStressPanel', () => {
     });
 
     render(<ClientStressPanel clientId="client-1" />);
-    await waitFor(() => screen.getByText('Recomendada para ti ahora'));
+    await waitFor(() => screen.getByText('Recomendado para ti ahora'));
     expect(screen.getByRole('heading', { level: 3, name: 'Respiración de caja' })).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'Empezar técnica' }));
+    await user.click(screen.getByRole('button', { name: 'Empezar protocolo' }));
     expect(await screen.findByRole('heading', { name: 'Respiración de caja' })).toBeInTheDocument();
+  });
+
+  it('shows "Capacidad de regulación" inverted from Carga Cognitiva (10 - carga, escalado a 0-100)', async () => {
+    mockFetches({
+      cognitiveLoad: {
+        today: 3,
+        trend: [
+          { fecha: '2026-08-01', score: 4 },
+          { fecha: '2026-08-02', score: 4 },
+          { fecha: '2026-08-03', score: 4 },
+          { fecha: '2026-08-04', score: 3 },
+        ],
+        threshold: null,
+        consecutiveDaysOverThreshold: 0,
+        alert: false,
+        alertStreakThreshold: 3,
+        latest: { hrv: null, activacionMatutina: null, recuperacionPct: null },
+      },
+    });
+
+    render(<ClientStressPanel clientId="client-1" />);
+    await waitFor(() => expect(screen.getByText('Capacidad de regulación')).toBeInTheDocument());
+    // Carga hoy = 3 -> capacidad = (10 - 3) * 10 = 70 -> "Moderada" (50-79).
+    expect(screen.getByText('70')).toBeInTheDocument();
+    expect(screen.getByText('Moderada')).toBeInTheDocument();
+    // Línea base = promedio de los 3 días previos (4,4,4 -> capacidad 60) -> delta = 70 - 60 = +10.
+    expect(screen.getByText(/10 pts vs\. tu línea base/)).toBeInTheDocument();
+  });
+
+  it('shows the "not enough data yet" message for Capacidad de regulación when there is no score for today', async () => {
+    mockFetches();
+    render(<ClientStressPanel clientId="client-1" />);
+    await waitFor(() => expect(screen.getByText('Capacidad de regulación')).toBeInTheDocument());
+    expect(screen.getByText(/wearable o check-in matutino/)).toBeInTheDocument();
   });
 
   it('shows the generic upgrade card when this client type has no access to Stress', async () => {

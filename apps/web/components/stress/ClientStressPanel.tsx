@@ -15,14 +15,16 @@ import {
 import { MorningCheckinSummary } from './MorningCheckinSummary';
 import { CognitiveLoadSection } from './CognitiveLoadSection';
 import { RoxRitualSection } from './RoxRitualSection';
+import { RegulationCapacityCard } from './RegulationCapacityCard';
+import { RecommendedProtocolCard } from './RecommendedProtocolCard';
+import { StressPlanSection } from './StressPlanSection';
+import { StressProtocolLibrary } from './StressProtocolLibrary';
 import { youtubeEmbedUrl } from '../../lib/training-timer-logic';
 import { calculateStressWeeklyStats } from '../../lib/stress-logic';
 import { NEUROWELLNESS_TECHNIQUE_TYPES } from '@latribu/shared-types';
 import { PermissionDeniedError } from '../../lib/api-client';
 import { getModuleAccessState } from '../../lib/module-access';
 import IdentityHeader from '../ui/IdentityHeader';
-import Badge from '../ui/Badge';
-import EmptyState from '../ui/EmptyState';
 import RingProgress from '../ui/RingProgress';
 import ProgressBar from '../ui/ProgressBar';
 import LockedBenefit from '../ui/LockedBenefit';
@@ -132,59 +134,6 @@ function StressPlayer({
   );
 }
 
-function TechniqueList({
-  techniques,
-  playingAudioId,
-  setPlayingAudioId,
-  setActiveId,
-}: {
-  techniques: StressTechnique[];
-  playingAudioId: string | null;
-  setPlayingAudioId: (updater: (prev: string | null) => string | null) => void;
-  setActiveId: (id: string) => void;
-}) {
-  return (
-    <div>
-      {techniques.map((t, i) => {
-        const hasVideo = !!(t.youtubeUrl || t.videoUrl);
-        const hasAudio = !!t.audioUrl;
-        const isPlayingAudio = playingAudioId === t.id;
-        return (
-          <div key={t.id} className={`py-3 ${i === 0 ? '' : 'border-t border-[var(--eph-line)]'}`}>
-            <div className="flex items-center gap-3">
-              <TechniqueIcon type={t.type} />
-              <div className="flex-1">
-                <div className="font-body text-sm font-medium" style={{ color: 'var(--eph-text)' }}>
-                  {t.title} {t.type && <Badge label={t.type} />}
-                </div>
-                <div className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.08em]" style={{ color: 'var(--eph-muted)' }}>{t.duration}</div>
-              </div>
-              {hasVideo && (
-                <Button type="button" variant="secondary" onClick={() => setActiveId(t.id)}>
-                  Reproducir
-                </Button>
-              )}
-              {!hasVideo && hasAudio && (
-                <Button type="button" variant="secondary" onClick={() => setPlayingAudioId((prev) => (prev === t.id ? null : t.id))}>
-                  {isPlayingAudio ? 'Ocultar' : 'Reproducir'}
-                </Button>
-              )}
-            </div>
-            {t.precautionNote && (
-              <div className="mt-2 border px-3 py-2 font-body text-xs" style={{ borderColor: 'var(--eph-danger)', background: 'color-mix(in srgb, var(--eph-danger) 14%, transparent)', color: 'var(--eph-danger)' }}>
-                <strong>Precaución:</strong> {t.precautionNote}
-              </div>
-            )}
-            {isPlayingAudio && hasAudio && (
-              <audio controls autoPlay src={t.audioUrl ?? undefined} className="mt-2.5 w-full" />
-            )}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
 async function fetchStressBundle(clientId: string) {
   const [techniques, completions, tip, morningCheckin, cognitiveLoad] = await Promise.all([
     listTechniques(clientId),
@@ -225,7 +174,7 @@ export function ClientStressPanel({
     void techniqueId;
   }
 
-  const header = <IdentityHeader title="Stress" subtitle="Es momento de bajar el ritmo." />;
+  const header = <IdentityHeader title="Stress" subtitle="Herramientas de Neuro-Wellness para regular tu sistema nervioso." />;
 
   if (isLoading) {
     return (
@@ -293,62 +242,28 @@ export function ClientStressPanel({
       />
       {clientType === 'mentoring' && <InsightsSection clientId={clientId} moduleKey="cortisol" />}
 
-      {recommended && (
-        <div
-          className="relative mt-8 mb-5 overflow-hidden rounded-[0] p-7 text-center"
-          style={{ background: 'var(--eph-surface)', color: 'var(--eph-text)' }}
-        >
-          <div
-            className="pointer-events-none absolute -right-10 -top-10 h-[180px] w-[180px] rounded-full"
-            style={{ background: 'radial-gradient(circle, rgba(217,183,126,.18) 0%, transparent 70%)' }}
-          />
-          <p className="relative z-10 mb-1 font-mono text-[10px] uppercase tracking-[0.14em]" style={{ color: 'var(--eph-accent)' }}>
-            Recomendada para ti ahora
-          </p>
-          <h3 className="relative z-10 mb-1 font-display text-lg" style={{ color: 'var(--eph-text)' }}>{recommended.title}</h3>
-          <p className="relative z-10 mb-3 font-body text-sm" style={{ color: 'var(--eph-muted)' }}>
-            {recommended.description || 'Tu técnica de regulación recomendada para hoy.'}
-          </p>
-          <span className="relative z-10 inline-block">
-            <Button type="button" variant="primary" onClick={() => setActiveId(recommended.id)}>
-              Empezar técnica
-            </Button>
-          </span>
-        </div>
-      )}
+      <RegulationCapacityCard overview={cognitiveLoad} />
+
+      {recommended && <RecommendedProtocolCard protocol={recommended} onStart={setActiveId} />}
 
       {clientType === 'mentoring' && (
-        <section className="border p-6 mb-5" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface)' }}>
-          <h2 className="mb-1 font-display text-lg" style={{ color: 'var(--eph-text)' }}>Regulación del Sistema Nervioso</h2>
-          <p className="mb-4 font-body text-xs" style={{ color: 'var(--eph-muted)' }}>
-            Entrenamiento proactivo de tu capacidad de regulación — no depende de cómo te sientas hoy.
-          </p>
-          {neurowellnessTechniques.length === 0 ? (
-            <EmptyState message="Tu mentor aún no te ha asignado prácticas de regulación." />
-          ) : (
-            <TechniqueList
-              techniques={neurowellnessTechniques}
-              playingAudioId={playingAudioId}
-              setPlayingAudioId={setPlayingAudioId}
-              setActiveId={setActiveId}
-            />
-          )}
-        </section>
+        <StressPlanSection
+          techniques={neurowellnessTechniques}
+          playingAudioId={playingAudioId}
+          setPlayingAudioId={setPlayingAudioId}
+          setActiveId={setActiveId}
+          TechniqueIcon={TechniqueIcon}
+          Button={Button}
+        />
       )}
 
-      <section className="border p-6 mb-5" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface)' }}>
-        <h2 className="mb-4 font-display text-lg" style={{ color: 'var(--eph-text)' }}>Tus técnicas</h2>
-        {generalTechniques.length === 0 ? (
-          <EmptyState message="Aún no tienes técnicas asignadas." />
-        ) : (
-          <TechniqueList
-            techniques={generalTechniques}
-            playingAudioId={playingAudioId}
-            setPlayingAudioId={setPlayingAudioId}
-            setActiveId={setActiveId}
-          />
-        )}
-      </section>
+      <StressProtocolLibrary techniques={generalTechniques} onSelect={setActiveId} />
+
+      {generalTechniques.length === 0 && (
+        <p className="mb-5 font-body text-xs" style={{ color: 'var(--eph-faint)' }}>
+          Los protocolos de ejemplo de arriba se activan cuando tu mentor te asigne los tuyos.
+        </p>
+      )}
 
       {techniques.length > 0 && (
         <section className="border p-6 mb-5" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface)' }}>
