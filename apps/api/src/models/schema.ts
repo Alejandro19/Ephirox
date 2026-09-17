@@ -422,15 +422,14 @@ export const stressTechniques = pgTable('stress_techniques', {
 // Protocolos reutilizables (Fase 2 del rediseño de Stress, spec punto 18):
 // el admin arma esto UNA vez como librería — reemplaza a stressTechniques
 // (que queda legacy, de solo lectura, ver comentario ahí abajo) para nuevas
-// asignaciones. criteriaId queda SIN foreign key todavía a propósito:
-// assignment_criteria no existe hasta la Fase 5 del plan — se agrega la
-// constraint en esa migración, no acá.
+// asignaciones. criteriaId (FK a assignmentCriteria, ver más abajo) se
+// cerró en la migración de la Fase 5.
 export const stressProtocols = pgTable('stress_protocols', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: text('name').notNull(),
   mechanism: text('mechanism'),
   status: text('status').notNull().default('borrador'), // 'borrador' | 'en_revision_clinica' | 'publicado'
-  criteriaId: uuid('criteria_id'),
+  criteriaId: uuid('criteria_id').references(() => assignmentCriteria.id),
   createdBy: uuid('created_by').references(() => admins.id),
   sortOrder: integer('sort_order').notNull().default(0),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
@@ -1008,6 +1007,48 @@ export const labeledCaseCheckpoints = pgTable('labeled_case_checkpoints', {
   caseWeekUnique: unique('labeled_case_checkpoints_case_id_week_number_unique').on(table.caseId, table.weekNumber),
 }));
 export type LabeledCaseCheckpoint = typeof labeledCaseCheckpoints.$inferSelect;
+
+// Catálogo de marcadores (Fase 5 del rediseño de Stress, spec punto 21.1) —
+// se define una sola vez, reutilizable por cualquier módulo. En esta ronda
+// se puebla con una migración de seed controlada por código (ver
+// metrics-catalog.service.ts::SEED_METRICS) — el admin solo activa/desactiva
+// y ajusta referenceRange desde la UI (Fase 6), no crea fieldKey arbitrarios
+// todavía: un fieldKey inventado a mano (typo camelCase/snake_case) rompería
+// un criterio en silencio, así que por ahora solo el código controla ese mapeo.
+export const metricsCatalog = pgTable('metrics_catalog', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: text('name').notNull(),
+  unit: text('unit'),
+  source: text('source').notNull(), // 'wearable' | 'lab_panel' | 'cognitive_load' | 'morning_checkin'
+  fieldKey: text('field_key').notNull(),
+  // Evita comparar fuentes con ventanas temporales distintas sin criterio
+  // explícito (wearable es diario, lab_panel es por checkpoint 0/6/12).
+  aggregation: text('aggregation').notNull().default('latest'), // 'latest' | 'avg_7d' | 'avg_14d'
+  referenceRange: jsonb('reference_range'), // { min, max } — solo informativo en el rule-builder
+  active: boolean('active').notNull().default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+export type MetricsCatalogEntry = typeof metricsCatalog.$inferSelect;
+
+// Criterios de asignación (spec punto 21.1) — árbol AND/OR de condiciones
+// contra el catálogo de arriba. Versionado: editar un criterio ya publicado
+// y en uso NO muta la fila — crea una versión nueva (ver
+// assignment-criteria.service.ts), para que un labeled_cases.baselineSnapshot
+// histórico siga siendo interpretable contra el criterio vigente al momento
+// de la asignación (mismo patrón que lab_panels con cálculos congelados).
+export const assignmentCriteria = pgTable('assignment_criteria', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: text('name').notNull(),
+  // [{ metricId, operator, value } | { op: 'AND'|'OR', rules: [...] }]
+  conditions: jsonb('conditions').notNull().default([]),
+  applicableModules: text('applicable_modules').array().notNull().default([]),
+  status: text('status').notNull().default('borrador'), // 'borrador' | 'publicado' | 'archivado'
+  version: integer('version').notNull().default(1),
+  createdBy: uuid('created_by').references(() => admins.id),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+});
+export type AssignmentCriteria = typeof assignmentCriteria.$inferSelect;
 
 export const blindspotCases = pgTable('blindspot_cases', {
   id: uuid('id').primaryKey().defaultRandom(),
