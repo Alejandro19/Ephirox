@@ -4,9 +4,11 @@ import userEvent from '@testing-library/user-event';
 import { renderWithSWR as render } from './swr-test-utils';
 import { ClientStressPanel } from '../components/stress/ClientStressPanel';
 import * as stressClient from '../lib/stress-client';
+import * as labeledCasesClient from '../lib/labeled-cases-client';
 import { PermissionDeniedError } from '../lib/api-client';
 
 vi.mock('../lib/stress-client');
+vi.mock('../lib/labeled-cases-client');
 
 const DEFAULT_COGNITIVE_LOAD: stressClient.CognitiveLoadOverview = {
   today: null,
@@ -24,18 +26,21 @@ function mockFetches({
   tip = null,
   morningCheckin = { id: 'mc1', fecha: '2026-08-02', energia: 3, tension: 3, claridad: 3, activacionMatutina: 6 },
   cognitiveLoad = DEFAULT_COGNITIVE_LOAD,
+  activeCase = null,
 }: {
   techniques?: stressClient.StressTechnique[];
   completions?: stressClient.StressCompletion[];
   tip?: stressClient.StressTip;
   morningCheckin?: stressClient.MorningCheckin;
   cognitiveLoad?: stressClient.CognitiveLoadOverview;
+  activeCase?: labeledCasesClient.ActiveCaseView | null;
 } = {}) {
   vi.mocked(stressClient.listTechniques).mockResolvedValue(techniques);
   vi.mocked(stressClient.listCompletions).mockResolvedValue(completions);
   vi.mocked(stressClient.getTipOfTheDay).mockResolvedValue(tip);
   vi.mocked(stressClient.getTodayMorningCheckin).mockResolvedValue(morningCheckin);
   vi.mocked(stressClient.getCognitiveLoadOverview).mockResolvedValue(cognitiveLoad);
+  vi.mocked(labeledCasesClient.getActiveCase).mockResolvedValue(activeCase);
 }
 
 describe('ClientStressPanel', () => {
@@ -99,6 +104,34 @@ describe('ClientStressPanel', () => {
 
     await user.click(screen.getByRole('button', { name: 'Empezar protocolo' }));
     expect(await screen.findByRole('heading', { name: 'Respiración de caja' })).toBeInTheDocument();
+  });
+
+  it('shows the real mentor and active protocol (Fase 3 — Caso Etiquetado) instead of the placeholder, for a mentoring client', async () => {
+    mockFetches({
+      activeCase: {
+        labeledCase: {
+          id: 'case-1', caseNumber: 1247, clientId: 'client-1', module: 'stress', protocolId: 'p1',
+          mentorId: 'm1', assignedAt: new Date().toISOString(), cycleWeeks: 12, outcome: null,
+        },
+        mentor: { id: 'm1', name: 'Sofía Duarte', specialty: null },
+        protocol: { id: 'p1', name: 'Recuperación Vagal — Nivel 1', mechanism: 'Respiración' },
+        resources: [
+          {
+            id: 'r1', protocolId: 'p1', type: 'Técnica de respiración', title: 'Respiración 4-7-8',
+            durationMinutes: 3, durationSeconds: null, instructions: null, audioUrl: null, audioName: null,
+            videoUrl: null, videoName: null, youtubeUrl: null, sortOrder: 0,
+          },
+        ],
+        checkpoints: [],
+      },
+    });
+
+    render(<ClientStressPanel clientId="client-1" clientType="mentoring" />);
+    expect(await screen.findByText('Tu protocolo activo')).toBeInTheDocument();
+    expect(screen.getByText('Recuperación Vagal — Nivel 1')).toBeInTheDocument();
+    expect(screen.getByText('Asignado por Sofía Duarte, tu mentor')).toBeInTheDocument();
+    expect(screen.getByText('Semana 1 de 12')).toBeInTheDocument();
+    expect(screen.queryByText('Tu mentor está diseñando tu plan personalizado.')).not.toBeInTheDocument();
   });
 
   it('shows "Capacidad de regulación" inverted from Carga Cognitiva (10 - carga, escalado a 0-100)', async () => {

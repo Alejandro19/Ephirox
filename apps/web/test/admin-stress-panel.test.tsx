@@ -5,9 +5,15 @@ import { renderWithSWR as render } from './swr-test-utils';
 import { AdminStressPanel } from '../components/stress/AdminStressPanel';
 import * as stressClient from '../lib/stress-client';
 import * as stressTipsClient from '../lib/stress-tips-client';
+import * as protocolsClient from '../lib/stress-protocols-client';
+import * as mentorsClient from '../lib/mentors-client';
+import * as casesClient from '../lib/labeled-cases-client';
 
 vi.mock('../lib/stress-client');
 vi.mock('../lib/stress-tips-client');
+vi.mock('../lib/stress-protocols-client');
+vi.mock('../lib/mentors-client');
+vi.mock('../lib/labeled-cases-client');
 
 const baseTechnique = {
   type: null, duration: null, durationMinutes: null, durationSeconds: null, description: null,
@@ -19,6 +25,9 @@ describe('AdminStressPanel', () => {
   beforeEach(() => {
     vi.mocked(stressClient.listTechniques).mockResolvedValue([]);
     vi.mocked(stressTipsClient.listTips).mockResolvedValue([]);
+    vi.mocked(protocolsClient.listProtocols).mockResolvedValue([]);
+    vi.mocked(mentorsClient.listMentors).mockResolvedValue([]);
+    vi.mocked(casesClient.getActiveCase).mockResolvedValue(null);
   });
 
   it('lists existing techniques', async () => {

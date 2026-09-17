@@ -1,6 +1,52 @@
 'use client';
 
 import type { StressTechnique } from '../../lib/stress-client';
+import type { ActiveCaseView } from '../../lib/labeled-cases-client';
+
+function currentCycleWeek(assignedAt: string, cycleWeeks: number): number {
+  const elapsedMs = Date.now() - new Date(assignedAt).getTime();
+  const elapsedWeeks = Math.floor(elapsedMs / (7 * 24 * 60 * 60 * 1000));
+  return Math.min(cycleWeeks, Math.max(1, elapsedWeeks + 1));
+}
+
+// Superficie 1 del spec punto 17 (vista cliente) — cuando ya existe un caso
+// etiquetado activo, se muestra el protocolo real asignado por el mentor
+// (nombre + mecanismo + recursos), no la lista genérica de técnicas legacy.
+function ActiveCaseCard({ activeCase }: { activeCase: ActiveCaseView }) {
+  const week = currentCycleWeek(activeCase.labeledCase.assignedAt, activeCase.labeledCase.cycleWeeks);
+  return (
+    <div>
+      <p className="mb-1 font-mono text-[10px] uppercase tracking-[0.14em]" style={{ color: 'var(--eph-accent)' }}>Tu protocolo activo</p>
+      <h3 className="mb-1 font-display text-lg" style={{ color: 'var(--eph-text)' }}>{activeCase.protocol?.name}</h3>
+      {activeCase.protocol?.mechanism && (
+        <p className="mb-3 font-body text-sm" style={{ color: 'var(--eph-muted)' }}>{activeCase.protocol.mechanism}</p>
+      )}
+      <div className="mt-2">
+        {activeCase.resources.map((r, i) => (
+          <div key={r.id} className={`py-3 ${i === 0 ? '' : 'border-t border-[var(--eph-line)]'}`}>
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <div className="font-body text-sm font-medium" style={{ color: 'var(--eph-text)' }}>{r.title}</div>
+                <div className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.08em]" style={{ color: 'var(--eph-muted)' }}>
+                  {[r.type, r.durationMinutes != null ? `${r.durationMinutes} min` : null].filter(Boolean).join(' · ')}
+                </div>
+              </div>
+            </div>
+            {r.audioUrl && <audio controls src={r.audioUrl} className="mt-2 w-full" />}
+          </div>
+        ))}
+      </div>
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t pt-3" style={{ borderColor: 'var(--eph-line)' }}>
+        <span className="font-body text-xs" style={{ color: 'var(--eph-muted)' }}>
+          {activeCase.mentor ? `Asignado por ${activeCase.mentor.name}, tu mentor` : 'Caso etiquetado activo'}
+        </span>
+        <span className="font-mono text-[10px] uppercase tracking-[0.1em]" style={{ color: 'var(--eph-accent)' }}>
+          Semana {week} de {activeCase.labeledCase.cycleWeeks}
+        </span>
+      </div>
+    </div>
+  );
+}
 
 function TechniqueList({
   techniques,
@@ -55,6 +101,7 @@ function TechniqueList({
 const DEFAULT_STARTER_PROTOCOL = { title: 'Respiración 4-7-8', duration: '3 min' };
 
 export function StressPlanSection({
+  activeCase,
   techniques,
   playingAudioId,
   setPlayingAudioId,
@@ -62,6 +109,7 @@ export function StressPlanSection({
   TechniqueIcon,
   Button,
 }: {
+  activeCase?: ActiveCaseView | null;
   techniques: StressTechnique[];
   playingAudioId: string | null;
   setPlayingAudioId: (updater: (prev: string | null) => string | null) => void;
@@ -75,7 +123,9 @@ export function StressPlanSection({
       <p className="mb-4 font-body text-xs" style={{ color: 'var(--eph-muted)' }}>
         Entrenamiento proactivo de tu capacidad de regulación — no depende de cómo te sientas hoy.
       </p>
-      {techniques.length === 0 ? (
+      {activeCase ? (
+        <ActiveCaseCard activeCase={activeCase} />
+      ) : techniques.length === 0 ? (
         <div>
           <p className="font-body text-sm" style={{ color: 'var(--eph-text)' }}>
             Tu mentor está diseñando tu plan personalizado.

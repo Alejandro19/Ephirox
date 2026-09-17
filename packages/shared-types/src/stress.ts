@@ -36,6 +36,9 @@ export type StressTechniqueInput = z.infer<typeof StressTechniqueInputSchema>;
 
 export const StressCompletionInputSchema = z.object({
   technique_id: z.string().uuid().nullable().optional(),
+  // Fase 2/3: marcar completado un recurso de un protocolo reutilizable en
+  // vez de una técnica legacy por-cliente.
+  resource_id: z.string().uuid().nullable().optional(),
 });
 export type StressCompletionInput = z.infer<typeof StressCompletionInputSchema>;
 

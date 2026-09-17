@@ -14,6 +14,7 @@ import {
 import { formatDurationLabel } from '../../lib/stress-logic';
 import { showToast } from '../layout/AppShell';
 import { StressTipsPanel } from './StressTipsPanel';
+import { AdminStressCaseAssignmentPanel } from './AdminStressCaseAssignmentPanel';
 import Accordion from '../ui/Accordion';
 import Badge from '../ui/Badge';
 import EmptyState from '../ui/EmptyState';
@@ -201,6 +202,7 @@ export function AdminStressPanel({ clientId }: { clientId: string }) {
   return (
     <div>
       <InsightsSection clientId={clientId} moduleKey="cortisol" />
+      <AdminStressCaseAssignmentPanel clientId={clientId} />
       <div style={cardStyle}>
         <h3 style={cardTitleStyle}>Asignar técnica</h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>

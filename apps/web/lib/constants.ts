@@ -42,6 +42,7 @@ export const ADMIN_HUB_SUBITEMS: NavItem[] = [
   { key: "admin-roles", label: "Roles y Perfiles" },
   { key: "admin-membership-prices", label: "Precios de Membresía" },
   { key: "admin-stress-protocols", label: "Protocolos de Stress" },
+  { key: "admin-mentors", label: "Mentores" },
 ];
 
 export const ENTERPRISE_LEAD_ESTADO_LABELS: Record<string, string> = {
@@ -126,6 +127,7 @@ export const VIEW_TO_PATH: Record<string, string> = {
   "admin-roles": "/admin/roles",
   "admin-membership-prices": "/admin/membership-prices",
   "admin-stress-protocols": "/admin/stress-protocols",
+  "admin-mentors": "/admin/mentors",
 };
 
 export const PATH_TO_VIEW: Record<string, string> = {
@@ -144,4 +146,5 @@ export const PATH_TO_VIEW: Record<string, string> = {
   "/admin/roles": "admin-roles",
   "/admin/membership-prices": "admin-membership-prices",
   "/admin/stress-protocols": "admin-stress-protocols",
+  "/admin/mentors": "admin-mentors",
 };

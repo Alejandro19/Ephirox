@@ -945,6 +945,70 @@ export const membershipPayments = pgTable('membership_payments', {
 }));
 export type MembershipPayment = typeof membershipPayments.$inferSelect;
 
+// Mentores de performance (Stress/Workout/Nutrition/Sleep) — Fase 3 del
+// rediseño de Stress (spec punto 17). Deliberadamente separada de
+// `therapists`: esa tabla está acoplada al dominio clínico de Breakthrough
+// Sessions (blindspotTasks/blindspotSessionLogs referencian therapistId
+// directamente); mezclar mentores de performance ahí arriesga que uno
+// aparezca elegible en flujos de asesoría psicológica por error de datos.
+// Sin login propio por ahora (confirmado con Alejandro) — es un catálogo
+// simple que el admin gestiona y asigna manualmente.
+export const mentors = pgTable('mentors', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: text('name').notNull(),
+  specialty: text('specialty'),
+  active: boolean('active').notNull().default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+export type Mentor = typeof mentors.$inferSelect;
+
+// "Caso Etiquetado" — Data Network Effect (spec punto 17): objeto de datos
+// común (baseline + protocolo + resultado en semana 6/12) pensado para los 4
+// módulos de contenido, pero en esta ronda SOLO Stress tiene UI de
+// asignación real — Workout/Nutrition/Sleep no tienen todavía su propia
+// librería de protocolos reutilizables (ver Fase 2), así que no hay a qué
+// apuntar protocolId para ellos aún. protocolId queda SIN foreign key a
+// propósito: cada módulo tendrá su propia tabla de protocolos, se resuelve
+// por código según `module`, no por una FK única imposible de expresar.
+export const labeledCases = pgTable('labeled_cases', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  // Numeración secuencial GLOBAL cruzando los 4 módulos (confirmado) — mismo
+  // patrón que blindspotCases.caseNumber, visible como "Caso #N".
+  caseNumber: serial('case_number').notNull(),
+  clientId: uuid('client_id').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+  module: text('module').notNull(), // 'stress' | 'training' | 'nutrition' | 'rest'
+  protocolId: uuid('protocol_id'),
+  mentorId: uuid('mentor_id').references(() => mentors.id),
+  assignedBy: uuid('assigned_by').notNull().references(() => admins.id),
+  // Copia congelada del baseline del cliente al momento de asignar — igual
+  // que un panel de laboratorio ya calculado, no se recalcula retroactivo
+  // aunque el shape de las métricas de wearable cambie más adelante.
+  baselineSnapshot: jsonb('baseline_snapshot').notNull().default({}),
+  cycleWeeks: integer('cycle_weeks').notNull().default(12),
+  assignedAt: timestamp('assigned_at', { withTimezone: true }).defaultNow(),
+  outcome: text('outcome'), // null mientras activo; 'mejora' | 'sin_cambio' | 'derivado' | 'cerrado'
+  closedAt: timestamp('closed_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => ({
+  clientIdIdx: index('labeled_cases_client_id_idx').on(table.clientId),
+  moduleIdx: index('labeled_cases_module_idx').on(table.module),
+}));
+export type LabeledCase = typeof labeledCases.$inferSelect;
+
+export const labeledCaseCheckpoints = pgTable('labeled_case_checkpoints', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  caseId: uuid('case_id').notNull().references(() => labeledCases.id, { onDelete: 'cascade' }),
+  weekNumber: integer('week_number').notNull(), // 6 | 12
+  status: text('status').notNull().default('pendiente'), // 'pendiente' | 'completado' | 'omitido'
+  notes: text('notes'),
+  completedAt: timestamp('completed_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (table) => ({
+  caseWeekUnique: unique('labeled_case_checkpoints_case_id_week_number_unique').on(table.caseId, table.weekNumber),
+}));
+export type LabeledCaseCheckpoint = typeof labeledCaseCheckpoints.$inferSelect;
+
 export const blindspotCases = pgTable('blindspot_cases', {
   id: uuid('id').primaryKey().defaultRandom(),
   // Numeración secuencial visible en todos los paneles como "#N" — se asigna
