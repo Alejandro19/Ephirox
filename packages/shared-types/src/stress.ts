@@ -49,3 +49,38 @@ export const StressTipUpdateSchema = z.object({
   active: z.boolean().optional(),
 });
 export type StressTipUpdate = z.infer<typeof StressTipUpdateSchema>;
+
+// Protocolos reutilizables (Fase 2 del rediseño de Stress, spec punto 18) —
+// librería que el admin arma UNA vez, no técnicas por-cliente. Estado sigue
+// la gobernanza clínica del spec (punto 19.4): solo "publicado" entra al
+// motor de auto-asignación de la Fase 3/4.
+export const STRESS_PROTOCOL_STATUSES = ['borrador', 'en_revision_clinica', 'publicado'] as const;
+export const StressProtocolStatusSchema = z.enum(STRESS_PROTOCOL_STATUSES);
+export type StressProtocolStatus = z.infer<typeof StressProtocolStatusSchema>;
+
+export const StressProtocolInputSchema = z.object({
+  name: z.string().min(1),
+  mechanism: z.string().nullable().optional(),
+  status: StressProtocolStatusSchema.optional(),
+  sort_order: z.coerce.number().int().optional(),
+});
+export type StressProtocolInput = z.infer<typeof StressProtocolInputSchema>;
+
+// 4 tipos exactos del spec punto 18 — distinto (más chico y específico) del
+// set legacy STRESS_TECHNIQUE_TYPES de arriba, que es por-cliente.
+export const STRESS_RESOURCE_TYPES = [
+  'Técnica de respiración', 'Meditación guiada', 'Journal de descarga', 'Actividad específica',
+] as const;
+export const StressResourceTypeSchema = z.enum(STRESS_RESOURCE_TYPES);
+export type StressResourceType = z.infer<typeof StressResourceTypeSchema>;
+
+export const StressProtocolResourceInputSchema = z.object({
+  type: StressResourceTypeSchema,
+  title: z.string().min(1),
+  duration_minutes: z.coerce.number().int().min(0).nullable().optional(),
+  duration_seconds: z.coerce.number().int().min(0).nullable().optional(),
+  instructions: z.string().nullable().optional(),
+  youtube_url: z.string().url().nullable().optional(),
+  sort_order: z.coerce.number().int().optional(),
+});
+export type StressProtocolResourceInput = z.infer<typeof StressProtocolResourceInputSchema>;

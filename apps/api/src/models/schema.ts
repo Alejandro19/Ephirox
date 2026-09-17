@@ -419,10 +419,58 @@ export const stressTechniques = pgTable('stress_techniques', {
   clientIdIdx: index('stress_techniques_client_id_idx').on(table.clientId),
 }));
 
+// Protocolos reutilizables (Fase 2 del rediseño de Stress, spec punto 18):
+// el admin arma esto UNA vez como librería — reemplaza a stressTechniques
+// (que queda legacy, de solo lectura, ver comentario ahí abajo) para nuevas
+// asignaciones. criteriaId queda SIN foreign key todavía a propósito:
+// assignment_criteria no existe hasta la Fase 5 del plan — se agrega la
+// constraint en esa migración, no acá.
+export const stressProtocols = pgTable('stress_protocols', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: text('name').notNull(),
+  mechanism: text('mechanism'),
+  status: text('status').notNull().default('borrador'), // 'borrador' | 'en_revision_clinica' | 'publicado'
+  criteriaId: uuid('criteria_id'),
+  createdBy: uuid('created_by').references(() => admins.id),
+  sortOrder: integer('sort_order').notNull().default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+});
+
+export const stressProtocolResources = pgTable('stress_protocol_resources', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  protocolId: uuid('protocol_id').notNull().references(() => stressProtocols.id, { onDelete: 'cascade' }),
+  type: text('type').notNull(), // STRESS_RESOURCE_TYPES: respiración | meditación guiada | journal | actividad
+  title: text('title').notNull(),
+  durationMinutes: integer('duration_minutes'),
+  durationSeconds: integer('duration_seconds'),
+  instructions: text('instructions'),
+  audioUrl: text('audio_url'),
+  audioName: text('audio_name'),
+  videoUrl: text('video_url'),
+  videoName: text('video_name'),
+  youtubeUrl: text('youtube_url'),
+  sortOrder: integer('sort_order').notNull().default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (table) => ({
+  protocolIdIdx: index('stress_protocol_resources_protocol_id_idx').on(table.protocolId),
+}));
+
+export type StressProtocol = typeof stressProtocols.$inferSelect;
+export type StressProtocolResource = typeof stressProtocolResources.$inferSelect;
+
+// stressTechniques queda legacy (por-cliente, creada a mano una por una) —
+// las asignaciones nuevas usan stressProtocols/stressProtocolResources.
+// stressCompletions.resourceId es la columna nueva para ese flujo;
+// techniqueId se conserva solo para no perder el historial ya registrado
+// contra el modelo viejo (ver Fase 2 del plan, "Migración de datos": no se
+// convierte automáticamente contenido por-cliente en protocolo publicado
+// sin revisión).
 export const stressCompletions = pgTable('stress_completions', {
   id: uuid('id').primaryKey().defaultRandom(),
   clientId: uuid('client_id').notNull().references(() => clients.id, { onDelete: 'cascade' }),
   techniqueId: uuid('technique_id').references(() => stressTechniques.id, { onDelete: 'set null' }),
+  resourceId: uuid('resource_id').references(() => stressProtocolResources.id, { onDelete: 'set null' }),
   completedDate: date('completed_date').notNull().defaultNow(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 }, (table) => ({

@@ -16,6 +16,7 @@ import { adminPhrasesRouter } from './routes/admin-phrases.routes.js';
 import { adminQuotesRouter } from './routes/admin-quotes.routes.js';
 import { restToolsRouter } from './routes/rest-tools.routes.js';
 import { adminStressTipsRouter } from './routes/admin-stress-tips.routes.js';
+import { stressProtocolsRouter } from './routes/stress-protocols.routes.js';
 import { adminNutritionTipsRouter } from './routes/admin-nutrition-tips.routes.js';
 import { recipesRouter } from './routes/recipes.routes.js';
 import { stressTechniquesRouter } from './routes/stress-techniques.routes.js';
@@ -100,6 +101,7 @@ export function createApp() {
   app.use('/api', adminQuotesRouter);
   app.use('/api', restToolsRouter);
   app.use('/api', adminStressTipsRouter);
+  app.use('/api', stressProtocolsRouter);
   app.use('/api', adminNutritionTipsRouter);
   app.use('/api', recipesRouter);
   app.use('/api', eventsRouter);
