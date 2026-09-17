@@ -3,7 +3,7 @@ import request from 'supertest';
 import { eq } from 'drizzle-orm';
 import { createApp } from '../src/app.js';
 import { db } from '../src/db/index.js';
-import { clients, trainingCompletions, sleepLogs, cortisolCheckins, wellnessIndexHistory } from '../src/models/schema.js';
+import { clients, trainingCompletions, sleepLogs, wellnessIndexHistory } from '../src/models/schema.js';
 import { signToken } from '../src/services/auth.service.js';
 
 function todayISO(): string {
@@ -51,7 +51,6 @@ describe('wellness-index route', () => {
   afterEach(async () => {
     await db.delete(trainingCompletions).where(eq(trainingCompletions.clientId, clientId));
     await db.delete(sleepLogs).where(eq(sleepLogs.clientId, clientId));
-    await db.delete(cortisolCheckins).where(eq(cortisolCheckins.clientId, clientId));
     await db.delete(wellnessIndexHistory).where(eq(wellnessIndexHistory.clientId, clientId));
   });
 
@@ -61,7 +60,7 @@ describe('wellness-index route', () => {
     expect(res.body.data).toBeNull();
   });
 
-  it('computes the weighted value from training/sleep/cortisol, nests them into the evolution component, and never includes nutrition', async () => {
+  it('computes the weighted value from training/sleep, nests them into the evolution component, and never includes nutrition', async () => {
     await db.update(clients).set({ trainingDays: 1 }).where(eq(clients.id, clientId));
     const today = todayISO();
     // trainingDays=1 -> expected=4 this month; 2 distinct days done -> pct=50
@@ -71,15 +70,15 @@ describe('wellness-index route', () => {
     const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
     await db.insert(trainingCompletions).values([{ clientId, dayNumber: 1, completedDate: yesterday, source: 'manual' }]);
     await db.insert(sleepLogs).values({ clientId, date: today, hours: '7', quality: 5 });
-    await db.insert(cortisolCheckins).values({ clientId, emotion: 'tranquilo', checkinDate: today });
 
     const res = await request(app).get(`/api/clients/${clientId}/wellness-index`).set('Authorization', `Bearer ${clientToken}`);
     expect(res.status).toBe(200);
-    expect(res.body.data.value).toBe(82);
+    expect(res.body.data.value).toBe(73);
     expect(res.body.data.trend).toBe('none');
     expect(res.body.data.previousValue).toBeNull();
-    expect(res.body.data.componentsUsed).toMatchObject({ training: 50, sleep: 100, cortisol: 100, evolution: 80 });
+    expect(res.body.data.componentsUsed).toMatchObject({ training: 50, sleep: 100, evolution: 71 });
     expect(res.body.data.componentsUsed.nutrition).toBeUndefined();
+    expect(res.body.data.componentsUsed.cortisol).toBeUndefined();
   });
 
   it('does not duplicate the history row when called twice in the same week — upserts in place', async () => {

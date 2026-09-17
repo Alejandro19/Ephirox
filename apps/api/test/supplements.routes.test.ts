@@ -38,7 +38,7 @@ describe('supplements routes', () => {
     // "unlocks the module" test still observes the false -> true transition.
     await db
       .update(clients)
-      .set({ permissions: { training: false, nutrition: false, supplementation: true, cortisol: false, community: true, evolution: true } })
+      .set({ permissions: { training: false, nutrition: false, supplementation: true, stress: false, community: true, evolution: true } })
       .where(eq(clients.id, clientId));
 
     const res = await request(app).get(`/api/clients/${clientId}/supplements`).set('Authorization', `Bearer ${clientToken}`);
@@ -47,7 +47,7 @@ describe('supplements routes', () => {
 
     await db
       .update(clients)
-      .set({ permissions: { training: false, nutrition: false, supplementation: false, cortisol: false, community: true, evolution: true } })
+      .set({ permissions: { training: false, nutrition: false, supplementation: false, stress: false, community: true, evolution: true } })
       .where(eq(clients.id, clientId));
   });
 

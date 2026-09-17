@@ -15,7 +15,7 @@ describe('cognitive-load.service', () => {
         email: `cognitive-load-${Date.now()}@example.com`,
         status: 'active',
         clientType: 'coaching_1_1',
-        permissions: { cortisol: true },
+        permissions: { stress: true },
       })
       .returning();
     clientId = client.id;

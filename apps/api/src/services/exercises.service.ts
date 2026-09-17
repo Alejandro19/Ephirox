@@ -15,7 +15,7 @@ const MODULE_LABELS: Record<string, string> = {
   training: 'Workout',
   nutrition: 'Nutrition',
   supplementation: 'suplementación',
-  cortisol: 'Stress',
+  stress: 'Stress',
 };
 
 async function unlockModule(clientId: string, moduleKey: string): Promise<void> {

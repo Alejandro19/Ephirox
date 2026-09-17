@@ -37,7 +37,7 @@ export async function isModuleAllowedForType(clientType: string, moduleKey: stri
 // por grep de apps/api/src/routes/*.ts. 'personal-info' queda afuera a
 // propósito: usa requirePersonalInfoAccess, un gate distinto con su propia
 // lógica de visibilidad ya correcta en el frontend (CLIENT_NAV).
-export const GATED_MODULE_KEYS = ['training', 'nutrition', 'cortisol', 'community', 'evolution', 'rest', 'blindspot'] as const;
+export const GATED_MODULE_KEYS = ['training', 'nutrition', 'stress', 'community', 'evolution', 'rest', 'blindspot'] as const;
 
 // Vista "puedo acceder a este módulo" para un cliente, expuesta en las
 // respuestas de auth (ver auth.controller.ts) para que el frontend (topbar,

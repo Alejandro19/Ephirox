@@ -17,7 +17,7 @@ export const CLIENT_NAV: NavItem[] = [
   { key: "personal-info", label: "Baseline" },
   { key: "training", label: "Workout", visible: (s) => s.onboardingComplete === true },
   { key: "nutrition", label: "Nutrition", visible: (s) => s.onboardingComplete === true },
-  { key: "cortisol", label: "Stress", visible: (s) => s.onboardingComplete === true },
+  { key: "stress", label: "Stress", visible: (s) => s.onboardingComplete === true },
   { key: "rest", label: "Sleep", visible: (s) => s.onboardingComplete === true },
   { key: "blindspot", label: "Breakthrough Sessions", visible: (s) => s.onboardingComplete === true },
   { key: "community", label: "The Circle", visible: (s) => s.onboardingComplete === true },
@@ -28,7 +28,7 @@ export const ADMIN_NAV: NavItem[] = [
   { key: "admin-hub", label: "Administration" },
   { key: "training", label: "Workout" },
   { key: "nutrition", label: "Nutrition" },
-  { key: "cortisol", label: "Stress" },
+  { key: "stress", label: "Stress" },
   { key: "rest", label: "Sleep" },
   { key: "blindspot", label: "Breakthrough Sessions" },
   { key: "evolution", label: "Evolution" },
@@ -78,7 +78,7 @@ export const MANTRA_BANK: Record<string, string[]> = {
     "Comer bien no es un castigo, es un regalo que te das cada día.",
     "Cada bocado es una oportunidad de nutrir tu mejor versión.",
   ],
-  cortisol: [
+  stress: [
     "Respirar profundo también es avanzar.",
     "La calma se entrena igual que el cuerpo.",
     "No tienes que apagar la tormenta, solo bajar el volumen.",
@@ -113,7 +113,7 @@ export const COACH_WHATSAPP_NUMBER = "573214973677";
 export const VIEW_TO_PATH: Record<string, string> = {
   training: "/training",
   nutrition: "/nutrition",
-  cortisol: "/cortisol",
+  stress: "/stress",
   rest: "/rest",
   community: "/community",
   evolution: "/evolution",
@@ -129,7 +129,7 @@ export const VIEW_TO_PATH: Record<string, string> = {
 export const PATH_TO_VIEW: Record<string, string> = {
   "/training": "training",
   "/nutrition": "nutrition",
-  "/cortisol": "cortisol",
+  "/stress": "stress",
   "/rest": "rest",
   "/community": "community",
   "/evolution": "evolution",

@@ -47,7 +47,7 @@ describe('roles (Roles y Perfiles) admin routes', () => {
     expect(keys).toEqual(
       expect.arrayContaining([
         'personal_info', 'personal_info_mentoring', 'training', 'nutrition',
-        'cortisol', 'rest', 'blindspot', 'community', 'evolution',
+        'stress', 'rest', 'blindspot', 'community', 'evolution',
       ])
     );
   });

@@ -29,7 +29,7 @@ export const clients = pgTable('clients', {
     training: false,
     nutrition: false,
     supplementation: false,
-    cortisol: false,
+    stress: false,
     community: true,
     evolution: true,
   }),
@@ -387,7 +387,7 @@ export type NutritionPlan = typeof nutritionPlans.$inferSelect;
 export type Meal = typeof meals.$inferSelect;
 export type Supplement = typeof supplements.$inferSelect;
 
-export const cortisolTechniques = pgTable('cortisol_techniques', {
+export const stressTechniques = pgTable('stress_techniques', {
   id: uuid('id').primaryKey().defaultRandom(),
   clientId: uuid('client_id').notNull().references(() => clients.id, { onDelete: 'cascade' }),
   title: text('title').notNull(),
@@ -402,9 +402,10 @@ export const cortisolTechniques = pgTable('cortisol_techniques', {
   audioUrl: text('audio_url'),
   audioName: text('audio_name'),
   sortOrder: integer('sort_order').default(0),
-  // Emoción del check-in ('ansioso' | 'irritable' | ... — ver CORTISOL_EMOTIONS
-  // en apps/web/lib/cortisol-logic.ts) para la que esta técnica es la
-  // recomendación del hero — null si no está asignada a ninguna.
+  // Emoción del check-in ('ansioso' | 'irritable' | ...) para la que esta
+  // técnica es la recomendación del hero — null si no está asignada a
+  // ninguna. El check-in de ánimo que originaba este valor ya no existe
+  // como feature; el campo se conserva por compatibilidad de datos.
   emotion: text('emotion'),
   // Aviso de precaución/contraindicación visible en el cliente — sobre todo
   // para "Exposición Controlada" (frío/calor), disponible para cualquier tipo.
@@ -415,30 +416,20 @@ export const cortisolTechniques = pgTable('cortisol_techniques', {
   isRitual: boolean('is_ritual').notNull().default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 }, (table) => ({
-  clientIdIdx: index('cortisol_techniques_client_id_idx').on(table.clientId),
+  clientIdIdx: index('stress_techniques_client_id_idx').on(table.clientId),
 }));
 
-export const cortisolCompletions = pgTable('cortisol_completions', {
+export const stressCompletions = pgTable('stress_completions', {
   id: uuid('id').primaryKey().defaultRandom(),
   clientId: uuid('client_id').notNull().references(() => clients.id, { onDelete: 'cascade' }),
-  techniqueId: uuid('technique_id').references(() => cortisolTechniques.id, { onDelete: 'set null' }),
+  techniqueId: uuid('technique_id').references(() => stressTechniques.id, { onDelete: 'set null' }),
   completedDate: date('completed_date').notNull().defaultNow(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 }, (table) => ({
-  clientIdIdx: index('cortisol_completions_client_id_idx').on(table.clientId),
+  clientIdIdx: index('stress_completions_client_id_idx').on(table.clientId),
 }));
 
-export const cortisolCheckins = pgTable('cortisol_checkins', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  clientId: uuid('client_id').notNull().references(() => clients.id, { onDelete: 'cascade' }),
-  emotion: text('emotion').notNull(),
-  checkinDate: date('checkin_date').notNull().defaultNow(),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-}, (table) => ({
-  clientIdIdx: index('cortisol_checkins_client_id_idx').on(table.clientId),
-}));
-
-export const cortisolTips = pgTable('cortisol_tips', {
+export const stressTips = pgTable('stress_tips', {
   id: uuid('id').primaryKey().defaultRandom(),
   content: text('content').notNull(),
   active: boolean('active').notNull().default(true),
@@ -482,10 +473,9 @@ export const cognitiveLoadHistory = pgTable('cognitive_load_history', {
   clientFechaUnique: unique('cognitive_load_history_client_id_fecha_unique').on(table.clientId, table.fecha),
 }));
 
-export type CortisolTechnique = typeof cortisolTechniques.$inferSelect;
-export type CortisolCompletion = typeof cortisolCompletions.$inferSelect;
-export type CortisolCheckin = typeof cortisolCheckins.$inferSelect;
-export type CortisolTip = typeof cortisolTips.$inferSelect;
+export type StressTechnique = typeof stressTechniques.$inferSelect;
+export type StressCompletion = typeof stressCompletions.$inferSelect;
+export type StressTip = typeof stressTips.$inferSelect;
 export type MorningCheckin = typeof morningCheckins.$inferSelect;
 export type CognitiveLoadRow = typeof cognitiveLoadHistory.$inferSelect;
 

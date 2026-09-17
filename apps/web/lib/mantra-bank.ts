@@ -14,7 +14,7 @@ const MANTRA_BANK: Record<string, string[]> = {
     'Cada comida es una oportunidad, no un examen.',
     'Tu plato refleja el cuidado que te estás dando hoy.',
   ],
-  cortisol: [
+  stress: [
     'Regular no es debilidad, es estrategia.',
     'Respirar despacio también es avanzar.',
     'La calma se entrena igual que el cuerpo.',

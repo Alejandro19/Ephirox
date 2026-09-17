@@ -18,7 +18,7 @@ export default function ClientSwitcher({
   onSelect,
 }: ClientSwitcherProps) {
   // Clave de caché compartida entre todos los módulos admin (Entrenamiento,
-  // Nutrición, Cortisol, etc.) — cambiar de módulo ya no vuelve a pedir la
+  // Nutrición, Stress, etc.) — cambiar de módulo ya no vuelve a pedir la
   // lista completa de clientes, SWR la sirve desde caché al instante y
   // revalida en segundo plano. Usa el mismo helper (lib/clients-client.ts,
   // NEXT_PUBLIC_API_BASE_URL) que el resto de la app en vez de un fetch

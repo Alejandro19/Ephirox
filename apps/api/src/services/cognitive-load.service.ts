@@ -82,7 +82,7 @@ export async function computeAndStoreCognitiveLoadForDate(clientId: string, fech
 export async function runCognitiveLoadNightlyJob(fecha: string = new Date().toISOString().slice(0, 10)): Promise<void> {
   const rows = await db.select({ id: clients.id, clientType: clients.clientType }).from(clients);
   for (const row of rows) {
-    const allowed = await isModuleAllowedForType(row.clientType, 'cortisol');
+    const allowed = await isModuleAllowedForType(row.clientType, 'stress');
     if (!allowed) continue;
     try {
       await computeAndStoreCognitiveLoadForDate(row.id, fecha);

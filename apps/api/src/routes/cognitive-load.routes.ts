@@ -12,7 +12,7 @@ cognitiveLoadRouter.get(
   '/:id/morning-checkin/today',
   authMiddleware,
   ownerOrAdmin,
-  requirePermission('cortisol'),
+  requirePermission('stress'),
   asyncHandler(cognitiveLoadController.getTodayMorningCheckin)
 );
 
@@ -20,7 +20,7 @@ cognitiveLoadRouter.post(
   '/:id/morning-checkin',
   authMiddleware,
   ownerOrAdmin,
-  requirePermission('cortisol'),
+  requirePermission('stress'),
   validateBody(MorningCheckinInputSchema),
   asyncHandler(cognitiveLoadController.postMorningCheckin)
 );
@@ -29,6 +29,6 @@ cognitiveLoadRouter.get(
   '/:id/cognitive-load',
   authMiddleware,
   ownerOrAdmin,
-  requirePermission('cortisol'),
+  requirePermission('stress'),
   asyncHandler(cognitiveLoadController.getCognitiveLoadOverview)
 );

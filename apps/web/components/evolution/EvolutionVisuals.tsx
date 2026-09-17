@@ -23,7 +23,7 @@ export function WellnessIndexHero({ index }: { index: number | null }) {
       <div>
         <p className="mb-1 font-display text-base font-normal">Índice de rendimiento</p>
         <p className="font-body text-[11.5px] leading-relaxed" style={{ color: 'var(--eph-muted)' }}>
-          Promedio ponderado de tus módulos activos (entrenamiento, sueño, cortisol y tu evolución física). Los
+          Promedio ponderado de tus módulos activos (entrenamiento, sueño y tu evolución física). Los
           componentes sin datos aún se excluyen del cálculo, en vez de contar como cero.
         </p>
       </div>
@@ -74,22 +74,18 @@ export function TrendChip({
   );
 }
 
-// ─── Bienestar general (Descanso + Cortisol, siempre visibles) ────
+// ─── Bienestar general (Descanso + Stress, siempre visibles) ──────
 
 export function BienestarGeneral({
   sleepAvg,
   weeklyRegulation,
   sleepDelta,
   sleepStatus,
-  cortisolDelta,
-  cortisolStatus,
 }: {
   sleepAvg: string | null;
   weeklyRegulation: number | null;
   sleepDelta: number | null;
   sleepStatus: KpiStatus | null;
-  cortisolDelta: number | null;
-  cortisolStatus: KpiStatus | null;
 }) {
   return (
     <div className="mb-5 border p-6" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface)' }}>
@@ -112,7 +108,6 @@ export function BienestarGeneral({
           </p>
           <MetricValue value={weeklyRegulation ?? '—'} size="secondary" />
           <p className="mt-0.5 font-body text-[10.5px]" style={{ color: 'var(--eph-muted)' }}>Momentos de regulación esta semana</p>
-          <TrendChip delta={cortisolDelta} unit="" status={cortisolStatus} comparisonLabel="vs mes pasado" />
         </div>
       </div>
     </div>

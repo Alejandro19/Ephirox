@@ -1,7 +1,7 @@
 import Link from 'next/link';
 
-// Footer fijo en cada vista de protocolo (Entrenamiento, Nutrición, Gestión
-// de Cortisol, Hackea tu Sueño) — recordatorio corto y siempre visible del
+// Footer fijo en cada vista de protocolo (Entrenamiento, Nutrición, Stress,
+// Hackea tu Sueño) — recordatorio corto y siempre visible del
 // descargo de responsabilidad completo, que vive en los Términos de Servicio
 // (ver legal-content.js, sección "Descargo de responsabilidad y naturaleza
 // del servicio"). No repite el texto completo acá a propósito.

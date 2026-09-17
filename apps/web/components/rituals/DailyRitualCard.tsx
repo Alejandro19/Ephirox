@@ -9,7 +9,7 @@ import {
   getTodayCheckin,
   postDailyCheckin,
 } from '@/lib/checkins-client';
-import { getTodayMorningCheckin, postMorningCheckin } from '@/lib/cortisol-client';
+import { getTodayMorningCheckin, postMorningCheckin } from '@/lib/stress-client';
 import { RitualCheckinCard } from './RitualCheckinCard';
 import { ScaleQuestion } from './ScaleQuestion';
 import Button from '@/components/ui/Button';
@@ -30,12 +30,12 @@ function streakLabel(days: number): string {
 
 export function DailyRitualCard({ clientId }: { clientId: string }) {
   const { moduleAccess, planExpired } = useAuth();
-  const hasCortisolAccess = getModuleAccessState('cortisol', { moduleAccess, planExpired }) === 'ok';
+  const hasStressAccess = getModuleAccessState('stress', { moduleAccess, planExpired }) === 'ok';
 
   const { data: status, mutate: mutateStatus } = useSWR(['checkins-status', clientId], () => getCheckinsStatus(clientId));
   const { data: dailyCheckin, mutate: mutateDaily } = useSWR(['daily-checkin-today', clientId], () => getTodayCheckin(clientId));
   const { data: morningCheckin, mutate: mutateMorning } = useSWR(
-    hasCortisolAccess ? ['morning-checkin-today', clientId] : null,
+    hasStressAccess ? ['morning-checkin-today', clientId] : null,
     () => getTodayMorningCheckin(clientId)
   );
 
@@ -62,7 +62,7 @@ export function DailyRitualCard({ clientId }: { clientId: string }) {
 
   if (!status) return null;
 
-  const completed = hasCortisolAccess ? !!dailyCheckin && !!morningCheckin : !!dailyCheckin;
+  const completed = hasStressAccess ? !!dailyCheckin && !!morningCheckin : !!dailyCheckin;
 
   async function handleSubmit() {
     if (mood == null) return;
@@ -70,11 +70,11 @@ export function DailyRitualCard({ clientId }: { clientId: string }) {
     setError(null);
     try {
       await postDailyCheckin(clientId, mood);
-      if (hasCortisolAccess) {
+      if (hasStressAccess) {
         await postMorningCheckin(clientId, { energia: Number(energia), tension: Number(tension), claridad: Number(claridad) });
       }
       setIsEditing(false);
-      await Promise.all([mutateDaily(), hasCortisolAccess ? mutateMorning() : null, mutateStatus()].filter(Boolean));
+      await Promise.all([mutateDaily(), hasStressAccess ? mutateMorning() : null, mutateStatus()].filter(Boolean));
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error al guardar.');
     } finally {
@@ -95,7 +95,7 @@ export function DailyRitualCard({ clientId }: { clientId: string }) {
       summary={
         <p className="font-body text-sm" style={{ color: 'var(--eph-body)' }}>
           {dailyCheckin && `Ánimo ${dailyCheckin.pulsoAnimo}/5`}
-          {hasCortisolAccess && morningCheckin && ` · Energía ${morningCheckin.energia}/5 · Tensión ${morningCheckin.tension}/5 · Claridad ${morningCheckin.claridad}/5`}
+          {hasStressAccess && morningCheckin && ` · Energía ${morningCheckin.energia}/5 · Tensión ${morningCheckin.tension}/5 · Claridad ${morningCheckin.claridad}/5`}
         </p>
       }
     >
@@ -131,7 +131,7 @@ export function DailyRitualCard({ clientId }: { clientId: string }) {
         )}
       </div>
 
-      {hasCortisolAccess && (
+      {hasStressAccess && (
         <>
           <ScaleQuestion
             question="¿Cómo sentiste tu energía al despertar hoy?"

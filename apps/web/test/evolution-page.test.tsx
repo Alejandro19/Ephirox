@@ -10,9 +10,8 @@ vi.mock('../lib/evolution-client', () => ({
   createCheckin: vi.fn(),
   updateNextCheckinDate: vi.fn(),
 }));
-vi.mock('../lib/cortisol-client', () => ({
+vi.mock('../lib/stress-client', () => ({
   listCompletions: vi.fn().mockResolvedValue([]),
-  listCheckins: vi.fn().mockResolvedValue([]),
 }));
 vi.mock('../lib/sleep-client', () => ({
   listLogs: vi.fn().mockResolvedValue([]),

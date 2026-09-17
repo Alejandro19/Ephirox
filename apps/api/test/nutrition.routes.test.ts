@@ -37,7 +37,7 @@ describe('nutrition routes', () => {
     // requirePermission('nutrition') gate, is what's under test here.
     await db
       .update(clients)
-      .set({ permissions: { training: false, nutrition: true, supplementation: false, cortisol: false, community: true, evolution: true } })
+      .set({ permissions: { training: false, nutrition: true, supplementation: false, stress: false, community: true, evolution: true } })
       .where(eq(clients.id, clientId));
 
     const res = await request(app).get(`/api/clients/${clientId}/nutrition`).set('Authorization', `Bearer ${clientToken}`);
@@ -48,7 +48,7 @@ describe('nutrition routes', () => {
     // Revert so downstream tests still observe the false -> true unlock transition.
     await db
       .update(clients)
-      .set({ permissions: { training: false, nutrition: false, supplementation: false, cortisol: false, community: true, evolution: true } })
+      .set({ permissions: { training: false, nutrition: false, supplementation: false, stress: false, community: true, evolution: true } })
       .where(eq(clients.id, clientId));
   });
 

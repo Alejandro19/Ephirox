@@ -34,15 +34,6 @@ export function monthlyAverages<T extends Record<string, unknown>>(
     .map(([month, values]) => ({ month, avg: values.reduce((s, v) => s + v, 0) / values.length }));
 }
 
-export const EMOCION_SCORE: Record<string, number> = {
-  ansioso: 1,
-  irritable: 1,
-  abrumado: 1,
-  cansado: 3,
-  tranquilo: 5,
-  energia: 5,
-};
-
 export type KpiStatus = 'good' | 'watch' | 'neutral';
 
 // La dirección "favorable" de peso/grasa/masa muscular depende del objetivo
@@ -61,8 +52,8 @@ export function getKpiStatus(
   return isFavorable ? 'good' : 'watch';
 }
 
-// Sueño y cortisol no tienen objetivo configurable — mejor siempre es "subir"
-// (dormir mejor, regularse mejor), igual para todos los clientes.
+// Sueño no tiene objetivo configurable — mejor siempre es "subir" (dormir
+// mejor), igual para todos los clientes.
 export function getWellnessTrendStatus(delta: number | null): KpiStatus {
   if (delta === 0 || delta == null) return 'neutral';
   return delta > 0 ? 'good' : 'watch';

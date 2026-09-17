@@ -28,7 +28,7 @@ const TOGGLEABLE_MODULE_PATHS = [
   "/onboarding",
   "/training",
   "/nutrition",
-  "/cortisol",
+  "/stress",
   "/rest",
   "/blindspot",
   "/community",

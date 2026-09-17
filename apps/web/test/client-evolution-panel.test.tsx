@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { renderWithSWR as render } from './swr-test-utils';
 import { ClientEvolutionPanel } from '../components/evolution/ClientEvolutionPanel';
 import * as evolutionClient from '../lib/evolution-client';
-import * as cortisolClient from '../lib/cortisol-client';
+import * as stressClient from '../lib/stress-client';
 import * as sleepClient from '../lib/sleep-client';
 import * as trainingClient from '../lib/training-client';
 import * as clientsClient from '../lib/clients-client';
@@ -12,7 +12,7 @@ import * as wellnessIndexClient from '../lib/wellness-index-client';
 import { PermissionDeniedError } from '../lib/api-client';
 
 vi.mock('../lib/evolution-client');
-vi.mock('../lib/cortisol-client');
+vi.mock('../lib/stress-client');
 vi.mock('../lib/sleep-client');
 vi.mock('../lib/training-client');
 vi.mock('../lib/clients-client');
@@ -43,8 +43,7 @@ function mockFetches({
   inbody?: evolutionClient.InbodyRecord[];
 } = {}) {
   vi.mocked(evolutionClient.getEvolutionData).mockResolvedValue({ checkins: [], anthropometrics, inbody });
-  vi.mocked(cortisolClient.listCompletions).mockResolvedValue([]);
-  vi.mocked(cortisolClient.listCheckins).mockResolvedValue([]);
+  vi.mocked(stressClient.listCompletions).mockResolvedValue([]);
   vi.mocked(sleepClient.listLogs).mockResolvedValue([]);
   vi.mocked(trainingClient.listTrainingCompletions).mockResolvedValue([]);
   vi.mocked(trainingClient.getStreak).mockResolvedValue({
@@ -55,7 +54,7 @@ function mockFetches({
     trainingDays, objetivos: { peso: 'bajar', grasa_corporal: 'bajar', masa_muscular: 'subir' }, nextCheckinDate: null, inbodyCadenceType: 'mensual',
   });
   vi.mocked(wellnessIndexClient.getWellnessIndex).mockResolvedValue({
-    value: 72, previousValue: 64, delta: 8, trend: 'up', componentsUsed: { training: 60, sleep: 80, cortisol: 90, evolution: 70 },
+    value: 72, previousValue: 64, delta: 8, trend: 'up', componentsUsed: { training: 60, sleep: 80, evolution: 70 },
   });
 }
 

@@ -4,7 +4,6 @@ import {
   clients,
   trainingCompletions,
   sleepLogs,
-  cortisolCheckins,
   wellnessIndexHistory,
 } from '../models/schema.js';
 import { isModuleAllowedForType } from './type-module-access.service.js';
@@ -19,26 +18,15 @@ function weightedAverage(components: Array<{ weight: number; score: number }>): 
 }
 
 // Índice de bienestar general "clásico" (Mi Evolución, ya shippeado): 40%
-// entrenamiento / 30% sueño / 30% cortisol. Se reutiliza tal cual como el
-// score del componente "Mi Evolución" del índice nuevo (decisión de
-// producto: cuenta dos veces — directo arriba y anidado acá — es
-// intencional, no un bug).
-function computeEvolutionSubIndex(trainingPct: number | null, sleepAvg: number | null, cortisolAvg: number | null): number | null {
+// entrenamiento / 30% sueño. Se reutiliza tal cual como el score del
+// componente "Mi Evolución" del índice nuevo (decisión de producto: cuenta
+// dos veces — directo arriba y anidado acá — es intencional, no un bug).
+function computeEvolutionSubIndex(trainingPct: number | null, sleepAvg: number | null): number | null {
   const components: Array<{ weight: number; score: number }> = [];
   if (trainingPct != null) components.push({ weight: 0.4, score: Math.max(0, Math.min(100, trainingPct)) });
   if (sleepAvg != null) components.push({ weight: 0.3, score: (sleepAvg / 5) * 100 });
-  if (cortisolAvg != null) components.push({ weight: 0.3, score: (cortisolAvg / 5) * 100 });
   return weightedAverage(components);
 }
-
-const EMOCION_SCORE: Record<string, number> = {
-  ansioso: 1,
-  irritable: 1,
-  abrumado: 1,
-  cansado: 3,
-  tranquilo: 5,
-  energia: 5,
-};
 
 // Promedio del mes calendario más reciente que tenga registros — mismo
 // criterio que monthlyAverages(...) del lado web (agrupa por mes, toma el
@@ -73,12 +61,6 @@ async function calculateSleepAvg(clientId: string): Promise<number | null> {
   return latestMonthAverage(logs.map((l) => l.date), logs.map((l) => l.quality));
 }
 
-async function calculateCortisolAvg(clientId: string): Promise<number | null> {
-  const checkins = await db.select().from(cortisolCheckins).where(eq(cortisolCheckins.clientId, clientId));
-  const scored = checkins.filter((c) => EMOCION_SCORE[c.emotion] != null);
-  return latestMonthAverage(scored.map((c) => c.checkinDate), scored.map((c) => EMOCION_SCORE[c.emotion]));
-}
-
 // Lunes de la semana ISO vigente (UTC), formato YYYY-MM-DD.
 function currentWeekStartUTC(): string {
   const now = new Date();
@@ -105,31 +87,24 @@ export async function computeWellnessIndexForClient(clientId: string): Promise<W
   const [client] = await db.select({ clientType: clients.clientType }).from(clients).where(eq(clients.id, clientId)).limit(1);
   if (!client) return null;
 
-  const [trainingAllowed, cortisolAllowed, sleepAllowed, evolutionAllowed] = await Promise.all([
+  const [trainingAllowed, sleepAllowed, evolutionAllowed] = await Promise.all([
     isModuleAllowedForType(client.clientType, 'training'),
-    isModuleAllowedForType(client.clientType, 'cortisol'),
     isModuleAllowedForType(client.clientType, 'rest'),
     isModuleAllowedForType(client.clientType, 'evolution'),
   ]);
 
-  const [trainingPct, sleepAvg, cortisolAvg] = await Promise.all([
+  const [trainingPct, sleepAvg] = await Promise.all([
     trainingAllowed ? calculateTrainingPct(clientId) : Promise.resolve(null),
     sleepAllowed ? calculateSleepAvg(clientId) : Promise.resolve(null),
-    cortisolAllowed ? calculateCortisolAvg(clientId) : Promise.resolve(null),
   ]);
 
-  const evolutionScore = evolutionAllowed ? computeEvolutionSubIndex(trainingPct, sleepAvg, cortisolAvg) : null;
+  const evolutionScore = evolutionAllowed ? computeEvolutionSubIndex(trainingPct, sleepAvg) : null;
 
   const componentsUsed: Record<string, number> = {};
   const components: Array<{ weight: number; score: number }> = [];
   if (trainingPct != null) {
     components.push({ weight: 15, score: Math.max(0, Math.min(100, trainingPct)) });
     componentsUsed.training = Math.round(trainingPct);
-  }
-  if (cortisolAvg != null) {
-    const score = (cortisolAvg / 5) * 100;
-    components.push({ weight: 15, score });
-    componentsUsed.cortisol = Math.round(score);
   }
   if (sleepAvg != null) {
     const score = (sleepAvg / 5) * 100;

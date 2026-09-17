@@ -44,7 +44,7 @@ const NO_FLASH_SCRIPT = `(function(){try{
   var stored=window.localStorage.getItem(KEY);
   var mode=stored==='light'?'light':'dark';
   var path=window.location.pathname;
-  var modules=['/onboarding','/training','/nutrition','/cortisol','/rest','/blindspot','/community','/evolution','/configuracion'];
+  var modules=['/onboarding','/training','/nutrition','/stress','/rest','/blindspot','/community','/evolution','/configuracion'];
   var isModule=path==='/'||modules.some(function(base){return path===base||path.indexOf(base+'/')===0;});
   var screen=path==='/login'?'login':(isModule?'module':'dashboard');
   var locked=(screen==='login'||screen==='splash'||screen==='dashboard');

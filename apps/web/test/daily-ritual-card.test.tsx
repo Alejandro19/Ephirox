@@ -4,11 +4,11 @@ import { renderWithSWR as render } from './swr-test-utils';
 import { DailyRitualCard } from '../components/rituals/DailyRitualCard';
 import { useAuth } from '../lib/auth-context';
 import * as checkinsClient from '../lib/checkins-client';
-import * as cortisolClient from '../lib/cortisol-client';
+import * as stressClient from '../lib/stress-client';
 
 vi.mock('../lib/auth-context', () => ({ useAuth: vi.fn() }));
 vi.mock('../lib/checkins-client');
-vi.mock('../lib/cortisol-client');
+vi.mock('../lib/stress-client');
 
 const BASE_STATUS: checkinsClient.CheckinsStatus = {
   dailyDoneToday: false,
@@ -41,7 +41,7 @@ describe('DailyRitualCard', () => {
     mockAuth();
     vi.mocked(checkinsClient.getCheckinsStatus).mockResolvedValue(BASE_STATUS);
     vi.mocked(checkinsClient.getTodayCheckin).mockResolvedValue(null);
-    vi.mocked(cortisolClient.getTodayMorningCheckin).mockResolvedValue(null);
+    vi.mocked(stressClient.getTodayMorningCheckin).mockResolvedValue(null);
 
     render(<DailyRitualCard clientId="client-1" />);
 
@@ -57,9 +57,9 @@ describe('DailyRitualCard', () => {
     mockAuth();
     vi.mocked(checkinsClient.getCheckinsStatus).mockResolvedValue(BASE_STATUS);
     vi.mocked(checkinsClient.getTodayCheckin).mockResolvedValue(null);
-    vi.mocked(cortisolClient.getTodayMorningCheckin).mockResolvedValue(null);
+    vi.mocked(stressClient.getTodayMorningCheckin).mockResolvedValue(null);
     vi.mocked(checkinsClient.postDailyCheckin).mockResolvedValue(undefined);
-    vi.mocked(cortisolClient.postMorningCheckin).mockResolvedValue({
+    vi.mocked(stressClient.postMorningCheckin).mockResolvedValue({
       id: 'mc1', fecha: '2026-09-02', energia: 3, tension: 3, claridad: 3, activacionMatutina: 6,
     });
 
@@ -69,19 +69,19 @@ describe('DailyRitualCard', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Bien' }));
 
     vi.mocked(checkinsClient.getTodayCheckin).mockResolvedValue({ id: 'd1', fecha: '2026-09-02', pulsoAnimo: 4, createdAt: '2026-09-02T00:00:00Z' });
-    vi.mocked(cortisolClient.getTodayMorningCheckin).mockResolvedValue({
+    vi.mocked(stressClient.getTodayMorningCheckin).mockResolvedValue({
       id: 'mc1', fecha: '2026-09-02', energia: 3, tension: 3, claridad: 3, activacionMatutina: 6,
     });
     fireEvent.click(screen.getByRole('button', { name: 'Guardar ritual' }));
 
     await waitFor(() => expect(checkinsClient.postDailyCheckin).toHaveBeenCalledWith('client-1', 4));
-    expect(cortisolClient.postMorningCheckin).toHaveBeenCalledWith('client-1', { energia: 3, tension: 3, claridad: 3 });
+    expect(stressClient.postMorningCheckin).toHaveBeenCalledWith('client-1', { energia: 3, tension: 3, claridad: 3 });
     await waitFor(() => expect(screen.getByText('Completado')).toBeInTheDocument());
     expect(screen.getByText(/Ánimo 4\/5/)).toBeInTheDocument();
   });
 
-  it('only asks the mood question and never calls postMorningCheckin when the client has no cortisol/Stress access', async () => {
-    mockAuth({ moduleAccess: { cortisol: false } });
+  it('only asks the mood question and never calls postMorningCheckin when the client has no Stress access', async () => {
+    mockAuth({ moduleAccess: { stress: false } });
     vi.mocked(checkinsClient.getCheckinsStatus).mockResolvedValue(BASE_STATUS);
     vi.mocked(checkinsClient.getTodayCheckin).mockResolvedValue(null);
     vi.mocked(checkinsClient.postDailyCheckin).mockResolvedValue(undefined);
@@ -90,14 +90,14 @@ describe('DailyRitualCard', () => {
     await screen.findByText('¿Cómo te sientes hoy?');
 
     expect(screen.queryByText('¿Cómo sentiste tu energía al despertar hoy?')).not.toBeInTheDocument();
-    expect(cortisolClient.getTodayMorningCheckin).not.toHaveBeenCalled();
+    expect(stressClient.getTodayMorningCheckin).not.toHaveBeenCalled();
 
     fireEvent.click(screen.getByRole('button', { name: 'Muy bien' }));
     vi.mocked(checkinsClient.getTodayCheckin).mockResolvedValue({ id: 'd1', fecha: '2026-09-02', pulsoAnimo: 5, createdAt: '2026-09-02T00:00:00Z' });
     fireEvent.click(screen.getByRole('button', { name: 'Guardar ritual' }));
 
     await waitFor(() => expect(checkinsClient.postDailyCheckin).toHaveBeenCalledWith('client-1', 5));
-    expect(cortisolClient.postMorningCheckin).not.toHaveBeenCalled();
+    expect(stressClient.postMorningCheckin).not.toHaveBeenCalled();
     await waitFor(() => expect(screen.getByText('Completado')).toBeInTheDocument());
   });
 
@@ -105,7 +105,7 @@ describe('DailyRitualCard', () => {
     mockAuth();
     vi.mocked(checkinsClient.getCheckinsStatus).mockResolvedValue({ ...BASE_STATUS, dailyDoneToday: true, dailyStreakDays: 3 });
     vi.mocked(checkinsClient.getTodayCheckin).mockResolvedValue({ id: 'd1', fecha: '2026-09-02', pulsoAnimo: 4, createdAt: '2026-09-02T00:00:00Z' });
-    vi.mocked(cortisolClient.getTodayMorningCheckin).mockResolvedValue({
+    vi.mocked(stressClient.getTodayMorningCheckin).mockResolvedValue({
       id: 'mc1', fecha: '2026-09-02', energia: 2, tension: 4, claridad: 5, activacionMatutina: 5,
     });
 

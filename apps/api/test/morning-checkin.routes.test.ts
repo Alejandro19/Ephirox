@@ -19,7 +19,7 @@ describe('morning checkin routes', () => {
         email: `morning-checkin-${Date.now()}@example.com`,
         status: 'active',
         clientType: 'coaching_1_1',
-        permissions: { cortisol: true },
+        permissions: { stress: true },
       })
       .returning();
     clientId = client.id;

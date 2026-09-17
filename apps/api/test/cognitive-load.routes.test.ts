@@ -21,7 +21,7 @@ describe('cognitive load routes', () => {
         email: `cognitive-load-route-${Date.now()}@example.com`,
         status: 'active',
         clientType: 'coaching_1_1',
-        permissions: { cortisol: true },
+        permissions: { stress: true },
       })
       .returning();
     clientId = client.id;
@@ -34,7 +34,7 @@ describe('cognitive load routes', () => {
         email: `cognitive-load-other-${Date.now()}@example.com`,
         status: 'active',
         clientType: 'coaching_1_1',
-        permissions: { cortisol: true },
+        permissions: { stress: true },
       })
       .returning();
     otherClientId = other.id;

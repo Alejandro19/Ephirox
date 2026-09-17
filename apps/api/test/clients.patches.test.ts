@@ -34,7 +34,7 @@ describe('clients patch routes', () => {
     const res = await request(app)
       .patch(`/api/clients/${clientId}/permissions`)
       .set('Authorization', `Bearer ${adminToken}`)
-      .send({ permissions: { training: true, nutrition: false, supplementation: false, cortisol: false, community: true, evolution: true } });
+      .send({ permissions: { training: true, nutrition: false, supplementation: false, stress: false, community: true, evolution: true } });
     expect(res.status).toBe(200);
     expect(res.body.client.permissions.training).toBe(true);
   });

@@ -4,12 +4,10 @@ import { useState } from 'react';
 import useSWR from 'swr';
 import { getEvolutionData, type EvolutionData } from '../../lib/evolution-client';
 import {
-  listCompletions as listCortisolCompletions,
-  listCheckins as listCortisolCheckins,
-  type CortisolCompletion,
-  type CortisolCheckinRecord,
-} from '../../lib/cortisol-client';
-import { calculateCortisolWeeklyStats } from '../../lib/cortisol-logic';
+  listCompletions as listStressCompletions,
+  type StressCompletion,
+} from '../../lib/stress-client';
+import { calculateStressWeeklyStats } from '../../lib/stress-logic';
 import { listLogs as listSleepLogs, type SleepLog } from '../../lib/sleep-client';
 import { listTrainingCompletions, getStreak, type TrainingCompletion } from '../../lib/training-client';
 import { calculateDisciplineStats } from '../../lib/training-home-logic';
@@ -21,7 +19,6 @@ import {
   calculateSleepQualityAvg,
   formatSleepHours,
   monthlyAverages,
-  EMOCION_SCORE,
   getWellnessTrendStatus,
 } from '../../lib/evolution-logic';
 import IdentityHeader from '../ui/IdentityHeader';
@@ -42,17 +39,16 @@ function clientTz(): string {
 }
 
 async function fetchEvolutionBundle(clientId: string) {
-  const [evo, cortisolCompletions, cortisolCheckins, fullClient, sleepLogs, trainingCompletions, streak, wellnessIndex] = await Promise.all([
+  const [evo, stressCompletions, fullClient, sleepLogs, trainingCompletions, streak, wellnessIndex] = await Promise.all([
     getEvolutionData(clientId),
-    listCortisolCompletions(clientId).catch(() => [] as CortisolCompletion[]),
-    listCortisolCheckins(clientId).catch(() => [] as CortisolCheckinRecord[]),
+    listStressCompletions(clientId).catch(() => [] as StressCompletion[]),
     fetchClient(clientId).catch(() => null as ClientDetail | null),
     listSleepLogs(clientId).catch(() => [] as SleepLog[]),
     listTrainingCompletions(clientId).catch(() => [] as TrainingCompletion[]),
     getStreak(clientId, clientTz()).catch(() => null),
     getWellnessIndex(clientId).catch(() => null),
   ]);
-  return { evo, cortisolCompletions, cortisolCheckins, fullClient, sleepLogs, trainingCompletions, streak, wellnessIndex };
+  return { evo, stressCompletions, fullClient, sleepLogs, trainingCompletions, streak, wellnessIndex };
 }
 
 export function ClientEvolutionPanel({ clientId }: { clientId: string }) {
@@ -94,23 +90,15 @@ export function ClientEvolutionPanel({ clientId }: { clientId: string }) {
   }
   if (!data) return null;
 
-  const { evo, cortisolCompletions, cortisolCheckins, fullClient: client, sleepLogs, trainingCompletions, streak, wellnessIndex } = data;
+  const { evo, stressCompletions, fullClient: client, sleepLogs, trainingCompletions, streak, wellnessIndex } = data;
 
   const sleepAvg = calculateSleepQualityAvg(evo.checkins);
-  const weeklyRegulation = calculateCortisolWeeklyStats(cortisolCompletions).count;
+  const weeklyRegulation = calculateStressWeeklyStats(stressCompletions).count;
 
   const sleepMonths = monthlyAverages(sleepLogs, 'date', 'quality');
   const sleepLast = sleepMonths.length ? sleepMonths[sleepMonths.length - 1].avg : null;
   const sleepPrev = sleepMonths.length >= 2 ? sleepMonths[sleepMonths.length - 2].avg : null;
   const sleepDelta = sleepLast != null && sleepPrev != null ? sleepLast - sleepPrev : null;
-
-  const cortisolScored = cortisolCheckins
-    .map((c) => ({ checkinDate: c.checkinDate, score: EMOCION_SCORE[c.emotion] ?? null }))
-    .filter((c): c is { checkinDate: string; score: number } => c.score != null);
-  const cortisolMonths = monthlyAverages(cortisolScored, 'checkinDate', 'score');
-  const cortisolLast = cortisolMonths.length ? cortisolMonths[cortisolMonths.length - 1].avg : null;
-  const cortisolPrev = cortisolMonths.length >= 2 ? cortisolMonths[cortisolMonths.length - 2].avg : null;
-  const cortisolDelta = cortisolLast != null && cortisolPrev != null ? cortisolLast - cortisolPrev : null;
 
   const disciplineStats = client?.trainingDays ? calculateDisciplineStats(trainingCompletions, client.trainingDays) : null;
   const streakWeeks = streak?.streakWeeks ?? null;
@@ -125,8 +113,6 @@ export function ClientEvolutionPanel({ clientId }: { clientId: string }) {
         weeklyRegulation={weeklyRegulation}
         sleepDelta={sleepDelta}
         sleepStatus={getWellnessTrendStatus(sleepDelta)}
-        cortisolDelta={cortisolDelta}
-        cortisolStatus={getWellnessTrendStatus(cortisolDelta)}
       />
       <EvolucionFisicaSection
         anthropometrics={evo?.anthropometrics ?? []}
