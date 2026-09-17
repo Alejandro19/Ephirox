@@ -13,7 +13,13 @@ describe('enterprise leads routes', () => {
     for (const id of createdLeadIds) {
       await db.delete(enterpriseLeads).where(eq(enterpriseLeads.id, id)).catch(() => {});
     }
-    await db.delete(adminNotifications).where(like(adminNotifications.message, 'Nueva empresa interesada:%')).catch(() => {});
+    // Bug real encontrado acá: el mensaje cambió a "Nueva solicitud de
+    // demo: ..." (punto 12, formulario "propuesta"→"demo") pero este
+    // cleanup seguía buscando el prefijo viejo "Nueva empresa interesada:" —
+    // nunca borraba nada, y las filas de adminNotifications se acumulaban
+    // entre corridas del suite completo (causa real de la flakiness
+    // "expected 1, got 2/3" ya observada esta sesión).
+    await db.delete(adminNotifications).where(like(adminNotifications.message, 'Nueva solicitud de demo:%')).catch(() => {});
   });
 
   it('crea un lead sin necesitar autenticación (endpoint público de la landing), y una alarma en el panel admin', async () => {
@@ -64,5 +70,33 @@ describe('enterprise leads routes', () => {
     const res = await request(app).post('/api/enterprise-leads').send({ nombre: 'Sin Empresa', rol: 'CFO' });
     expect(res.status).toBe(400);
     expect(res.body.success).toBe(false);
+  });
+
+  it('rechaza un correo personal/gratuito (punto 12.1 — correo de trabajo corporativo)', async () => {
+    const res = await request(app)
+      .post('/api/enterprise-leads')
+      .send({ nombre: 'Correo Personal', correo: 'alguien@gmail.com', celular: '+57 300 000 0000' });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/correo electrónico corporativo/i);
+  });
+
+  it('guarda país y sitio web (punto 12.1 — Paso 2 del formulario)', async () => {
+    const res = await request(app)
+      .post('/api/enterprise-leads')
+      .send({
+        nombre: 'Marta Gil',
+        empresa: 'Gamma SAS',
+        rol: 'COO',
+        correo: 'marta@gamma.com',
+        celular: '+57 302 111 2222',
+        tamano: '31 – 80',
+        pais: 'México',
+        sitioWeb: 'gamma.com',
+      });
+    expect(res.status).toBe(201);
+    const rows = await db.select().from(enterpriseLeads).where(eq(enterpriseLeads.empresa, 'Gamma SAS'));
+    expect(rows).toHaveLength(1);
+    createdLeadIds.push(rows[0].id);
+    expect(rows[0]).toMatchObject({ pais: 'México', sitioWeb: 'gamma.com' });
   });
 });

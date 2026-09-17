@@ -125,6 +125,8 @@ export function EnterpriseLeadsPanel() {
                 <th style={thStyle}>Correo</th>
                 <th style={thStyle}>Celular</th>
                 <th style={thStyle}>Equipo</th>
+                <th style={thStyle}>País</th>
+                <th style={thStyle}>Sitio web</th>
                 <th style={thStyle}>Fecha</th>
                 <th style={thStyle}>Estado</th>
               </tr>
@@ -138,6 +140,8 @@ export function EnterpriseLeadsPanel() {
                   <td style={tdStyle}>{lead.correo || '—'}</td>
                   <td style={tdStyle}>{lead.celular || '—'}</td>
                   <td style={tdStyle}>{lead.tamano || '—'}</td>
+                  <td style={tdStyle}>{lead.pais || '—'}</td>
+                  <td style={tdStyle}>{lead.sitioWeb || '—'}</td>
                   <td style={tdStyle}>{new Date(lead.createdAt).toLocaleDateString('es-CO')}</td>
                   <td style={tdStyle}>
                     <select

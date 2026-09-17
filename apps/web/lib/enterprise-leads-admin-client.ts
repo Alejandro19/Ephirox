@@ -25,6 +25,8 @@ export type AdminEnterpriseLead = {
   correo: string | null;
   celular: string | null;
   tamano: string | null;
+  pais: string | null;
+  sitioWeb: string | null;
   quien: string | null;
   estado: EnterpriseLeadEstado;
   createdAt: string;

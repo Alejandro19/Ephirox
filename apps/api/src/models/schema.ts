@@ -1162,6 +1162,10 @@ export const enterpriseLeads = pgTable('enterprise_leads', {
   rol: text('rol'),
   tamano: text('tamano'),
   quien: text('quien'),
+  // Punto 12.1: revelado progresivo + campos de calificación restaurados —
+  // sede/país (prellenado "Colombia" en el formulario) y sitio web (opcional).
+  pais: text('pais'),
+  sitioWeb: text('sitio_web'),
   // Pipeline del submódulo admin "Leads por contactar".
   estado: text('estado').notNull().default('nuevo'), // nuevo | contactado | preparando_propuesta | propuesta_entregada | cerrado
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),

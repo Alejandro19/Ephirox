@@ -33,9 +33,8 @@ export async function updateEnterpriseLeadEstado(
 // volvió nullable esa columna, apps/api/drizzle/manual-migrations/
 // 2026-09-06-admin-notifications-nullable-client.sql).
 async function createAdminAlert(lead: EnterpriseLeadRow): Promise<void> {
-  // El formulario público ya no pide empresa/rol (pasó de "preparar
-  // propuesta" a "solicitar demo" — esa calificación se hace en vivo en la
-  // llamada), así que casi siempre vienen vacíos para leads nuevos.
+  // Punto 12.1: el formulario vuelve a pedir empresa/cargo (revelado
+  // progresivo, Paso 2) — casi siempre vienen con dato para leads nuevos.
   const contexto = lead.empresa ? ` — ${lead.empresa}${lead.rol ? ` (${lead.rol})` : ''}` : '';
   await db.insert(adminNotifications).values({
     type: 'enterprise_lead',
@@ -59,15 +58,17 @@ async function notifyEnterpriseLead(lead: EnterpriseLeadRow): Promise<void> {
   const subject = `Nueva solicitud de demo: ${lead.nombre}`;
   const html = renderEmailHtml({
     preheader: `${lead.nombre} quiere agendar una demo de Ephirox.`,
-    // empresa/rol/tamano/quien ya no los pide el formulario público (pasó de
-    // "preparar propuesta" a "solicitar demo") — se muestran solo si vienen
-    // (leads viejos, o si algún día se vuelven a capturar en otro flujo).
+    // Punto 12.1: Empresa/Cargo/Tamaño de cohorte vuelven a pedirse (Paso 2,
+    // revelado progresivo) — Sede/país y sitio web son campos nuevos. Todo
+    // se muestra solo si viene (leads viejos, o si se abandonó a mitad).
     bodyHtml: `<p style="margin:0 0 6px;"><strong>Nombre:</strong> ${lead.nombre}</p>
 <p style="margin:0 0 6px;"><strong>Correo:</strong> ${lead.correo}</p>
 <p style="margin:0 0 6px;"><strong>WhatsApp:</strong> ${lead.celular}</p>
 ${lead.empresa ? `<p style="margin:0 0 6px;"><strong>Empresa:</strong> ${lead.empresa}</p>` : ''}
-${lead.rol ? `<p style="margin:0 0 6px;"><strong>Rol:</strong> ${lead.rol}</p>` : ''}
-${lead.tamano ? `<p style="margin:0 0 6px;"><strong>Equipo a considerar:</strong> ${lead.tamano}</p>` : ''}
+${lead.rol ? `<p style="margin:0 0 6px;"><strong>Cargo:</strong> ${lead.rol}</p>` : ''}
+${lead.tamano ? `<p style="margin:0 0 6px;"><strong>Tamaño de cohorte:</strong> ${lead.tamano}</p>` : ''}
+${lead.pais ? `<p style="margin:0 0 6px;"><strong>Sede / país:</strong> ${lead.pais}</p>` : ''}
+${lead.sitioWeb ? `<p style="margin:0 0 6px;"><strong>Sitio web:</strong> ${lead.sitioWeb}</p>` : ''}
 ${lead.quien ? `<p style="margin:0;"><strong>Quién más debería estar:</strong> ${lead.quien}</p>` : ''}`,
   });
 

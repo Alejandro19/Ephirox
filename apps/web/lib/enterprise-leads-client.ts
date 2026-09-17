@@ -4,12 +4,14 @@ export type EnterpriseLeadInput = {
   nombre: string;
   correo: string;
   celular: string;
-  // El formulario de la landing ya no pide empresa/rol/tamaño de equipo
-  // (pasó de "preparar propuesta" a "solicitar demo") — se dejan opcionales
-  // para no romper el tipo compartido con el resto del backend.
+  // Paso 2 del formulario (revelado progresivo, punto 12.1) — Empresa/Cargo/
+  // Tamaño de cohorte/Sede-país/Sitio web. Quedan opcionales a nivel de tipo
+  // para no romper el resto del backend, aunque el formulario los pide.
   empresa?: string;
   rol?: string;
   tamano?: string;
+  pais?: string;
+  sitioWeb?: string;
   quien?: string;
 };
 
