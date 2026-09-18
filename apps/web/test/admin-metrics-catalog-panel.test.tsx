@@ -9,6 +9,7 @@ vi.mock('../lib/assignment-criteria-client');
 const HRV_METRIC: criteriaClient.MetricsCatalogEntry = {
   id: 'm1', name: 'HRV basal (RMSSD)', unit: 'ms', source: 'wearable', fieldKey: 'hrvNocturno',
   aggregation: 'latest', referenceRange: { min: 40, max: 60 }, active: true, createdAt: '2026-09-01T00:00:00.000Z',
+  modulesInUse: ['stress'],
 };
 
 describe('AdminMetricsCatalogPanel (Fase 6)', () => {
@@ -22,6 +23,7 @@ describe('AdminMetricsCatalogPanel (Fase 6)', () => {
     expect(screen.getByText('wearable')).toBeInTheDocument();
     expect(screen.getByDisplayValue('40')).toBeInTheDocument();
     expect(screen.getByDisplayValue('60')).toBeInTheDocument();
+    expect(screen.getByText('Stress')).toBeInTheDocument();
   });
 
   it('toggles a metric active/inactive', async () => {

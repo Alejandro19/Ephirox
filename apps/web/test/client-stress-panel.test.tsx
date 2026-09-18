@@ -25,36 +25,35 @@ const DISABLED_REGULATION_CAPACITY: stressClient.RegulationCapacityOverview = { 
 function mockFetches({
   techniques = [],
   completions = [],
-  tip = null,
   morningCheckin = { id: 'mc1', fecha: '2026-08-02', energia: 3, tension: 3, claridad: 3, activacionMatutina: 6 },
   cognitiveLoad = DEFAULT_COGNITIVE_LOAD,
   activeCase = null,
   regulationCapacity = DISABLED_REGULATION_CAPACITY,
+  closedCases = [],
 }: {
   techniques?: stressClient.StressTechnique[];
   completions?: stressClient.StressCompletion[];
-  tip?: stressClient.StressTip;
   morningCheckin?: stressClient.MorningCheckin;
   cognitiveLoad?: stressClient.CognitiveLoadOverview;
   activeCase?: labeledCasesClient.ActiveCaseView | null;
   regulationCapacity?: stressClient.RegulationCapacityOverview;
+  closedCases?: labeledCasesClient.ClosedCaseSummary[];
 } = {}) {
   vi.mocked(stressClient.listTechniques).mockResolvedValue(techniques);
   vi.mocked(stressClient.listCompletions).mockResolvedValue(completions);
-  vi.mocked(stressClient.getTipOfTheDay).mockResolvedValue(tip);
   vi.mocked(stressClient.getTodayMorningCheckin).mockResolvedValue(morningCheckin);
   vi.mocked(stressClient.getCognitiveLoadOverview).mockResolvedValue(cognitiveLoad);
   vi.mocked(stressClient.getRegulationCapacityOverview).mockResolvedValue(regulationCapacity);
   vi.mocked(labeledCasesClient.getActiveCase).mockResolvedValue(activeCase);
+  vi.mocked(labeledCasesClient.listClosedCases).mockResolvedValue(closedCases);
 }
 
 describe('ClientStressPanel', () => {
-  it('shows the assigned protocols and the tip of the day', async () => {
+  it('shows the assigned protocols', async () => {
     mockFetches({
       techniques: [
         { id: 't1', title: 'Respiración 4-7-8', type: 'Respiración', duration: '5 min', durationMinutes: 5, durationSeconds: null, description: null, videoUrl: null, videoName: null, youtubeUrl: null, audioUrl: null, audioName: null, emotion: null, precautionNote: null, isRitual: false },
       ],
-      tip: { id: 'tip1', content: 'Duerme 8 horas.' },
     });
 
     render(<ClientStressPanel clientId="client-1" />);
@@ -62,7 +61,16 @@ describe('ClientStressPanel', () => {
     // en la card "Recomendado para ti ahora" (siempre el primero, ver
     // ClientStressPanel.tsx) y en la librería "Tus protocolos" de abajo.
     await waitFor(() => expect(screen.getAllByText('Respiración 4-7-8').length).toBeGreaterThan(0));
-    expect(screen.getByText(/Duerme 8 horas\./)).toBeInTheDocument();
+  });
+
+  it('no longer shows the legacy "Momento de regulación", "Sabías que", or "Carga cognitiva" cards', async () => {
+    mockFetches({ cognitiveLoad: { ...DEFAULT_COGNITIVE_LOAD, today: 5 } });
+    render(<ClientStressPanel clientId="client-1" />);
+    await waitFor(() => expect(screen.getByText('Capacidad de regulación')).toBeInTheDocument());
+    expect(screen.queryByText('Momento de regulación')).not.toBeInTheDocument();
+    expect(screen.queryByText('Sabías que')).not.toBeInTheDocument();
+    expect(screen.queryByText('Carga cognitiva')).not.toBeInTheDocument();
+    expect(screen.queryByText('Tendencia 14 días')).not.toBeInTheDocument();
   });
 
   it('fills "Tus protocolos" with the 3 example protocols when none are assigned yet, and never shows it empty', async () => {
@@ -139,6 +147,28 @@ describe('ClientStressPanel', () => {
     expect(screen.queryByText('Tu mentor está diseñando tu plan personalizado.')).not.toBeInTheDocument();
   });
 
+  it('shows a simple protocol-history list (nombre + rango de fechas) for a mentoring client', async () => {
+    mockFetches({
+      activeCase: {
+        labeledCase: {
+          id: 'case-2', caseNumber: 1300, clientId: 'client-1', module: 'stress', protocolId: 'p2',
+          mentorId: 'm1', assignedAt: new Date().toISOString(), cycleWeeks: 12, outcome: null,
+        },
+        mentor: { id: 'm1', name: 'Sofía Duarte', specialty: null },
+        protocol: { id: 'p2', name: 'Recuperación Vagal — Nivel 2', mechanism: null },
+        resources: [],
+        checkpoints: [],
+      },
+      closedCases: [
+        { id: 'closed-1', protocolName: 'Recuperación Vagal — Nivel 1', assignedAt: '2026-06-01T00:00:00.000Z', closedAt: '2026-08-01T00:00:00.000Z' },
+      ],
+    });
+
+    render(<ClientStressPanel clientId="client-1" clientType="mentoring" />);
+    expect(await screen.findByText('Historial de protocolos')).toBeInTheDocument();
+    expect(screen.getByText('Recuperación Vagal — Nivel 1')).toBeInTheDocument();
+  });
+
   it('shows "Capacidad de regulación" inverted from Carga Cognitiva (10 - carga, escalado a 0-100)', async () => {
     mockFetches({
       cognitiveLoad: {
@@ -203,7 +233,6 @@ describe('ClientStressPanel', () => {
   it('shows the generic upgrade card when this client type has no access to Stress', async () => {
     vi.mocked(stressClient.listTechniques).mockRejectedValue(new PermissionDeniedError('Este módulo no está disponible para tu tipo de cuenta.'));
     vi.mocked(stressClient.listCompletions).mockResolvedValue([]);
-    vi.mocked(stressClient.getTipOfTheDay).mockResolvedValue(null);
 
     render(<ClientStressPanel clientId="client-1" />);
     expect(await screen.findByText('Disponible en Premium')).toBeInTheDocument();

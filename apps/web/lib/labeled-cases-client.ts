@@ -87,3 +87,33 @@ export async function getActiveCase(clientId: string, module: LabeledCaseModule)
   if (!body.success) throw new Error(body.error || 'Error al obtener tu protocolo activo.');
   return body.activeCase;
 }
+
+export type ClosedCaseSummary = { id: string; protocolName: string; assignedAt: string; closedAt: string | null };
+
+export async function listClosedCases(clientId: string, module: LabeledCaseModule): Promise<ClosedCaseSummary[]> {
+  const body = await authorizedRequest<{ success: boolean; cases: ClosedCaseSummary[]; error?: string }>(
+    `/api/clients/${clientId}/labeled-cases/closed?module=${module}`,
+    'GET'
+  );
+  if (!body.success) throw new Error(body.error || 'Error al obtener tu historial de protocolos.');
+  return body.cases;
+}
+
+export type RecentCaseLogEntry = {
+  id: string;
+  caseNumber: number;
+  clientName: string;
+  clientType: string;
+  protocolName: string;
+  mentorName: string | null;
+  assignedAt: string;
+};
+
+export async function listRecentCases(module: LabeledCaseModule): Promise<RecentCaseLogEntry[]> {
+  const body = await authorizedRequest<{ success: boolean; cases: RecentCaseLogEntry[]; error?: string }>(
+    `/api/admin/labeled-cases/recent?module=${module}`,
+    'GET'
+  );
+  if (!body.success) throw new Error(body.error || 'Error al obtener las asignaciones recientes.');
+  return body.cases;
+}

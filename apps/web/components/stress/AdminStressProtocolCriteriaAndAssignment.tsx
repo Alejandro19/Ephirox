@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { updateProtocolCriteria } from '../../lib/stress-protocols-client';
 import { listCriteria, listMetrics, getMatchingClients, type AssignmentCriteria, type MetricsCatalogEntry } from '../../lib/assignment-criteria-client';
 import { listActiveClientsWithBaseline, type ActiveClientBaseline } from '../../lib/admin-client-baseline-client';
-import { createCase } from '../../lib/labeled-cases-client';
+import { createCase, listRecentCases, type RecentCaseLogEntry } from '../../lib/labeled-cases-client';
 import { OPERATOR_LABEL } from '../admin/criteria/CriteriaRuleBuilder';
 import type { ConditionNode } from '@latribu/shared-types';
 import { showToast } from '../layout/AppShell';
@@ -36,6 +36,33 @@ const tagMatchStyle: React.CSSProperties = {
   fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.03em', color: 'var(--eph-accent)',
   background: 'rgba(132,160,110,.12)', border: '1px solid var(--eph-accent-edge)', borderRadius: 999, padding: '3px 9px', whiteSpace: 'nowrap',
 };
+
+// "Flag de estado" bajo cada tarjeta de baseline (spec 19.1/20.1): contra el
+// rango de referencia real del catálogo (lab/wearable/médico), nunca contra
+// un percentil de cohorte. Sin rango definido para ese marcador todavía
+// (Sleep score y Recovery score no tienen uno sembrado — ver SEED_METRICS,
+// metrics-catalog.service.ts), no se inventa un umbral: simplemente no se
+// muestra flag para ese caso.
+function referenceFlag(metricNamePrefix: string, value: number | null, metrics: MetricsCatalogEntry[]): string | null {
+  if (value == null) return null;
+  const metric = metrics.find((m) => m.name.startsWith(metricNamePrefix));
+  const range = metric?.referenceRange;
+  if (!range || (range.min == null && range.max == null)) return null;
+  const rangeLabel = `${range.min ?? '0'}–${range.max ?? '∞'} ${metric?.unit ?? ''}`.trim();
+  if (range.min != null && value < range.min) return `Bajo rango de referencia (${rangeLabel})`;
+  if (range.max != null && value > range.max) return `Sobre rango de referencia (${rangeLabel})`;
+  return `Dentro de rango (${rangeLabel})`;
+}
+
+function relativeTime(iso: string): string {
+  const diffMs = Date.now() - new Date(iso).getTime();
+  const diffDays = Math.floor(diffMs / (24 * 60 * 60 * 1000));
+  if (diffDays <= 0) return 'hoy';
+  if (diffDays === 1) return 'hace 1 día';
+  if (diffDays < 30) return `hace ${diffDays} días`;
+  const diffMonths = Math.floor(diffDays / 30);
+  return diffMonths === 1 ? 'hace 1 mes' : `hace ${diffMonths} meses`;
+}
 
 function renderConditionChips(node: ConditionNode, metricsById: Map<string, MetricsCatalogEntry>): React.ReactNode {
   if ('metric_id' in node) {
@@ -78,12 +105,19 @@ export function AdminStressProtocolCriteriaAndAssignment({
   const [loading, setLoading] = useState(true);
   const [assigning, setAssigning] = useState(false);
   const [assignedCount, setAssignedCount] = useState<number | null>(null);
+  const [recentCases, setRecentCases] = useState<RecentCaseLogEntry[]>([]);
 
   async function refetch() {
-    const [criteriaRows, metricRows, clientRows] = await Promise.all([listCriteria(), listMetrics(), listActiveClientsWithBaseline()]);
+    const [criteriaRows, metricRows, clientRows, recentRows] = await Promise.all([
+      listCriteria(),
+      listMetrics(),
+      listActiveClientsWithBaseline(),
+      listRecentCases('stress'),
+    ]);
     setCriteriaList(criteriaRows.filter((c) => c.status === 'publicado' && c.applicableModules.includes('stress')));
     setMetrics(metricRows);
     setActiveClients(clientRows);
+    setRecentCases(recentRows);
   }
 
   useEffect(() => {
@@ -136,6 +170,7 @@ export function AdminStressProtocolCriteriaAndAssignment({
       }
       setAssignedCount(count);
       showToast(`Protocolo asignado a ${count} cliente(s) — caso etiquetado creado por cada uno.`, 'success');
+      listRecentCases('stress').then(setRecentCases).catch(() => {});
     } catch (e) {
       showToast((e as Error).message, 'error');
     } finally {
@@ -179,14 +214,22 @@ export function AdminStressProtocolCriteriaAndAssignment({
               ['FC en reposo', focusedClient.fcReposo, 'bpm', false],
               ['Sleep score', focusedClient.suenoScore, '/100', false],
               ['Recovery score', focusedClient.recoveryScore, '/100', false],
-            ] as const).map(([label, value, unit, highlight]) => (
-              <div key={label} style={highlight ? tileHighlightStyle : tileStyle}>
-                <div style={{ fontSize: 10, color: 'var(--eph-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</div>
-                <div style={{ fontFamily: 'var(--font-cormorant), serif', fontSize: 24, color: 'var(--eph-text)', marginTop: 4 }}>
-                  {value != null ? `${value} ${unit}` : '—'}
+            ] as const).map(([label, value, unit, highlight]) => {
+              const flag = referenceFlag(label, value, metrics);
+              return (
+                <div key={label} style={highlight ? tileHighlightStyle : tileStyle}>
+                  <div style={{ fontSize: 10, color: 'var(--eph-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</div>
+                  <div style={{ fontFamily: 'var(--font-cormorant), serif', fontSize: 24, color: 'var(--eph-text)', marginTop: 4 }}>
+                    {value != null ? `${value} ${unit}` : '—'}
+                  </div>
+                  {flag && (
+                    <div style={{ fontSize: 11, marginTop: 6, fontWeight: 600, color: flag.startsWith('Dentro') ? 'var(--eph-accent)' : 'var(--eph-danger)' }}>
+                      {flag}
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </>
       )}
@@ -224,6 +267,26 @@ export function AdminStressProtocolCriteriaAndAssignment({
         <p style={{ fontSize: 12, color: 'var(--eph-accent)', marginTop: 8 }}>
           Protocolo asignado — {assignedCount} caso(s) etiquetado(s) creado(s), cada uno con su propio snapshot de baseline.
         </p>
+      )}
+
+      <h3 style={{ margin: '26px 0 8px', fontSize: 14, fontWeight: 600, color: 'var(--eph-text)' }}>Asignaciones recientes</h3>
+      {recentCases.length === 0 ? (
+        <p style={{ fontSize: 12, color: 'var(--eph-faint)' }}>Todavía no hay protocolos asignados en Stress.</p>
+      ) : (
+        <div>
+          {recentCases.map((rc, i) => (
+            <div
+              key={rc.id}
+              style={{ padding: '8px 0', borderBottom: i === recentCases.length - 1 ? 'none' : '0.5px solid var(--eph-line)', fontSize: 12, color: 'var(--eph-text)', display: 'flex', justifyContent: 'space-between', gap: 10 }}
+            >
+              <span>
+                <strong>{rc.clientName}</strong>
+                <span style={{ color: 'var(--eph-muted)' }}> — {rc.clientType}</span> → {rc.protocolName} · <span style={{ color: 'var(--eph-muted)' }}>Caso #{rc.caseNumber}</span>
+              </span>
+              <span style={{ color: 'var(--eph-faint)', whiteSpace: 'nowrap' }}>{relativeTime(rc.assignedAt)}</span>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );

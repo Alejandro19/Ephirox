@@ -10,7 +10,7 @@ function err(res: Response, message: string, status = 400) {
 }
 
 export async function listMetrics(req: Request, res: Response) {
-  const metrics = await metricsService.listMetrics();
+  const metrics = await metricsService.listMetricsWithModules();
   return ok(res, { metrics });
 }
 

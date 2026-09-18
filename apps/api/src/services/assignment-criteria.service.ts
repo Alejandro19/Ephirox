@@ -1,13 +1,29 @@
 import { eq, asc, and, inArray } from 'drizzle-orm';
 import { db } from '../db/index.js';
-import { assignmentCriteria, clients, metricsCatalog, type AssignmentCriteria } from '../models/schema.js';
+import { assignmentCriteria, clients, metricsCatalog, stressProtocols, type AssignmentCriteria } from '../models/schema.js';
 import { evaluateCondition } from './criteria-evaluation-engine.js';
 import { resolveMetricValue } from './metric-value-resolver.js';
 import { findMetricById } from './metrics-catalog.service.js';
 import type { AssignmentCriteriaInput, ConditionNode } from '@latribu/shared-types';
 
-export async function listCriteria(): Promise<AssignmentCriteria[]> {
-  return db.select().from(assignmentCriteria).orderBy(asc(assignmentCriteria.name));
+// "cuántos protocolos lo usan actualmente" (spec 22/23.3, librería de
+// criterios en Administración) — por ahora solo cuenta stress_protocols
+// (el único módulo con su propia librería de protocolos todavía, ver Fase
+// 2 del plan); cuando Workout/Nutrition/Sleep tengan la suya, sumar sus
+// conteos acá.
+export type AssignmentCriteriaWithCount = AssignmentCriteria & { protocolCount: number };
+
+export async function listCriteria(): Promise<AssignmentCriteriaWithCount[]> {
+  const [rows, protocolRows] = await Promise.all([
+    db.select().from(assignmentCriteria).orderBy(asc(assignmentCriteria.name)),
+    db.select({ criteriaId: stressProtocols.criteriaId }).from(stressProtocols),
+  ]);
+  const countByCriteria = new Map<string, number>();
+  for (const p of protocolRows) {
+    if (!p.criteriaId) continue;
+    countByCriteria.set(p.criteriaId, (countByCriteria.get(p.criteriaId) ?? 0) + 1);
+  }
+  return rows.map((r) => ({ ...r, protocolCount: countByCriteria.get(r.id) ?? 0 }));
 }
 
 export async function findCriteriaById(criteriaId: string): Promise<AssignmentCriteria | undefined> {

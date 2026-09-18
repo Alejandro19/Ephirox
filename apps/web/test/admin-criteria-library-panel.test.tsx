@@ -9,16 +9,19 @@ vi.mock('../lib/assignment-criteria-client');
 const HRV_METRIC: criteriaClient.MetricsCatalogEntry = {
   id: 'm1', name: 'HRV basal (RMSSD)', unit: 'ms', source: 'wearable', fieldKey: 'hrvNocturno',
   aggregation: 'latest', referenceRange: { min: 40, max: 60 }, active: true, createdAt: '2026-09-01T00:00:00.000Z',
+  modulesInUse: ['stress'],
 };
 const CORTISOL_METRIC: criteriaClient.MetricsCatalogEntry = {
   id: 'm2', name: 'Cortisol PM', unit: 'µg/dL', source: 'lab_panel', fieldKey: 'cortisol',
   aggregation: 'latest', referenceRange: { min: 6, max: 18 }, active: true, createdAt: '2026-09-01T00:00:00.000Z',
+  modulesInUse: [],
 };
 
 const DRAFT_CRITERIA: criteriaClient.AssignmentCriteria = {
   id: 'c1', name: 'Recuperación Vagal — criterio estándar',
   conditions: { op: 'AND', rules: [{ metric_id: 'm1', operator: 'menor_que', value: 40 }, { metric_id: 'm2', operator: 'mayor_que', value: 15 }] },
   applicableModules: ['stress'], status: 'borrador', version: 1, createdAt: '2026-09-01T00:00:00.000Z', updatedAt: '2026-09-01T00:00:00.000Z',
+  protocolCount: 2,
 };
 
 describe('AdminCriteriaLibraryPanel (Fase 6 — armador de reglas)', () => {
@@ -31,6 +34,12 @@ describe('AdminCriteriaLibraryPanel (Fase 6 — armador de reglas)', () => {
     vi.mocked(criteriaClient.listCriteria).mockResolvedValue([]);
     render(<AdminCriteriaLibraryPanel />);
     expect(await screen.findByText('Aún no hay criterios de asignación guardados.')).toBeInTheDocument();
+  });
+
+  it('shows how many protocols are using each criterion', async () => {
+    vi.mocked(criteriaClient.listCriteria).mockResolvedValue([DRAFT_CRITERIA]);
+    render(<AdminCriteriaLibraryPanel />);
+    expect(await screen.findByText('2 protocolos')).toBeInTheDocument();
   });
 
   it('creates a criterion with 2 chained AND conditions, saved as borrador', async () => {

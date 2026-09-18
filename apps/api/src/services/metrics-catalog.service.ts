@@ -1,7 +1,7 @@
 import { eq, asc } from 'drizzle-orm';
 import { db } from '../db/index.js';
-import { metricsCatalog, type MetricsCatalogEntry } from '../models/schema.js';
-import type { MetricsCatalogUpdate } from '@latribu/shared-types';
+import { metricsCatalog, assignmentCriteria, type MetricsCatalogEntry } from '../models/schema.js';
+import type { MetricsCatalogUpdate, ConditionNode } from '@latribu/shared-types';
 
 // Seed controlado por código (ver comentario de metricsCatalog en schema.ts)
 // — cada fieldKey está verificado contra el schema Drizzle real (no
@@ -62,4 +62,36 @@ export async function updateMetric(metricId: string, input: MetricsCatalogUpdate
   if (input.reference_range !== undefined) fields.referenceRange = input.reference_range;
   const [updated] = await db.update(metricsCatalog).set(fields).where(eq(metricsCatalog.id, metricId)).returning();
   return updated ?? null;
+}
+
+function collectMetricIds(node: ConditionNode): string[] {
+  if ('metric_id' in node) return [node.metric_id];
+  return node.rules.flatMap(collectMetricIds);
+}
+
+// "Módulos donde se usa" cada marcador (spec 22/23.3, catálogo de
+// marcadores) — derivado, no una columna propia: se calcula recorriendo qué
+// criterios de asignación referencian cada métrica en su árbol de
+// condiciones, y se unen los módulos aplicables de esos criterios. Un mismo
+// marcador queda disponible para cualquier módulo apenas un criterio de ese
+// módulo lo usa — no hace falta declararlo a mano por marcador.
+export type MetricsCatalogEntryWithModules = MetricsCatalogEntry & { modulesInUse: string[] };
+
+export async function listMetricsWithModules(): Promise<MetricsCatalogEntryWithModules[]> {
+  const [metrics, criteria] = await Promise.all([
+    listMetrics(),
+    db.select({ conditions: assignmentCriteria.conditions, applicableModules: assignmentCriteria.applicableModules }).from(assignmentCriteria),
+  ]);
+
+  const modulesByMetricId = new Map<string, Set<string>>();
+  for (const c of criteria) {
+    const metricIds = collectMetricIds(c.conditions as ConditionNode);
+    for (const metricId of metricIds) {
+      const set = modulesByMetricId.get(metricId) ?? new Set<string>();
+      for (const m of c.applicableModules) set.add(m);
+      modulesByMetricId.set(metricId, set);
+    }
+  }
+
+  return metrics.map((m) => ({ ...m, modulesInUse: Array.from(modulesByMetricId.get(m.id) ?? []) }));
 }

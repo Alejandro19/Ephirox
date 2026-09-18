@@ -29,22 +29,28 @@ function average(values: number[]): number {
   return values.reduce((s, v) => s + v, 0) / values.length;
 }
 
-function Sparkline({ points }: { points: number[] }) {
+// Línea punteada de referencia (mismo comportamiento que el mockup, punto
+// 23.3): marca dónde cae tu línea base habitual dentro de la misma escala
+// del sparkline, para poder ver de un vistazo si hoy quedó por encima o por
+// debajo sin tener que leer el delta en texto.
+function Sparkline({ points, baseline }: { points: number[]; baseline: number | null }) {
   if (points.length < 2) return null;
   const width = 160;
   const height = 44;
-  const min = Math.min(...points);
-  const max = Math.max(...points);
+  const allValues = baseline != null ? [...points, baseline] : points;
+  const min = Math.min(...allValues);
+  const max = Math.max(...allValues);
   const range = max - min || 1;
   const step = width / (points.length - 1);
-  const coords = points.map((p, i) => {
-    const x = i * step;
-    const y = height - ((p - min) / range) * height;
-    return `${x.toFixed(1)},${y.toFixed(1)}`;
-  });
+  const toY = (v: number) => height - ((v - min) / range) * height;
+  const coords = points.map((p, i) => `${(i * step).toFixed(1)},${toY(p).toFixed(1)}`);
   const [lastX, lastY] = coords[coords.length - 1].split(',');
+  const baselineY = baseline != null ? toY(baseline) : null;
   return (
-    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Tendencia de capacidad de regulación, últimos días">
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Tendencia de capacidad de regulación, últimos días, con tu línea base habitual marcada">
+      {baselineY != null && (
+        <line x1="0" y1={baselineY.toFixed(1)} x2={width} y2={baselineY.toFixed(1)} stroke="var(--eph-faint)" strokeWidth="1" strokeDasharray="2 3" opacity="0.6" />
+      )}
       <polyline
         points={coords.join(' ')}
         fill="none"
@@ -112,9 +118,10 @@ export function RegulationCapacityCard({
       )}
       {sparklinePoints.length >= 2 && (
         <div className="mt-4 flex items-end gap-4">
-          <Sparkline points={sparklinePoints} />
+          <Sparkline points={sparklinePoints} baseline={baseline} />
           <p className="font-body text-xs leading-relaxed" style={{ color: 'var(--eph-faint)' }}>
             Últimos {sparklinePoints.length} días
+            {baseline != null && <><br />Línea punteada = tu línea base habitual</>}
           </p>
         </div>
       )}

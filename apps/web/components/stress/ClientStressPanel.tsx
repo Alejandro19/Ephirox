@@ -6,7 +6,6 @@ import {
   listTechniques,
   listCompletions,
   markCompletion,
-  getTipOfTheDay,
   getTodayMorningCheckin,
   getCognitiveLoadOverview,
   getRegulationCapacityOverview,
@@ -14,22 +13,18 @@ import {
   type StressCompletion,
   type RegulationCapacityOverview,
 } from '../../lib/stress-client';
-import { getActiveCase, type ActiveCaseView } from '../../lib/labeled-cases-client';
+import { getActiveCase, listClosedCases, type ActiveCaseView, type ClosedCaseSummary } from '../../lib/labeled-cases-client';
 import { MorningCheckinSummary } from './MorningCheckinSummary';
-import { CognitiveLoadSection } from './CognitiveLoadSection';
 import { RoxRitualSection } from './RoxRitualSection';
 import { RegulationCapacityCard } from './RegulationCapacityCard';
 import { RecommendedProtocolCard } from './RecommendedProtocolCard';
 import { StressPlanSection } from './StressPlanSection';
 import { StressProtocolLibrary } from './StressProtocolLibrary';
 import { youtubeEmbedUrl } from '../../lib/training-timer-logic';
-import { calculateStressWeeklyStats } from '../../lib/stress-logic';
 import { NEUROWELLNESS_TECHNIQUE_TYPES } from '@latribu/shared-types';
 import { PermissionDeniedError } from '../../lib/api-client';
 import { getModuleAccessState } from '../../lib/module-access';
 import IdentityHeader from '../ui/IdentityHeader';
-import RingProgress from '../ui/RingProgress';
-import ProgressBar from '../ui/ProgressBar';
 import LockedBenefit from '../ui/LockedBenefit';
 import { ProtocolDisclaimerFooter } from '../ui/ProtocolDisclaimerFooter';
 import { InsightsSection } from '../insights/InsightsSection';
@@ -50,6 +45,22 @@ const TECHNIQUE_ICON_PATHS: Record<string, React.ReactNode> = {
     <path d="M10 3v14M4.5 6.5l11 7M4.5 13.5l11-7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
   ),
   'recuperación activa': (
+    <path d="M4 12l3-6 2.5 9L12 6l1.5 6H16" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+  ),
+  // Los 4 tipos de recurso de protocolo (spec punto 18) reusan el path más
+  // cercano de arriba en vez de duplicar — journal de descarga es el único
+  // sin equivalente, así que ese sí tiene su propio ícono.
+  'técnica de respiración': <path d="M3 10c2.5-3 4.5-3 7 0s4.5 3 7 0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" fill="none" />,
+  'meditación guiada': (
+    <path d="M10 4a3 3 0 1 1 0 6 3 3 0 0 1 0-6Zm-6 12c1-3.5 3.5-5.5 6-5.5s5 2 6 5.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" fill="none" />
+  ),
+  'journal de descarga': (
+    <>
+      <rect x="4.5" y="2.5" width="11" height="15" rx="1.5" stroke="currentColor" strokeWidth="1.4" fill="none" />
+      <path d="M7.5 7h5M7.5 10h5M7.5 13h3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    </>
+  ),
+  'actividad específica': (
     <path d="M4 12l3-6 2.5 9L12 6l1.5 6H16" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" fill="none" />
   ),
   base: (
@@ -138,16 +149,16 @@ function StressPlayer({
 }
 
 async function fetchStressBundle(clientId: string) {
-  const [techniques, completions, tip, morningCheckin, cognitiveLoad, activeCase, regulationCapacity] = await Promise.all([
+  const [techniques, completions, morningCheckin, cognitiveLoad, activeCase, regulationCapacity, closedCases] = await Promise.all([
     listTechniques(clientId),
     listCompletions(clientId).catch(() => [] as StressCompletion[]),
-    getTipOfTheDay(clientId),
     getTodayMorningCheckin(clientId),
     getCognitiveLoadOverview(clientId),
     getActiveCase(clientId, 'stress').catch(() => null as ActiveCaseView | null),
     getRegulationCapacityOverview(clientId).catch(() => null as RegulationCapacityOverview | null),
+    listClosedCases(clientId, 'stress').catch(() => [] as ClosedCaseSummary[]),
   ]);
-  return { techniques, completions, tip, morningCheckin, cognitiveLoad, activeCase, regulationCapacity };
+  return { techniques, completions, morningCheckin, cognitiveLoad, activeCase, regulationCapacity, closedCases };
 }
 
 export function ClientStressPanel({
@@ -208,7 +219,7 @@ export function ClientStressPanel({
   }
   if (!data) return null;
 
-  const { techniques, completions, tip, morningCheckin, cognitiveLoad, activeCase, regulationCapacity } = data;
+  const { techniques, completions, morningCheckin, cognitiveLoad, activeCase, regulationCapacity, closedCases } = data;
   const active = activeId ? techniques.find((t) => t.id === activeId) : null;
   if (active) {
     const todayStr = new Date().toISOString().slice(0, 10);
@@ -230,7 +241,6 @@ export function ClientStressPanel({
   // (sortOrder). El check-in de ánimo que antes elegía esto según la
   // emoción reportada por el cliente ya no existe como feature.
   const recommended = techniques[0] || null;
-  const weeklyStats = calculateStressWeeklyStats(completions);
   const isNeurowellnessType = (type: string | null) => !!type && (NEUROWELLNESS_TECHNIQUE_TYPES as readonly string[]).includes(type);
   const neurowellnessTechniques = techniques.filter((t) => isNeurowellnessType(t.type));
   const generalTechniques = techniques.filter((t) => !isNeurowellnessType(t.type));
@@ -254,6 +264,8 @@ export function ClientStressPanel({
       {clientType === 'mentoring' && (
         <StressPlanSection
           activeCase={activeCase}
+          onCompleteActiveResource={() => handleComplete(activeCase?.labeledCase.id ?? '')}
+          closedCases={closedCases}
           techniques={neurowellnessTechniques}
           playingAudioId={playingAudioId}
           setPlayingAudioId={setPlayingAudioId}
@@ -271,27 +283,6 @@ export function ClientStressPanel({
         </p>
       )}
 
-      {techniques.length > 0 && (
-        <section className="border p-6 mb-5" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface)' }}>
-          <h2 className="mb-4 font-display text-lg" style={{ color: 'var(--eph-text)' }}>Momento de regulación</h2>
-          <div className="flex items-center gap-4">
-            <RingProgress value={weeklyStats.pct} size={48} />
-            <div className="flex-1">
-              <ProgressBar done={weeklyStats.count} total={7} label="Esta semana" />
-            </div>
-          </div>
-        </section>
-      )}
-
-      {tip && (
-        <div className="mb-5 border p-[18px_20px]" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface-2)' }}>
-          <p className="m-0 font-body text-xs" style={{ color: 'var(--eph-muted)' }}>
-            <strong style={{ color: 'var(--eph-text)' }}>Sabías que</strong> {tip.content}
-          </p>
-        </div>
-      )}
-
-      <CognitiveLoadSection overview={cognitiveLoad} />
       <RoxRitualSection rituals={ritualTechniques} onStart={setActiveId} />
 
       <ProtocolDisclaimerFooter />

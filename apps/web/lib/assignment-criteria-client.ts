@@ -28,6 +28,9 @@ export type MetricsCatalogEntry = {
   referenceRange: { min?: number; max?: number } | null;
   active: boolean;
   createdAt: string;
+  // Derivado — qué módulos (Stress/Workout/Nutrition/Sleep) usan este
+  // marcador hoy, según los criterios de asignación que lo referencian.
+  modulesInUse: string[];
 };
 
 export type AssignmentCriteria = {
@@ -39,6 +42,8 @@ export type AssignmentCriteria = {
   version: number;
   createdAt: string;
   updatedAt: string;
+  // Cuántos protocolos lo están usando actualmente (spec 22/23.3).
+  protocolCount: number;
 };
 
 export async function listMetrics(): Promise<MetricsCatalogEntry[]> {

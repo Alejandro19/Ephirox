@@ -5,6 +5,7 @@ import {
   labeledCaseCheckpoints,
   wearableMetricas,
   cognitiveLoadHistory,
+  clients,
   type LabeledCase,
   type LabeledCaseCheckpoint,
   type Mentor,
@@ -57,6 +58,72 @@ export async function listActiveCasesForModule(module: string): Promise<LabeledC
 export async function findCaseById(caseId: string): Promise<LabeledCase | undefined> {
   const rows = await db.select().from(labeledCases).where(eq(labeledCases.id, caseId)).limit(1);
   return rows[0];
+}
+
+// "Historial de protocolos" (spec 23.3, vista cliente) — casos ya cerrados
+// (outcome no nulo) de este cliente, con el nombre del protocolo resuelto
+// para mostrar filas simples "nombre + rango de fechas".
+export type ClosedCaseSummary = { id: string; protocolName: string; assignedAt: string; closedAt: string | null };
+
+export async function listClosedCasesForClient(clientId: string, module: string): Promise<ClosedCaseSummary[]> {
+  const rows = await db
+    .select()
+    .from(labeledCases)
+    .where(and(eq(labeledCases.clientId, clientId), eq(labeledCases.module, module)))
+    .orderBy(desc(labeledCases.closedAt));
+  const closed = rows.filter((r) => r.outcome != null);
+
+  const summaries: ClosedCaseSummary[] = [];
+  for (const row of closed) {
+    const protocol = row.protocolId ? await findProtocolById(row.protocolId) : undefined;
+    summaries.push({
+      id: row.id,
+      protocolName: protocol?.name ?? 'Protocolo',
+      assignedAt: row.assignedAt as unknown as string,
+      closedAt: row.closedAt as unknown as string | null,
+    });
+  }
+  return summaries;
+}
+
+// "Asignaciones recientes" (spec 19/23.3, vista admin) — últimos casos
+// creados para el módulo, cualquier estado, con cliente/protocolo/mentor ya
+// resueltos para el log de una sola línea del mockup ("Camila Ruiz — CEO →
+// Recuperación Vagal, Nivel 1 · Caso #1247").
+export type RecentCaseLogEntry = {
+  id: string;
+  caseNumber: number;
+  clientName: string;
+  clientType: string;
+  protocolName: string;
+  mentorName: string | null;
+  assignedAt: string;
+};
+
+export async function listRecentCasesForModule(module: string, limit = 10): Promise<RecentCaseLogEntry[]> {
+  const rows = await db
+    .select()
+    .from(labeledCases)
+    .where(eq(labeledCases.module, module))
+    .orderBy(desc(labeledCases.assignedAt))
+    .limit(limit);
+
+  const entries: RecentCaseLogEntry[] = [];
+  for (const row of rows) {
+    const [client] = await db.select({ name: clients.name, clientType: clients.clientType }).from(clients).where(eq(clients.id, row.clientId)).limit(1);
+    const protocol = row.protocolId ? await findProtocolById(row.protocolId) : undefined;
+    const mentor = row.mentorId ? await findMentorById(row.mentorId) : undefined;
+    entries.push({
+      id: row.id,
+      caseNumber: row.caseNumber,
+      clientName: client?.name ?? 'Cliente',
+      clientType: client?.clientType ?? '',
+      protocolName: protocol?.name ?? 'Protocolo',
+      mentorName: mentor?.name ?? null,
+      assignedAt: row.assignedAt as unknown as string,
+    });
+  }
+  return entries;
 }
 
 export async function createCase(clientId: string, input: LabeledCaseInput, assignedBy: string): Promise<LabeledCase> {

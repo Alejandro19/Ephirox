@@ -6,6 +6,8 @@ import { showToast } from '../../layout/AppShell';
 import EmptyState from '../../ui/EmptyState';
 import Badge from '../../ui/Badge';
 
+const MODULE_LABEL: Record<string, string> = { stress: 'Stress', training: 'Workout', nutrition: 'Nutrition', rest: 'Sleep' };
+
 const thStyle: React.CSSProperties = {
   textAlign: 'left', padding: '10px 12px', fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
   fontSize: 10, fontWeight: 400, color: 'var(--eph-muted)', textTransform: 'uppercase',
@@ -82,6 +84,7 @@ export function AdminMetricsCatalogPanel() {
             <th style={thStyle}>Unidad</th>
             <th style={thStyle}>Fuente</th>
             <th style={thStyle}>Rango de referencia</th>
+            <th style={thStyle}>Módulos</th>
             <th style={thStyle}>Estado</th>
           </tr>
         </thead>
@@ -110,6 +113,13 @@ export function AdminMetricsCatalogPanel() {
                   />
                   <button type="button" style={ghostButtonStyle} onClick={() => handleSaveRange(m.id)}>Guardar</button>
                 </div>
+              </td>
+              <td style={tdStyle}>
+                {m.modulesInUse.length === 0 ? (
+                  <span style={{ color: 'var(--eph-faint)' }}>—</span>
+                ) : (
+                  m.modulesInUse.map((mod) => <Badge key={mod} label={MODULE_LABEL[mod] ?? mod} variant="success" />)
+                )}
               </td>
               <td style={tdStyle}>
                 <button type="button" style={{ ...ghostButtonStyle, cursor: 'pointer' }} onClick={() => handleToggleActive(m)}>

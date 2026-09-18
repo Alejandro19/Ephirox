@@ -10,6 +10,10 @@ export const labeledCasesRouter = Router();
 
 labeledCasesRouter.get('/admin/labeled-cases', authMiddleware, adminOnly, asyncHandler(casesController.listActiveCases));
 
+// "Asignaciones recientes" (spec 19/23.3) — log de los últimos casos
+// creados para el módulo, cualquier estado.
+labeledCasesRouter.get('/admin/labeled-cases/recent', authMiddleware, adminOnly, asyncHandler(casesController.getRecentCases));
+
 labeledCasesRouter.post(
   '/admin/clients/:id/labeled-cases',
   authMiddleware,
@@ -43,4 +47,13 @@ labeledCasesRouter.get(
   ownerOrAdmin,
   requirePermission('stress'),
   asyncHandler(casesController.getActiveCaseForClient)
+);
+
+// "Historial de protocolos" (spec 23.3, vista cliente) — casos ya cerrados.
+labeledCasesRouter.get(
+  '/clients/:id/labeled-cases/closed',
+  authMiddleware,
+  ownerOrAdmin,
+  requirePermission('stress'),
+  asyncHandler(casesController.getClosedCasesForClient)
 );

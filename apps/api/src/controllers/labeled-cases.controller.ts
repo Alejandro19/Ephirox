@@ -38,3 +38,15 @@ export async function getActiveCaseForClient(req: Request, res: Response) {
   const view = await casesService.getActiveCaseForClient(req.params.id, module);
   return ok(res, { activeCase: view });
 }
+
+export async function getClosedCasesForClient(req: Request, res: Response) {
+  const module = typeof req.query.module === 'string' ? req.query.module : 'stress';
+  const cases = await casesService.listClosedCasesForClient(req.params.id, module);
+  return ok(res, { cases });
+}
+
+export async function getRecentCases(req: Request, res: Response) {
+  const module = typeof req.query.module === 'string' ? req.query.module : 'stress';
+  const cases = await casesService.listRecentCasesForModule(module);
+  return ok(res, { cases });
+}

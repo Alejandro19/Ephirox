@@ -194,6 +194,9 @@ export function AdminCriteriaLibraryPanel() {
               <strong style={{ color: 'var(--eph-text)', fontSize: 14 }}>{c.name}</strong>
               <Badge label={STATUS_LABEL[c.status]} variant={STATUS_VARIANT[c.status]} />
               <span style={{ fontSize: 11, color: 'var(--eph-muted)' }}>v{c.version}</span>
+              <span style={{ fontSize: 11, color: 'var(--eph-muted)' }}>
+                {c.protocolCount} protocolo{c.protocolCount === 1 ? '' : 's'}
+              </span>
               {c.applicableModules.map((m) => <Badge key={m} label={MODULE_LABEL[m] ?? m} variant="success" />)}
             </div>
             {editingId === c.id ? (

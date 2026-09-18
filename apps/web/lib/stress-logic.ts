@@ -1,6 +1,9 @@
 import { getWeekStart } from './training-home-logic';
 import type { StressCompletion } from './stress-client';
 
+// Todavía usada por Evolution (AdminEvolutionPanel/ClientEvolutionPanel) para
+// su propio conteo de "regulación semanal" — ya no por ClientStressPanel.tsx,
+// que quitó la card "Momento de regulación" que la mostraba directamente.
 export function calculateStressWeeklyStats(completions: StressCompletion[]): { count: number; pct: number } {
   const weekStart = getWeekStart();
   const count = new Set(completions.filter((c) => c.completedDate >= weekStart).map((c) => c.completedDate)).size;
