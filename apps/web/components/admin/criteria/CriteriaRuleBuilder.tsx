@@ -6,7 +6,7 @@ import type { MetricsCatalogEntry } from '../../../lib/assignment-criteria-clien
 export type FlatCondition = { metric_id: string; operator: AssignmentCriteriaOperator; value: number; value_max?: number };
 export type RuleBuilderValue = { op: 'AND' | 'OR'; rules: FlatCondition[] };
 
-const OPERATOR_LABEL: Record<AssignmentCriteriaOperator, string> = {
+export const OPERATOR_LABEL: Record<AssignmentCriteriaOperator, string> = {
   menor_que: 'menor que',
   mayor_que: 'mayor que',
   fuera_de_rango: 'fuera del rango',

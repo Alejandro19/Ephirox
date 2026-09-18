@@ -18,6 +18,7 @@ export type StressProtocol = {
   name: string;
   mechanism: string | null;
   status: StressProtocolStatus;
+  criteriaId: string | null;
   sortOrder: number;
   createdAt: string;
 };
@@ -69,6 +70,16 @@ export async function updateProtocolStatus(protocolId: string, status: StressPro
     { status }
   );
   if (!body.success) throw new Error(body.error || 'Error al actualizar el estado.');
+  return body.protocol;
+}
+
+export async function updateProtocolCriteria(protocolId: string, criteriaId: string | null): Promise<StressProtocol> {
+  const body = await authorizedRequest<{ success: boolean; protocol: StressProtocol; error?: string }>(
+    `/api/admin/stress-protocols/${protocolId}`,
+    'PATCH',
+    { criteria_id: criteriaId }
+  );
+  if (!body.success) throw new Error(body.error || 'Error al actualizar el criterio del protocolo.');
   return body.protocol;
 }
 

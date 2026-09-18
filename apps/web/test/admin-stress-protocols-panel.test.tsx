@@ -1,21 +1,33 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { AdminStressProtocolsPanel } from '../components/admin/stress/AdminStressProtocolsPanel';
 import * as protocolsClient from '../lib/stress-protocols-client';
+import * as criteriaClient from '../lib/assignment-criteria-client';
+import * as baselineClient from '../lib/admin-client-baseline-client';
 
 vi.mock('../lib/stress-protocols-client');
+vi.mock('../lib/assignment-criteria-client');
+vi.mock('../lib/admin-client-baseline-client');
 
 const BASE_PROTOCOL: protocolsClient.StressProtocol = {
   id: 'p1',
   name: 'Recuperación Vagal — Nivel 1',
   mechanism: 'Respiración',
   status: 'borrador',
+  criteriaId: null,
   sortOrder: 0,
   createdAt: '2026-09-01T00:00:00.000Z',
 };
 
 describe('AdminStressProtocolsPanel', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(criteriaClient.listCriteria).mockResolvedValue([]);
+    vi.mocked(criteriaClient.listMetrics).mockResolvedValue([]);
+    vi.mocked(baselineClient.listActiveClientsWithBaseline).mockResolvedValue([]);
+  });
+
   it('shows an empty state when the library has no protocols yet', async () => {
     vi.mocked(protocolsClient.listProtocols).mockResolvedValue([]);
     render(<AdminStressProtocolsPanel />);

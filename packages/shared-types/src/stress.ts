@@ -66,6 +66,9 @@ export const StressProtocolInputSchema = z.object({
   mechanism: z.string().nullable().optional(),
   status: StressProtocolStatusSchema.optional(),
   sort_order: z.coerce.number().int().optional(),
+  // Fase 4: selector "Criterio guardado" del form de protocolo — un uuid de
+  // assignment_criteria (Fase 5/6), o null para quitarlo.
+  criteria_id: z.string().uuid().nullable().optional(),
 });
 export type StressProtocolInput = z.infer<typeof StressProtocolInputSchema>;
 

@@ -14,6 +14,7 @@ import {
   type StressProtocolResource,
 } from '../../../lib/stress-protocols-client';
 import { STRESS_RESOURCE_TYPES, STRESS_PROTOCOL_STATUSES, type StressProtocolStatus, type StressResourceType } from '@latribu/shared-types';
+import { AdminStressProtocolCriteriaAndAssignment } from '../../stress/AdminStressProtocolCriteriaAndAssignment';
 import { showToast } from '../../layout/AppShell';
 import EmptyState from '../../ui/EmptyState';
 import Badge from '../../ui/Badge';
@@ -242,6 +243,14 @@ function ProtocolDetail({ protocolId, onDeleted }: { protocolId: string; onDelet
         ))
       )}
       <ResourceForm protocolId={protocolId} onCreated={(r) => setResources((prev) => [...prev, r])} />
+
+      <div style={{ borderTop: '1px solid var(--eph-line-2)', marginTop: 22, paddingTop: 4 }}>
+        <AdminStressProtocolCriteriaAndAssignment
+          protocolId={protocolId}
+          criteriaId={protocol.criteriaId}
+          onCriteriaChange={(criteriaId) => setProtocol((prev) => (prev ? { ...prev, criteriaId } : prev))}
+        />
+      </div>
 
       <button type="button" style={{ ...dangerButtonStyle, marginTop: 18 }} onClick={handleDeleteProtocol}>
         Eliminar protocolo completo

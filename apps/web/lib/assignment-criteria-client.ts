@@ -94,6 +94,15 @@ export async function publishCriteria(criteriaId: string, input?: Partial<Criter
   return body.criteria;
 }
 
+export async function getMatchingClients(criteriaId: string): Promise<Array<{ id: string; name: string; clientType: string }>> {
+  const body = await authorizedRequest<{ success: boolean; clients: Array<{ id: string; name: string; clientType: string }>; error?: string }>(
+    `/api/admin/assignment-criteria/${criteriaId}/matching-clients`,
+    'GET'
+  );
+  if (!body.success) throw new Error(body.error || 'Error al calcular los clientes que cumplen el criterio.');
+  return body.clients;
+}
+
 export async function deleteCriteria(criteriaId: string): Promise<void> {
   const body = await authorizedRequest<{ success: boolean; error?: string }>(`/api/admin/assignment-criteria/${criteriaId}`, 'DELETE');
   if (!body.success) throw new Error(body.error || 'Error al eliminar el criterio.');

@@ -48,6 +48,7 @@ export async function updateProtocol(protocolId: string, input: Partial<StressPr
   if (input.mechanism !== undefined) fields.mechanism = input.mechanism;
   if (input.status !== undefined) fields.status = input.status;
   if (input.sort_order !== undefined) fields.sortOrder = input.sort_order;
+  if (input.criteria_id !== undefined) fields.criteriaId = input.criteria_id;
   const [protocol] = await db.update(stressProtocols).set(fields).where(eq(stressProtocols.id, protocolId)).returning();
   return protocol ?? null;
 }

@@ -3,7 +3,7 @@ import request from 'supertest';
 import { eq } from 'drizzle-orm';
 import { createApp } from '../src/app.js';
 import { db } from '../src/db/index.js';
-import { clients, admins, stressProtocols } from '../src/models/schema.js';
+import { clients, admins, stressProtocols, assignmentCriteria } from '../src/models/schema.js';
 import { hashPassword, signToken } from '../src/services/auth.service.js';
 
 describe('stress protocols routes (Fase 2 — librería reutilizable)', () => {
@@ -76,6 +76,32 @@ describe('stress protocols routes (Fase 2 — librería reutilizable)', () => {
     expect(patchRes.body.protocol.status).toBe('publicado');
 
     await db.delete(stressProtocols).where(eq(stressProtocols.id, protocolId));
+  });
+
+  it('sets criteria_id on a protocol (Fase 4 — selector "Criterio guardado"), and can clear it back to null', async () => {
+    const [criteria] = await db
+      .insert(assignmentCriteria)
+      .values({ name: 'Criterio de prueba', conditions: { metric_id: 'irrelevant', operator: 'menor_que', value: 1 }, applicableModules: ['stress'], createdBy: adminId })
+      .returning();
+    const createRes = await createProtocol();
+    const protocolId = createRes.body.protocol.id;
+
+    const setRes = await request(app)
+      .patch(`/api/admin/stress-protocols/${protocolId}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ criteria_id: criteria.id });
+    expect(setRes.status).toBe(200);
+    expect(setRes.body.protocol.criteriaId).toBe(criteria.id);
+
+    const clearRes = await request(app)
+      .patch(`/api/admin/stress-protocols/${protocolId}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ criteria_id: null });
+    expect(clearRes.status).toBe(200);
+    expect(clearRes.body.protocol.criteriaId).toBeNull();
+
+    await db.delete(stressProtocols).where(eq(stressProtocols.id, protocolId));
+    await db.delete(assignmentCriteria).where(eq(assignmentCriteria.id, criteria.id));
   });
 
   it('adds resources of the 4 spec types to a protocol, and reads them back via GET with resources', async () => {
