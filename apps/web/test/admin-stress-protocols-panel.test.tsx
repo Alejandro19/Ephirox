@@ -102,4 +102,37 @@ describe('AdminStressProtocolsPanel', () => {
     // Solo un uploader de audio visible — el recurso de tipo "Journal de descarga" no tiene.
     expect(screen.getAllByText('Adjuntar audio (.mp3, .wav)')).toHaveLength(1);
   });
+
+  it('edits an existing resource — título, duración e instrucciones', async () => {
+    const user = userEvent.setup();
+    const resource: protocolsClient.StressProtocolResource = {
+      id: 'r1', protocolId: 'p1', type: 'Técnica de respiración', title: 'Respiración 4-7-8',
+      durationMinutes: 3, durationSeconds: null, instructions: null, audioUrl: null, audioName: null,
+      videoUrl: null, videoName: null, youtubeUrl: null, sortOrder: 0,
+    };
+    vi.mocked(protocolsClient.listProtocols).mockResolvedValue([BASE_PROTOCOL]);
+    vi.mocked(protocolsClient.getProtocol).mockResolvedValue({ protocol: BASE_PROTOCOL, resources: [resource] });
+    vi.mocked(protocolsClient.updateResource).mockResolvedValue({ ...resource, title: 'Respiración 4-7-8 (revisada)', durationMinutes: 5 });
+
+    render(<AdminStressProtocolsPanel />);
+    await user.click(await screen.findByRole('button', { name: /Recuperación Vagal/ }));
+    await screen.findByText('Respiración 4-7-8');
+
+    await user.click(screen.getByRole('button', { name: 'Editar' }));
+    const titleInput = screen.getByDisplayValue('Respiración 4-7-8');
+    await user.clear(titleInput);
+    await user.type(titleInput, 'Respiración 4-7-8 (revisada)');
+    const durationInput = screen.getByDisplayValue('3');
+    await user.clear(durationInput);
+    await user.type(durationInput, '5');
+    await user.click(screen.getByRole('button', { name: 'Guardar' }));
+
+    expect(protocolsClient.updateResource).toHaveBeenCalledWith('p1', 'r1', {
+      type: 'Técnica de respiración',
+      title: 'Respiración 4-7-8 (revisada)',
+      duration_minutes: 5,
+      instructions: null,
+    });
+    expect(await screen.findByText('Respiración 4-7-8 (revisada)')).toBeInTheDocument();
+  });
 });

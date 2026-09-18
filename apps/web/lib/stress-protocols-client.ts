@@ -101,6 +101,20 @@ export async function createResource(
   return body.resource;
 }
 
+export async function updateResource(
+  protocolId: string,
+  resourceId: string,
+  input: Partial<{ type: StressResourceType; title: string; duration_minutes: number | null; instructions: string | null }>
+): Promise<StressProtocolResource> {
+  const body = await authorizedRequest<{ success: boolean; resource: StressProtocolResource; error?: string }>(
+    `/api/admin/stress-protocols/${protocolId}/resources/${resourceId}`,
+    'PATCH',
+    input
+  );
+  if (!body.success) throw new Error(body.error || 'Error al actualizar el recurso.');
+  return body.resource;
+}
+
 export async function deleteResource(protocolId: string, resourceId: string): Promise<void> {
   const body = await authorizedRequest<{ success: boolean; error?: string }>(
     `/api/admin/stress-protocols/${protocolId}/resources/${resourceId}`,

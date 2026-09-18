@@ -8,6 +8,7 @@ import {
   deleteProtocol,
   getProtocol,
   createResource,
+  updateResource,
   deleteResource,
   uploadResourceAudio,
   type StressProtocol,
@@ -38,6 +39,11 @@ const primaryButtonStyle: React.CSSProperties = {
   height: 36, padding: '0 18px', borderRadius: 0, border: 'none',
   fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
   background: 'var(--eph-accent)', color: 'var(--eph-ink)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.14em', cursor: 'pointer',
+};
+const ghostButtonStyle: React.CSSProperties = {
+  height: 32, padding: '0 14px', borderRadius: 0, border: '1px solid var(--eph-line-2)',
+  fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
+  background: 'transparent', color: 'var(--eph-body)', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', cursor: 'pointer', flexShrink: 0,
 };
 
 const STATUS_LABEL: Record<StressProtocolStatus, string> = {
@@ -114,6 +120,72 @@ function ResourceForm({ protocolId, onCreated }: { protocolId: string; onCreated
   );
 }
 
+function ResourceEditForm({ protocolId, resource, onSaved, onCancel }: {
+  protocolId: string;
+  resource: StressProtocolResource;
+  onSaved: (r: StressProtocolResource) => void;
+  onCancel: () => void;
+}) {
+  const [type, setType] = useState<StressResourceType>(resource.type);
+  const [title, setTitle] = useState(resource.title);
+  const [durationMinutes, setDurationMinutes] = useState(resource.durationMinutes != null ? String(resource.durationMinutes) : '');
+  const [instructions, setInstructions] = useState(resource.instructions ?? '');
+  const [saving, setSaving] = useState(false);
+
+  async function handleSave() {
+    if (!title.trim()) return;
+    setSaving(true);
+    try {
+      const updated = await updateResource(protocolId, resource.id, {
+        type,
+        title: title.trim(),
+        duration_minutes: durationMinutes ? Number(durationMinutes) : null,
+        instructions: instructions.trim() || null,
+      });
+      onSaved(updated);
+      showToast('Recurso actualizado.', 'success');
+    } catch (e) {
+      showToast((e as Error).message, 'error');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div style={{ border: '1px dashed var(--eph-line-2)', padding: 14, marginTop: 8 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>
+        <div>
+          <label style={labelStyle} htmlFor={`re-type-${resource.id}`}>Tipo</label>
+          <select id={`re-type-${resource.id}`} style={inputStyle} value={type} onChange={(e) => setType(e.target.value as StressResourceType)}>
+            {STRESS_RESOURCE_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+          </select>
+        </div>
+        <div>
+          <label style={labelStyle} htmlFor={`re-duration-${resource.id}`}>Duración (min)</label>
+          <input id={`re-duration-${resource.id}`} type="number" min={0} style={inputStyle} value={durationMinutes} onChange={(e) => setDurationMinutes(e.target.value)} />
+        </div>
+      </div>
+      <div style={{ marginTop: 10 }}>
+        <label style={labelStyle} htmlFor={`re-title-${resource.id}`}>Título</label>
+        <input id={`re-title-${resource.id}`} style={inputStyle} value={title} onChange={(e) => setTitle(e.target.value)} />
+      </div>
+      <div style={{ marginTop: 10 }}>
+        <label style={labelStyle} htmlFor={`re-instructions-${resource.id}`}>Instrucciones / contenido</label>
+        <textarea
+          id={`re-instructions-${resource.id}`}
+          style={{ ...inputStyle, height: 72, padding: 10, resize: 'vertical' }}
+          value={instructions}
+          onChange={(e) => setInstructions(e.target.value)}
+        />
+      </div>
+      <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+        <button type="button" style={primaryButtonStyle} onClick={handleSave} disabled={saving || !title.trim()}>Guardar</button>
+        <button type="button" style={ghostButtonStyle} onClick={onCancel} disabled={saving}>Cancelar</button>
+      </div>
+    </div>
+  );
+}
+
 function ResourceRow({ protocolId, resource, onChanged, onDeleted }: {
   protocolId: string;
   resource: StressProtocolResource;
@@ -121,6 +193,7 @@ function ResourceRow({ protocolId, resource, onChanged, onDeleted }: {
   onDeleted: (id: string) => void;
 }) {
   const [uploading, setUploading] = useState(false);
+  const [editing, setEditing] = useState(false);
 
   async function handleAudioUpload(file: File | null) {
     if (!file) return;
@@ -145,6 +218,22 @@ function ResourceRow({ protocolId, resource, onChanged, onDeleted }: {
     }
   }
 
+  if (editing) {
+    return (
+      <div style={{ padding: '12px 0', borderBottom: '0.5px solid var(--eph-line)' }}>
+        <ResourceEditForm
+          protocolId={protocolId}
+          resource={resource}
+          onSaved={(updated) => {
+            onChanged(updated);
+            setEditing(false);
+          }}
+          onCancel={() => setEditing(false)}
+        />
+      </div>
+    );
+  }
+
   return (
     <div style={{ padding: '12px 0', borderBottom: '0.5px solid var(--eph-line)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -154,6 +243,7 @@ function ResourceRow({ protocolId, resource, onChanged, onDeleted }: {
             {[resource.type, resource.durationMinutes != null ? `${resource.durationMinutes} min` : null].filter(Boolean).join(' · ')}
           </p>
         </div>
+        <button type="button" style={ghostButtonStyle} onClick={() => setEditing(true)}>Editar</button>
         <button type="button" style={dangerButtonStyle} onClick={handleDelete}>Eliminar</button>
       </div>
       {/* Campo de audio solo para "Meditación guiada" (spec 19.2) — aparece/desaparece según el tipo. */}
