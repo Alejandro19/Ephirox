@@ -5,6 +5,7 @@ import { createApp } from '../src/app.js';
 import { db } from '../src/db/index.js';
 import { clients, dailyCheckins, weeklyReflections } from '../src/models/schema.js';
 import { signToken } from '../src/services/auth.service.js';
+import { todayInTz, addDaysISO } from '../src/services/timezone.js';
 
 describe('checkins routes (pulso diario + reflexión semanal — exclusivo Mentoría)', () => {
   const app = createApp();
@@ -110,14 +111,15 @@ describe('checkins routes (pulso diario + reflexión semanal — exclusivo Mento
       .returning();
     const streakToken = signToken({ id: streakClient.id, role: 'cliente', name: streakClient.name, email: streakClient.email, clientType: 'mentoring' });
 
-    const addDaysISO = (iso: string, days: number) => {
-      const [y, m, d] = iso.split('-').map(Number);
-      return new Date(Date.UTC(y, m - 1, d + days)).toISOString().slice(0, 10);
-    };
-    const today = new Date().toISOString().slice(0, 10);
+    // "Hoy" se calcula en la tz por defecto de la app (America/Bogota, ver
+    // timezone.ts), igual que getCheckinsStatus — no en UTC puro: entre las
+    // 00:00 y las 05:00 UTC, la fecha calendario en Bogotá todavía es la de
+    // "ayer" en UTC, así que sembrar con el día UTC desalineaba el streak
+    // esperado justo en esa ventana (bug del test, no del servicio).
+    const today = todayInTz(undefined);
     const yesterday = addDaysISO(today, -1);
     const twoDaysAgo = addDaysISO(today, -2);
-    const day = new Date().getUTCDay();
+    const day = new Date(`${today}T00:00:00Z`).getUTCDay();
     const currentWeekStart = addDaysISO(today, day === 0 ? -6 : 1 - day);
     const lastWeekStart = addDaysISO(currentWeekStart, -7);
 
