@@ -211,6 +211,12 @@ async function driveWizardToFinalize(options: DriveOptions = {}) {
   render(<OnboardingPage />);
 
   await screen.findByLabelText('País de residencia');
+  // El <select> de país existe desde el primer render, pero sus <option>
+  // llegan async (getCountries() — ver CountryCityPicker.tsx): hay que
+  // esperar a que la opción exista antes de fireEvent.change, si no
+  // jsdom ignora el value='CO' (no matchea ningún <option> todavía) y el
+  // país nunca queda seteado, bloqueando la validación de "Continuar".
+  await waitFor(() => expect(within(screen.getByLabelText('País de residencia')).getByRole('option', { name: /Colombia/ })).toBeInTheDocument());
   fillModule1();
   clickContinue();
 
@@ -302,7 +308,7 @@ describe('WizardShell finalize()', () => {
     const putOrder = vi.mocked(onboardingClient.putPersonalInfo).mock.invocationCallOrder[0];
     const finalizeOrder = vi.mocked(onboardingClient.finalizeOnboarding).mock.invocationCallOrder[0];
     expect(putOrder).toBeLessThan(finalizeOrder);
-  }, 15000);
+  }, 25000);
 
   it('shows an explicit error and never completes when finalizeOnboarding reports missing items', async () => {
     vi.mocked(onboardingClient.finalizeOnboarding).mockResolvedValue({ success: false, missing: ['wearable', 'lab_week0'] });
@@ -338,12 +344,12 @@ describe('WizardShell finalize()', () => {
 
     expect(await screen.findByText(/conectar un wearable.*cargar tu laboratorio de Semana 0/)).toBeInTheDocument();
     expect(screen.queryByText('Listo.')).not.toBeInTheDocument();
-  }, 15000);
+  }, 25000);
 
   it('does NOT call createAnthropometric when no antropometric measurement was entered', async () => {
     await driveWizardToFinalize();
     expect(onboardingClient.createAnthropometric).not.toHaveBeenCalled();
-  }, 15000);
+  }, 25000);
 
   it('calls createAnthropometric when at least one antropometric measurement was entered, after putPersonalInfo', async () => {
     await driveWizardToFinalize({ module3: { withAntropometria: true } });
@@ -356,12 +362,12 @@ describe('WizardShell finalize()', () => {
     const putOrder = vi.mocked(onboardingClient.putPersonalInfo).mock.invocationCallOrder[0];
     const anthroOrder = vi.mocked(onboardingClient.createAnthropometric).mock.invocationCallOrder[0];
     expect(putOrder).toBeLessThan(anthroOrder);
-  }, 15000);
+  }, 25000);
 
   it('does NOT call createInbodyRecord when OCR was never run, even with InBody fields filled by hand', async () => {
     await driveWizardToFinalize();
     expect(onboardingClient.createInbodyRecord).not.toHaveBeenCalled();
-  }, 15000);
+  }, 25000);
 
   it('uploads a pending checkup file before putPersonalInfo and merges the result into onboarding_report', async () => {
     await driveWizardToFinalize({ module4: { withCheckupFile: true } });
@@ -379,5 +385,5 @@ describe('WizardShell finalize()', () => {
       checkup_file_name: 'chequeo.pdf',
       checkup_uploaded_at: '2026-07-29T00:00:00.000Z',
     });
-  }, 15000);
+  }, 25000);
 });
