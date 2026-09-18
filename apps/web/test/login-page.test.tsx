@@ -1,18 +1,36 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import LoginPage from '../app/(auth)/login/page';
 
-const pushMock = vi.fn();
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: pushMock }),
-}));
-
 describe('LoginPage', () => {
+  let capturedHref: string | null;
+  const realLocation = window.location;
+
+  // jsdom no deja redefinir location.href directamente (no configurable) —
+  // se reemplaza todo el objeto por un stub que delega pathname/search al
+  // valor fijado acá, y captura los intentos de navegación (href = ...) sin
+  // que jsdom tire "Not implemented: navigation" (mismo patrón que
+  // set-password-page.test.tsx). El login manda vía window.location.href
+  // (no router.push) desde que la sesión pasó a cookie httpOnly — el token
+  // ya no se puede leer del lado cliente para decidir la ruta y navegar sin
+  // recargar.
+  function setSearch(search: string) {
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      value: { pathname: '/login', search, get href() { return capturedHref ?? '/login' + search; }, set href(v: string) { capturedHref = v; } },
+    });
+  }
+
   beforeEach(() => {
-    pushMock.mockClear();
     vi.stubGlobal('fetch', vi.fn());
     window.localStorage.clear();
     window.sessionStorage.clear();
+    capturedHref = null;
+    setSearch('');
+  });
+
+  afterEach(() => {
+    Object.defineProperty(window, 'location', { configurable: true, value: realLocation });
   });
 
   it('redirects an admin to /admin/clients', async () => {
@@ -21,11 +39,11 @@ describe('LoginPage', () => {
     });
 
     render(<LoginPage />);
-    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'a@a.com' } });
-    fireEvent.change(screen.getByLabelText('Contraseña'), { target: { value: 'secret' } });
+    fireEvent.change(screen.getByLabelText('EMAIL'), { target: { value: 'a@a.com' } });
+    fireEvent.change(screen.getByLabelText('CONTRASEÑA'), { target: { value: 'secret' } });
     fireEvent.click(screen.getByRole('button', { name: /entrar/i }));
 
-    await waitFor(() => expect(pushMock).toHaveBeenCalledWith('/admin/clients'));
+    await waitFor(() => expect(capturedHref).toBe('/admin/clients'));
   });
 
   it('redirects a client with an incomplete onboarding to /onboarding', async () => {
@@ -40,11 +58,11 @@ describe('LoginPage', () => {
     });
 
     render(<LoginPage />);
-    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'c@c.com' } });
-    fireEvent.change(screen.getByLabelText('Contraseña'), { target: { value: 'secret' } });
+    fireEvent.change(screen.getByLabelText('EMAIL'), { target: { value: 'c@c.com' } });
+    fireEvent.change(screen.getByLabelText('CONTRASEÑA'), { target: { value: 'secret' } });
     fireEvent.click(screen.getByRole('button', { name: /entrar/i }));
 
-    await waitFor(() => expect(pushMock).toHaveBeenCalledWith('/onboarding'));
+    await waitFor(() => expect(capturedHref).toBe('/onboarding'));
   });
 
   it('redirects a client who already completed onboarding to /training', async () => {
@@ -59,11 +77,32 @@ describe('LoginPage', () => {
     });
 
     render(<LoginPage />);
-    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'c2@c.com' } });
-    fireEvent.change(screen.getByLabelText('Contraseña'), { target: { value: 'secret' } });
+    fireEvent.change(screen.getByLabelText('EMAIL'), { target: { value: 'c2@c.com' } });
+    fireEvent.change(screen.getByLabelText('CONTRASEÑA'), { target: { value: 'secret' } });
     fireEvent.click(screen.getByRole('button', { name: /entrar/i }));
 
-    await waitFor(() => expect(pushMock).toHaveBeenCalledWith('/training'));
+    await waitFor(() => expect(capturedHref).toBe('/training'));
+  });
+
+  it('sends a client with a temporary password to /set-password before anything else, preserving the deep link', async () => {
+    setSearch('?from=%2Ftraining%3Fm%3Dentrenamiento%26a%3Dconfirmar');
+    (fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+      json: async () => ({
+        success: true,
+        token: 'abc.def.ghi',
+        role: 'cliente',
+        user: { id: '4', name: 'Cliente', email: 'c4@c.com' },
+        onboardingComplete: true,
+        mustChangePassword: true,
+      }),
+    });
+
+    render(<LoginPage />);
+    fireEvent.change(screen.getByLabelText('EMAIL'), { target: { value: 'c4@c.com' } });
+    fireEvent.change(screen.getByLabelText('CONTRASEÑA'), { target: { value: 'temp' } });
+    fireEvent.click(screen.getByRole('button', { name: /entrar/i }));
+
+    await waitFor(() => expect(capturedHref).toBe('/set-password?from=%2Ftraining%3Fm%3Dentrenamiento%26a%3Dconfirmar'));
   });
 
   it('shows an error message on failed login', async () => {
@@ -72,15 +111,15 @@ describe('LoginPage', () => {
     });
 
     render(<LoginPage />);
-    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'a@a.com' } });
-    fireEvent.change(screen.getByLabelText('Contraseña'), { target: { value: 'wrong' } });
+    fireEvent.change(screen.getByLabelText('EMAIL'), { target: { value: 'a@a.com' } });
+    fireEvent.change(screen.getByLabelText('CONTRASEÑA'), { target: { value: 'wrong' } });
     fireEvent.click(screen.getByRole('button', { name: /entrar/i }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Credenciales incorrectas.');
   });
 
-  it('redirects to /training when a pending NFC confirm action exists, ahead of the onboarding check', async () => {
-    window.localStorage.setItem('lt_pending_action', JSON.stringify({ m: 'entrenamiento', a: 'confirmar' }));
+  it('redirects to the original deep-link target (?from=, set by the middleware) ahead of the onboarding check', async () => {
+    setSearch('?from=%2Ftraining%3Fm%3Dentrenamiento%26a%3Dconfirmar');
     (fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       json: async () => ({
         success: true,
@@ -92,11 +131,11 @@ describe('LoginPage', () => {
     });
 
     render(<LoginPage />);
-    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'c5@c.com' } });
-    fireEvent.change(screen.getByLabelText('Contraseña'), { target: { value: 'secret' } });
+    fireEvent.change(screen.getByLabelText('EMAIL'), { target: { value: 'c5@c.com' } });
+    fireEvent.change(screen.getByLabelText('CONTRASEÑA'), { target: { value: 'secret' } });
     fireEvent.click(screen.getByRole('button', { name: /entrar/i }));
 
-    await waitFor(() => expect(pushMock).toHaveBeenCalledWith('/training'));
-    expect(pushMock).not.toHaveBeenCalledWith('/onboarding');
+    await waitFor(() => expect(capturedHref).toBe('/training?m=entrenamiento&a=confirmar'));
+    expect(capturedHref).not.toBe('/onboarding');
   });
 });

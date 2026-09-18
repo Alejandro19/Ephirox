@@ -18,6 +18,23 @@ import '../../eph-login-shared.css';
 // caso de recordar la contraseña de forma segura.
 const REMEMBER_EMAIL_KEY = 'latribu_remember_email';
 
+// A dónde mandar tras un login exitoso (email/password, Google o Apple —
+// las tres rutas convergen acá). getSafeRedirectTarget() (el `?from=` que
+// deja el middleware al rebotar un deep-link sin sesión, ej. el sticker NFC)
+// tiene prioridad sobre el destino por rol: preservar a dónde iba el cliente
+// importa más que la regla general. Sin `from`, cae al onboarding-gate
+// clásico — se había perdido en una migración vieja (el login mandaba
+// siempre a "/" sin mirar rol/onboarding) y quedó sin cliente incompleto
+// siendo reenviado a terminarlo.
+function resolvePostLoginTarget(result: LoginResult): string {
+  if (result.mustChangePassword) return getSetPasswordUrl();
+  const from = getSafeRedirectTarget();
+  if (from !== '/') return from;
+  if (result.role === 'cliente' && !result.onboardingComplete) return '/onboarding';
+  if (result.role === 'cliente') return '/training';
+  return '/admin/clients';
+}
+
 // Tipado mínimo de los namespaces globales que inyectan los scripts de
 // Google Identity Services y Sign in with Apple JS (cargados en layout.tsx)
 // — ninguno de los dos publica un paquete npm oficial con tipos.
@@ -177,7 +194,7 @@ export default function LoginPage(): React.ReactElement {
           return;
         }
         navigating = true;
-        window.location.href = getSafeRedirectTarget();
+        window.location.href = resolvePostLoginTarget(result);
       } finally {
         // Si hubo éxito, el overlay se deja visible a propósito: cubre hasta
         // que "/" termine de cargar, en vez de mostrar un instante de login
@@ -272,7 +289,7 @@ export default function LoginPage(): React.ReactElement {
           return;
         }
         navigating = true;
-        window.location.href = getSafeRedirectTarget();
+        window.location.href = resolvePostLoginTarget(result);
       } finally {
         if (!navigating) setEnteringLabel(null);
       }
@@ -303,9 +320,7 @@ export default function LoginPage(): React.ReactElement {
         // "/" termine de cargar, en vez de un instante de login sin cambios.
         setEnteringLabel('Calibrando…');
         navigating = true;
-        // El admin le asignó una contraseña temporal (checkbox en Crear
-        // Usuario) — antes de entrar a la app, tiene que definir una nueva.
-        window.location.href = result.mustChangePassword ? getSetPasswordUrl() : getSafeRedirectTarget();
+        window.location.href = resolvePostLoginTarget(result);
       }
     } catch {
       setLoginError('Error de conexión. Intenta de nuevo.');
