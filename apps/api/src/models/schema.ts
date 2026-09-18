@@ -520,6 +520,37 @@ export const cognitiveLoadHistory = pgTable('cognitive_load_history', {
   clientFechaUnique: unique('cognitive_load_history_client_id_fecha_unique').on(table.clientId, table.fecha),
 }));
 
+// Índice propio "Capacidad de regulación" (Fase 7 del rediseño de Stress,
+// spec punto 21.2) — servicio HERMANO de Carga Cognitiva, no una extensión:
+// fórmula y fuente distintas (0-100, solo wearable objetivo, sin
+// autorreporte). Precondición: mínimo 7 días de wearable ANTES del Día 0
+// del cliente, promediados una sola vez y congelados acá — nunca se
+// recalcula el baseline con el tiempo (a diferencia de la ventana rolling
+// de wearable-trend.ts). Detrás de un feature flag hasta aprobación clínica
+// de los pesos (ver regulation-capacity-logic.ts) — ver
+// REGULATION_CAPACITY_ENABLED_IN_PRODUCTION en regulation-capacity.service.ts.
+export const regulationCapacityBaselines = pgTable('regulation_capacity_baselines', {
+  clientId: uuid('client_id').primaryKey().references(() => clients.id, { onDelete: 'cascade' }),
+  hrvAvg: numeric('hrv_avg', { precision: 6, scale: 2 }).$type<number>(),
+  fcReposoAvg: numeric('fc_reposo_avg', { precision: 6, scale: 2 }).$type<number>(),
+  suenoScoreAvg: numeric('sueno_score_avg', { precision: 6, scale: 2 }).$type<number>(),
+  daysUsed: integer('days_used').notNull(),
+  fixedAt: timestamp('fixed_at', { withTimezone: true }).defaultNow(),
+});
+export type RegulationCapacityBaselineRow = typeof regulationCapacityBaselines.$inferSelect;
+
+export const regulationCapacityHistory = pgTable('regulation_capacity_history', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  clientId: uuid('client_id').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+  fecha: date('fecha').notNull(),
+  score: numeric('score', { precision: 5, scale: 2 }).notNull().$type<number>(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (table) => ({
+  clientIdIdx: index('regulation_capacity_history_client_id_idx').on(table.clientId),
+  clientFechaUnique: unique('regulation_capacity_history_client_id_fecha_unique').on(table.clientId, table.fecha),
+}));
+export type RegulationCapacityHistoryRow = typeof regulationCapacityHistory.$inferSelect;
+
 export type StressTechnique = typeof stressTechniques.$inferSelect;
 export type StressCompletion = typeof stressCompletions.$inferSelect;
 export type StressTip = typeof stressTips.$inferSelect;

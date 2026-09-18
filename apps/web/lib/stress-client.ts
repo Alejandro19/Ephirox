@@ -153,3 +153,20 @@ export async function getCognitiveLoadOverview(clientId: string): Promise<Cognit
   const { success: _success, error: _error, ...overview } = body;
   return overview;
 }
+
+// Índice propio "Capacidad de regulación" (Fase 7, spec 21.2) — enabled:false
+// mientras el flag de calibración clínica esté apagado; RegulationCapacityCard.tsx
+// sigue mostrando el placeholder derivado de Carga Cognitiva en ese caso.
+export type RegulationCapacityOverview = {
+  enabled: boolean;
+  today: number | null;
+  trend: Array<{ fecha: string; score: number }>;
+  baseline: { hrvAvg: number | null; fcReposoAvg: number | null; suenoScoreAvg: number | null; daysUsed: number } | null;
+};
+
+export async function getRegulationCapacityOverview(clientId: string): Promise<RegulationCapacityOverview> {
+  const body = await authorizedRequest<RegulationCapacityOverview & { success: boolean; error?: string }>(`/api/clients/${clientId}/regulation-capacity`, 'GET');
+  if (!body.success) throw new Error(body.error || 'Error al obtener tu capacidad de regulación.');
+  const { success: _success, error: _error, ...overview } = body;
+  return overview;
+}

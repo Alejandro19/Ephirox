@@ -20,6 +20,8 @@ const DEFAULT_COGNITIVE_LOAD: stressClient.CognitiveLoadOverview = {
   latest: { hrv: null, activacionMatutina: null, recuperacionPct: null },
 };
 
+const DISABLED_REGULATION_CAPACITY: stressClient.RegulationCapacityOverview = { enabled: false, today: null, trend: [], baseline: null };
+
 function mockFetches({
   techniques = [],
   completions = [],
@@ -27,6 +29,7 @@ function mockFetches({
   morningCheckin = { id: 'mc1', fecha: '2026-08-02', energia: 3, tension: 3, claridad: 3, activacionMatutina: 6 },
   cognitiveLoad = DEFAULT_COGNITIVE_LOAD,
   activeCase = null,
+  regulationCapacity = DISABLED_REGULATION_CAPACITY,
 }: {
   techniques?: stressClient.StressTechnique[];
   completions?: stressClient.StressCompletion[];
@@ -34,12 +37,14 @@ function mockFetches({
   morningCheckin?: stressClient.MorningCheckin;
   cognitiveLoad?: stressClient.CognitiveLoadOverview;
   activeCase?: labeledCasesClient.ActiveCaseView | null;
+  regulationCapacity?: stressClient.RegulationCapacityOverview;
 } = {}) {
   vi.mocked(stressClient.listTechniques).mockResolvedValue(techniques);
   vi.mocked(stressClient.listCompletions).mockResolvedValue(completions);
   vi.mocked(stressClient.getTipOfTheDay).mockResolvedValue(tip);
   vi.mocked(stressClient.getTodayMorningCheckin).mockResolvedValue(morningCheckin);
   vi.mocked(stressClient.getCognitiveLoadOverview).mockResolvedValue(cognitiveLoad);
+  vi.mocked(stressClient.getRegulationCapacityOverview).mockResolvedValue(regulationCapacity);
   vi.mocked(labeledCasesClient.getActiveCase).mockResolvedValue(activeCase);
 }
 
@@ -166,6 +171,33 @@ describe('ClientStressPanel', () => {
     render(<ClientStressPanel clientId="client-1" />);
     await waitFor(() => expect(screen.getByText('Capacidad de regulación')).toBeInTheDocument());
     expect(screen.getByText(/wearable o check-in matutino/)).toBeInTheDocument();
+  });
+
+  it('uses the real regulation-capacity index instead of the Carga Cognitiva placeholder once enabled:true', async () => {
+    mockFetches({
+      // Carga Cognitiva "hoy" sigue presente pero NO debe usarse — si el
+      // componente cayera de vuelta al placeholder, saldría 10-3=7*10=70,
+      // no el 72 real del índice propio.
+      cognitiveLoad: { ...DEFAULT_COGNITIVE_LOAD, today: 3 },
+      regulationCapacity: {
+        enabled: true,
+        today: 72,
+        trend: [
+          { fecha: '2026-09-10', score: 90 },
+          { fecha: '2026-09-11', score: 90 },
+          { fecha: '2026-09-12', score: 90 },
+          { fecha: '2026-09-13', score: 72 },
+        ],
+        baseline: { hrvAvg: 45, fcReposoAvg: 62, suenoScoreAvg: 68, daysUsed: 7 },
+      },
+    });
+
+    render(<ClientStressPanel clientId="client-1" />);
+    await waitFor(() => expect(screen.getByText('72')).toBeInTheDocument());
+    expect(screen.queryByText('70')).not.toBeInTheDocument();
+    // Baseline = promedio de los 3 días previos (90,90,90 -> 90) -> delta = 72 - 90 = -18.
+    expect(screen.getByText(/18 pts vs\. tu línea base/)).toBeInTheDocument();
+    expect(screen.getByText(/tu línea base personal, registrada en tu semana de referencia inicial/)).toBeInTheDocument();
   });
 
   it('shows the generic upgrade card when this client type has no access to Stress', async () => {

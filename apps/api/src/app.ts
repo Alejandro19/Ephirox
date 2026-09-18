@@ -21,6 +21,7 @@ import { mentorsRouter } from './routes/mentors.routes.js';
 import { labeledCasesRouter } from './routes/labeled-cases.routes.js';
 import { assignmentCriteriaRouter } from './routes/assignment-criteria.routes.js';
 import { adminClientBaselineRouter } from './routes/admin-client-baseline.routes.js';
+import { regulationCapacityRouter } from './routes/regulation-capacity.routes.js';
 import { adminNutritionTipsRouter } from './routes/admin-nutrition-tips.routes.js';
 import { recipesRouter } from './routes/recipes.routes.js';
 import { stressTechniquesRouter } from './routes/stress-techniques.routes.js';
@@ -110,6 +111,7 @@ export function createApp() {
   app.use('/api', labeledCasesRouter);
   app.use('/api', assignmentCriteriaRouter);
   app.use('/api', adminClientBaselineRouter);
+  app.use('/api', regulationCapacityRouter);
   app.use('/api', adminNutritionTipsRouter);
   app.use('/api', recipesRouter);
   app.use('/api', eventsRouter);

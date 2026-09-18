@@ -9,8 +9,10 @@ import {
   getTipOfTheDay,
   getTodayMorningCheckin,
   getCognitiveLoadOverview,
+  getRegulationCapacityOverview,
   type StressTechnique,
   type StressCompletion,
+  type RegulationCapacityOverview,
 } from '../../lib/stress-client';
 import { getActiveCase, type ActiveCaseView } from '../../lib/labeled-cases-client';
 import { MorningCheckinSummary } from './MorningCheckinSummary';
@@ -136,15 +138,16 @@ function StressPlayer({
 }
 
 async function fetchStressBundle(clientId: string) {
-  const [techniques, completions, tip, morningCheckin, cognitiveLoad, activeCase] = await Promise.all([
+  const [techniques, completions, tip, morningCheckin, cognitiveLoad, activeCase, regulationCapacity] = await Promise.all([
     listTechniques(clientId),
     listCompletions(clientId).catch(() => [] as StressCompletion[]),
     getTipOfTheDay(clientId),
     getTodayMorningCheckin(clientId),
     getCognitiveLoadOverview(clientId),
     getActiveCase(clientId, 'stress').catch(() => null as ActiveCaseView | null),
+    getRegulationCapacityOverview(clientId).catch(() => null as RegulationCapacityOverview | null),
   ]);
-  return { techniques, completions, tip, morningCheckin, cognitiveLoad, activeCase };
+  return { techniques, completions, tip, morningCheckin, cognitiveLoad, activeCase, regulationCapacity };
 }
 
 export function ClientStressPanel({
@@ -205,7 +208,7 @@ export function ClientStressPanel({
   }
   if (!data) return null;
 
-  const { techniques, completions, tip, morningCheckin, cognitiveLoad, activeCase } = data;
+  const { techniques, completions, tip, morningCheckin, cognitiveLoad, activeCase, regulationCapacity } = data;
   const active = activeId ? techniques.find((t) => t.id === activeId) : null;
   if (active) {
     const todayStr = new Date().toISOString().slice(0, 10);
@@ -244,7 +247,7 @@ export function ClientStressPanel({
       />
       {clientType === 'mentoring' && <InsightsSection clientId={clientId} moduleKey="cortisol" />}
 
-      <RegulationCapacityCard overview={cognitiveLoad} />
+      <RegulationCapacityCard overview={cognitiveLoad} regulationCapacity={regulationCapacity} />
 
       {recommended && <RecommendedProtocolCard protocol={recommended} onStart={setActiveId} />}
 
