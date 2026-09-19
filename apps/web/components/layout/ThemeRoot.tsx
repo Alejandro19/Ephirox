@@ -92,7 +92,16 @@ export default function ThemeRoot({ children }: { children: ReactNode }) {
         id="eph-root"
         ref={rootRef}
         className="eph-root"
-        data-theme="dark-carbon"
+        // Default estático (antes de que corra NO_FLASH_SCRIPT) — dark-brand
+        // es el más oscuro de los tres temas, así que arrancar acá en vez de
+        // dark-carbon evita el flash "más claro → más oscuro" reportado en
+        // /login (que siempre resuelve a dark-brand, bloqueado, sin importar
+        // preferencia guardada): con dark-carbon como default se veía el
+        // fondo #1c1a17 por un instante antes de que el script lo corrigiera
+        // a #0b0a08. Para pantallas no bloqueadas (los módulos), el script
+        // sigue corrigiendo a dark-carbon/light-premium antes del primer
+        // paint, igual que antes.
+        data-theme="dark-brand"
         suppressHydrationWarning
       >
         <script dangerouslySetInnerHTML={{ __html: NO_FLASH_SCRIPT }} />
