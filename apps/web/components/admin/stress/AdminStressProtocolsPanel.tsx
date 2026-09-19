@@ -5,6 +5,7 @@ import {
   listProtocols,
   createProtocol,
   updateProtocolStatus,
+  updateProtocolSchedule,
   deleteProtocol,
   getProtocol,
   createResource,
@@ -14,13 +15,26 @@ import {
   type StressProtocol,
   type StressProtocolResource,
 } from '../../../lib/stress-protocols-client';
-import { STRESS_RESOURCE_TYPES, STRESS_PROTOCOL_STATUSES, type StressProtocolStatus, type StressResourceType } from '@latribu/shared-types';
+import { getProtocolEffectiveness, type ProtocolEffectiveness } from '../../../lib/labeled-cases-client';
+import { STRESS_RESOURCE_TYPES, STRESS_PROTOCOL_STATUSES, STRESS_SUGGESTED_FREQUENCIES, type StressProtocolStatus, type StressResourceType } from '@latribu/shared-types';
+
+// Duraciones de ciclo ofrecidas al admin — 6 y 12 coinciden con los
+// checkpoints reales (FOLLOWUP_WEEKS en labeled-cases.service.ts); 8 y 16
+// son opciones intermedias/largas razonables sin checkpoint propio.
+const CYCLE_WEEKS_OPTIONS = [6, 8, 12, 16] as const;
 import { AdminStressProtocolCriteriaAndAssignment } from '../../stress/AdminStressProtocolCriteriaAndAssignment';
 import { showToast } from '../../layout/AppShell';
 import EmptyState from '../../ui/EmptyState';
 import Badge from '../../ui/Badge';
 import FileField from '../../ui/FileField';
 
+const cardStyle: React.CSSProperties = {
+  background: 'var(--eph-surface)', border: '1px solid var(--eph-line)',
+  borderRadius: 0, padding: '22px 24px', marginBottom: 20,
+};
+const cardTitleStyle: React.CSSProperties = {
+  fontFamily: 'var(--font-cormorant), Georgia, serif', fontSize: 18, fontWeight: 400, color: 'var(--eph-text)', margin: '0 0 16px',
+};
 const labelStyle: React.CSSProperties = {
   display: 'block', fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', fontSize: 10,
   textTransform: 'uppercase', letterSpacing: '0.14em', fontWeight: 400, color: 'var(--eph-muted)', marginBottom: 6,
@@ -197,6 +211,14 @@ function ResourceRow({ protocolId, resource, onChanged, onDeleted }: {
 
   async function handleAudioUpload(file: File | null) {
     if (!file) return;
+    if (!file.type.startsWith('audio/')) {
+      showToast('El archivo debe ser un audio (.mp3, .wav, .m4a, .ogg).', 'error');
+      return;
+    }
+    if (file.size > 100 * 1024 * 1024) {
+      showToast('El archivo supera el límite de 100MB.', 'error');
+      return;
+    }
     setUploading(true);
     try {
       const updated = await uploadResourceAudio(protocolId, resource.id, file);
@@ -262,6 +284,24 @@ function ResourceRow({ protocolId, resource, onChanged, onDeleted }: {
   );
 }
 
+// Efectividad por protocolo (punto 24) — se calcula sola a partir de los
+// casos completados y elegibles para el dataset; sin datos todavía, no
+// muestra nada en vez de un 0% engañoso.
+function ProtocolEffectivenessBadge({ protocolId }: { protocolId: string }) {
+  const [effectiveness, setEffectiveness] = useState<ProtocolEffectiveness>(null);
+
+  useEffect(() => {
+    getProtocolEffectiveness(protocolId).then(setEffectiveness).catch(() => {});
+  }, [protocolId]);
+
+  if (!effectiveness) return null;
+  return (
+    <span style={{ fontSize: 11, color: 'var(--eph-accent)' }}>
+      {effectiveness.improvementPct}% mejora · {effectiveness.eligibleCompletedCount} caso{effectiveness.eligibleCompletedCount === 1 ? '' : 's'} completo{effectiveness.eligibleCompletedCount === 1 ? '' : 's'}
+    </span>
+  );
+}
+
 function ProtocolDetail({ protocolId, onDeleted }: { protocolId: string; onDeleted: () => void }) {
   const [protocol, setProtocol] = useState<StressProtocol | null>(null);
   const [resources, setResources] = useState<StressProtocolResource[]>([]);
@@ -284,7 +324,16 @@ function ProtocolDetail({ protocolId, onDeleted }: { protocolId: string; onDelet
     try {
       const updated = await updateProtocolStatus(protocolId, status);
       setProtocol(updated);
-      showToast(status === 'publicado' ? 'Protocolo publicado — ya entra al selector de criterios.' : 'Estado actualizado.', 'success');
+      showToast(status === 'publicado' ? 'Protocolo publicado — ya entra al selector de reglas.' : 'Estado actualizado.', 'success');
+    } catch (e) {
+      showToast((e as Error).message, 'error');
+    }
+  }
+
+  async function handleScheduleChange(patch: { suggested_frequency?: string | null; default_cycle_weeks?: number }) {
+    try {
+      const updated = await updateProtocolSchedule(protocolId, patch);
+      setProtocol(updated);
     } catch (e) {
       showToast((e as Error).message, 'error');
     }
@@ -299,10 +348,11 @@ function ProtocolDetail({ protocolId, onDeleted }: { protocolId: string; onDelet
     }
   }
 
-  if (loading || !protocol) return <p style={{ color: 'var(--eph-muted)', fontSize: 14 }}>Cargando protocolo…</p>;
+  if (loading || !protocol) return <div style={{ ...cardStyle, marginTop: 16 }}><p style={{ color: 'var(--eph-muted)', fontSize: 14, margin: 0 }}>Cargando protocolo…</p></div>;
 
   return (
-    <div style={{ borderTop: '1px solid var(--eph-line-2)', marginTop: 16, paddingTop: 16 }}>
+    <div style={{ ...cardStyle, marginTop: 16 }}>
+      <h3 style={cardTitleStyle}>{protocol.name}</h3>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
         <label style={{ ...labelStyle, marginBottom: 0 }} htmlFor="pd-status">Estado del protocolo</label>
         <select
@@ -314,8 +364,34 @@ function ProtocolDetail({ protocolId, onDeleted }: { protocolId: string; onDelet
           {STRESS_PROTOCOL_STATUSES.map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
         </select>
         <span style={{ fontSize: 11, color: 'var(--eph-muted)' }}>
-          Solo un protocolo &quot;Publicado&quot; entra al selector de criterios de asignación.
+          Solo un protocolo &quot;Publicado&quot; entra al selector de reglas de asignación.
         </span>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12, marginTop: 16 }}>
+        <div>
+          <label style={labelStyle} htmlFor="pd-frequency">Frecuencia sugerida</label>
+          <select
+            id="pd-frequency"
+            style={inputStyle}
+            value={protocol.suggestedFrequency ?? ''}
+            onChange={(e) => handleScheduleChange({ suggested_frequency: e.target.value || null })}
+          >
+            <option value="">Sin definir</option>
+            {STRESS_SUGGESTED_FREQUENCIES.map((f) => <option key={f} value={f}>{f}</option>)}
+          </select>
+        </div>
+        <div>
+          <label style={labelStyle} htmlFor="pd-cycle-weeks">Duración del ciclo</label>
+          <select
+            id="pd-cycle-weeks"
+            style={inputStyle}
+            value={protocol.defaultCycleWeeks}
+            onChange={(e) => handleScheduleChange({ default_cycle_weeks: Number(e.target.value) })}
+          >
+            {CYCLE_WEEKS_OPTIONS.map((w) => <option key={w} value={w}>{w} semanas</option>)}
+          </select>
+        </div>
       </div>
 
       <h3 style={{ margin: '18px 0 8px', fontSize: 14, fontWeight: 600, color: 'var(--eph-text)' }}>Recursos del protocolo</h3>
@@ -384,25 +460,29 @@ export function AdminStressProtocolsPanel() {
     }
   }
 
-  if (loading) return <p style={{ color: 'var(--eph-muted)', fontSize: 14 }}>Cargando protocolos…</p>;
+  if (loading) return <div style={cardStyle}><p style={{ color: 'var(--eph-muted)', fontSize: 14, margin: 0 }}>Cargando protocolos…</p></div>;
 
   return (
     <div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginBottom: 12 }}>
-        <div>
-          <label style={labelStyle} htmlFor="app-name">Nombre del protocolo</label>
-          <input id="app-name" style={inputStyle} value={name} onChange={(e) => setName(e.target.value)} placeholder="Ej: Recuperación Vagal — Nivel 1" />
+      <div style={cardStyle}>
+        <h3 style={cardTitleStyle}>Crear protocolo</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginBottom: 12 }}>
+          <div>
+            <label style={labelStyle} htmlFor="app-name">Nombre del protocolo</label>
+            <input id="app-name" style={inputStyle} value={name} onChange={(e) => setName(e.target.value)} placeholder="Ej: Recuperación Vagal — Nivel 1" />
+          </div>
+          <div>
+            <label style={labelStyle} htmlFor="app-mechanism">Mecanismo</label>
+            <input id="app-mechanism" style={inputStyle} value={mechanism} onChange={(e) => setMechanism(e.target.value)} placeholder="Ej: Respiración" />
+          </div>
         </div>
-        <div>
-          <label style={labelStyle} htmlFor="app-mechanism">Mecanismo</label>
-          <input id="app-mechanism" style={inputStyle} value={mechanism} onChange={(e) => setMechanism(e.target.value)} placeholder="Ej: Respiración" />
-        </div>
+        <button type="button" style={primaryButtonStyle} onClick={handleCreate} disabled={saving || !name.trim()}>
+          + Crear protocolo
+        </button>
       </div>
-      <button type="button" style={primaryButtonStyle} onClick={handleCreate} disabled={saving || !name.trim()}>
-        + Crear protocolo
-      </button>
 
-      <div style={{ marginTop: 20 }}>
+      <div style={cardStyle}>
+        <h3 style={cardTitleStyle}>Protocolos en la librería</h3>
         {protocols.length === 0 ? (
           <EmptyState message="Aún no hay protocolos en la librería." />
         ) : (
@@ -421,6 +501,7 @@ export function AdminStressProtocolsPanel() {
                   <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: 'var(--eph-text)' }}>{p.name}</p>
                   {p.mechanism && <p style={{ margin: '2px 0 0', fontSize: 11, color: 'var(--eph-muted)' }}>{p.mechanism}</p>}
                 </div>
+                <ProtocolEffectivenessBadge protocolId={p.id} />
                 <Badge label={STATUS_LABEL[p.status]} variant={STATUS_BADGE_VARIANT[p.status]} />
               </button>
               {selectedId === p.id && (

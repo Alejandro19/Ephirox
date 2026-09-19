@@ -52,9 +52,28 @@ export async function listMetrics(): Promise<MetricsCatalogEntry[]> {
   return body.metrics;
 }
 
+export type MetricCatalogInput = {
+  name: string;
+  unit?: string | null;
+  source: MetricSource;
+  field_key: string;
+  aggregation?: MetricAggregation;
+  reference_range?: { min?: number | null; max?: number | null } | null;
+};
+
+export async function createMetric(input: MetricCatalogInput): Promise<MetricsCatalogEntry> {
+  const body = await authorizedRequest<{ success: boolean; metric: MetricsCatalogEntry; error?: string }>(
+    '/api/admin/metrics-catalog',
+    'POST',
+    input
+  );
+  if (!body.success) throw new Error(body.error || 'Error al crear el marcador.');
+  return body.metric;
+}
+
 export async function updateMetric(
   metricId: string,
-  input: { active?: boolean; reference_range?: { min?: number | null; max?: number | null } | null }
+  input: Partial<MetricCatalogInput> & { active?: boolean }
 ): Promise<MetricsCatalogEntry> {
   const body = await authorizedRequest<{ success: boolean; metric: MetricsCatalogEntry; error?: string }>(
     `/api/admin/metrics-catalog/${metricId}`,
@@ -63,6 +82,11 @@ export async function updateMetric(
   );
   if (!body.success) throw new Error(body.error || 'Error al actualizar el marcador.');
   return body.metric;
+}
+
+export async function deleteMetric(metricId: string): Promise<void> {
+  const body = await authorizedRequest<{ success: boolean; error?: string }>(`/api/admin/metrics-catalog/${metricId}`, 'DELETE');
+  if (!body.success) throw new Error(body.error || 'Error al eliminar el marcador.');
 }
 
 export async function listCriteria(): Promise<AssignmentCriteria[]> {

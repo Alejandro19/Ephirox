@@ -11,7 +11,8 @@ vi.mock('../lib/mentors-client');
 vi.mock('../lib/labeled-cases-client');
 
 const PUBLISHED_PROTOCOL: protocolsClient.StressProtocol = {
-  id: 'p1', name: 'Recuperación Vagal — Nivel 1', mechanism: 'Respiración', status: 'publicado', sortOrder: 0, createdAt: '2026-09-01T00:00:00.000Z',
+  id: 'p1', name: 'Recuperación Vagal — Nivel 1', mechanism: 'Respiración', status: 'publicado',
+  criteriaId: null, suggestedFrequency: null, defaultCycleWeeks: 12, sortOrder: 0, createdAt: '2026-09-01T00:00:00.000Z',
 };
 const MENTOR: mentorsClient.Mentor = { id: 'm1', name: 'Sofía Duarte', specialty: null, active: true, createdAt: '2026-09-01T00:00:00.000Z' };
 
@@ -42,8 +43,7 @@ describe('AdminStressCaseAssignmentPanel', () => {
     expect(await screen.findByText(/Caso #1/)).toBeInTheDocument();
   });
 
-  it('shows the currently active case with a "cerrar caso" action instead of the assignment form', async () => {
-    const user = userEvent.setup();
+  it('shows the currently active case instead of the assignment form, with no manual "cerrar caso" action', async () => {
     vi.mocked(protocolsClient.listProtocols).mockResolvedValue([PUBLISHED_PROTOCOL]);
     vi.mocked(mentorsClient.listMentors).mockResolvedValue([MENTOR]);
     vi.mocked(casesClient.getActiveCase).mockResolvedValue({
@@ -53,15 +53,14 @@ describe('AdminStressCaseAssignmentPanel', () => {
       resources: [],
       checkpoints: [],
     });
-    vi.mocked(casesClient.closeCase).mockResolvedValue({
-      id: 'case-1', caseNumber: 7, clientId: 'client-1', module: 'stress', protocolId: 'p1', mentorId: 'm1', assignedAt: '2026-09-01T00:00:00.000Z', cycleWeeks: 12, outcome: 'cerrado',
-    });
 
     render(<AdminStressCaseAssignmentPanel clientId="client-1" />);
     expect(await screen.findByText('Caso #7')).toBeInTheDocument();
     expect(screen.queryByLabelText('Protocolo publicado')).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'Cerrar caso' }));
-    expect(casesClient.closeCase).toHaveBeenCalledWith('case-1', 'cerrado');
+    // El cierre ahora es automático al registrar el último checkpoint en el
+    // panel "Casos Etiquetados" — este panel ya no ofrece un botón manual.
+    expect(screen.queryByRole('button', { name: 'Cerrar caso' })).not.toBeInTheDocument();
+    expect(screen.getByText(/El caso se cierra solo al registrar el último checkpoint/)).toBeInTheDocument();
   });
 });

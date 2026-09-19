@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { listProtocols, type StressProtocol } from '../../lib/stress-protocols-client';
 import { listMentors, type Mentor } from '../../lib/mentors-client';
-import { createCase, closeCase, getActiveCase, type ActiveCaseView } from '../../lib/labeled-cases-client';
+import { createCase, getActiveCase, type ActiveCaseView } from '../../lib/labeled-cases-client';
 import { showToast } from '../layout/AppShell';
 import Badge from '../ui/Badge';
 
@@ -20,11 +20,6 @@ const primaryButtonStyle: React.CSSProperties = {
   height: 40, padding: '0 22px', borderRadius: 0, border: 'none',
   fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
   background: 'var(--eph-accent)', color: 'var(--eph-ink)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.14em', cursor: 'pointer',
-};
-const dangerButtonStyle: React.CSSProperties = {
-  height: 32, padding: '0 14px', borderRadius: 0, border: '1px solid var(--eph-danger)',
-  fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
-  background: 'transparent', color: 'var(--eph-danger)', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', cursor: 'pointer',
 };
 const cardStyle: React.CSSProperties = {
   background: 'var(--eph-surface)', border: '1px solid var(--eph-line)',
@@ -88,17 +83,6 @@ export function AdminStressCaseAssignmentPanel({ clientId }: { clientId: string 
     }
   }
 
-  async function handleClose() {
-    if (!activeCase) return;
-    try {
-      await closeCase(activeCase.labeledCase.id, 'cerrado');
-      await refetch();
-      showToast('Caso cerrado.', 'success');
-    } catch (e) {
-      showToast((e as Error).message, 'error');
-    }
-  }
-
   if (loading) return <p style={{ color: 'var(--eph-body)', fontSize: 14 }}>Cargando protocolos y mentores…</p>;
 
   return (
@@ -115,15 +99,15 @@ export function AdminStressCaseAssignmentPanel({ clientId }: { clientId: string 
           <p style={{ fontSize: 12, color: 'var(--eph-muted)', marginTop: 6 }}>
             Ciclo de {activeCase.labeledCase.cycleWeeks} semanas · asignado el {new Date(activeCase.labeledCase.assignedAt).toLocaleDateString('es-CO')}
           </p>
-          <button type="button" style={{ ...dangerButtonStyle, marginTop: 10 }} onClick={handleClose}>
-            Cerrar caso
-          </button>
+          <p style={{ fontSize: 12, color: 'var(--eph-faint)', marginTop: 10 }}>
+            El caso se cierra solo al registrar el último checkpoint en Administración → Protocolos → Casos Etiquetados.
+          </p>
         </div>
       ) : (
         <>
           {publishedProtocols.length === 0 ? (
             <p style={{ fontSize: 13, color: 'var(--eph-muted)' }}>
-              No hay protocolos publicados todavía — publica uno en Administración → Protocolos de Stress.
+              No hay protocolos publicados todavía — publica uno en Administración → Protocolos.
             </p>
           ) : (
             <>

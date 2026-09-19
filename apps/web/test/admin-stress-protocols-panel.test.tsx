@@ -16,6 +16,8 @@ const BASE_PROTOCOL: protocolsClient.StressProtocol = {
   mechanism: 'Respiración',
   status: 'borrador',
   criteriaId: null,
+  suggestedFrequency: null,
+  defaultCycleWeeks: 12,
   sortOrder: 0,
   createdAt: '2026-09-01T00:00:00.000Z',
 };
@@ -73,6 +75,22 @@ describe('AdminStressProtocolsPanel', () => {
     expect(await screen.findByText('Respiración 4-7-8')).toBeInTheDocument();
     await user.selectOptions(screen.getByLabelText('Estado del protocolo'), 'publicado');
     expect(protocolsClient.updateProtocolStatus).toHaveBeenCalledWith('p1', 'publicado');
+  });
+
+  it('edits the suggested frequency and cycle duration of a protocol', async () => {
+    const user = userEvent.setup();
+    vi.mocked(protocolsClient.listProtocols).mockResolvedValue([BASE_PROTOCOL]);
+    vi.mocked(protocolsClient.getProtocol).mockResolvedValue({ protocol: BASE_PROTOCOL, resources: [] });
+    vi.mocked(protocolsClient.updateProtocolSchedule).mockResolvedValue({ ...BASE_PROTOCOL, suggestedFrequency: '2x / día', defaultCycleWeeks: 16 });
+
+    render(<AdminStressProtocolsPanel />);
+    await user.click(await screen.findByRole('button', { name: /Recuperación Vagal/ }));
+
+    await user.selectOptions(await screen.findByLabelText('Frecuencia sugerida'), '2x / día');
+    expect(protocolsClient.updateProtocolSchedule).toHaveBeenCalledWith('p1', { suggested_frequency: '2x / día' });
+
+    await user.selectOptions(screen.getByLabelText('Duración del ciclo'), '16');
+    expect(protocolsClient.updateProtocolSchedule).toHaveBeenCalledWith('p1', { default_cycle_weeks: 16 });
   });
 
   it('shows the audio uploader only for "Meditación guiada" resources, not for other types', async () => {

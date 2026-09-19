@@ -107,8 +107,14 @@ export async function getTipOfTheDay(clientId: string): Promise<StressTip> {
   return body.tip;
 }
 
-export async function markCompletion(clientId: string): Promise<void> {
-  const body = await authorizedRequest<{ success: boolean; error?: string }>(`/api/clients/${clientId}/stress-completions`, 'POST', {});
+export async function markCompletion(
+  clientId: string,
+  input: { resourceId?: string | null; notes?: string | null } = {}
+): Promise<void> {
+  const body = await authorizedRequest<{ success: boolean; error?: string }>(`/api/clients/${clientId}/stress-completions`, 'POST', {
+    resource_id: input.resourceId ?? null,
+    notes: input.notes ?? null,
+  });
   if (!body.success) throw new Error(body.error || 'Error al marcar como completado.');
 }
 

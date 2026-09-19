@@ -19,6 +19,8 @@ export type StressProtocol = {
   mechanism: string | null;
   status: StressProtocolStatus;
   criteriaId: string | null;
+  suggestedFrequency: string | null;
+  defaultCycleWeeks: number;
   sortOrder: number;
   createdAt: string;
 };
@@ -80,6 +82,19 @@ export async function updateProtocolCriteria(protocolId: string, criteriaId: str
     { criteria_id: criteriaId }
   );
   if (!body.success) throw new Error(body.error || 'Error al actualizar el criterio del protocolo.');
+  return body.protocol;
+}
+
+export async function updateProtocolSchedule(
+  protocolId: string,
+  input: { suggested_frequency?: string | null; default_cycle_weeks?: number | null }
+): Promise<StressProtocol> {
+  const body = await authorizedRequest<{ success: boolean; protocol: StressProtocol; error?: string }>(
+    `/api/admin/stress-protocols/${protocolId}`,
+    'PATCH',
+    input
+  );
+  if (!body.success) throw new Error(body.error || 'Error al actualizar la frecuencia/duración del protocolo.');
   return body.protocol;
 }
 

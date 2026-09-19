@@ -42,7 +42,7 @@ describe('AdminStressProtocolCriteriaAndAssignment (Fase 4)', () => {
     ]);
 
     render(<AdminStressProtocolCriteriaAndAssignment protocolId="p1" criteriaId={null} onCriteriaChange={vi.fn()} />);
-    const select = await screen.findByLabelText('Criterio guardado');
+    const select = await screen.findByLabelText('Regla guardada');
     expect(select.textContent).toContain('Recuperación Vagal — criterio estándar');
     expect(select.textContent).not.toContain('Borrador sin publicar');
     expect(select.textContent).not.toContain('Publicado de Nutrition');
@@ -56,7 +56,7 @@ describe('AdminStressProtocolCriteriaAndAssignment (Fase 4)', () => {
     const onCriteriaChange = vi.fn();
 
     render(<AdminStressProtocolCriteriaAndAssignment protocolId="p1" criteriaId={null} onCriteriaChange={onCriteriaChange} />);
-    await user.selectOptions(await screen.findByLabelText('Criterio guardado'), 'crit1');
+    await user.selectOptions(await screen.findByLabelText('Regla guardada'), 'crit1');
 
     expect(protocolsClient.updateProtocolCriteria).toHaveBeenCalledWith('p1', 'crit1');
     expect(onCriteriaChange).toHaveBeenCalledWith('crit1');
@@ -75,7 +75,7 @@ describe('AdminStressProtocolCriteriaAndAssignment (Fase 4)', () => {
 
     const camilaRow = (await screen.findByText('Camila Ruiz')).closest('label')!;
     expect(camilaRow.querySelector('input[type="checkbox"]')).toBeChecked();
-    expect(camilaRow).toHaveTextContent('Cumple criterio');
+    expect(camilaRow).toHaveTextContent('Cumple regla');
 
     const julianRow = screen.getByText('Julián Rendón').closest('label')!;
     expect(julianRow.querySelector('input[type="checkbox"]')).not.toBeChecked();

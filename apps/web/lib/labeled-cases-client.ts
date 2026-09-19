@@ -1,4 +1,4 @@
-import type { LabeledCaseModule, LabeledCaseOutcome, LabeledCaseCheckpointStatus } from '@latribu/shared-types';
+import type { LabeledCaseModule, LabeledCaseOutcome, LabeledCaseCheckpointStatus, OutcomeRating } from '@latribu/shared-types';
 import type { StressProtocolResource } from './stress-protocols-client';
 import { PermissionDeniedError } from './api-client';
 
@@ -35,14 +35,17 @@ export type LabeledCaseCheckpoint = {
   caseId: string;
   weekNumber: number;
   status: LabeledCaseCheckpointStatus;
+  valoracion: OutcomeRating | null;
   notes: string | null;
   completedAt: string | null;
 };
 
+export type CaseCheckpointView = LabeledCaseCheckpoint & { dueDate: string; overdue: boolean };
+
 export type ActiveCaseView = {
   labeledCase: LabeledCase;
   mentor: { id: string; name: string; specialty: string | null } | null;
-  protocol: { id: string; name: string; mechanism: string | null } | null;
+  protocol: { id: string; name: string; mechanism: string | null; suggestedFrequency: string | null } | null;
   resources: StressProtocolResource[];
   checkpoints: LabeledCaseCheckpoint[];
 };
@@ -116,4 +119,93 @@ export async function listRecentCases(module: LabeledCaseModule): Promise<Recent
   );
   if (!body.success) throw new Error(body.error || 'Error al obtener las asignaciones recientes.');
   return body.cases;
+}
+
+export async function updateCheckpoint(
+  caseId: string,
+  weekNumber: number,
+  input: { status: LabeledCaseCheckpointStatus; valoracion?: OutcomeRating | null; notes?: string | null }
+): Promise<LabeledCaseCheckpoint> {
+  const body = await authorizedRequest<{ success: boolean; checkpoint: LabeledCaseCheckpoint; error?: string }>(
+    `/api/admin/labeled-cases/${caseId}/checkpoints/${weekNumber}`,
+    'PATCH',
+    input
+  );
+  if (!body.success) throw new Error(body.error || 'Error al registrar el checkpoint.');
+  return body.checkpoint;
+}
+
+// Panel "Casos Etiquetados" (punto 24) — tabla con estado derivado.
+export type CaseStatus = 'activo' | 'vencido' | 'completado';
+
+export type CaseListRow = {
+  id: string;
+  caseNumber: number;
+  clientId: string;
+  clientName: string;
+  clientType: string;
+  protocolName: string;
+  status: CaseStatus;
+  currentWeek: number;
+  cycleWeeks: number;
+  nextCheckpoint: CaseCheckpointView | null;
+  outcome: OutcomeRating | null;
+};
+
+export async function listCasesDetailed(
+  module: LabeledCaseModule,
+  filters: { search?: string; status?: CaseStatus; protocolId?: string } = {}
+): Promise<CaseListRow[]> {
+  const params = new URLSearchParams({ module });
+  if (filters.search) params.set('search', filters.search);
+  if (filters.status) params.set('status', filters.status);
+  if (filters.protocolId) params.set('protocolId', filters.protocolId);
+  const body = await authorizedRequest<{ success: boolean; cases: CaseListRow[]; error?: string }>(
+    `/api/admin/labeled-cases/detailed?${params.toString()}`,
+    'GET'
+  );
+  if (!body.success) throw new Error(body.error || 'Error al obtener los casos etiquetados.');
+  return body.cases;
+}
+
+export type CaseDetailView = {
+  labeledCase: LabeledCase;
+  clientName: string;
+  clientType: string;
+  mentor: { id: string; name: string; specialty: string | null } | null;
+  protocolName: string | null;
+  criteriaName: string | null;
+  criteriaVersion: number | null;
+  dataResearchConsent: boolean | null;
+  checkpoints: CaseCheckpointView[];
+};
+
+export async function getCaseDetail(caseId: string): Promise<CaseDetailView> {
+  const body = await authorizedRequest<{ success: boolean; detail: CaseDetailView; error?: string }>(
+    `/api/admin/labeled-cases/${caseId}/detail`,
+    'GET'
+  );
+  if (!body.success) throw new Error(body.error || 'Error al obtener el detalle del caso.');
+  return body.detail;
+}
+
+export type ProtocolEffectiveness = { improvementPct: number; eligibleCompletedCount: number } | null;
+
+export async function getProtocolEffectiveness(protocolId: string): Promise<ProtocolEffectiveness> {
+  const body = await authorizedRequest<{ success: boolean; effectiveness: ProtocolEffectiveness; error?: string }>(
+    `/api/admin/labeled-cases/protocol/${protocolId}/effectiveness`,
+    'GET'
+  );
+  if (!body.success) throw new Error(body.error || 'Error al calcular la efectividad del protocolo.');
+  return body.effectiveness;
+}
+
+// Dispara la descarga del navegador directamente — el endpoint devuelve
+// text/csv con Content-Disposition: attachment, no JSON, así que no pasa
+// por authorizedRequest (que asume JSON).
+export function exportCasesCsvUrl(module?: string, onlyCompleted = true): string {
+  const params = new URLSearchParams();
+  if (module) params.set('module', module);
+  if (!onlyCompleted) params.set('status', 'all');
+  return `${API_BASE_URL}/api/admin/labeled-cases/export.csv?${params.toString()}`;
 }

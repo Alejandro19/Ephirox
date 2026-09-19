@@ -43,6 +43,7 @@ export type LegalAcceptancePayload = {
   termsVersion: string;
   acceptedAt: string;
   sensitiveDataConsent: boolean;
+  dataResearchConsent?: boolean;
 };
 
 export type SimpleResult = {

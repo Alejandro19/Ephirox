@@ -23,10 +23,19 @@ const chipStyle: React.CSSProperties = {
   borderRadius: 999, padding: '5px 11px', display: 'inline-block',
 };
 const joinerChipStyle: React.CSSProperties = { fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--eph-accent)' };
+// Más protagonismo visual (punto 25.5): degradado cálido + label dorado en
+// todas las tiles, con borde+glow reservado para la destacada.
 const tileStyle: React.CSSProperties = {
-  background: 'var(--eph-surface-2)', border: '1px solid var(--eph-line-2)', padding: '12px 14px',
+  background: 'linear-gradient(160deg, var(--eph-surface-2) 0%, var(--eph-surface) 100%)',
+  border: '1px solid var(--eph-line-2)', padding: '14px 16px',
 };
-const tileHighlightStyle: React.CSSProperties = { ...tileStyle, borderColor: 'var(--eph-accent)', background: 'rgba(201,166,107,.10)' };
+const tileHighlightStyle: React.CSSProperties = {
+  ...tileStyle,
+  background: 'linear-gradient(160deg, color-mix(in srgb, var(--eph-accent) 16%, var(--eph-surface-2)) 0%, var(--eph-surface-2) 100%)',
+  border: '1.5px solid var(--eph-accent)',
+  boxShadow: '0 0 0 1px color-mix(in srgb, var(--eph-accent) 30%, transparent), 0 12px 26px -10px color-mix(in srgb, var(--eph-accent) 45%, transparent)',
+};
+const tileLabelStyle: React.CSSProperties = { fontSize: 11, color: 'var(--eph-accent)', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 700 };
 const primaryButtonStyle: React.CSSProperties = {
   height: 36, padding: '0 18px', borderRadius: 0, border: 'none',
   fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
@@ -187,10 +196,10 @@ export function AdminStressProtocolCriteriaAndAssignment({
 
   return (
     <div>
-      <h3 style={{ margin: '18px 0 8px', fontSize: 14, fontWeight: 600, color: 'var(--eph-text)' }}>Criterios de asignación</h3>
-      <label style={labelStyle} htmlFor="criteria-picker">Criterio guardado</label>
+      <h3 style={{ margin: '18px 0 8px', fontSize: 14, fontWeight: 600, color: 'var(--eph-text)' }}>Reglas de asignación</h3>
+      <label style={labelStyle} htmlFor="criteria-picker">Regla guardada</label>
       <select id="criteria-picker" style={fieldStyle} value={criteriaId ?? ''} onChange={(e) => handleCriteriaSelect(e.target.value)}>
-        <option value="">Sin criterio</option>
+        <option value="">Sin regla</option>
         {criteriaList.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
       </select>
       {selectedCriteria && (
@@ -199,8 +208,8 @@ export function AdminStressProtocolCriteriaAndAssignment({
         </div>
       )}
       <p style={{ fontSize: 12, color: 'var(--eph-faint)', marginTop: 10, maxWidth: 560 }}>
-        Los criterios se crean y versionan una sola vez en <strong style={{ color: 'var(--eph-text)' }}>Administración → Criterios y Marcadores</strong>, y se reutilizan aquí y en los protocolos de Workout, Nutrition y Sleep — este formulario solo selecciona cuál aplicar, no lo construye.{' '}
-        <Link href="/admin/criteria" style={{ color: 'var(--eph-accent)' }}>Crear o editar criterios en Administración →</Link>
+        Las reglas se crean y versionan una sola vez en <strong style={{ color: 'var(--eph-text)' }}>Administración → Reglas y Marcadores</strong>, y se reutilizan aquí y en los protocolos de Workout, Nutrition y Sleep — este formulario solo selecciona cuál aplicar, no la construye.{' '}
+        <Link href="/admin/criteria" style={{ color: 'var(--eph-accent)' }}>Crear o editar reglas en Administración →</Link>
       </p>
 
       {focusedClient && (
@@ -218,8 +227,8 @@ export function AdminStressProtocolCriteriaAndAssignment({
               const flag = referenceFlag(label, value, metrics);
               return (
                 <div key={label} style={highlight ? tileHighlightStyle : tileStyle}>
-                  <div style={{ fontSize: 10, color: 'var(--eph-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</div>
-                  <div style={{ fontFamily: 'var(--font-cormorant), serif', fontSize: 24, color: 'var(--eph-text)', marginTop: 4 }}>
+                  <div style={highlight ? tileLabelStyle : { ...tileLabelStyle, color: 'var(--eph-muted)' }}>{label}</div>
+                  <div style={{ fontFamily: 'var(--font-cormorant), serif', fontSize: 30, fontWeight: 600, color: 'var(--eph-text)', marginTop: 6 }}>
                     {value != null ? `${value} ${unit}` : '—'}
                   </div>
                   {flag && (
@@ -250,14 +259,14 @@ export function AdminStressProtocolCriteriaAndAssignment({
             <span style={{ flex: 1, fontSize: 13, color: 'var(--eph-text)' }}>{c.name}</span>
             <span style={{ fontSize: 11, color: 'var(--eph-muted)' }}>{c.hrvNocturno != null ? `HRV ${c.hrvNocturno} ms` : 'sin wearable'}</span>
             {matchingIds && (
-              <span style={tagMatchStyle}>{matchingIds.has(c.id) ? 'Cumple criterio' : 'No cumple'}</span>
+              <span style={tagMatchStyle}>{matchingIds.has(c.id) ? 'Cumple regla' : 'No cumple'}</span>
             )}
           </label>
         ))}
       </div>
       {matchingIds && (
         <p style={{ fontSize: 11, color: 'var(--eph-faint)', marginTop: 8 }}>
-          Los marcados &quot;Cumple criterio&quot; se preseleccionan solos según el baseline — puedes agregar o quitar clientes manualmente antes de guardar.
+          Los marcados &quot;Cumple regla&quot; se preseleccionan solos según el baseline — puedes agregar o quitar clientes manualmente antes de guardar.
         </p>
       )}
       <button type="button" style={{ ...primaryButtonStyle, marginTop: 14 }} onClick={handleAssign} disabled={assigning || selectedClientIds.size === 0}>

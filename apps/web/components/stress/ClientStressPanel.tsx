@@ -179,15 +179,14 @@ export function ClientStressPanel({
   const [activeId, setActiveId] = useState<string | null>(null);
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
 
-  async function handleComplete(techniqueId: string) {
+  async function handleComplete(input: { resourceId?: string; notes?: string } = {}) {
     try {
-      await markCompletion(clientId);
+      await markCompletion(clientId, input);
       const completionList = await listCompletions(clientId).catch(() => data?.completions ?? []);
       await mutate((current) => (current ? { ...current, completions: completionList } : current), { revalidate: false });
     } catch (e) {
       setActionError((e as Error).message);
     }
-    void techniqueId;
   }
 
   const header = <IdentityHeader title="Stress" subtitle="Herramientas de Neuro-Wellness para regular tu sistema nervioso." />;
@@ -231,7 +230,7 @@ export function ClientStressPanel({
           technique={active}
           doneToday={doneToday}
           onBack={() => setActiveId(null)}
-          onComplete={() => handleComplete(active.id)}
+          onComplete={() => handleComplete()}
         />
       </div>
     );
@@ -264,7 +263,7 @@ export function ClientStressPanel({
       {clientType === 'mentoring' && (
         <StressPlanSection
           activeCase={activeCase}
-          onCompleteActiveResource={() => handleComplete(activeCase?.labeledCase.id ?? '')}
+          onCompleteActiveResource={(resourceId, notes) => handleComplete({ resourceId, notes })}
           closedCases={closedCases}
           techniques={neurowellnessTechniques}
           playingAudioId={playingAudioId}

@@ -33,7 +33,7 @@ describe('AdminCriteriaLibraryPanel (Fase 6 — armador de reglas)', () => {
   it('shows an empty state with no criteria yet', async () => {
     vi.mocked(criteriaClient.listCriteria).mockResolvedValue([]);
     render(<AdminCriteriaLibraryPanel />);
-    expect(await screen.findByText('Aún no hay criterios de asignación guardados.')).toBeInTheDocument();
+    expect(await screen.findByText('Aún no hay reglas de asignación guardadas.')).toBeInTheDocument();
   });
 
   it('shows how many protocols are using each criterion', async () => {
@@ -48,10 +48,10 @@ describe('AdminCriteriaLibraryPanel (Fase 6 — armador de reglas)', () => {
     vi.mocked(criteriaClient.createCriteria).mockResolvedValue(DRAFT_CRITERIA);
 
     render(<AdminCriteriaLibraryPanel />);
-    await screen.findByText('Aún no hay criterios de asignación guardados.');
-    await user.click(screen.getByRole('button', { name: '+ Crear nuevo criterio' }));
+    await screen.findByText('Aún no hay reglas de asignación guardadas.');
+    await user.click(screen.getByRole('button', { name: '+ Crear nueva regla' }));
 
-    await user.type(screen.getByLabelText('Nombre del criterio'), 'Recuperación Vagal — criterio estándar');
+    await user.type(screen.getByLabelText('Nombre de la regla'), 'Recuperación Vagal — criterio estándar');
     await user.click(screen.getByRole('checkbox', { name: 'Stress' }));
 
     // Fila 1 (HRV < 40, default), agrega una segunda condición y la configura.
@@ -66,7 +66,7 @@ describe('AdminCriteriaLibraryPanel (Fase 6 — armador de reglas)', () => {
     await user.clear(valueInputs[1]);
     await user.type(valueInputs[1], '15');
 
-    await user.click(screen.getByRole('button', { name: 'Guardar criterio en la librería' }));
+    await user.click(screen.getByRole('button', { name: 'Guardar regla en la librería' }));
 
     expect(criteriaClient.createCriteria).toHaveBeenCalledWith({
       name: 'Recuperación Vagal — criterio estándar',

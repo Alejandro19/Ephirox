@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { screen, waitFor } from '@testing-library/react';
+import { screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderWithSWR as render } from './swr-test-utils';
 import { ClientStressPanel } from '../components/stress/ClientStressPanel';
@@ -99,7 +99,7 @@ describe('ClientStressPanel', () => {
     // abajo tiene el mismo protocolo como card clickeable.
     await user.click(screen.getByRole('button', { name: 'Empezar protocolo' }));
     await user.click(screen.getByRole('button', { name: 'Marcar completado' }));
-    await waitFor(() => expect(stressClient.markCompletion).toHaveBeenCalledWith('client-1'));
+    await waitFor(() => expect(stressClient.markCompletion).toHaveBeenCalledWith('client-1', {}));
   });
 
   it('recommends and plays the first assigned protocol (no live emotion signal anymore)', async () => {
@@ -127,7 +127,7 @@ describe('ClientStressPanel', () => {
           mentorId: 'm1', assignedAt: new Date().toISOString(), cycleWeeks: 12, outcome: null,
         },
         mentor: { id: 'm1', name: 'Sofía Duarte', specialty: null },
-        protocol: { id: 'p1', name: 'Recuperación Vagal — Nivel 1', mechanism: 'Respiración' },
+        protocol: { id: 'p1', name: 'Recuperación Vagal — Nivel 1', mechanism: 'Respiración', suggestedFrequency: '2x / día' },
         resources: [
           {
             id: 'r1', protocolId: 'p1', type: 'Técnica de respiración', title: 'Respiración 4-7-8',
@@ -144,7 +144,95 @@ describe('ClientStressPanel', () => {
     expect(screen.getByText('Recuperación Vagal — Nivel 1')).toBeInTheDocument();
     expect(screen.getByText('Asignado por Sofía Duarte, tu mentor')).toBeInTheDocument();
     expect(screen.getByText('Semana 1 de 12')).toBeInTheDocument();
+    expect(screen.getByText('Frecuencia sugerida: 2x / día')).toBeInTheDocument();
     expect(screen.queryByText('Tu mentor está diseñando tu plan personalizado.')).not.toBeInTheDocument();
+  });
+
+  it('"Técnica de respiración" starts a real countdown and marks completed when it reaches zero', async () => {
+    mockFetches({
+      activeCase: {
+        labeledCase: {
+          id: 'case-1', caseNumber: 1247, clientId: 'client-1', module: 'stress', protocolId: 'p1',
+          mentorId: null, assignedAt: new Date().toISOString(), cycleWeeks: 12, outcome: null,
+        },
+        mentor: null,
+        protocol: { id: 'p1', name: 'Recuperación Vagal — Nivel 1', mechanism: null, suggestedFrequency: null },
+        resources: [
+          {
+            id: 'r1', protocolId: 'p1', type: 'Técnica de respiración', title: 'Respiración 4-7-8',
+            durationMinutes: 0, durationSeconds: 1, instructions: null, audioUrl: null, audioName: null,
+            videoUrl: null, videoName: null, youtubeUrl: null, sortOrder: 0,
+          },
+        ],
+        checkpoints: [],
+      },
+    });
+
+    render(<ClientStressPanel clientId="client-1" clientType="mentoring" />);
+    const startButton = await screen.findByRole('button', { name: 'Empezar' });
+    fireEvent.click(startButton);
+
+    expect(screen.getByText('0:01')).toBeInTheDocument();
+    await waitFor(() => expect(stressClient.markCompletion).toHaveBeenCalledWith('client-1', { resourceId: 'r1', notes: undefined }), { timeout: 3000 });
+  }, 10000);
+
+  it('"Journal de descarga" opens a text box and saves its content as notes', async () => {
+    const user = userEvent.setup();
+    mockFetches({
+      activeCase: {
+        labeledCase: {
+          id: 'case-1', caseNumber: 1247, clientId: 'client-1', module: 'stress', protocolId: 'p1',
+          mentorId: null, assignedAt: new Date().toISOString(), cycleWeeks: 12, outcome: null,
+        },
+        mentor: null,
+        protocol: { id: 'p1', name: 'Recuperación Vagal — Nivel 1', mechanism: null, suggestedFrequency: null },
+        resources: [
+          {
+            id: 'r2', protocolId: 'p1', type: 'Journal de descarga', title: 'Diario de descarga',
+            durationMinutes: null, durationSeconds: null, instructions: null, audioUrl: null, audioName: null,
+            videoUrl: null, videoName: null, youtubeUrl: null, sortOrder: 0,
+          },
+        ],
+        checkpoints: [],
+      },
+    });
+
+    render(<ClientStressPanel clientId="client-1" clientType="mentoring" />);
+    await user.click(await screen.findByRole('button', { name: 'Escribir' }));
+    await user.type(screen.getByPlaceholderText('Escribe lo que quieras dejar por escrito hoy…'), 'Hoy me sentí mejor.');
+    await user.click(screen.getByRole('button', { name: 'Guardar' }));
+
+    await waitFor(() => expect(stressClient.markCompletion).toHaveBeenCalledWith('client-1', { resourceId: 'r2', notes: 'Hoy me sentí mejor.' }));
+  });
+
+  it('"Meditación guiada" plays its audio and marks completed when it ends', async () => {
+    const user = userEvent.setup();
+    mockFetches({
+      activeCase: {
+        labeledCase: {
+          id: 'case-1', caseNumber: 1247, clientId: 'client-1', module: 'stress', protocolId: 'p1',
+          mentorId: null, assignedAt: new Date().toISOString(), cycleWeeks: 12, outcome: null,
+        },
+        mentor: null,
+        protocol: { id: 'p1', name: 'Recuperación Vagal — Nivel 1', mechanism: null, suggestedFrequency: null },
+        resources: [
+          {
+            id: 'r3', protocolId: 'p1', type: 'Meditación guiada', title: 'Calma nocturna',
+            durationMinutes: 8, durationSeconds: null, instructions: null,
+            audioUrl: 'https://files.example.com/calma.mp3', audioName: 'calma.mp3',
+            videoUrl: null, videoName: null, youtubeUrl: null, sortOrder: 0,
+          },
+        ],
+        checkpoints: [],
+      },
+    });
+
+    render(<ClientStressPanel clientId="client-1" clientType="mentoring" />);
+    await user.click(await screen.findByRole('button', { name: 'Reproducir' }));
+    const audioEl = document.querySelector('audio')!;
+    fireEvent.ended(audioEl);
+
+    await waitFor(() => expect(stressClient.markCompletion).toHaveBeenCalledWith('client-1', { resourceId: 'r3', notes: undefined }));
   });
 
   it('shows a simple protocol-history list (nombre + rango de fechas) for a mentoring client', async () => {
@@ -155,7 +243,7 @@ describe('ClientStressPanel', () => {
           mentorId: 'm1', assignedAt: new Date().toISOString(), cycleWeeks: 12, outcome: null,
         },
         mentor: { id: 'm1', name: 'Sofía Duarte', specialty: null },
-        protocol: { id: 'p2', name: 'Recuperación Vagal — Nivel 2', mechanism: null },
+        protocol: { id: 'p2', name: 'Recuperación Vagal — Nivel 2', mechanism: null, suggestedFrequency: null },
         resources: [],
         checkpoints: [],
       },

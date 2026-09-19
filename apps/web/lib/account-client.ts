@@ -26,6 +26,7 @@ export type LegalAcceptance = {
   dataPolicyVersion: string;
   termsVersion: string;
   sensitiveDataConsent: boolean;
+  dataResearchConsent?: boolean | null;
   acceptedAt: string;
 };
 

@@ -40,6 +40,10 @@ const dangerButtonStyle: React.CSSProperties = {
   fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
   background: 'transparent', color: 'var(--eph-danger)', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', cursor: 'pointer',
 };
+const cardStyle: React.CSSProperties = {
+  background: 'var(--eph-surface)', border: '1px solid var(--eph-line)',
+  borderRadius: 0, padding: '22px 24px', marginBottom: 20,
+};
 
 const STATUS_LABEL: Record<string, string> = { borrador: 'Borrador', publicado: 'Publicado', archivado: 'Archivado' };
 const STATUS_VARIANT: Record<string, 'success' | 'warn' | 'danger'> = { borrador: 'warn', publicado: 'success', archivado: 'danger' };
@@ -81,8 +85,8 @@ function CriteriaForm({
 
   return (
     <div style={{ border: '1px dashed var(--eph-line-2)', padding: 16, marginTop: 12 }}>
-      <label style={labelStyle} htmlFor="crit-name">Nombre del criterio</label>
-      <input id="crit-name" style={fieldStyle} value={name} onChange={(e) => setName(e.target.value)} placeholder="Ej: Recuperación Vagal — criterio estándar" />
+      <label style={labelStyle} htmlFor="crit-name">Nombre de la regla</label>
+      <input id="crit-name" style={fieldStyle} value={name} onChange={(e) => setName(e.target.value)} placeholder="Ej: Recuperación Vagal — regla estándar" />
 
       <label style={{ ...labelStyle, marginTop: 14 }}>Módulos donde aplica</label>
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
@@ -140,7 +144,7 @@ export function AdminCriteriaLibraryPanel() {
       await createCriteria(input);
       setCreating(false);
       await refetch();
-      showToast('Criterio guardado en borrador.', 'success');
+      showToast('Regla guardada en borrador.', 'success');
     } catch (e) {
       showToast((e as Error).message, 'error');
     }
@@ -153,7 +157,7 @@ export function AdminCriteriaLibraryPanel() {
         showToast('Se creó una nueva versión publicada — la anterior quedó archivada.', 'success');
       } else {
         await updateDraftCriteria(criterion.id, input);
-        showToast('Criterio actualizado.', 'success');
+        showToast('Regla actualizada.', 'success');
       }
       setEditingId(null);
       await refetch();
@@ -166,7 +170,7 @@ export function AdminCriteriaLibraryPanel() {
     try {
       await publishCriteria(criteriaId);
       await refetch();
-      showToast('Criterio publicado — ya está disponible para seleccionar en protocolos.', 'success');
+      showToast('Regla publicada — ya está disponible para seleccionar en protocolos.', 'success');
     } catch (e) {
       showToast((e as Error).message, 'error');
     }
@@ -181,12 +185,12 @@ export function AdminCriteriaLibraryPanel() {
     }
   }
 
-  if (loading) return <p style={{ color: 'var(--eph-muted)', fontSize: 14 }}>Cargando criterios…</p>;
+  if (loading) return <div style={cardStyle}><p style={{ color: 'var(--eph-muted)', fontSize: 14, margin: 0 }}>Cargando reglas…</p></div>;
 
   return (
-    <div>
+    <div style={cardStyle}>
       {criteria.length === 0 ? (
-        <EmptyState message="Aún no hay criterios de asignación guardados." />
+        <EmptyState message="Aún no hay reglas de asignación guardadas." />
       ) : (
         criteria.map((c) => (
           <div key={c.id} style={{ borderBottom: '1px solid var(--eph-line)', padding: '14px 0' }}>
@@ -223,10 +227,10 @@ export function AdminCriteriaLibraryPanel() {
       )}
 
       {creating ? (
-        <CriteriaForm metrics={metrics} onSave={handleCreate} onCancel={() => setCreating(false)} saveLabel="Guardar criterio en la librería" />
+        <CriteriaForm metrics={metrics} onSave={handleCreate} onCancel={() => setCreating(false)} saveLabel="Guardar regla en la librería" />
       ) : (
         <button type="button" style={{ ...ghostButtonStyle, marginTop: 16 }} onClick={() => setCreating(true)} disabled={metrics.length === 0}>
-          + Crear nuevo criterio
+          + Crear nueva regla
         </button>
       )}
     </div>

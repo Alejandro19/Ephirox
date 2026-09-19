@@ -130,7 +130,7 @@ function Consent({ label, checked, enabled, onToggle, locked }) {
 export default function AceptacionRegistro({ onComplete = () => {} }) {
   const [tab, setTab] = useState("datos");
   const [scrolled, setScrolled] = useState({ datos: false, terminos: false });
-  const [accepted, setAccepted] = useState({ datos: false, terminos: false, sensible: false });
+  const [accepted, setAccepted] = useState({ datos: false, terminos: false, sensible: false, investigacion: false });
   const [done, setDone] = useState(false);
 
   const markScrolled = (k) => setScrolled((s) => (s[k] ? s : { ...s, [k]: true }));
@@ -146,6 +146,7 @@ export default function AceptacionRegistro({ onComplete = () => {} }) {
       termsVersion: TERMS_VERSION,
       acceptedAt: new Date().toISOString(),
       sensitiveDataConsent: true,
+      dataResearchConsent: accepted.investigacion,
     });
   };
 
@@ -232,6 +233,13 @@ export default function AceptacionRegistro({ onComplete = () => {} }) {
             enabled={true}
             locked={false}
             onToggle={() => toggle("sensible")}
+          />
+          <Consent
+            label="Autorizo, de forma opcional y separada, usar mis datos de forma anonimizada en la investigación interna de Ephirox para mejorar los protocolos de acompañamiento. Puedo completar mi registro sin marcar esta casilla."
+            checked={accepted.investigacion}
+            enabled={true}
+            locked={false}
+            onToggle={() => toggle("investigacion")}
           />
         </div>
 
