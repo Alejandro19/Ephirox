@@ -22,14 +22,14 @@ describe('AdminStressCaseAssignmentPanel', () => {
     vi.mocked(protocolsClient.listProtocols).mockResolvedValue([PUBLISHED_PROTOCOL]);
     vi.mocked(mentorsClient.listMentors).mockResolvedValue([MENTOR]);
     vi.mocked(casesClient.getActiveCase).mockResolvedValueOnce(null).mockResolvedValueOnce({
-      labeledCase: { id: 'case-1', caseNumber: 1, clientId: 'client-1', module: 'stress', protocolId: 'p1', mentorId: 'm1', assignedAt: new Date().toISOString(), cycleWeeks: 12, outcome: null },
+      labeledCase: { id: 'case-1', caseNumber: 1, clientId: 'client-1', module: 'stress', protocolId: 'p1', mentorId: 'm1', assignedAt: new Date().toISOString(), cycleWeeks: 12, baselineSnapshot: {}, outcome: null },
       mentor: MENTOR,
       protocol: PUBLISHED_PROTOCOL,
       resources: [],
       checkpoints: [],
     });
     vi.mocked(casesClient.createCase).mockResolvedValue({
-      id: 'case-1', caseNumber: 1, clientId: 'client-1', module: 'stress', protocolId: 'p1', mentorId: 'm1', assignedAt: new Date().toISOString(), cycleWeeks: 12, outcome: null,
+      id: 'case-1', caseNumber: 1, clientId: 'client-1', module: 'stress', protocolId: 'p1', mentorId: 'm1', assignedAt: new Date().toISOString(), cycleWeeks: 12, baselineSnapshot: {}, outcome: null,
     });
 
     render(<AdminStressCaseAssignmentPanel clientId="client-1" />);
@@ -47,7 +47,7 @@ describe('AdminStressCaseAssignmentPanel', () => {
     vi.mocked(protocolsClient.listProtocols).mockResolvedValue([PUBLISHED_PROTOCOL]);
     vi.mocked(mentorsClient.listMentors).mockResolvedValue([MENTOR]);
     vi.mocked(casesClient.getActiveCase).mockResolvedValue({
-      labeledCase: { id: 'case-1', caseNumber: 7, clientId: 'client-1', module: 'stress', protocolId: 'p1', mentorId: 'm1', assignedAt: '2026-09-01T00:00:00.000Z', cycleWeeks: 12, outcome: null },
+      labeledCase: { id: 'case-1', caseNumber: 7, clientId: 'client-1', module: 'stress', protocolId: 'p1', mentorId: 'm1', assignedAt: '2026-09-01T00:00:00.000Z', cycleWeeks: 12, baselineSnapshot: {}, outcome: null },
       mentor: MENTOR,
       protocol: PUBLISHED_PROTOCOL,
       resources: [],

@@ -41,11 +41,16 @@ describe('AdminStressCasesPanel (punto 24)', () => {
     expect(screen.getByText('Semana 7 de 12')).toBeInTheDocument();
   });
 
-  it('expands a case and shows its full detail — regla, consentimiento y checkpoints', async () => {
+  it('expands a case and shows its full detail — regla, consentimiento, baseline congelado y checkpoints', async () => {
     const user = userEvent.setup();
     vi.mocked(casesClient.listCasesDetailed).mockResolvedValue([CASE_ROW]);
     vi.mocked(casesClient.getCaseDetail).mockResolvedValue({
-      labeledCase: { id: 'case-1', caseNumber: 1245, clientId: 'cl1', module: 'stress', protocolId: 'p1', mentorId: 'm1', assignedAt: '2026-08-01T00:00:00.000Z', cycleWeeks: 12, outcome: null },
+      labeledCase: {
+        id: 'case-1', caseNumber: 1245, clientId: 'cl1', module: 'stress', protocolId: 'p1', mentorId: 'm1',
+        assignedAt: '2026-08-01T00:00:00.000Z', cycleWeeks: 12,
+        baselineSnapshot: { hrvNocturno: 38, fcReposo: 68, suenoScore: 62, recoveryScore: null, cognitiveLoadScore: 6 },
+        outcome: null,
+      },
       clientName: 'Marcela Ortiz', clientType: 'coaching_1_1',
       mentor: { id: 'm1', name: 'Sofía Duarte', specialty: null },
       protocolName: 'Recuperación Vagal — Nivel 1',
@@ -60,13 +65,37 @@ describe('AdminStressCasesPanel (punto 24)', () => {
     expect(await screen.findByText('Coherencia Cardíaca — sostenido')).toBeInTheDocument();
     expect(screen.getByText(/Pendiente — cuenta registrada antes de incluir esta autorización/)).toBeInTheDocument();
     expect(screen.getByText(/Vencido hace/)).toBeInTheDocument();
+
+    // Snapshot congelado del baseline (lo que faltaba, reportado por Alejandro).
+    expect(screen.getByText('Snapshot del baseline al momento de asignar')).toBeInTheDocument();
+    expect(screen.getByText('38 ms')).toBeInTheDocument();
+    expect(screen.getByText('68 bpm')).toBeInTheDocument();
+    expect(screen.getByText('62 /100')).toBeInTheDocument();
+    expect(screen.getByText('6 /10')).toBeInTheDocument();
+  });
+
+  it('shows a fallback message when the frozen baseline snapshot has no data at all', async () => {
+    const user = userEvent.setup();
+    vi.mocked(casesClient.listCasesDetailed).mockResolvedValue([CASE_ROW]);
+    vi.mocked(casesClient.getCaseDetail).mockResolvedValue({
+      labeledCase: { id: 'case-1', caseNumber: 1245, clientId: 'cl1', module: 'stress', protocolId: 'p1', mentorId: null, assignedAt: '2026-08-01T00:00:00.000Z', cycleWeeks: 12, baselineSnapshot: {}, outcome: null },
+      clientName: 'Marcela Ortiz', clientType: 'coaching_1_1',
+      mentor: null, protocolName: 'Recuperación Vagal — Nivel 1',
+      criteriaName: null, criteriaVersion: null, dataResearchConsent: null,
+      checkpoints: [OVERDUE_CHECKPOINT],
+    });
+
+    render(<AdminStressCasesPanel />);
+    await user.click(await screen.findByText('Marcela Ortiz'));
+
+    expect(await screen.findByText(/Sin datos de wearable\/carga cognitiva disponibles/)).toBeInTheDocument();
   });
 
   it('registers an overdue checkpoint with a standardized rating and a short note', async () => {
     const user = userEvent.setup();
     vi.mocked(casesClient.listCasesDetailed).mockResolvedValue([CASE_ROW]);
     vi.mocked(casesClient.getCaseDetail).mockResolvedValue({
-      labeledCase: { id: 'case-1', caseNumber: 1245, clientId: 'cl1', module: 'stress', protocolId: 'p1', mentorId: null, assignedAt: '2026-08-01T00:00:00.000Z', cycleWeeks: 12, outcome: null },
+      labeledCase: { id: 'case-1', caseNumber: 1245, clientId: 'cl1', module: 'stress', protocolId: 'p1', mentorId: null, assignedAt: '2026-08-01T00:00:00.000Z', cycleWeeks: 12, baselineSnapshot: {}, outcome: null },
       clientName: 'Marcela Ortiz', clientType: 'coaching_1_1',
       mentor: null, protocolName: 'Recuperación Vagal — Nivel 1',
       criteriaName: null, criteriaVersion: null, dataResearchConsent: true,

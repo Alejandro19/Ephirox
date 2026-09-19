@@ -124,7 +124,7 @@ describe('ClientStressPanel', () => {
       activeCase: {
         labeledCase: {
           id: 'case-1', caseNumber: 1247, clientId: 'client-1', module: 'stress', protocolId: 'p1',
-          mentorId: 'm1', assignedAt: new Date().toISOString(), cycleWeeks: 12, outcome: null,
+          mentorId: 'm1', assignedAt: new Date().toISOString(), cycleWeeks: 12, baselineSnapshot: {}, outcome: null,
         },
         mentor: { id: 'm1', name: 'Sofía Duarte', specialty: null },
         protocol: { id: 'p1', name: 'Recuperación Vagal — Nivel 1', mechanism: 'Respiración', suggestedFrequency: '2x / día' },
@@ -153,7 +153,7 @@ describe('ClientStressPanel', () => {
       activeCase: {
         labeledCase: {
           id: 'case-1', caseNumber: 1247, clientId: 'client-1', module: 'stress', protocolId: 'p1',
-          mentorId: null, assignedAt: new Date().toISOString(), cycleWeeks: 12, outcome: null,
+          mentorId: null, assignedAt: new Date().toISOString(), cycleWeeks: 12, baselineSnapshot: {}, outcome: null,
         },
         mentor: null,
         protocol: { id: 'p1', name: 'Recuperación Vagal — Nivel 1', mechanism: null, suggestedFrequency: null },
@@ -182,7 +182,7 @@ describe('ClientStressPanel', () => {
       activeCase: {
         labeledCase: {
           id: 'case-1', caseNumber: 1247, clientId: 'client-1', module: 'stress', protocolId: 'p1',
-          mentorId: null, assignedAt: new Date().toISOString(), cycleWeeks: 12, outcome: null,
+          mentorId: null, assignedAt: new Date().toISOString(), cycleWeeks: 12, baselineSnapshot: {}, outcome: null,
         },
         mentor: null,
         protocol: { id: 'p1', name: 'Recuperación Vagal — Nivel 1', mechanism: null, suggestedFrequency: null },
@@ -211,7 +211,7 @@ describe('ClientStressPanel', () => {
       activeCase: {
         labeledCase: {
           id: 'case-1', caseNumber: 1247, clientId: 'client-1', module: 'stress', protocolId: 'p1',
-          mentorId: null, assignedAt: new Date().toISOString(), cycleWeeks: 12, outcome: null,
+          mentorId: null, assignedAt: new Date().toISOString(), cycleWeeks: 12, baselineSnapshot: {}, outcome: null,
         },
         mentor: null,
         protocol: { id: 'p1', name: 'Recuperación Vagal — Nivel 1', mechanism: null, suggestedFrequency: null },
@@ -240,7 +240,7 @@ describe('ClientStressPanel', () => {
       activeCase: {
         labeledCase: {
           id: 'case-2', caseNumber: 1300, clientId: 'client-1', module: 'stress', protocolId: 'p2',
-          mentorId: 'm1', assignedAt: new Date().toISOString(), cycleWeeks: 12, outcome: null,
+          mentorId: 'm1', assignedAt: new Date().toISOString(), cycleWeeks: 12, baselineSnapshot: {}, outcome: null,
         },
         mentor: { id: 'm1', name: 'Sofía Duarte', specialty: null },
         protocol: { id: 'p2', name: 'Recuperación Vagal — Nivel 2', mechanism: null, suggestedFrequency: null },

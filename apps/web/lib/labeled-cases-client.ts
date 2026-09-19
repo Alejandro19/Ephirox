@@ -18,6 +18,19 @@ async function authorizedRequest<T>(path: string, method: string, body?: unknown
   return res.json();
 }
 
+// Copia congelada de lo que había en wearableMetricas/cognitiveLoadHistory
+// al momento de asignar el caso (ver buildBaselineSnapshot en el backend) —
+// todos los campos son opcionales porque un cliente sin wearable/carga
+// cognitiva todavía en ese momento simplemente no los tenía.
+export type BaselineSnapshot = {
+  fecha?: string | null;
+  hrvNocturno?: number | null;
+  fcReposo?: number | null;
+  suenoScore?: number | null;
+  recoveryScore?: number | null;
+  cognitiveLoadScore?: number | null;
+};
+
 export type LabeledCase = {
   id: string;
   caseNumber: number;
@@ -25,6 +38,7 @@ export type LabeledCase = {
   module: LabeledCaseModule;
   protocolId: string | null;
   mentorId: string | null;
+  baselineSnapshot: BaselineSnapshot;
   assignedAt: string;
   cycleWeeks: number;
   outcome: LabeledCaseOutcome | null;

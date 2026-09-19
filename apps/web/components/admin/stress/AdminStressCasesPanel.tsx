@@ -41,6 +41,14 @@ const labelStyle: React.CSSProperties = {
   display: 'block', fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', fontSize: 10,
   textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 400, color: 'var(--eph-muted)', marginBottom: 6,
 };
+// Mismo tratamiento visual que las tiles de baseline en vivo
+// (AdminStressProtocolCriteriaAndAssignment.tsx) — degradado cálido, label
+// dorado (punto 25.5), acá para el snapshot CONGELADO del caso.
+const tileStyle: React.CSSProperties = {
+  background: 'linear-gradient(160deg, var(--eph-surface-2) 0%, var(--eph-surface) 100%)',
+  border: '1px solid var(--eph-line-2)', padding: '14px 16px',
+};
+const tileLabelStyle: React.CSSProperties = { fontSize: 11, color: 'var(--eph-accent)', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 700 };
 
 const STATUS_LABEL: Record<CaseStatus, string> = { activo: 'Activo', vencido: 'Checkpoint vencido', completado: 'Completado' };
 const STATUS_VARIANT: Record<CaseStatus, 'success' | 'warn' | 'danger'> = { activo: 'success', vencido: 'danger', completado: 'warn' };
@@ -172,6 +180,36 @@ function CaseDetail({ caseId, onChanged }: { caseId: string; onChanged: () => vo
           <div style={{ fontSize: 13, color: consentColor, fontWeight: 600 }}>{consentLabel}</div>
         </div>
       </div>
+
+      <p style={{ ...labelStyle, marginTop: 20 }}>Snapshot del baseline al momento de asignar</p>
+      <p style={{ fontSize: 11, color: 'var(--eph-faint)', marginTop: -4, marginBottom: 10 }}>
+        Congelado — no cambia aunque el baseline actual del cliente cambie.
+      </p>
+      {(() => {
+        const b = detail.labeledCase.baselineSnapshot ?? {};
+        const tiles: { label: string; value: number | null; unit: string }[] = [
+          { label: 'HRV basal', value: b.hrvNocturno ?? null, unit: 'ms' },
+          { label: 'FC en reposo', value: b.fcReposo ?? null, unit: 'bpm' },
+          { label: 'Sleep score', value: b.suenoScore ?? null, unit: '/100' },
+          { label: 'Recovery score', value: b.recoveryScore ?? null, unit: '/100' },
+          { label: 'Carga Cognitiva', value: b.cognitiveLoadScore ?? null, unit: '/10' },
+        ];
+        if (tiles.every((t) => t.value == null)) {
+          return <p style={{ fontSize: 12, color: 'var(--eph-faint)' }}>Sin datos de wearable/carga cognitiva disponibles al momento de asignar.</p>;
+        }
+        return (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 10 }}>
+            {tiles.map((t) => (
+              <div key={t.label} style={tileStyle}>
+                <div style={tileLabelStyle}>{t.label}</div>
+                <div style={{ fontFamily: 'var(--font-cormorant), serif', fontSize: 24, fontWeight: 600, color: 'var(--eph-text)', marginTop: 6 }}>
+                  {t.value != null ? `${t.value} ${t.unit}` : '—'}
+                </div>
+              </div>
+            ))}
+          </div>
+        );
+      })()}
 
       <p style={{ ...labelStyle, marginTop: 20 }}>Checkpoints de seguimiento</p>
       <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 8 }}>

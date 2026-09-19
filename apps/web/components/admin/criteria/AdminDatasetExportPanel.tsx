@@ -6,6 +6,13 @@ import { LABELED_CASE_MODULES_FOR_CRITERIA } from '@latribu/shared-types';
 
 const MODULE_LABEL: Record<string, string> = { stress: 'Stress', training: 'Workout', nutrition: 'Nutrition', rest: 'Sleep' };
 
+const cardStyle: React.CSSProperties = {
+  background: 'var(--eph-surface)', border: '1px solid var(--eph-line)',
+  borderRadius: 0, padding: '22px 24px', marginBottom: 20,
+};
+const cardTitleStyle: React.CSSProperties = {
+  fontFamily: 'var(--font-cormorant), Georgia, serif', fontSize: 18, fontWeight: 400, color: 'var(--eph-text)', margin: '0 0 16px',
+};
 const labelStyle: React.CSSProperties = {
   display: 'block', fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', fontSize: 10,
   textTransform: 'uppercase', letterSpacing: '0.14em', fontWeight: 400, color: 'var(--eph-muted)', marginBottom: 6,
@@ -30,7 +37,8 @@ export function AdminDatasetExportPanel() {
   const [onlyCompleted, setOnlyCompleted] = useState(true);
 
   return (
-    <div>
+    <div style={cardStyle}>
+      <h3 style={cardTitleStyle}>Exportar dataset de casos etiquetados</h3>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
         <div>
           <label style={labelStyle} htmlFor="export-module">Módulo</label>
