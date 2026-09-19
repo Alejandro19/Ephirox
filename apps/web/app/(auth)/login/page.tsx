@@ -90,7 +90,13 @@ declare global {
 // tema del resto de la app.
 // ============================================================
 
-const PAGE_BG = '#0B0907';
+// PAGE_BG usaba un hex literal ('#0B0907') que, aunque casi idéntico,
+// no coincidía byte a byte con --eph-bg de dark-brand (#0b0a08, tema.css) —
+// dos negros distintos entre la pantalla de carga de AppShell y la de este
+// login, reportado como "dos tonos diferentes" durante la autenticación.
+// /login es siempre dark-brand (screenForPathname), así que var(--eph-bg)
+// resuelve exactamente al mismo valor.
+const PAGE_BG = 'var(--eph-bg)';
 const GOLD = '#C9A66B';
 
 type LoginView = 'login' | 'forgot';
