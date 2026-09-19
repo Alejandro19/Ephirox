@@ -18,6 +18,17 @@ const ESTADO_ORDER: EnterpriseLeadEstado[] = [
   'cerrado',
 ];
 
+// Mismo patrón de card que el resto del admin (AdminTrainingPanel,
+// QuotesPanel, etc.) — fondo de superficie + hairline + título Cormorant
+// adentro, en vez de la lista/tabla suelta que tenía este panel.
+const cardStyle: React.CSSProperties = {
+  background: 'var(--eph-surface)', border: '1px solid var(--eph-line)',
+  borderRadius: 0, padding: '22px 24px', marginBottom: 20,
+};
+const cardTitleStyle: React.CSSProperties = {
+  fontFamily: 'var(--font-cormorant), Georgia, serif', fontSize: 18, fontWeight: 400, color: 'var(--eph-text)', margin: '0 0 16px',
+};
+
 const thStyle: React.CSSProperties = {
   textAlign: 'left', padding: '12px 16px', fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
   fontSize: 10, fontWeight: 400, color: 'var(--eph-muted)', textTransform: 'uppercase',
@@ -76,11 +87,12 @@ export function EnterpriseLeadsPanel() {
 
   const visible = filter === 'all' ? leads : leads.filter((l) => l.estado !== 'cerrado');
 
-  if (loading) return <p style={{ color: 'var(--eph-muted)', fontSize: 13 }}>Cargando…</p>;
-  if (error) return <p role="alert" style={{ color: '#D99483', fontSize: 13 }}>{error}</p>;
+  if (loading) return <div style={cardStyle}><p style={{ color: 'var(--eph-muted)', fontSize: 13, margin: 0 }}>Cargando…</p></div>;
+  if (error) return <div style={cardStyle}><p role="alert" style={{ color: '#D99483', fontSize: 13, margin: 0 }}>{error}</p></div>;
 
   return (
-    <div>
+    <div style={cardStyle}>
+      <h3 style={cardTitleStyle}>Leads empresariales</h3>
       <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
         <button
           type="button"

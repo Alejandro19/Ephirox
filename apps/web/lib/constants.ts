@@ -37,13 +37,13 @@ export const ADMIN_NAV: NavItem[] = [
 
 export const ADMIN_HUB_SUBITEMS: NavItem[] = [
   { key: "admin-clients", label: "Clientes" },
-  { key: "admin-leads", label: "Leads por Contactar" },
+  { key: "admin-leads", label: "Leads" },
   { key: "admin-quotes", label: "Frases" },
   { key: "admin-roles", label: "Roles y Perfiles" },
   { key: "admin-membership-prices", label: "Precios de Membresía" },
-  { key: "admin-stress-protocols", label: "Protocolos de Stress" },
+  { key: "admin-stress-protocols", label: "Protocolos" },
   { key: "admin-mentors", label: "Mentores" },
-  { key: "admin-criteria", label: "Criterios y Marcadores" },
+  { key: "admin-criteria", label: "Reglas y Marcadores" },
 ];
 
 export const ENTERPRISE_LEAD_ESTADO_LABELS: Record<string, string> = {

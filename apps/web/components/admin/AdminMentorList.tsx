@@ -30,6 +30,13 @@ const primaryButtonStyle: React.CSSProperties = {
   fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
   background: 'var(--eph-accent)', color: 'var(--eph-ink)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.14em', cursor: 'pointer',
 };
+const cardStyle: React.CSSProperties = {
+  background: 'var(--eph-surface)', border: '1px solid var(--eph-line)',
+  borderRadius: 0, padding: '22px 24px', marginBottom: 20,
+};
+const cardTitleStyle: React.CSSProperties = {
+  fontFamily: 'var(--font-cormorant), Georgia, serif', fontSize: 18, fontWeight: 400, color: 'var(--eph-text)', margin: '0 0 16px',
+};
 
 export function AdminMentorList() {
   const [mentors, setMentors] = useState<Mentor[]>([]);
@@ -82,10 +89,11 @@ export function AdminMentorList() {
     }
   }
 
-  if (loading) return <p style={{ color: 'var(--eph-muted)', fontSize: 14 }}>Cargando mentores…</p>;
+  if (loading) return <div style={cardStyle}><p style={{ color: 'var(--eph-muted)', fontSize: 14, margin: 0 }}>Cargando mentores…</p></div>;
 
   return (
-    <div>
+    <div style={cardStyle}>
+      <h3 style={cardTitleStyle}>Mentores</h3>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginBottom: 12 }}>
         <div>
           <label style={labelStyle} htmlFor="aml-name">Nombre</label>

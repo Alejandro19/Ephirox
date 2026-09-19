@@ -6,6 +6,7 @@ import { useAuth } from "../../lib/auth-context";
 import { useTranslation } from "../../lib/i18n/useTranslation";
 import { ADMIN_NAV, ADMIN_HUB_SUBITEMS, VIEW_TO_PATH } from "../../lib/constants";
 import NotificationBell from "./NotificationBell";
+import ThemeToggle from "./ThemeToggle";
 import Isotipo from "../ui/Isotipo";
 
 type AdminTopbarProps = {
@@ -178,6 +179,7 @@ export default function AdminTopbar({ viewKey }: AdminTopbarProps) {
         </nav>
 
         <div className="admin-topbar-actions" style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0, marginLeft: "auto" }}>
+          <ThemeToggle />
           {/* NotificationBell ya trae su propio botón fantasma 34×34 (spec
               §7.3) — el círculo con borde permanente que había acá quedó
               redundante/duplicado y se quitó. */}
@@ -267,7 +269,10 @@ export default function AdminTopbar({ viewKey }: AdminTopbarProps) {
           </span>
           {/* Notificaciones vive acá porque .admin-topbar-actions (donde
               vive en desktop) se oculta entero en mobile. */}
-          <NotificationBell />
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <ThemeToggle />
+            <NotificationBell />
+          </div>
         </div>
         <span className="font-mono" style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--eph-muted)", padding: "8px 4px 2px" }}>
           Administration
