@@ -7,6 +7,7 @@ import { useTranslation } from "../../lib/i18n/useTranslation";
 import { ADMIN_NAV, ADMIN_HUB_SUBITEMS, VIEW_TO_PATH } from "../../lib/constants";
 import NotificationBell from "./NotificationBell";
 import ThemeToggle from "./ThemeToggle";
+import HeaderLogoutButton from "./HeaderLogoutButton";
 import Isotipo from "../ui/Isotipo";
 
 type AdminTopbarProps = {
@@ -184,6 +185,11 @@ export default function AdminTopbar({ viewKey }: AdminTopbarProps) {
               §7.3) — el círculo con borde permanente que había acá quedó
               redundante/duplicado y se quitó. */}
           <NotificationBell />
+          {/* Atajo directo de logout (spec §7.4) — ya existía en
+              ClientTopbar pero no acá; "Cerrar sesión" seguía disponible
+              dentro del menú de la cuenta, solo no era visible de un
+              vistazo. */}
+          <HeaderLogoutButton onClick={logout} />
           <div ref={accountRef} style={{ position: "relative" }}>
             <button
               onClick={() => setAccountOpen((v) => !v)}
@@ -272,6 +278,7 @@ export default function AdminTopbar({ viewKey }: AdminTopbarProps) {
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <ThemeToggle />
             <NotificationBell />
+            <HeaderLogoutButton onClick={logout} />
           </div>
         </div>
         <span className="font-mono" style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--eph-muted)", padding: "8px 4px 2px" }}>

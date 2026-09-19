@@ -65,7 +65,7 @@ describe('LoginPage', () => {
     await waitFor(() => expect(capturedHref).toBe('/onboarding'));
   });
 
-  it('redirects a client who already completed onboarding to /training', async () => {
+  it('redirects a client who already completed onboarding to the home screen ("/"), never a specific module', async () => {
     (fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       json: async () => ({
         success: true,
@@ -81,7 +81,7 @@ describe('LoginPage', () => {
     fireEvent.change(screen.getByLabelText('CONTRASEÑA'), { target: { value: 'secret' } });
     fireEvent.click(screen.getByRole('button', { name: /entrar/i }));
 
-    await waitFor(() => expect(capturedHref).toBe('/training'));
+    await waitFor(() => expect(capturedHref).toBe('/'));
   });
 
   it('sends a client with a temporary password to /set-password before anything else, preserving the deep link', async () => {

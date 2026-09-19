@@ -52,6 +52,25 @@ describe('AppShell', () => {
     });
   });
 
+  it('the loading ("Calibrando…") screen is always dark-brand, even on a toggleable route like /admin', () => {
+    usePathnameMock.mockReturnValue('/admin/clients');
+    vi.mocked(useAuth).mockReturnValue({
+      role: 'admin',
+      isLoading: true,
+      planExpired: false,
+      isAuthenticated: true,
+    } as unknown as ReturnType<typeof useAuth>);
+
+    const { container } = render(
+      <ThemeRoot>
+        <AppShell>{null}</AppShell>
+      </ThemeRoot>,
+    );
+
+    expect(screen.getByText('Calibrando…')).toBeInTheDocument();
+    expect(container.querySelector('[data-theme="dark-brand"]')).not.toBeNull();
+  });
+
   it('redirects to /login when auth finished loading and there is no session token', () => {
     vi.mocked(useAuth).mockReturnValue({
       role: null,

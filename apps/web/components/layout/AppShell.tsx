@@ -136,9 +136,13 @@ export default function AppShell({ children }: { children: ReactNode }) {
   // ── Loading ──
   // Mismo anillo (mañana/tarde/noche) que la pantalla transitoria del login,
   // para que no haya un salto visual entre "entrando" y "cargando sesión".
+  // data-theme="dark-brand" fijo a propósito, sin importar la ruta/toggle:
+  // es una pantalla transitoria universal (cualquier usuario, cualquier
+  // destino), no debe heredar dark-carbon/light-premium de una ruta
+  // toggleable (ej. /admin) — se vería gris en vez del negro esperado acá.
   if (isLoading) {
     return (
-      <div style={{
+      <div data-theme="dark-brand" style={{
         minHeight: "100vh", display: "flex", flexDirection: "column",
         alignItems: "center", justifyContent: "center", gap: 20,
         background: "var(--eph-bg)",
@@ -162,7 +166,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
   if (isClientRole) {
     if (legalAcceptance === undefined) {
       return (
-        <div style={{
+        <div data-theme="dark-brand" style={{
           minHeight: "100vh", display: "flex", flexDirection: "column",
           alignItems: "center", justifyContent: "center", gap: 20,
           background: "var(--eph-bg)",

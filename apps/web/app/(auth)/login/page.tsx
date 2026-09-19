@@ -31,7 +31,10 @@ function resolvePostLoginTarget(result: LoginResult): string {
   const from = getSafeRedirectTarget();
   if (from !== '/') return from;
   if (result.role === 'cliente' && !result.onboardingComplete) return '/onboarding';
-  if (result.role === 'cliente') return '/training';
+  // Con onboarding completo, siempre a la pantalla principal ("/") — nunca
+  // a un módulo específico como Workout, que antes quedaba seleccionado
+  // sin que el cliente lo hubiera elegido.
+  if (result.role === 'cliente') return '/';
   return '/admin/clients';
 }
 
