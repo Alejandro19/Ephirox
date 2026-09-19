@@ -230,8 +230,11 @@ function ActiveCaseCard({
 
   return (
     <div>
-      <p className="mb-2 font-mono text-[11px] font-bold uppercase tracking-[0.16em]" style={{ color: 'var(--eph-accent)' }}>Tu protocolo activo</p>
-      <h3 className="eph-num mb-1 font-display text-2xl" style={{ color: 'var(--eph-text)' }}>{activeCase.protocol?.name}</h3>
+      {/* Reemplaza al encabezado genérico "Tu plan de regulación" (pedido
+          explícito) — este título ahora hace ese trabajo, con tamaño y peso
+          de título real en vez del kicker chico que tenía antes. */}
+      <h2 className="mb-2 font-display text-2xl" style={{ color: 'var(--eph-text)' }}>Tu protocolo activo</h2>
+      <h3 className="eph-num mb-1 font-display text-lg" style={{ color: 'var(--eph-text)' }}>{activeCase.protocol?.name}</h3>
       {activeCase.protocol?.mechanism && (
         <p className="mb-1 font-body text-base" style={{ color: 'var(--eph-body)' }}>{activeCase.protocol.mechanism}</p>
       )}
@@ -359,7 +362,6 @@ export function StressPlanSection({
   // valor (pedido explícito); el título alcanza para identificar la sección.
   return (
     <section className="border p-7 mb-5" style={{ borderColor: 'var(--eph-accent-edge)', background: 'var(--eph-panel)' }}>
-      <h2 className="mb-5 font-display text-2xl" style={{ color: 'var(--eph-text)' }}>Tu plan de regulación</h2>
       {activeCase ? (
         <ActiveCaseCard activeCase={activeCase} onComplete={onCompleteActiveResource} TechniqueIcon={TechniqueIcon} />
       ) : techniques.length === 0 ? (

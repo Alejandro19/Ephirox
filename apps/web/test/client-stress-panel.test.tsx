@@ -187,9 +187,9 @@ describe('ClientStressPanel', () => {
   });
 
   // La misma práctica no debe aparecer dos veces (RecommendedProtocolCard
-  // arriba, y de nuevo dentro de "Tu plan de regulación" más abajo) para un
+  // arriba, y de nuevo dentro de la sección de plan más abajo) para un
   // cliente Mentoría, que sí ve esa segunda sección.
-  it('hides the standalone "Recomendado para ti ahora" card for a mentoring client — it already lives inside "Tu plan de regulación"', async () => {
+  it('hides the standalone "Recomendado para ti ahora" card for a mentoring client — it already lives inside the plan section below', async () => {
     mockFetches({
       techniques: [
         { id: 't1', title: 'Respiración 4-7-8', type: 'Respiración', duration: '5 min', durationMinutes: 5, durationSeconds: null, description: null, videoUrl: null, videoName: null, youtubeUrl: null, audioUrl: null, audioName: null, emotion: null, precautionNote: null, isRitual: false },
@@ -197,7 +197,7 @@ describe('ClientStressPanel', () => {
     });
 
     render(<ClientStressPanel clientId="client-1" clientType="mentoring" />);
-    await waitFor(() => expect(screen.getByText('Tu plan de regulación')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('Tus protocolos')).toBeInTheDocument());
     expect(screen.queryByText('Recomendado para ti ahora')).not.toBeInTheDocument();
   });
 
