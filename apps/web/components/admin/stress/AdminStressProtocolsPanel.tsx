@@ -78,6 +78,7 @@ function ResourceForm({ protocolId, onCreated }: { protocolId: string; onCreated
   const [title, setTitle] = useState('');
   const [durationMinutes, setDurationMinutes] = useState('');
   const [instructions, setInstructions] = useState('');
+  const [youtubeUrl, setYoutubeUrl] = useState('');
   const [saving, setSaving] = useState(false);
 
   async function handleCreate() {
@@ -89,11 +90,13 @@ function ResourceForm({ protocolId, onCreated }: { protocolId: string; onCreated
         title: title.trim(),
         duration_minutes: durationMinutes ? Number(durationMinutes) : null,
         instructions: instructions.trim() || null,
+        youtube_url: type === 'Meditación guiada' ? (youtubeUrl.trim() || null) : null,
       });
       onCreated(resource);
       setTitle('');
       setDurationMinutes('');
       setInstructions('');
+      setYoutubeUrl('');
       showToast('Recurso agregado.', 'success');
     } catch (e) {
       showToast((e as Error).message, 'error');
@@ -120,6 +123,15 @@ function ResourceForm({ protocolId, onCreated }: { protocolId: string; onCreated
         <label style={labelStyle} htmlFor="rf-title">Título</label>
         <input id="rf-title" style={inputStyle} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ej: Respiración 4-7-8" />
       </div>
+      {/* Enlace, alternativo/adicional al audio subido (spec punto 19.2) —
+          solo para Meditación guiada. Se agrega/quita escribiendo o
+          borrando el campo, igual que en ResourceEditForm. */}
+      {type === 'Meditación guiada' && (
+        <div style={{ marginTop: 10 }}>
+          <label style={labelStyle} htmlFor="rf-youtube">Enlace (YouTube, opcional)</label>
+          <input id="rf-youtube" style={inputStyle} value={youtubeUrl} onChange={(e) => setYoutubeUrl(e.target.value)} placeholder="https://youtube.com/watch?v=…" />
+        </div>
+      )}
       <div style={{ marginTop: 10 }}>
         <label style={labelStyle} htmlFor="rf-instructions">Instrucciones / contenido</label>
         <textarea
@@ -146,6 +158,7 @@ function ResourceEditForm({ protocolId, resource, onSaved, onCancel }: {
   const [title, setTitle] = useState(resource.title);
   const [durationMinutes, setDurationMinutes] = useState(resource.durationMinutes != null ? String(resource.durationMinutes) : '');
   const [instructions, setInstructions] = useState(resource.instructions ?? '');
+  const [youtubeUrl, setYoutubeUrl] = useState(resource.youtubeUrl ?? '');
   const [saving, setSaving] = useState(false);
 
   async function handleSave() {
@@ -157,6 +170,7 @@ function ResourceEditForm({ protocolId, resource, onSaved, onCancel }: {
         title: title.trim(),
         duration_minutes: durationMinutes ? Number(durationMinutes) : null,
         instructions: instructions.trim() || null,
+        youtube_url: type === 'Meditación guiada' ? (youtubeUrl.trim() || null) : null,
       });
       onSaved(updated);
       showToast('Recurso actualizado.', 'success');
@@ -185,6 +199,12 @@ function ResourceEditForm({ protocolId, resource, onSaved, onCancel }: {
         <label style={labelStyle} htmlFor={`re-title-${resource.id}`}>Título</label>
         <input id={`re-title-${resource.id}`} style={inputStyle} value={title} onChange={(e) => setTitle(e.target.value)} />
       </div>
+      {type === 'Meditación guiada' && (
+        <div style={{ marginTop: 10 }}>
+          <label style={labelStyle} htmlFor={`re-youtube-${resource.id}`}>Enlace (YouTube, opcional)</label>
+          <input id={`re-youtube-${resource.id}`} style={inputStyle} value={youtubeUrl} onChange={(e) => setYoutubeUrl(e.target.value)} placeholder="https://youtube.com/watch?v=…" />
+        </div>
+      )}
       <div style={{ marginTop: 10 }}>
         <label style={labelStyle} htmlFor={`re-instructions-${resource.id}`}>Instrucciones / contenido</label>
         <textarea
@@ -270,7 +290,9 @@ function ResourceRow({ protocolId, resource, onChanged, onDeleted }: {
         <button type="button" style={ghostButtonStyle} onClick={() => setEditing(true)}>Editar</button>
         <button type="button" style={dangerButtonStyle} onClick={handleDelete}>Eliminar</button>
       </div>
-      {/* Campo de audio solo para "Meditación guiada" (spec 19.2) — aparece/desaparece según el tipo. */}
+      {/* Audio y enlace, solo para "Meditación guiada" (spec 19.2) — aparecen/
+          desaparecen según el tipo. El enlace se agrega/quita desde "Editar"
+          (mismo patrón que título/instrucciones); acá solo se previsualiza. */}
       {resource.type === 'Meditación guiada' && (
         <div style={{ marginTop: 8 }}>
           <FileField
@@ -280,6 +302,11 @@ function ResourceRow({ protocolId, resource, onChanged, onDeleted }: {
             uploading={uploading}
             onFileChange={handleAudioUpload}
           />
+          {resource.youtubeUrl && (
+            <p style={{ margin: '8px 0 0', fontSize: 11, color: 'var(--eph-muted)' }}>
+              Enlace: <a href={resource.youtubeUrl} target="_blank" rel="noreferrer" style={{ color: 'var(--eph-accent)' }}>{resource.youtubeUrl}</a>
+            </p>
+          )}
         </div>
       )}
     </div>

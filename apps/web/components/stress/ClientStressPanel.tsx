@@ -100,7 +100,7 @@ function StressPlayer({
       <button type="button" onClick={onBack} className="mb-3 inline-block bg-transparent p-0 font-mono text-[10px] uppercase tracking-[0.1em] hover:underline" style={{ color: 'var(--eph-muted)' }}>
         ← Stress
       </button>
-      <h1 className="mb-1 font-display text-2xl" style={{ color: 'var(--eph-text)' }}>{technique.title}</h1>
+      <h1 className="eph-num mb-1 font-display text-2xl" style={{ color: 'var(--eph-text)' }}>{technique.title}</h1>
       <p className="mb-5 font-body text-sm" style={{ color: 'var(--eph-muted)' }}>{[technique.type, technique.duration].filter(Boolean).join(' · ')}</p>
 
       <div className="border p-[26px]" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface)' }}>
@@ -258,7 +258,12 @@ export function ClientStressPanel({
 
       <RegulationCapacityCard overview={cognitiveLoad} regulationCapacity={regulationCapacity} />
 
-      {recommended && <RecommendedProtocolCard protocol={recommended} onStart={setActiveId} />}
+      {/* Para clientes Mentoría la práctica recomendada ya vive dentro de
+          "Tu plan de regulación" (ActiveCaseCard/TechniqueList más abajo) —
+          mostrarla acá también era una segunda tarjeta redundante con lo
+          mismo. Para clientes 1:1, que no ven esa sección, esta sigue
+          siendo su único CTA destacado. */}
+      {recommended && clientType !== 'mentoring' && <RecommendedProtocolCard protocol={recommended} onStart={setActiveId} />}
 
       {clientType === 'mentoring' && (
         <StressPlanSection

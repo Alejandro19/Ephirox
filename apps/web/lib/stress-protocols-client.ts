@@ -105,7 +105,7 @@ export async function deleteProtocol(protocolId: string): Promise<void> {
 
 export async function createResource(
   protocolId: string,
-  input: { type: StressResourceType; title: string; duration_minutes: number | null; instructions: string | null }
+  input: { type: StressResourceType; title: string; duration_minutes: number | null; instructions: string | null; youtube_url?: string | null }
 ): Promise<StressProtocolResource> {
   const body = await authorizedRequest<{ success: boolean; resource: StressProtocolResource; error?: string }>(
     `/api/admin/stress-protocols/${protocolId}/resources`,
@@ -119,7 +119,7 @@ export async function createResource(
 export async function updateResource(
   protocolId: string,
   resourceId: string,
-  input: Partial<{ type: StressResourceType; title: string; duration_minutes: number | null; instructions: string | null }>
+  input: Partial<{ type: StressResourceType; title: string; duration_minutes: number | null; instructions: string | null; youtube_url: string | null }>
 ): Promise<StressProtocolResource> {
   const body = await authorizedRequest<{ success: boolean; resource: StressProtocolResource; error?: string }>(
     `/api/admin/stress-protocols/${protocolId}/resources/${resourceId}`,

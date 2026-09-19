@@ -20,7 +20,7 @@ function ProtocolHistoryList({ closedCases }: { closedCases: ClosedCaseSummary[]
       {closedCases.map((c, i) => (
         <div key={c.id} className={`flex items-center justify-between py-2 ${i === 0 ? '' : 'border-t border-[var(--eph-line)]'}`}>
           <span className="font-body text-sm" style={{ color: 'var(--eph-text)' }}>{c.protocolName}</span>
-          <span className="font-mono text-[10px]" style={{ color: 'var(--eph-faint)' }}>
+          <span className="eph-num-mono font-mono text-[10px]" style={{ color: 'var(--eph-faint)' }}>
             {formatDate(c.assignedAt)} – {c.closedAt ? formatDate(c.closedAt) : 'presente'}
           </span>
         </div>
@@ -141,8 +141,8 @@ function ActiveResourceRow({
       <div className="flex items-center gap-3">
         <TechniqueIcon type={resource.type} />
         <div className="flex-1">
-          <div className="font-body text-sm font-medium" style={{ color: 'var(--eph-text)' }}>{resource.title}</div>
-          <div className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.08em]" style={{ color: 'var(--eph-muted)' }}>
+          <div className="eph-num font-body text-base font-medium" style={{ color: 'var(--eph-text)' }}>{resource.title}</div>
+          <div className="eph-num-mono mt-0.5 font-mono text-[10px] uppercase tracking-[0.08em]" style={{ color: 'var(--eph-muted)' }}>
             {[resource.type, resource.durationMinutes != null ? `${resource.durationMinutes} min` : null].filter(Boolean).join(' · ')}
           </div>
         </div>
@@ -230,10 +230,10 @@ function ActiveCaseCard({
 
   return (
     <div>
-      <p className="mb-1 font-mono text-[10px] uppercase tracking-[0.14em]" style={{ color: 'var(--eph-accent)' }}>Tu protocolo activo</p>
-      <h3 className="mb-1 font-display text-lg" style={{ color: 'var(--eph-text)' }}>{activeCase.protocol?.name}</h3>
+      <p className="mb-2 font-mono text-[11px] font-bold uppercase tracking-[0.16em]" style={{ color: 'var(--eph-accent)' }}>Tu protocolo activo</p>
+      <h3 className="eph-num mb-1 font-display text-2xl" style={{ color: 'var(--eph-text)' }}>{activeCase.protocol?.name}</h3>
       {activeCase.protocol?.mechanism && (
-        <p className="mb-1 font-body text-sm" style={{ color: 'var(--eph-muted)' }}>{activeCase.protocol.mechanism}</p>
+        <p className="mb-1 font-body text-base" style={{ color: 'var(--eph-body)' }}>{activeCase.protocol.mechanism}</p>
       )}
       {activeCase.protocol?.suggestedFrequency && (
         <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.1em]" style={{ color: 'var(--eph-faint)' }}>
@@ -249,18 +249,23 @@ function ActiveCaseCard({
       </div>
       <div className="mt-4 border-t pt-3" style={{ borderColor: 'var(--eph-line)' }}>
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            {activeCase.mentor && <MentorAvatar name={activeCase.mentor.name} />}
-            <span className="font-body text-xs" style={{ color: 'var(--eph-muted)' }}>
-              {activeCase.mentor ? `Asignado por ${activeCase.mentor.name}, tu mentor` : 'Caso etiquetado activo'}
-            </span>
-          </div>
+          {/* "Caso etiquetado activo" (el nombre interno del modelo de datos)
+              nunca debe llegar al cliente — sin mentor asignado todavía, se
+              omite la línea entera en vez de mostrar ese término. */}
+          {activeCase.mentor && (
+            <div className="flex items-center gap-3">
+              <MentorAvatar name={activeCase.mentor.name} />
+              <span className="font-body text-xs" style={{ color: 'var(--eph-muted)' }}>
+                Asignado por {activeCase.mentor.name}, tu mentor
+              </span>
+            </div>
+          )}
           <div className="text-right">
-            <div className="font-mono text-[10px] uppercase tracking-[0.1em]" style={{ color: 'var(--eph-accent)' }}>
+            <div className="eph-num-mono font-mono text-[10px] uppercase tracking-[0.1em]" style={{ color: 'var(--eph-accent)' }}>
               Semana {week} de {activeCase.labeledCase.cycleWeeks}
             </div>
             {nextCheckpoint && (
-              <div className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.08em]" style={{ color: 'var(--eph-faint)' }}>
+              <div className="eph-num-mono mt-0.5 font-mono text-[10px] uppercase tracking-[0.08em]" style={{ color: 'var(--eph-faint)' }}>
                 Próxima medición: semana {nextCheckpoint.weekNumber}
               </div>
             )}
@@ -300,8 +305,8 @@ function TechniqueList({
             <div className="flex items-center gap-3">
               <TechniqueIcon type={t.type} />
               <div className="flex-1">
-                <div className="font-body text-sm font-medium" style={{ color: 'var(--eph-text)' }}>{t.title}</div>
-                <div className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.08em]" style={{ color: 'var(--eph-muted)' }}>{t.duration}</div>
+                <div className="eph-num font-body text-base font-medium" style={{ color: 'var(--eph-text)' }}>{t.title}</div>
+                <div className="eph-num-mono mt-0.5 font-mono text-[10px] uppercase tracking-[0.08em]" style={{ color: 'var(--eph-muted)' }}>{t.duration}</div>
               </div>
               {hasVideo && <Button type="button" variant="secondary" onClick={() => setActiveId(t.id)}>Reproducir</Button>}
               {!hasVideo && hasAudio && (
@@ -347,11 +352,15 @@ export function StressPlanSection({
   TechniqueIcon: (props: { type: string | null }) => React.ReactNode;
   Button: (props: { type: 'button'; variant: 'secondary'; onClick: () => void; children: React.ReactNode }) => React.ReactNode;
 }) {
+  // Card con más protagonismo que el resto del módulo (pedido explícito:
+  // "esa card debe tener toda la atención") — mismo tratamiento "hero" que
+  // ya usa RegulationCapacityCard.tsx (var(--eph-panel) + borde dorado), en
+  // vez del contenedor plano que comparten las demás secciones.
   return (
-    <section className="border p-6 mb-5" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface)' }}>
-      <h2 className="mb-1 font-display text-lg" style={{ color: 'var(--eph-text)' }}>Tu plan de regulación</h2>
-      <p className="mb-4 font-body text-xs" style={{ color: 'var(--eph-muted)' }}>
-        Entrenamiento proactivo de tu capacidad de regulación — no depende de cómo te sientas hoy.
+    <section className="border p-7 mb-5" style={{ borderColor: 'var(--eph-accent-edge)', background: 'var(--eph-panel)' }}>
+      <h2 className="mb-2 font-display text-2xl" style={{ color: 'var(--eph-text)' }}>Tu plan de regulación</h2>
+      <p className="mb-5 font-body text-sm" style={{ color: 'var(--eph-body)' }}>
+        No depende de cómo te sientas hoy.
       </p>
       {activeCase ? (
         <ActiveCaseCard activeCase={activeCase} onComplete={onCompleteActiveResource} TechniqueIcon={TechniqueIcon} />
@@ -366,8 +375,8 @@ export function StressPlanSection({
           <div className="mt-2 flex items-center gap-3 border-t pt-3" style={{ borderColor: 'var(--eph-line)' }}>
             <TechniqueIcon type={null} />
             <div>
-              <div className="font-body text-sm font-medium" style={{ color: 'var(--eph-text)' }}>{DEFAULT_STARTER_PROTOCOL.title}</div>
-              <div className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.08em]" style={{ color: 'var(--eph-muted)' }}>{DEFAULT_STARTER_PROTOCOL.duration} · inhala 4s, sostén 7s, exhala 8s</div>
+              <div className="eph-num font-body text-base font-medium" style={{ color: 'var(--eph-text)' }}>{DEFAULT_STARTER_PROTOCOL.title}</div>
+              <div className="eph-num-mono mt-0.5 font-mono text-[10px] uppercase tracking-[0.08em]" style={{ color: 'var(--eph-muted)' }}>{DEFAULT_STARTER_PROTOCOL.duration} · inhala 4s, sostén 7s, exhala 8s</div>
             </div>
           </div>
         </div>

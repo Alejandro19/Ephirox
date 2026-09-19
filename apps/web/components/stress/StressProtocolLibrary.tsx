@@ -16,15 +16,20 @@ const MIN_ITEMS = 3;
 
 // Intercambio de diseño pedido con MorningCheckinSummary: "Tus protocolos"
 // toma el tratamiento sobrio/centrado que antes tenía el check-in — fondo
-// neutro, borde fino neutro + franja superior de color (sólida para
-// activo/completado, punteada para sugerido), sin badge en píldora (el
-// estado va como texto centrado bajo el título).
-function protocolCardStyle(borderTopColor: string, dashed: boolean): React.CSSProperties {
+// neutro, borde fino neutro + franja superior de color, sin badge en
+// píldora (el estado va como texto centrado bajo el título).
+//
+// Feedback directo: el borde punteado de "Sugerido" no se distinguía bien
+// del activo — ahora la franja es SIEMPRE sólida (nunca punteada) y lo que
+// diferencia un estado no-activo es que toda la card se opaca (borde más
+// tenue + texto atenuado + opacity reducida), no el estilo del borde.
+function protocolCardStyle(active: boolean): React.CSSProperties {
   return {
     background: 'var(--eph-surface-2)',
     border: '1px solid var(--eph-line)',
-    borderTop: `3px ${dashed ? 'dashed' : 'solid'} ${borderTopColor}`,
+    borderTop: `3px solid ${active ? 'var(--eph-accent)' : 'color-mix(in srgb, var(--eph-accent) 40%, var(--eph-surface-2))'}`,
     textAlign: 'center',
+    opacity: active ? 1 : 0.62,
   };
 }
 
@@ -61,12 +66,12 @@ export function StressProtocolLibrary({
               type="button"
               onClick={() => onSelect(t.id)}
               className="p-4"
-              style={protocolCardStyle('var(--eph-accent)', false)}
+              style={protocolCardStyle(!completed)}
             >
-              <div className="font-display text-base" style={{ color: 'var(--eph-text)' }}>{t.title}</div>
-              <div className="mt-1 font-mono text-[10px] uppercase tracking-[0.08em]" style={{ color: 'var(--eph-muted)' }}>{t.duration}</div>
+              <div className="eph-num font-display text-base" style={{ color: completed ? 'var(--eph-muted)' : 'var(--eph-text)' }}>{t.title}</div>
+              <div className="eph-num-mono mt-1 font-mono text-[10px] uppercase tracking-[0.08em]" style={{ color: 'var(--eph-muted)' }}>{t.duration}</div>
               {completed ? (
-                <StatusText color="color-mix(in srgb, var(--eph-accent) 65%, var(--eph-muted))">Completado</StatusText>
+                <StatusText color="var(--eph-muted)">Completado</StatusText>
               ) : (
                 <StatusText color="var(--eph-accent)">Activo ahora</StatusText>
               )}
@@ -74,10 +79,10 @@ export function StressProtocolLibrary({
           );
         })}
         {suggestions.map((s) => (
-          <div key={s.title} className="p-4" style={protocolCardStyle('var(--eph-accent)', true)}>
-            <div className="font-display text-base" style={{ color: 'var(--eph-text)' }}>{s.title}</div>
-            <div className="mt-1 font-mono text-[10px] uppercase tracking-[0.08em]" style={{ color: 'var(--eph-muted)' }}>{s.duration}</div>
-            <StatusText color="color-mix(in srgb, var(--eph-accent) 75%, var(--eph-muted))">Sugerido para ti</StatusText>
+          <div key={s.title} className="p-4" style={protocolCardStyle(false)}>
+            <div className="eph-num font-display text-base" style={{ color: 'var(--eph-muted)' }}>{s.title}</div>
+            <div className="eph-num-mono mt-1 font-mono text-[10px] uppercase tracking-[0.08em]" style={{ color: 'var(--eph-muted)' }}>{s.duration}</div>
+            <StatusText color="var(--eph-muted)">Sugerido para ti</StatusText>
           </div>
         ))}
       </div>

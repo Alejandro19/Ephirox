@@ -18,11 +18,11 @@ export function RecommendedProtocolCard({ protocol, onStart }: { protocol: Stres
         className="pointer-events-none absolute -right-10 -top-10 h-[180px] w-[180px] rounded-full"
         style={{ background: 'radial-gradient(circle, rgba(217,183,126,.18) 0%, transparent 70%)' }}
       />
-      <p className="relative z-10 mb-1 font-mono text-[10px] uppercase tracking-[0.14em]" style={{ color: 'var(--eph-accent)' }}>
+      <p className="relative z-10 mb-2 font-mono text-[11px] font-bold uppercase tracking-[0.18em]" style={{ color: 'var(--eph-accent)' }}>
         Recomendado para ti ahora
       </p>
-      <h3 className="relative z-10 mb-1 font-display text-lg" style={{ color: 'var(--eph-text)' }}>{protocol.title}</h3>
-      <p className="relative z-10 mb-3 font-body text-sm" style={{ color: 'var(--eph-muted)' }}>
+      <h3 className="eph-num relative z-10 mb-2 font-display text-2xl" style={{ color: 'var(--eph-text)' }}>{protocol.title}</h3>
+      <p className="relative z-10 mb-4 font-body text-sm" style={{ color: 'var(--eph-body)' }}>
         {protocol.description || 'Tu protocolo de regulación recomendado para hoy.'}
       </p>
       <span className="relative z-10 inline-block">

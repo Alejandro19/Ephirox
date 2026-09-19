@@ -164,6 +164,43 @@ describe('ClientStressPanel', () => {
     expect(screen.queryByText('Tu mentor está diseñando tu plan personalizado.')).not.toBeInTheDocument();
   });
 
+  // El nombre interno del modelo de datos ("labeled case") nunca debe
+  // llegar al cliente — sin mentor asignado, se omite la línea entera en vez
+  // de mostrar un texto como "Caso etiquetado activo".
+  it('never shows the internal "Caso etiquetado activo" wording, with or without a mentor assigned', async () => {
+    mockFetches({
+      activeCase: {
+        labeledCase: {
+          id: 'case-1', caseNumber: 1247, clientId: 'client-1', module: 'stress', protocolId: 'p1',
+          mentorId: null, assignedAt: new Date().toISOString(), cycleWeeks: 12, baselineSnapshot: {}, outcome: null,
+        },
+        mentor: null,
+        protocol: { id: 'p1', name: 'Recuperación Vagal — Nivel 1', mechanism: null, suggestedFrequency: null },
+        resources: [],
+        checkpoints: [],
+      },
+    });
+
+    render(<ClientStressPanel clientId="client-1" clientType="mentoring" />);
+    await screen.findByText('Recuperación Vagal — Nivel 1');
+    expect(screen.queryByText('Caso etiquetado activo')).not.toBeInTheDocument();
+  });
+
+  // La misma práctica no debe aparecer dos veces (RecommendedProtocolCard
+  // arriba, y de nuevo dentro de "Tu plan de regulación" más abajo) para un
+  // cliente Mentoría, que sí ve esa segunda sección.
+  it('hides the standalone "Recomendado para ti ahora" card for a mentoring client — it already lives inside "Tu plan de regulación"', async () => {
+    mockFetches({
+      techniques: [
+        { id: 't1', title: 'Respiración 4-7-8', type: 'Respiración', duration: '5 min', durationMinutes: 5, durationSeconds: null, description: null, videoUrl: null, videoName: null, youtubeUrl: null, audioUrl: null, audioName: null, emotion: null, precautionNote: null, isRitual: false },
+      ],
+    });
+
+    render(<ClientStressPanel clientId="client-1" clientType="mentoring" />);
+    await waitFor(() => expect(screen.getByText('Tu plan de regulación')).toBeInTheDocument());
+    expect(screen.queryByText('Recomendado para ti ahora')).not.toBeInTheDocument();
+  });
+
   it('"Técnica de respiración" starts a real countdown and marks completed when it reaches zero', async () => {
     mockFetches({
       activeCase: {
