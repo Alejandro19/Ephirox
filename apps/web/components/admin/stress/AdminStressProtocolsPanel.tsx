@@ -6,6 +6,7 @@ import {
   createProtocol,
   updateProtocolStatus,
   updateProtocolSchedule,
+  updateProtocolDetails,
   deleteProtocol,
   getProtocol,
   createResource,
@@ -16,7 +17,12 @@ import {
   type StressProtocolResource,
 } from '../../../lib/stress-protocols-client';
 import { getProtocolEffectiveness, type ProtocolEffectiveness } from '../../../lib/labeled-cases-client';
-import { STRESS_RESOURCE_TYPES, STRESS_PROTOCOL_STATUSES, type StressProtocolStatus, type StressResourceType } from '@latribu/shared-types';
+import { STRESS_RESOURCE_TYPES, STRESS_PROTOCOL_STATUSES, STRESS_SUGGESTED_FREQUENCIES, type StressProtocolStatus, type StressResourceType } from '@latribu/shared-types';
+
+// Duraciones de ciclo ofrecidas al admin — 6 y 12 coinciden con los
+// checkpoints reales (FOLLOWUP_WEEKS en labeled-cases.service.ts); 8 y 16
+// son opciones intermedias/largas razonables sin checkpoint propio.
+const CYCLE_WEEKS_OPTIONS = [6, 8, 12, 16] as const;
 import { AdminStressProtocolCriteriaAndAssignment } from '../../stress/AdminStressProtocolCriteriaAndAssignment';
 import { showToast } from '../../layout/AppShell';
 import EmptyState from '../../ui/EmptyState';
@@ -335,6 +341,10 @@ function ProtocolDetail({ protocolId, onDeleted }: { protocolId: string; onDelet
   const [protocol, setProtocol] = useState<StressProtocol | null>(null);
   const [resources, setResources] = useState<StressProtocolResource[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editingDetails, setEditingDetails] = useState(false);
+  const [nameInput, setNameInput] = useState('');
+  const [mechanismInput, setMechanismInput] = useState('');
+  const [savingDetails, setSavingDetails] = useState(false);
 
   async function refetch() {
     const data = await getProtocol(protocolId);
@@ -368,6 +378,28 @@ function ProtocolDetail({ protocolId, onDeleted }: { protocolId: string; onDelet
     }
   }
 
+  function startEditingDetails() {
+    if (!protocol) return;
+    setNameInput(protocol.name);
+    setMechanismInput(protocol.mechanism ?? '');
+    setEditingDetails(true);
+  }
+
+  async function handleSaveDetails() {
+    if (!nameInput.trim()) return;
+    setSavingDetails(true);
+    try {
+      const updated = await updateProtocolDetails(protocolId, { name: nameInput.trim(), mechanism: mechanismInput.trim() || null });
+      setProtocol(updated);
+      setEditingDetails(false);
+      showToast('Datos del protocolo actualizados.', 'success');
+    } catch (e) {
+      showToast((e as Error).message, 'error');
+    } finally {
+      setSavingDetails(false);
+    }
+  }
+
   async function handleDeleteProtocol() {
     try {
       await deleteProtocol(protocolId);
@@ -382,9 +414,33 @@ function ProtocolDetail({ protocolId, onDeleted }: { protocolId: string; onDelet
   return (
     <div style={{ marginTop: 16 }}>
       <SubCard kicker="Datos del protocolo">
-        <h3 style={{ ...cardTitleStyle, margin: '0 0 4px' }}>{protocol.name}</h3>
-        {protocol.mechanism && (
-          <p style={{ fontSize: 13, color: 'var(--eph-body)', margin: '0 0 16px' }}>{protocol.mechanism}</p>
+        {editingDetails ? (
+          <>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginBottom: 12 }}>
+              <div>
+                <label style={labelStyle} htmlFor="pd-name">Nombre del protocolo</label>
+                <input id="pd-name" style={inputStyle} value={nameInput} onChange={(e) => setNameInput(e.target.value)} />
+              </div>
+              <div>
+                <label style={labelStyle} htmlFor="pd-mechanism">Mecanismo</label>
+                <input id="pd-mechanism" style={inputStyle} value={mechanismInput} onChange={(e) => setMechanismInput(e.target.value)} />
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+              <button type="button" style={primaryButtonStyle} onClick={handleSaveDetails} disabled={savingDetails || !nameInput.trim()}>
+                {savingDetails ? 'Guardando…' : 'Guardar'}
+              </button>
+              <button type="button" style={ghostButtonStyle} onClick={() => setEditingDetails(false)} disabled={savingDetails}>Cancelar</button>
+            </div>
+          </>
+        ) : (
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 16 }}>
+            <div>
+              <h3 style={{ ...cardTitleStyle, margin: '0 0 4px' }}>{protocol.name}</h3>
+              {protocol.mechanism && <p style={{ fontSize: 13, color: 'var(--eph-body)', margin: 0 }}>{protocol.mechanism}</p>}
+            </div>
+            <button type="button" style={ghostButtonStyle} onClick={startEditingDetails}>Editar datos del protocolo</button>
+          </div>
         )}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
           <label style={{ ...labelStyle, marginBottom: 0 }} htmlFor="pd-status">Estado del protocolo</label>
@@ -406,9 +462,6 @@ function ProtocolDetail({ protocolId, onDeleted }: { protocolId: string; onDelet
         protocolId={protocolId}
         criteriaId={protocol.criteriaId}
         onCriteriaChange={(criteriaId) => setProtocol((prev) => (prev ? { ...prev, criteriaId } : prev))}
-        suggestedFrequency={protocol.suggestedFrequency}
-        defaultCycleWeeks={protocol.defaultCycleWeeks}
-        onScheduleChange={handleScheduleChange}
         afterCriteriaCard={
           <SubCard kicker="Recursos del protocolo">
             {resources.length === 0 ? (
@@ -425,6 +478,35 @@ function ProtocolDetail({ protocolId, onDeleted }: { protocolId: string; onDelet
               ))
             )}
             <ResourceForm protocolId={protocolId} onCreated={(r) => setResources((prev) => [...prev, r])} />
+
+            {/* Frecuencia/Duración del ciclo, al final de Recursos del
+                protocolo (pedido explícito) — antes vivían en la sub-card
+                "Reglas de asignación" del componente hijo. */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12, marginTop: 22, paddingTop: 18, borderTop: '1px solid var(--eph-line-2)' }}>
+              <div>
+                <label style={labelStyle} htmlFor="pd-frequency">Frecuencia sugerida</label>
+                <select
+                  id="pd-frequency"
+                  style={inputStyle}
+                  value={protocol.suggestedFrequency ?? ''}
+                  onChange={(e) => handleScheduleChange({ suggested_frequency: e.target.value || null })}
+                >
+                  <option value="">Sin definir</option>
+                  {STRESS_SUGGESTED_FREQUENCIES.map((f) => <option key={f} value={f}>{f}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={labelStyle} htmlFor="pd-cycle-weeks">Duración del ciclo</label>
+                <select
+                  id="pd-cycle-weeks"
+                  style={inputStyle}
+                  value={protocol.defaultCycleWeeks}
+                  onChange={(e) => handleScheduleChange({ default_cycle_weeks: Number(e.target.value) })}
+                >
+                  {CYCLE_WEEKS_OPTIONS.map((w) => <option key={w} value={w}>{w} semanas</option>)}
+                </select>
+              </div>
+            </div>
           </SubCard>
         }
       />
@@ -519,6 +601,10 @@ export function AdminStressProtocolsPanel() {
                 </div>
                 <ProtocolEffectivenessBadge protocolId={p.id} />
                 <Badge label={STATUS_LABEL[p.status]} variant={STATUS_BADGE_VARIANT[p.status]} />
+                {/* Indicador de acordeón (mismo patrón que AdminStressCasesPanel)
+                    — deja explícito que la fila colapsa/expande, útil cuando la
+                    librería tiene hartos protocolos. */}
+                <span style={{ marginLeft: 4, color: 'var(--eph-muted)', flexShrink: 0 }}>{selectedId === p.id ? '▴' : '▾'}</span>
               </button>
               {selectedId === p.id && (
                 <ProtocolDetail

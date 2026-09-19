@@ -5,10 +5,12 @@ import { AdminStressProtocolsPanel } from '../components/admin/stress/AdminStres
 import * as protocolsClient from '../lib/stress-protocols-client';
 import * as criteriaClient from '../lib/assignment-criteria-client';
 import * as baselineClient from '../lib/admin-client-baseline-client';
+import * as casesClient from '../lib/labeled-cases-client';
 
 vi.mock('../lib/stress-protocols-client');
 vi.mock('../lib/assignment-criteria-client');
 vi.mock('../lib/admin-client-baseline-client');
+vi.mock('../lib/labeled-cases-client');
 
 const BASE_PROTOCOL: protocolsClient.StressProtocol = {
   id: 'p1',
@@ -28,6 +30,8 @@ describe('AdminStressProtocolsPanel', () => {
     vi.mocked(criteriaClient.listCriteria).mockResolvedValue([]);
     vi.mocked(criteriaClient.listMetrics).mockResolvedValue([]);
     vi.mocked(baselineClient.listActiveClientsWithBaseline).mockResolvedValue([]);
+    vi.mocked(casesClient.listRecentCases).mockResolvedValue([]);
+    vi.mocked(casesClient.getProtocolEffectiveness).mockResolvedValue(null);
   });
 
   it('shows an empty state when the library has no protocols yet', async () => {
@@ -91,6 +95,55 @@ describe('AdminStressProtocolsPanel', () => {
 
     await user.selectOptions(screen.getByLabelText('Duración del ciclo'), '16');
     expect(protocolsClient.updateProtocolSchedule).toHaveBeenCalledWith('p1', { default_cycle_weeks: 16 });
+  });
+
+  // "Datos del protocolo" pasa a ser editable (pedido explícito) — antes
+  // nombre/mecanismo eran de solo lectura, solo el estado se podía cambiar.
+  it('edits the protocol name and mechanism from "Datos del protocolo"', async () => {
+    const user = userEvent.setup();
+    vi.mocked(protocolsClient.listProtocols).mockResolvedValue([BASE_PROTOCOL]);
+    vi.mocked(protocolsClient.getProtocol).mockResolvedValue({ protocol: BASE_PROTOCOL, resources: [] });
+    vi.mocked(protocolsClient.updateProtocolDetails).mockResolvedValue({
+      ...BASE_PROTOCOL, name: 'Recuperación Vagal — Nivel 2', mechanism: 'Respiración vagal',
+    });
+
+    render(<AdminStressProtocolsPanel />);
+    await user.click(await screen.findByRole('button', { name: /Recuperación Vagal/ }));
+
+    await user.click(await screen.findByRole('button', { name: 'Editar datos del protocolo' }));
+    const nameInput = screen.getByDisplayValue('Recuperación Vagal — Nivel 1');
+    await user.clear(nameInput);
+    await user.type(nameInput, 'Recuperación Vagal — Nivel 2');
+    const mechanismInput = screen.getByDisplayValue('Respiración');
+    await user.clear(mechanismInput);
+    await user.type(mechanismInput, 'Respiración vagal');
+    await user.click(screen.getByRole('button', { name: 'Guardar' }));
+
+    expect(protocolsClient.updateProtocolDetails).toHaveBeenCalledWith('p1', {
+      name: 'Recuperación Vagal — Nivel 2', mechanism: 'Respiración vagal',
+    });
+    expect(await screen.findByRole('heading', { name: 'Recuperación Vagal — Nivel 2' })).toBeInTheDocument();
+  });
+
+  // Orden de sub-cards pedido explícito: Datos → Reglas → Recursos (con
+  // Frecuencia/Duración al final) → Baseline (independiente) → Asignar a
+  // clientes activos.
+  it('shows Recursos del protocolo, then Baseline, then Asignar a clientes activos, in that order', async () => {
+    const user = userEvent.setup();
+    vi.mocked(protocolsClient.listProtocols).mockResolvedValue([BASE_PROTOCOL]);
+    vi.mocked(protocolsClient.getProtocol).mockResolvedValue({ protocol: BASE_PROTOCOL, resources: [] });
+    vi.mocked(baselineClient.listActiveClientsWithBaseline).mockResolvedValue([
+      { id: 'cl1', name: 'Camila Ruiz', clientType: 'coaching_1_1', fecha: '2026-09-16', hrvNocturno: 35, fcReposo: 68, suenoScore: 62, recoveryScore: null },
+    ]);
+
+    render(<AdminStressProtocolsPanel />);
+    await user.click(await screen.findByRole('button', { name: /Recuperación Vagal/ }));
+    await screen.findByText('Baseline relevante para Stress — Camila Ruiz');
+
+    const order = [...document.querySelectorAll('span')]
+      .map((el) => el.textContent)
+      .filter((t) => t === 'Recursos del protocolo' || t?.startsWith('Baseline relevante') || t === 'Asignar a clientes activos');
+    expect(order).toEqual(['Recursos del protocolo', 'Baseline relevante para Stress — Camila Ruiz', 'Asignar a clientes activos']);
   });
 
   it('shows the audio uploader only for "Meditación guiada" resources, not for other types', async () => {

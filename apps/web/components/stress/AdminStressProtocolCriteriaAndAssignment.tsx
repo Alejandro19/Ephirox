@@ -7,16 +7,9 @@ import { listCriteria, listMetrics, getMatchingClients, type AssignmentCriteria,
 import { listActiveClientsWithBaseline, type ActiveClientBaseline } from '../../lib/admin-client-baseline-client';
 import { createCase, listRecentCases, type RecentCaseLogEntry } from '../../lib/labeled-cases-client';
 import { OPERATOR_LABEL } from '../admin/criteria/CriteriaRuleBuilder';
-import { STRESS_SUGGESTED_FREQUENCIES, type ConditionNode } from '@latribu/shared-types';
+import type { ConditionNode } from '@latribu/shared-types';
 import { showToast } from '../layout/AppShell';
 import SubCard from '../ui/SubCard';
-
-// Duraciones de ciclo ofrecidas al admin — 6 y 12 coinciden con los
-// checkpoints reales (FOLLOWUP_WEEKS en labeled-cases.service.ts); 8 y 16
-// son opciones intermedias/largas razonables sin checkpoint propio. Mismo
-// listado que AdminStressProtocolsPanel.tsx (duplicado a propósito, dato
-// trivial — ver convención de cardStyle/cardTitleStyle en ese archivo).
-const CYCLE_WEEKS_OPTIONS = [6, 8, 12, 16] as const;
 
 const labelStyle: React.CSSProperties = {
   display: 'block', fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', fontSize: 10,
@@ -105,29 +98,20 @@ function renderConditionChips(node: ConditionNode, metricsById: Map<string, Metr
 // bloque solo selecciona un criterio ya publicado y muestra su resumen de
 // solo lectura, con link para crear/editar uno nuevo.
 //
-// Frecuencia/Duración de ciclo (suggestedFrequency/defaultCycleWeeks/
-// onScheduleChange) se pasan desde ProtocolDetail y se renderizan DENTRO de
-// la misma sub-card "Reglas de asignación" que el selector de Regla (spec
-// 26.2: van agrupados, no repartidos entre dos cards distintas). Recursos
-// del protocolo sigue viviendo en AdminStressProtocolsPanel.tsx — se inyecta
-// acá vía `afterCriteriaCard` para mantener el orden de cards que pide el
-// spec (Datos → Reglas → Recursos → Asignar a clientes) sin mover esa lógica
-// de archivo.
+// Recursos del protocolo (con Frecuencia/Duración al final, pedido
+// explícito) sigue viviendo en AdminStressProtocolsPanel.tsx — se inyecta
+// acá vía `afterCriteriaCard`. El Baseline del cliente enfocado se muestra
+// DESPUÉS de esa card, en su propia sub-card independiente, justo antes de
+// "Asignar a clientes activos" (pedido explícito: cambia de posición).
 export function AdminStressProtocolCriteriaAndAssignment({
   protocolId,
   criteriaId,
   onCriteriaChange,
-  suggestedFrequency = null,
-  defaultCycleWeeks = 12,
-  onScheduleChange = () => {},
   afterCriteriaCard = null,
 }: {
   protocolId: string;
   criteriaId: string | null;
   onCriteriaChange: (criteriaId: string | null) => void;
-  suggestedFrequency?: string | null;
-  defaultCycleWeeks?: number;
-  onScheduleChange?: (patch: { suggested_frequency?: string | null; default_cycle_weeks?: number }) => void;
   afterCriteriaCard?: React.ReactNode;
 }) {
   const [criteriaList, setCriteriaList] = useState<AssignmentCriteria[]>([]);
@@ -222,32 +206,6 @@ export function AdminStressProtocolCriteriaAndAssignment({
   return (
     <div>
       <SubCard kicker="Reglas de asignación">
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12, marginBottom: 18 }}>
-          <div>
-            <label style={labelStyle} htmlFor="pd-frequency">Frecuencia sugerida</label>
-            <select
-              id="pd-frequency"
-              style={fieldStyle}
-              value={suggestedFrequency ?? ''}
-              onChange={(e) => onScheduleChange({ suggested_frequency: e.target.value || null })}
-            >
-              <option value="">Sin definir</option>
-              {STRESS_SUGGESTED_FREQUENCIES.map((f) => <option key={f} value={f}>{f}</option>)}
-            </select>
-          </div>
-          <div>
-            <label style={labelStyle} htmlFor="pd-cycle-weeks">Duración del ciclo</label>
-            <select
-              id="pd-cycle-weeks"
-              style={fieldStyle}
-              value={defaultCycleWeeks}
-              onChange={(e) => onScheduleChange({ default_cycle_weeks: Number(e.target.value) })}
-            >
-              {CYCLE_WEEKS_OPTIONS.map((w) => <option key={w} value={w}>{w} semanas</option>)}
-            </select>
-          </div>
-        </div>
-
         <label style={labelStyle} htmlFor="criteria-picker">Regla guardada</label>
         <select id="criteria-picker" style={fieldStyle} value={criteriaId ?? ''} onChange={(e) => handleCriteriaSelect(e.target.value)}>
           <option value="">Sin regla</option>
@@ -262,40 +220,40 @@ export function AdminStressProtocolCriteriaAndAssignment({
           Las reglas se crean y versionan una sola vez en <strong style={{ color: 'var(--eph-text)' }}>Administración → Reglas y Marcadores</strong>, y se reutilizan aquí y en los protocolos de Workout, Nutrition y Sleep — este formulario solo selecciona cuál aplicar, no la construye.{' '}
           <Link href="/admin/criteria" style={{ color: 'var(--eph-accent)' }}>Crear o editar reglas en Administración →</Link>
         </p>
-
-        {focusedClient && (
-          <>
-            <h4 style={{ margin: '22px 0 8px', fontSize: 14, fontWeight: 600, color: 'var(--eph-text)' }}>
-              Baseline relevante para Stress — {focusedClient.name}
-            </h4>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 10 }}>
-              {([
-                ['HRV basal', focusedClient.hrvNocturno, 'ms', true],
-                ['FC en reposo', focusedClient.fcReposo, 'bpm', false],
-                ['Sleep score', focusedClient.suenoScore, '/100', false],
-                ['Recovery score', focusedClient.recoveryScore, '/100', false],
-              ] as const).map(([label, value, unit, highlight]) => {
-                const flag = referenceFlag(label, value, metrics);
-                return (
-                  <div key={label} style={highlight ? tileHighlightStyle : tileStyle}>
-                    <div style={highlight ? tileLabelStyle : { ...tileLabelStyle, color: 'var(--eph-muted)' }}>{label}</div>
-                    <div style={{ fontFamily: 'var(--font-cormorant), serif', fontSize: 30, fontWeight: 600, color: 'var(--eph-text)', marginTop: 6 }}>
-                      {value != null ? `${value} ${unit}` : '—'}
-                    </div>
-                    {flag && (
-                      <div style={{ fontSize: 11, marginTop: 6, fontWeight: 600, color: flag.startsWith('Dentro') ? 'var(--eph-accent)' : 'var(--eph-danger)' }}>
-                        {flag}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </>
-        )}
       </SubCard>
 
       {afterCriteriaCard}
+
+      {/* Baseline del cliente enfocado — sub-card independiente, después de
+          Recursos del protocolo y antes de Asignar a clientes (pedido
+          explícito: cambia de posición). */}
+      {focusedClient && (
+        <SubCard kicker={`Baseline relevante para Stress — ${focusedClient.name}`}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 10 }}>
+            {([
+              ['HRV basal', focusedClient.hrvNocturno, 'ms', true],
+              ['FC en reposo', focusedClient.fcReposo, 'bpm', false],
+              ['Sleep score', focusedClient.suenoScore, '/100', false],
+              ['Recovery score', focusedClient.recoveryScore, '/100', false],
+            ] as const).map(([label, value, unit, highlight]) => {
+              const flag = referenceFlag(label, value, metrics);
+              return (
+                <div key={label} style={highlight ? tileHighlightStyle : tileStyle}>
+                  <div style={highlight ? tileLabelStyle : { ...tileLabelStyle, color: 'var(--eph-muted)' }}>{label}</div>
+                  <div style={{ fontFamily: 'var(--font-cormorant), serif', fontSize: 30, fontWeight: 600, color: 'var(--eph-text)', marginTop: 6 }}>
+                    {value != null ? `${value} ${unit}` : '—'}
+                  </div>
+                  {flag && (
+                    <div style={{ fontSize: 11, marginTop: 6, fontWeight: 600, color: flag.startsWith('Dentro') ? 'var(--eph-accent)' : 'var(--eph-danger)' }}>
+                      {flag}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </SubCard>
+      )}
 
       <SubCard kicker="Asignar a clientes activos">
         <input

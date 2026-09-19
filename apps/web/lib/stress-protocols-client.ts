@@ -75,6 +75,16 @@ export async function updateProtocolStatus(protocolId: string, status: StressPro
   return body.protocol;
 }
 
+export async function updateProtocolDetails(protocolId: string, input: { name: string; mechanism: string | null }): Promise<StressProtocol> {
+  const body = await authorizedRequest<{ success: boolean; protocol: StressProtocol; error?: string }>(
+    `/api/admin/stress-protocols/${protocolId}`,
+    'PATCH',
+    input
+  );
+  if (!body.success) throw new Error(body.error || 'Error al actualizar los datos del protocolo.');
+  return body.protocol;
+}
+
 export async function updateProtocolCriteria(protocolId: string, criteriaId: string | null): Promise<StressProtocol> {
   const body = await authorizedRequest<{ success: boolean; protocol: StressProtocol; error?: string }>(
     `/api/admin/stress-protocols/${protocolId}`,
