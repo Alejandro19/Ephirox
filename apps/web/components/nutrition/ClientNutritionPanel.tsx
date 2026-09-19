@@ -88,12 +88,18 @@ function MealBlock({ meal, isFirst }: { meal: MenuMeal; isFirst: boolean }) {
 // se toca acá: es compartido con Sleep/Ejercicio a propósito, 44px fijo
 // en los 3 módulos — confirmado en la maqueta que sigue cabiendo bien
 // incluso en la columna angosta de mobile.
+// Fondo con un toque de color dorado (antes plano var(--eph-surface)) —
+// pedido explícito de Alejandro para que las 3 cards se destaquen un poco
+// más, manteniéndolo sutil (color-mix al 5%, no un tinte plano nuevo).
 function MacroCard({ label, value, unit }: { label: string; value: number | null | undefined; unit: string }) {
   return (
-    <div className="grid content-start gap-2.5 py-4 px-2.5 sm:gap-5 sm:py-7 sm:px-7" style={{ background: 'var(--eph-surface)' }}>
+    <div
+      className="grid content-start gap-2.5 py-4 px-2.5 sm:gap-5 sm:py-7 sm:px-7"
+      style={{ background: 'color-mix(in srgb, var(--eph-accent) 5%, var(--eph-surface))' }}
+    >
       <span className="font-mono" style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--eph-steel)' }}>{label}</span>
       <MetricValue value={value ?? '—'} unit={value != null ? unit : undefined} size="kpi" />
-      <div style={{ height: 2, background: 'var(--eph-line-2)' }}>
+      <div style={{ height: 3, background: 'var(--eph-line-2)' }}>
         <div style={{ height: '100%', background: 'var(--eph-accent)' }} />
       </div>
     </div>
