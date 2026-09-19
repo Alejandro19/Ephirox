@@ -35,14 +35,14 @@ export const ADMIN_NAV: NavItem[] = [
   { key: "community", label: "The Circle" },
 ];
 
+// Leads, Mentores y Frases ya no son ítems propios del menú — se integraron
+// como pestañas dentro de Clientes (mismo patrón que "Casos Etiquetados"
+// dentro de Protocolos), pedido explícito de Alejandro.
 export const ADMIN_HUB_SUBITEMS: NavItem[] = [
   { key: "admin-clients", label: "Clientes" },
-  { key: "admin-leads", label: "Leads" },
-  { key: "admin-quotes", label: "Frases" },
   { key: "admin-roles", label: "Roles y Perfiles" },
   { key: "admin-membership-prices", label: "Precios de Membresía" },
   { key: "admin-stress-protocols", label: "Protocolos" },
-  { key: "admin-mentors", label: "Mentores" },
   { key: "admin-criteria", label: "Reglas y Marcadores" },
 ];
 
@@ -123,12 +123,9 @@ export const VIEW_TO_PATH: Record<string, string> = {
   blindspot: "/blindspot",
   "personal-info": "/onboarding",
   "admin-clients": "/admin/clients",
-  "admin-leads": "/admin/leads",
-  "admin-quotes": "/admin/phrases",
   "admin-roles": "/admin/roles",
   "admin-membership-prices": "/admin/membership-prices",
   "admin-stress-protocols": "/admin/stress-protocols",
-  "admin-mentors": "/admin/mentors",
   "admin-criteria": "/admin/criteria",
 };
 
@@ -143,11 +140,8 @@ export const PATH_TO_VIEW: Record<string, string> = {
   "/onboarding": "personal-info",
   "/admin": "admin-hub",
   "/admin/clients": "admin-clients",
-  "/admin/leads": "admin-leads",
-  "/admin/phrases": "admin-quotes",
   "/admin/roles": "admin-roles",
   "/admin/membership-prices": "admin-membership-prices",
   "/admin/stress-protocols": "admin-stress-protocols",
-  "/admin/mentors": "admin-mentors",
   "/admin/criteria": "admin-criteria",
 };

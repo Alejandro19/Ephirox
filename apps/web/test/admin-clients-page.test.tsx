@@ -22,6 +22,33 @@ vi.mock('../components/layout/AppShell', () => ({
   showToast: vi.fn(),
 }));
 
+vi.mock('../lib/enterprise-leads-admin-client', () => ({
+  listEnterpriseLeads: vi.fn(async () => []),
+  updateEnterpriseLeadEstado: vi.fn(),
+}));
+
+vi.mock('../lib/mentors-client', () => ({
+  listMentors: vi.fn(async () => []),
+  createMentor: vi.fn(),
+  updateMentor: vi.fn(),
+  deleteMentor: vi.fn(),
+}));
+
+vi.mock('../lib/quotes-client', () => ({
+  listQuotes: vi.fn(async () => []),
+  createQuote: vi.fn(),
+  updateQuote: vi.fn(),
+  deleteQuote: vi.fn(),
+}));
+
+vi.mock('../lib/phrases-client', () => ({
+  listPhrases: vi.fn(async () => []),
+  createPhrase: vi.fn(),
+  updatePhrase: vi.fn(),
+  deletePhrase: vi.fn(),
+  drawPreviewPhrase: vi.fn(),
+}));
+
 describe('AdminClientsPage', () => {
   it('renders the fetched clients in a table', async () => {
     render(<AdminClientsPage />);
@@ -53,5 +80,30 @@ describe('AdminClientsPage', () => {
         name: 'Dra. Ríos', email: 'rios@example.com', password: 'temporal123', specialty: 'Biodescodificación',
       })
     );
+  });
+
+  // Leads, Mentores y Frases se integraron como pestañas adicionales dentro
+  // de Clientes (mismo patrón que "Casos Etiquetados" dentro de Protocolos)
+  // — antes eran ítems propios del menú Administration.
+  it('shows Leads, Mentores and Frases as additional tabs, in that order, to the right of Clientes', async () => {
+    const user = userEvent.setup();
+    render(<AdminClientsPage />);
+    await screen.findByText('Ana Pérez');
+
+    const tabs = ['Clientes', 'Leads', 'Mentores', 'Frases'];
+    expect(tabs.map((label) => screen.getByRole('button', { name: label }))).toHaveLength(4);
+
+    await user.click(screen.getByRole('button', { name: 'Leads' }));
+    expect(await screen.findByRole('heading', { name: 'Leads empresariales' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Mentores' }));
+    expect(await screen.findByRole('heading', { name: 'Mentores' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Frases' }));
+    expect(await screen.findByRole('heading', { name: 'Frases de mentalidad' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Frases Card RR.SS' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Clientes' }));
+    expect(await screen.findByText('Ana Pérez')).toBeInTheDocument();
   });
 });

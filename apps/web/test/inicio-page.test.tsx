@@ -110,12 +110,14 @@ describe('InicioPage — quick-access cards', () => {
     expect(screen.queryByText('Workout')).not.toBeInTheDocument();
   });
 
+  // "Frases" ya no es un quick link propio — se integró como pestaña dentro
+  // de Clientes (junto con Leads y Mentores), mismo patrón que "Casos
+  // Etiquetados" dentro de Protocolos.
   it('shows the admin quick links unchanged, without the data-gating logic', () => {
     mockAuth(null, 'admin');
     render(<InicioPage />);
 
     expect(screen.getByText('Clientes')).toBeInTheDocument();
-    expect(screen.getByText('Frases')).toBeInTheDocument();
     expect(screen.getByText('The Circle')).toBeInTheDocument();
     expect(clientsClient.fetchClient).not.toHaveBeenCalled();
   });

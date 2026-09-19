@@ -84,7 +84,6 @@ export default function InicioPage() {
   const quickLinks = isAdmin
     ? [
         { key: "admin-clients", label: "Clientes", desc: "Gestionar clientes y permisos" },
-        { key: "admin-quotes", label: "Frases", desc: "Administrar frases motivacionales" },
         { key: "community", label: "The Circle", desc: "Gestionar eventos y terapias" },
       ]
     : signals
