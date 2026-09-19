@@ -81,6 +81,14 @@
   --eph-hatch:repeating-linear-gradient(135deg,#f4f2ec 0 8px,#ebe7dc 8px 16px);
 }
 
+/* Controles nativos (audio, etc.) ------------------------------
+   Sin esto, el reproductor <audio> nativo usa el chrome por-defecto
+   del navegador (claro, sin relación con la marca) sin importar el
+   tema activo — reportado en el módulo Stress. */
+[data-theme="dark-brand"], [data-theme="dark-carbon"] { color-scheme: dark; }
+[data-theme="light-premium"] { color-scheme: light; }
+audio { accent-color: var(--eph-accent); }
+
 /* Tipografía -------------------------------------------------
    Cormorant Garamond 300 → wordmark, títulos, cifras
    Jost 300 → cuerpo, labels, navegación

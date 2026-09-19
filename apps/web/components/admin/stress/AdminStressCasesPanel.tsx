@@ -50,6 +50,27 @@ const tileStyle: React.CSSProperties = {
 };
 const tileLabelStyle: React.CSSProperties = { fontSize: 11, color: 'var(--eph-accent)', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 700 };
 
+// Título de sección dentro del detalle de un caso (spec 26.2) — mayúsculas,
+// negrita, dorado, con una barra vertical de acento a la izquierda, para que
+// funcione como separador real y no se confunda con un label de campo suelto
+// (antes reutilizaba labelStyle, gris y sin protagonismo).
+const sectionTitleStyle: React.CSSProperties = {
+  fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace', fontSize: 11, fontWeight: 700,
+  textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--eph-accent)',
+  margin: '22px 0 12px', borderLeft: '3px solid var(--eph-accent)', paddingLeft: 10,
+};
+// Mini-tarjeta para cada par etiqueta/valor del detalle (spec 26.2) — un
+// tono más claro que el panel/fila que lo contiene (var(--eph-surface-2)),
+// en vez de texto plano apilado sin ningún contenedor visual.
+const miniTileStyle: React.CSSProperties = {
+  background: 'color-mix(in srgb, var(--eph-surface-2) 82%, white 10%)',
+  border: '1px solid var(--eph-line-2)', borderRadius: 10, padding: '12px 14px',
+};
+// Sombra sutil para reforzar el borde de cada fila de caso (spec 26.2
+// "case-card"), mismo tratamiento que las filas de la librería de
+// protocolos (AdminStressProtocolsPanel.tsx).
+const rowShadow = '0 2px 10px -4px rgba(0,0,0,0.4)';
+
 const STATUS_LABEL: Record<CaseStatus, string> = { activo: 'Activo', vencido: 'Checkpoint vencido', completado: 'Completado' };
 const STATUS_VARIANT: Record<CaseStatus, 'success' | 'warn' | 'danger'> = { activo: 'success', vencido: 'danger', completado: 'warn' };
 const RATING_LABEL: Record<OutcomeRating, string> = {
@@ -152,36 +173,36 @@ function CaseDetail({ caseId, onChanged }: { caseId: string; onChanged: () => vo
 
   return (
     <div style={{ borderTop: '1px solid var(--eph-line-2)', marginTop: 10, paddingTop: 14 }}>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14 }}>
-        <div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
+        <div style={miniTileStyle}>
           <div style={labelStyle}>Caso</div>
           <div style={{ fontSize: 13, color: 'var(--eph-text)' }}>#{detail.labeledCase.caseNumber} — {detail.labeledCase.module}</div>
         </div>
-        <div>
+        <div style={miniTileStyle}>
           <div style={labelStyle}>Mentor asignador</div>
           <div style={{ fontSize: 13, color: 'var(--eph-text)' }}>{detail.mentor?.name ?? '—'}</div>
         </div>
-        <div>
+        <div style={miniTileStyle}>
           <div style={labelStyle}>Regla que lo activó</div>
           <div style={{ fontSize: 13, color: 'var(--eph-text)' }}>
             {detail.criteriaName ?? '—'}{detail.criteriaVersion != null && <span style={{ color: 'var(--eph-muted)' }}> v{detail.criteriaVersion}</span>}
           </div>
         </div>
-        <div>
+        <div style={miniTileStyle}>
           <div style={labelStyle}>Día 0 (inicio)</div>
           <div style={{ fontSize: 13, color: 'var(--eph-text)' }}>{formatDate(detail.labeledCase.assignedAt)}</div>
         </div>
-        <div>
+        <div style={miniTileStyle}>
           <div style={labelStyle}>Duración del ciclo</div>
           <div style={{ fontSize: 13, color: 'var(--eph-text)' }}>{detail.labeledCase.cycleWeeks} semanas</div>
         </div>
-        <div>
+        <div style={miniTileStyle}>
           <div style={labelStyle}>Consentimiento de datos (perfil del cliente)</div>
           <div style={{ fontSize: 13, color: consentColor, fontWeight: 600 }}>{consentLabel}</div>
         </div>
       </div>
 
-      <p style={{ ...labelStyle, marginTop: 20 }}>Snapshot del baseline al momento de asignar</p>
+      <p style={sectionTitleStyle}>Snapshot del baseline al momento de asignar</p>
       <p style={{ fontSize: 11, color: 'var(--eph-faint)', marginTop: -4, marginBottom: 10 }}>
         Congelado — no cambia aunque el baseline actual del cliente cambie.
       </p>
@@ -211,7 +232,7 @@ function CaseDetail({ caseId, onChanged }: { caseId: string; onChanged: () => vo
         );
       })()}
 
-      <p style={{ ...labelStyle, marginTop: 20 }}>Checkpoints de seguimiento</p>
+      <p style={sectionTitleStyle}>Checkpoints de seguimiento</p>
       <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 8 }}>
         {detail.checkpoints.map((c) => (
           <div key={c.id} style={{ padding: '10px 12px', border: '1px solid var(--eph-line)', background: 'var(--eph-surface-2)' }}>
@@ -235,7 +256,7 @@ function CaseDetail({ caseId, onChanged }: { caseId: string; onChanged: () => vo
         ))}
       </div>
 
-      <p style={{ ...labelStyle, marginTop: 20 }}>Etiqueta final de resultado</p>
+      <p style={sectionTitleStyle}>Etiqueta final de resultado</p>
       {finalRating ? (
         <Badge label={RATING_LABEL[finalRating]} variant={ratingVariant(finalRating)} />
       ) : detail.checkpoints.some((c) => c.overdue) ? (
@@ -310,7 +331,7 @@ export function AdminStressCasesPanel() {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {cases.map((c) => (
-            <div key={c.id} style={{ border: '1px solid var(--eph-line)', background: 'var(--eph-surface-2)', padding: '12px 14px' }}>
+            <div key={c.id} style={{ border: '1px solid var(--eph-line)', background: 'var(--eph-surface-2)', borderRadius: 8, padding: '12px 14px', boxShadow: rowShadow }}>
               <button
                 type="button"
                 onClick={() => setExpandedId(expandedId === c.id ? null : c.id)}

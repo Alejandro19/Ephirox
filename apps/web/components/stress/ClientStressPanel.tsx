@@ -274,11 +274,11 @@ export function ClientStressPanel({
         />
       )}
 
-      <StressProtocolLibrary techniques={generalTechniques} onSelect={setActiveId} />
+      <StressProtocolLibrary techniques={generalTechniques} completions={completions} onSelect={setActiveId} />
 
       {generalTechniques.length === 0 && (
         <p className="mb-5 font-body text-xs" style={{ color: 'var(--eph-faint)' }}>
-          Los protocolos de ejemplo de arriba se activan cuando tu mentor te asigne los tuyos.
+          Los protocolos sugeridos de arriba se activan cuando tu mentor te asigne los tuyos.
         </p>
       )}
 

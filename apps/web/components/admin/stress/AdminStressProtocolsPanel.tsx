@@ -16,17 +16,19 @@ import {
   type StressProtocolResource,
 } from '../../../lib/stress-protocols-client';
 import { getProtocolEffectiveness, type ProtocolEffectiveness } from '../../../lib/labeled-cases-client';
-import { STRESS_RESOURCE_TYPES, STRESS_PROTOCOL_STATUSES, STRESS_SUGGESTED_FREQUENCIES, type StressProtocolStatus, type StressResourceType } from '@latribu/shared-types';
-
-// Duraciones de ciclo ofrecidas al admin — 6 y 12 coinciden con los
-// checkpoints reales (FOLLOWUP_WEEKS en labeled-cases.service.ts); 8 y 16
-// son opciones intermedias/largas razonables sin checkpoint propio.
-const CYCLE_WEEKS_OPTIONS = [6, 8, 12, 16] as const;
+import { STRESS_RESOURCE_TYPES, STRESS_PROTOCOL_STATUSES, type StressProtocolStatus, type StressResourceType } from '@latribu/shared-types';
 import { AdminStressProtocolCriteriaAndAssignment } from '../../stress/AdminStressProtocolCriteriaAndAssignment';
 import { showToast } from '../../layout/AppShell';
 import EmptyState from '../../ui/EmptyState';
 import Badge from '../../ui/Badge';
 import FileField from '../../ui/FileField';
+import SubCard from '../../ui/SubCard';
+
+// Sombra sutil para reforzar el borde de las filas de la librería de
+// protocolos (spec 26.2 "lib-row") — igual que las case-cards de
+// AdminStressCasesPanel.tsx, incluso si el contraste real entre superficie y
+// borde de los tokens de Ephirox es bajo.
+const rowShadow = '0 2px 10px -4px rgba(0,0,0,0.4)';
 
 const cardStyle: React.CSSProperties = {
   background: 'var(--eph-surface)', border: '1px solid var(--eph-line)',
@@ -351,74 +353,56 @@ function ProtocolDetail({ protocolId, onDeleted }: { protocolId: string; onDelet
   if (loading || !protocol) return <div style={{ ...cardStyle, marginTop: 16 }}><p style={{ color: 'var(--eph-muted)', fontSize: 14, margin: 0 }}>Cargando protocolo…</p></div>;
 
   return (
-    <div style={{ ...cardStyle, marginTop: 16 }}>
-      <h3 style={cardTitleStyle}>{protocol.name}</h3>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-        <label style={{ ...labelStyle, marginBottom: 0 }} htmlFor="pd-status">Estado del protocolo</label>
-        <select
-          id="pd-status"
-          style={{ ...inputStyle, width: 'auto', minWidth: 180 }}
-          value={protocol.status}
-          onChange={(e) => handleStatusChange(e.target.value as StressProtocolStatus)}
-        >
-          {STRESS_PROTOCOL_STATUSES.map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
-        </select>
-        <span style={{ fontSize: 11, color: 'var(--eph-muted)' }}>
-          Solo un protocolo &quot;Publicado&quot; entra al selector de reglas de asignación.
-        </span>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12, marginTop: 16 }}>
-        <div>
-          <label style={labelStyle} htmlFor="pd-frequency">Frecuencia sugerida</label>
+    <div style={{ marginTop: 16 }}>
+      <SubCard kicker="Datos del protocolo">
+        <h3 style={{ ...cardTitleStyle, margin: '0 0 4px' }}>{protocol.name}</h3>
+        {protocol.mechanism && (
+          <p style={{ fontSize: 13, color: 'var(--eph-body)', margin: '0 0 16px' }}>{protocol.mechanism}</p>
+        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <label style={{ ...labelStyle, marginBottom: 0 }} htmlFor="pd-status">Estado del protocolo</label>
           <select
-            id="pd-frequency"
-            style={inputStyle}
-            value={protocol.suggestedFrequency ?? ''}
-            onChange={(e) => handleScheduleChange({ suggested_frequency: e.target.value || null })}
+            id="pd-status"
+            style={{ ...inputStyle, width: 'auto', minWidth: 180 }}
+            value={protocol.status}
+            onChange={(e) => handleStatusChange(e.target.value as StressProtocolStatus)}
           >
-            <option value="">Sin definir</option>
-            {STRESS_SUGGESTED_FREQUENCIES.map((f) => <option key={f} value={f}>{f}</option>)}
+            {STRESS_PROTOCOL_STATUSES.map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
           </select>
+          <span style={{ fontSize: 11, color: 'var(--eph-muted)' }}>
+            Solo un protocolo &quot;Publicado&quot; entra al selector de reglas de asignación.
+          </span>
         </div>
-        <div>
-          <label style={labelStyle} htmlFor="pd-cycle-weeks">Duración del ciclo</label>
-          <select
-            id="pd-cycle-weeks"
-            style={inputStyle}
-            value={protocol.defaultCycleWeeks}
-            onChange={(e) => handleScheduleChange({ default_cycle_weeks: Number(e.target.value) })}
-          >
-            {CYCLE_WEEKS_OPTIONS.map((w) => <option key={w} value={w}>{w} semanas</option>)}
-          </select>
-        </div>
-      </div>
+      </SubCard>
 
-      <h3 style={{ margin: '18px 0 8px', fontSize: 14, fontWeight: 600, color: 'var(--eph-text)' }}>Recursos del protocolo</h3>
-      {resources.length === 0 ? (
-        <EmptyState message="Este protocolo todavía no tiene recursos." />
-      ) : (
-        resources.map((r) => (
-          <ResourceRow
-            key={r.id}
-            protocolId={protocolId}
-            resource={r}
-            onChanged={(updated) => setResources((prev) => prev.map((p) => (p.id === updated.id ? updated : p)))}
-            onDeleted={(id) => setResources((prev) => prev.filter((p) => p.id !== id))}
-          />
-        ))
-      )}
-      <ResourceForm protocolId={protocolId} onCreated={(r) => setResources((prev) => [...prev, r])} />
+      <AdminStressProtocolCriteriaAndAssignment
+        protocolId={protocolId}
+        criteriaId={protocol.criteriaId}
+        onCriteriaChange={(criteriaId) => setProtocol((prev) => (prev ? { ...prev, criteriaId } : prev))}
+        suggestedFrequency={protocol.suggestedFrequency}
+        defaultCycleWeeks={protocol.defaultCycleWeeks}
+        onScheduleChange={handleScheduleChange}
+        afterCriteriaCard={
+          <SubCard kicker="Recursos del protocolo">
+            {resources.length === 0 ? (
+              <EmptyState message="Este protocolo todavía no tiene recursos." />
+            ) : (
+              resources.map((r) => (
+                <ResourceRow
+                  key={r.id}
+                  protocolId={protocolId}
+                  resource={r}
+                  onChanged={(updated) => setResources((prev) => prev.map((p) => (p.id === updated.id ? updated : p)))}
+                  onDeleted={(id) => setResources((prev) => prev.filter((p) => p.id !== id))}
+                />
+              ))
+            )}
+            <ResourceForm protocolId={protocolId} onCreated={(r) => setResources((prev) => [...prev, r])} />
+          </SubCard>
+        }
+      />
 
-      <div style={{ borderTop: '1px solid var(--eph-line-2)', marginTop: 22, paddingTop: 4 }}>
-        <AdminStressProtocolCriteriaAndAssignment
-          protocolId={protocolId}
-          criteriaId={protocol.criteriaId}
-          onCriteriaChange={(criteriaId) => setProtocol((prev) => (prev ? { ...prev, criteriaId } : prev))}
-        />
-      </div>
-
-      <button type="button" style={{ ...dangerButtonStyle, marginTop: 18 }} onClick={handleDeleteProtocol}>
+      <button type="button" style={{ ...dangerButtonStyle, marginTop: -6, marginBottom: 20 }} onClick={handleDeleteProtocol}>
         Eliminar protocolo completo
       </button>
     </div>
@@ -487,14 +471,19 @@ export function AdminStressProtocolsPanel() {
           <EmptyState message="Aún no hay protocolos en la librería." />
         ) : (
           protocols.map((p) => (
-            <div key={p.id}>
+            <div
+              key={p.id}
+              style={{
+                border: '1px solid var(--eph-line)', background: 'var(--eph-surface-2)',
+                borderRadius: 8, padding: '4px 14px', marginBottom: 10, boxShadow: rowShadow,
+              }}
+            >
               <button
                 type="button"
                 onClick={() => setSelectedId((prev) => (prev === p.id ? null : p.id))}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 10, width: '100%', textAlign: 'left',
-                  padding: '12px 0', borderBottom: '0.5px solid var(--eph-line)', background: 'transparent', border: 'none',
-                  borderBottomWidth: '0.5px', borderBottomColor: 'var(--eph-line)', borderBottomStyle: 'solid', cursor: 'pointer',
+                  padding: '12px 0', background: 'transparent', border: 'none', cursor: 'pointer',
                 }}
               >
                 <div style={{ flex: 1, minWidth: 0 }}>

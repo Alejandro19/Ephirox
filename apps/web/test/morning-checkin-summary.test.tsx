@@ -25,7 +25,7 @@ describe('MorningCheckinSummary', () => {
     expect(screen.getByRole('link', { name: /Responder en tu Ritual Diario/ })).toHaveAttribute('href', '/');
   });
 
-  it('shows the read-only values when there is data for today', () => {
+  it('shows the read-only values as 3 separate cards (Energía/Tensión/Claridad), each with its own number', () => {
     render(
       <MorningCheckinSummary
         morningCheckin={{ id: 'mc1', fecha: '2026-09-02', energia: 4, tension: 2, claridad: 5, activacionMatutina: 7 }}
@@ -33,6 +33,15 @@ describe('MorningCheckinSummary', () => {
         stressAccessState="ok"
       />
     );
-    expect(screen.getByText('Energía 4/5 · Tensión 2/5 · Claridad 5/5')).toBeInTheDocument();
+    expect(screen.getByText('Energía')).toBeInTheDocument();
+    expect(screen.getByText('Tensión')).toBeInTheDocument();
+    expect(screen.getByText('Claridad')).toBeInTheDocument();
+
+    const energiaCard = screen.getByText('Energía').closest('div')!;
+    expect(energiaCard).toHaveTextContent('4/5');
+    const tensionCard = screen.getByText('Tensión').closest('div')!;
+    expect(tensionCard).toHaveTextContent('2/5');
+    const claridadCard = screen.getByText('Claridad').closest('div')!;
+    expect(claridadCard).toHaveTextContent('5/5');
   });
 });

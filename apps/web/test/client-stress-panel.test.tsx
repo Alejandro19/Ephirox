@@ -73,14 +73,30 @@ describe('ClientStressPanel', () => {
     expect(screen.queryByText('Tendencia 14 días')).not.toBeInTheDocument();
   });
 
-  it('fills "Tus protocolos" with the 3 example protocols when none are assigned yet, and never shows it empty', async () => {
+  it('fills "Tus protocolos" with 3 suggested protocols when none are assigned yet, and never shows it empty', async () => {
     mockFetches();
     render(<ClientStressPanel clientId="client-1" />);
     await waitFor(() => expect(screen.getByText('Tus protocolos')).toBeInTheDocument());
     expect(screen.getByText('Respiración 4-7-8')).toBeInTheDocument();
     expect(screen.getByText('Reset del Sistema Nervioso')).toBeInTheDocument();
     expect(screen.getByText('Escaneo corporal breve')).toBeInTheDocument();
-    expect(screen.getAllByText('Ejemplo').length).toBe(3);
+    expect(screen.getAllByText('Sugerido para ti').length).toBe(3);
+  });
+
+  // spec 26.4 — reemplaza el look "Ejemplo" gris/apagado por 3 estados vivos:
+  // un protocolo real sin completions todavía se muestra "Activo ahora", uno
+  // con al menos un StressCompletion se muestra "Completado".
+  it('shows an assigned protocol as "Activo ahora" until it has a completion, then "Completado"', async () => {
+    mockFetches({
+      techniques: [
+        { id: 't1', title: 'Respiración 4-7-8', type: 'Respiración', duration: '5 min', durationMinutes: 5, durationSeconds: null, description: null, videoUrl: null, videoName: null, youtubeUrl: null, audioUrl: null, audioName: null, emotion: null, precautionNote: null, isRitual: false },
+      ],
+      completions: [{ id: 'c1', techniqueId: 't1', completedDate: '2026-09-18' }],
+    });
+    render(<ClientStressPanel clientId="client-1" />);
+    await waitFor(() => expect(screen.getByText('Tus protocolos')).toBeInTheDocument());
+    expect(screen.getByText('Completado')).toBeInTheDocument();
+    expect(screen.queryByText('Activo ahora')).not.toBeInTheDocument();
   });
 
   it('opens the protocol player and marks it as completed today', async () => {
@@ -233,6 +249,41 @@ describe('ClientStressPanel', () => {
     fireEvent.ended(audioEl);
 
     await waitFor(() => expect(stressClient.markCompletion).toHaveBeenCalledWith('client-1', { resourceId: 'r3', notes: undefined }));
+    // Bug reportado: el reproductor se quedaba abierto después de completar
+    // (el botón "Marcar hecho" parecía no funcionar).
+    expect(document.querySelector('audio')).not.toBeInTheDocument();
+  });
+
+  it('hides the audio player when "Marcar hecho" is clicked directly, not just when the audio ends', async () => {
+    const user = userEvent.setup();
+    mockFetches({
+      activeCase: {
+        labeledCase: {
+          id: 'case-1', caseNumber: 1247, clientId: 'client-1', module: 'stress', protocolId: 'p1',
+          mentorId: null, assignedAt: new Date().toISOString(), cycleWeeks: 12, baselineSnapshot: {}, outcome: null,
+        },
+        mentor: null,
+        protocol: { id: 'p1', name: 'Recuperación Vagal — Nivel 1', mechanism: null, suggestedFrequency: null },
+        resources: [
+          {
+            id: 'r3', protocolId: 'p1', type: 'Meditación guiada', title: 'Calma nocturna',
+            durationMinutes: 8, durationSeconds: null, instructions: null,
+            audioUrl: 'https://files.example.com/calma.mp3', audioName: 'calma.mp3',
+            videoUrl: null, videoName: null, youtubeUrl: null, sortOrder: 0,
+          },
+        ],
+        checkpoints: [],
+      },
+    });
+
+    render(<ClientStressPanel clientId="client-1" clientType="mentoring" />);
+    await user.click(await screen.findByRole('button', { name: 'Reproducir' }));
+    expect(document.querySelector('audio')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Marcar hecho' }));
+
+    await waitFor(() => expect(stressClient.markCompletion).toHaveBeenCalledWith('client-1', { resourceId: 'r3', notes: undefined }));
+    expect(document.querySelector('audio')).not.toBeInTheDocument();
   });
 
   it('shows a simple protocol-history list (nombre + rango de fechas) for a mentoring client', async () => {

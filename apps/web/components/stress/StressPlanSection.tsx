@@ -71,7 +71,7 @@ function BreathingCountdown({ totalSeconds, onDone }: { totalSeconds: number; on
 
   return (
     <div className="mt-3 flex items-center gap-4 border-t pt-3" style={{ borderColor: 'var(--eph-line)' }}>
-      <div className="font-display text-3xl tabular-nums" style={{ color: 'var(--eph-accent)' }}>{formatCountdown(remaining)}</div>
+      <div className="eph-num font-display" style={{ fontSize: 32, fontWeight: 300, color: 'var(--eph-accent)' }}>{formatCountdown(remaining)}</div>
       <button
         type="button"
         onClick={() => setRunning((r) => !r)}
@@ -122,6 +122,14 @@ function ActiveResourceRow({
     setMode('idle');
   }
 
+  // Bug reportado: el botón "Marcar hecho" del audio sí registraba la
+  // completion, pero el reproductor se quedaba abierto (mode nunca volvía a
+  // 'idle') — parecía que el botón no hacía nada.
+  function handleAudioDone() {
+    onComplete(resource.id);
+    setMode('idle');
+  }
+
   function handleSaveJournal() {
     onComplete(resource.id, journalText.trim() || undefined);
     setJournalText('');
@@ -155,13 +163,13 @@ function ActiveResourceRow({
       {mode === 'audio' && (
         <div className="mt-3 border-t pt-3" style={{ borderColor: 'var(--eph-line)' }}>
           {resource.audioUrl ? (
-            <audio controls autoPlay src={resource.audioUrl} className="w-full" onEnded={() => onComplete(resource.id)} />
+            <audio controls autoPlay src={resource.audioUrl} className="w-full" onEnded={handleAudioDone} />
           ) : (
             <p className="mb-2 font-body text-xs" style={{ color: 'var(--eph-muted)' }}>Tu mentor todavía no adjuntó el audio de este recurso.</p>
           )}
           <button
             type="button"
-            onClick={() => onComplete(resource.id)}
+            onClick={handleAudioDone}
             className="mt-2 inline-flex items-center justify-center min-h-[32px] rounded-none font-mono text-[10px] font-normal uppercase tracking-[0.14em] border px-3"
             style={{ borderColor: 'var(--eph-line-2)', color: 'var(--eph-body)', background: 'transparent' }}
           >
