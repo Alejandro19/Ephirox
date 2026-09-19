@@ -353,15 +353,13 @@ export function StressPlanSection({
   Button: (props: { type: 'button'; variant: 'secondary'; onClick: () => void; children: React.ReactNode }) => React.ReactNode;
 }) {
   // Card con más protagonismo que el resto del módulo (pedido explícito:
-  // "esa card debe tener toda la atención") — mismo tratamiento "hero" que
-  // ya usa RegulationCapacityCard.tsx (var(--eph-panel) + borde dorado), en
-  // vez del contenedor plano que comparten las demás secciones.
+  // "esa card debe tener toda la atención") — degradado cálido + borde
+  // dorado (var(--eph-panel)), en vez del contenedor plano que comparten
+  // las demás secciones. El subtítulo explicativo se quitó — no sumaba
+  // valor (pedido explícito); el título alcanza para identificar la sección.
   return (
     <section className="border p-7 mb-5" style={{ borderColor: 'var(--eph-accent-edge)', background: 'var(--eph-panel)' }}>
-      <h2 className="mb-2 font-display text-2xl" style={{ color: 'var(--eph-text)' }}>Tu plan de regulación</h2>
-      <p className="mb-5 font-body text-sm" style={{ color: 'var(--eph-body)' }}>
-        No depende de cómo te sientas hoy.
-      </p>
+      <h2 className="mb-5 font-display text-2xl" style={{ color: 'var(--eph-text)' }}>Tu plan de regulación</h2>
       {activeCase ? (
         <ActiveCaseCard activeCase={activeCase} onComplete={onCompleteActiveResource} TechniqueIcon={TechniqueIcon} />
       ) : techniques.length === 0 ? (

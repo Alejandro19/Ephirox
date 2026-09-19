@@ -81,7 +81,10 @@ export function RegulationCapacityCard({
 
   if (todayScore == null) {
     return (
-      <div className="mb-5 border p-7" style={{ borderColor: 'var(--eph-accent-edge)', background: 'var(--eph-panel)' }}>
+      // Neutro (antes var(--eph-panel) + borde dorado) — pedido explícito:
+      // junto al check-in matutino, que también quedó con borde/degradado
+      // dorado, se veía sobrecargado. Esta card ya no compite por atención.
+      <div className="mb-5 border p-7" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface)' }}>
         <span className="font-mono" style={{ fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--eph-muted)' }}>
           Capacidad de regulación
         </span>
@@ -103,7 +106,7 @@ export function RegulationCapacityCard({
   const sparklinePoints = history.slice(-7);
 
   return (
-    <div className="mb-5 border p-7" style={{ borderColor: 'var(--eph-accent-edge)', background: 'var(--eph-panel)' }}>
+    <div className="mb-5 border p-7" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface)' }}>
       <span className="font-mono" style={{ fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--eph-muted)' }}>
         Capacidad de regulación
       </span>

@@ -191,7 +191,11 @@ export default function AppShell({ children }: { children: ReactNode }) {
     }
   }
 
-  const viewKey = PATH_TO_VIEW[pathname] ?? "training";
+  // "" (no matchea ningún item de CLIENT_NAV/ADMIN_NAV) en vez de "training"
+  // — con ese fallback, entrar a "/" (pantalla principal) o a cualquier ruta
+  // sin mapeo (ej. /configuracion) dejaba "Workout" resaltado en el nav sin
+  // que el cliente estuviera ahí.
+  const viewKey = PATH_TO_VIEW[pathname] ?? "";
   const isAdmin = role === "admin";
 
   return (

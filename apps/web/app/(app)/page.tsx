@@ -136,6 +136,10 @@ export default function InicioPage() {
           const path = VIEW_TO_PATH[link.key] || `/${link.key}`;
           const state = isAdmin ? "ok" : getModuleAccessState(link.key, { moduleAccess, planExpired });
           const expired = state === "expired";
+          // Mismo diseño que las cards de "Tus protocolos" en Stress (pedido
+          // explícito): fondo neutro, borde fino neutro + franja superior
+          // dorada, texto centrado — en vez del border-completo plano que
+          // tenía esta grilla antes.
           return (
             <Link
               key={link.key}
@@ -149,10 +153,12 @@ export default function InicioPage() {
               style={{
                 display: "block",
                 position: "relative",
-                background: "var(--eph-surface)",
+                background: "var(--eph-surface-2)",
                 border: "1px solid var(--eph-line)",
+                borderTop: "3px solid var(--eph-accent)",
                 borderRadius: "0",
                 padding: "20px 20px",
+                textAlign: "center",
                 textDecoration: "none",
                 transition: "border-color 0.2s ease",
               }}
@@ -161,6 +167,7 @@ export default function InicioPage() {
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.borderColor = "var(--eph-line)";
+                e.currentTarget.style.borderTopColor = "var(--eph-accent)";
               }}
             >
               {expired && (
@@ -169,7 +176,7 @@ export default function InicioPage() {
                 </div>
               )}
               <div
-                className="font-display"
+                className="eph-num font-display"
                 style={{
                   fontSize: 17,
                   fontWeight: 400,

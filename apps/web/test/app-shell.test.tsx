@@ -105,6 +105,30 @@ describe('AppShell', () => {
     expect(screen.getByText('Contenido real')).toBeInTheDocument();
   });
 
+  // Bug reportado: entrar a "/" con el baseline ya completo mostraba
+  // correctamente el contenido de la pantalla principal, pero el nav
+  // quedaba con "Workout" resaltado como si esa fuera la pestaña activa
+  // (viewKey caía al fallback "training" al no tener "/" mapeado).
+  it('does not highlight "Workout" as active on "/" (the home screen)', async () => {
+    usePathnameMock.mockReturnValue('/');
+    vi.mocked(useAuth).mockReturnValue({
+      role: 'cliente', isLoading: false, planExpired: false, planEndDate: '2099-01-01',
+      isAuthenticated: true, user: { id: 'client-1', name: 'Ana', email: 'ana@example.com' },
+      clientType: 'coaching_1_1', onboardingComplete: true, moduleAccess: {}, logout: vi.fn(),
+    } as unknown as ReturnType<typeof useAuth>);
+
+    render(
+      <ThemeRoot>
+        <AppShell><p>Contenido real</p></AppShell>
+      </ThemeRoot>,
+    );
+
+    await screen.findByText('Contenido real', {}, { timeout: 3000 });
+    const workoutTabs = screen.getAllByRole('button', { name: 'Workout' });
+    expect(workoutTabs.length).toBeGreaterThan(0);
+    for (const tab of workoutTabs) expect(tab.className).not.toContain('active');
+  });
+
   it('does not show the banner for a client whose plan is not expired', async () => {
     usePathnameMock.mockReturnValue('/training');
     vi.mocked(useAuth).mockReturnValue({
