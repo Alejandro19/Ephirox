@@ -50,3 +50,32 @@ export async function getRecentCases(req: Request, res: Response) {
   const cases = await casesService.listRecentCasesForModule(module);
   return ok(res, { cases });
 }
+
+export async function listCasesForModule(req: Request, res: Response) {
+  const module = typeof req.query.module === 'string' ? req.query.module : 'stress';
+  const search = typeof req.query.search === 'string' ? req.query.search : undefined;
+  const status = typeof req.query.status === 'string' ? (req.query.status as 'activo' | 'vencido' | 'completado') : undefined;
+  const protocolId = typeof req.query.protocolId === 'string' ? req.query.protocolId : undefined;
+  const cases = await casesService.listCasesForModule(module, { search, status, protocolId });
+  return ok(res, { cases });
+}
+
+export async function getCaseDetail(req: Request, res: Response) {
+  const detail = await casesService.getCaseDetail(req.params.caseId);
+  if (!detail) return err(res, 'Caso no encontrado.', 404);
+  return ok(res, { detail });
+}
+
+export async function getProtocolEffectiveness(req: Request, res: Response) {
+  const effectiveness = await casesService.computeProtocolEffectiveness(req.params.protocolId);
+  return ok(res, { effectiveness });
+}
+
+export async function exportCasesCsv(req: Request, res: Response) {
+  const module = typeof req.query.module === 'string' && req.query.module !== 'all' ? req.query.module : undefined;
+  const onlyCompleted = req.query.status !== 'all';
+  const csv = await casesService.exportCasesCsv(module, onlyCompleted);
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', `attachment; filename="casos-etiquetados-${module ?? 'todos'}.csv"`);
+  return res.status(200).send(csv);
+}

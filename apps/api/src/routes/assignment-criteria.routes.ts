@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { AssignmentCriteriaInputSchema, MetricsCatalogUpdateSchema } from '@latribu/shared-types';
+import { AssignmentCriteriaInputSchema, MetricsCatalogInputSchema, MetricsCatalogUpdateSchema } from '@latribu/shared-types';
 import { validateBody } from '../middleware/validate.js';
 import { asyncHandler } from '../middleware/async-handler.js';
 import { authMiddleware, adminOnly } from '../middleware/auth.middleware.js';
@@ -10,12 +10,27 @@ export const assignmentCriteriaRouter = Router();
 
 assignmentCriteriaRouter.get('/admin/metrics-catalog', authMiddleware, adminOnly, asyncHandler(metricsController.listMetrics));
 
+assignmentCriteriaRouter.post(
+  '/admin/metrics-catalog',
+  authMiddleware,
+  adminOnly,
+  validateBody(MetricsCatalogInputSchema),
+  asyncHandler(metricsController.createMetric)
+);
+
 assignmentCriteriaRouter.patch(
   '/admin/metrics-catalog/:metricId',
   authMiddleware,
   adminOnly,
   validateBody(MetricsCatalogUpdateSchema),
   asyncHandler(metricsController.updateMetric)
+);
+
+assignmentCriteriaRouter.delete(
+  '/admin/metrics-catalog/:metricId',
+  authMiddleware,
+  adminOnly,
+  asyncHandler(metricsController.deleteMetric)
 );
 
 assignmentCriteriaRouter.get('/admin/assignment-criteria', authMiddleware, adminOnly, asyncHandler(criteriaController.listCriteria));

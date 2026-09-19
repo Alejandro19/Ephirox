@@ -39,6 +39,8 @@ export const StressCompletionInputSchema = z.object({
   // Fase 2/3: marcar completado un recurso de un protocolo reutilizable en
   // vez de una técnica legacy por-cliente.
   resource_id: z.string().uuid().nullable().optional(),
+  // Contenido del "Journal de descarga" — solo aplica a ese tipo de recurso.
+  notes: z.string().nullable().optional(),
 });
 export type StressCompletionInput = z.infer<typeof StressCompletionInputSchema>;
 
@@ -61,6 +63,11 @@ export const STRESS_PROTOCOL_STATUSES = ['borrador', 'en_revision_clinica', 'pub
 export const StressProtocolStatusSchema = z.enum(STRESS_PROTOCOL_STATUSES);
 export type StressProtocolStatus = z.infer<typeof StressProtocolStatusSchema>;
 
+// Frecuencia sugerida al cliente para practicar el protocolo — texto libre
+// en la card (spec pedido explícito), pero la UI ofrece un set cerrado de
+// opciones comunes para no dejarlo en blanco por accidente.
+export const STRESS_SUGGESTED_FREQUENCIES = ['1x / día', '2x / día', '3x / día', 'Según necesidad'] as const;
+
 export const StressProtocolInputSchema = z.object({
   name: z.string().min(1),
   mechanism: z.string().nullable().optional(),
@@ -69,6 +76,11 @@ export const StressProtocolInputSchema = z.object({
   // Fase 4: selector "Criterio guardado" del form de protocolo — un uuid de
   // assignment_criteria (Fase 5/6), o null para quitarlo.
   criteria_id: z.string().uuid().nullable().optional(),
+  suggested_frequency: z.string().nullable().optional(),
+  // Semanas por defecto del ciclo de este protocolo — se usa como
+  // labeled_cases.cycle_weeks al asignarlo, salvo que se pase otro valor
+  // explícito (ver labeled-cases.service.ts::createCase).
+  default_cycle_weeks: z.coerce.number().int().min(1).nullable().optional(),
 });
 export type StressProtocolInput = z.infer<typeof StressProtocolInputSchema>;
 

@@ -1,9 +1,14 @@
 import { z } from 'zod';
 
-// Catálogo de marcadores (spec punto 21.1) — poblado por una migración de
-// seed controlada por código (ver apps/api/.../metrics-catalog.service.ts),
-// no por el admin: un field_key inventado a mano rompería un criterio en
-// silencio. El admin solo activa/desactiva y ajusta reference_range.
+// Catálogo de marcadores (spec punto 21.1) — se sembró originalmente por
+// código (ver apps/api/.../metrics-catalog.service.ts::SEED_METRICS) con
+// field_key verificados a mano contra el schema Drizzle real, pero el admin
+// puede crear/editar/eliminar marcadores propios desde acá (pedido
+// explícito). Para wearable/cognitive_load el field_key sale de un select
+// cerrado en el form (AdminMetricsCatalogPanel), no de texto libre, así se
+// mantiene la mitigación original al riesgo de typo — lab_panel/
+// morning_checkin sí son texto libre porque leen de datos JSON sin columnas
+// fijas que enumerar.
 export const METRIC_SOURCES = ['wearable', 'lab_panel', 'cognitive_load', 'morning_checkin'] as const;
 export const MetricSourceSchema = z.enum(METRIC_SOURCES);
 export type MetricSource = z.infer<typeof MetricSourceSchema>;
@@ -12,7 +17,21 @@ export const METRIC_AGGREGATIONS = ['latest', 'avg_7d', 'avg_14d'] as const;
 export const MetricAggregationSchema = z.enum(METRIC_AGGREGATIONS);
 export type MetricAggregation = z.infer<typeof MetricAggregationSchema>;
 
+export const MetricsCatalogInputSchema = z.object({
+  name: z.string().min(1),
+  unit: z.string().nullable().optional(),
+  source: MetricSourceSchema,
+  field_key: z.string().min(1),
+  aggregation: MetricAggregationSchema.optional(),
+  reference_range: z.object({ min: z.number().nullable().optional(), max: z.number().nullable().optional() }).nullable().optional(),
+});
+export type MetricsCatalogInput = z.infer<typeof MetricsCatalogInputSchema>;
+
 export const MetricsCatalogUpdateSchema = z.object({
+  name: z.string().min(1).optional(),
+  unit: z.string().nullable().optional(),
+  field_key: z.string().min(1).optional(),
+  aggregation: MetricAggregationSchema.optional(),
   active: z.boolean().optional(),
   reference_range: z.object({ min: z.number().nullable().optional(), max: z.number().nullable().optional() }).nullable().optional(),
 });

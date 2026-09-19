@@ -24,7 +24,13 @@ export async function markCompletion(
 
   const [completion] = await db
     .insert(stressCompletions)
-    .values({ clientId, techniqueId: input.technique_id ?? null, completedDate: date })
+    .values({
+      clientId,
+      techniqueId: input.technique_id ?? null,
+      resourceId: input.resource_id ?? null,
+      notes: input.notes ?? null,
+      completedDate: date,
+    })
     .returning();
   return { completion, created: true };
 }

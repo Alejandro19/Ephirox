@@ -1,7 +1,7 @@
 import { eq, asc } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import { metricsCatalog, assignmentCriteria, type MetricsCatalogEntry } from '../models/schema.js';
-import type { MetricsCatalogUpdate, ConditionNode } from '@latribu/shared-types';
+import type { MetricsCatalogInput, MetricsCatalogUpdate, ConditionNode } from '@latribu/shared-types';
 
 // Seed controlado por código (ver comentario de metricsCatalog en schema.ts)
 // — cada fieldKey está verificado contra el schema Drizzle real (no
@@ -56,8 +56,27 @@ export async function findMetricById(metricId: string): Promise<MetricsCatalogEn
   return rows[0];
 }
 
+export async function createMetric(input: MetricsCatalogInput): Promise<MetricsCatalogEntry> {
+  const [created] = await db
+    .insert(metricsCatalog)
+    .values({
+      name: input.name,
+      unit: input.unit ?? null,
+      source: input.source,
+      fieldKey: input.field_key,
+      aggregation: input.aggregation ?? 'latest',
+      referenceRange: input.reference_range ?? null,
+    })
+    .returning();
+  return created;
+}
+
 export async function updateMetric(metricId: string, input: MetricsCatalogUpdate): Promise<MetricsCatalogEntry | null> {
   const fields: Record<string, unknown> = {};
+  if (input.name !== undefined) fields.name = input.name;
+  if (input.unit !== undefined) fields.unit = input.unit;
+  if (input.field_key !== undefined) fields.fieldKey = input.field_key;
+  if (input.aggregation !== undefined) fields.aggregation = input.aggregation;
   if (input.active !== undefined) fields.active = input.active;
   if (input.reference_range !== undefined) fields.referenceRange = input.reference_range;
   const [updated] = await db.update(metricsCatalog).set(fields).where(eq(metricsCatalog.id, metricId)).returning();
@@ -67,6 +86,19 @@ export async function updateMetric(metricId: string, input: MetricsCatalogUpdate
 function collectMetricIds(node: ConditionNode): string[] {
   if ('metric_id' in node) return [node.metric_id];
   return node.rules.flatMap(collectMetricIds);
+}
+
+// Borrar un marcador que un criterio todavía referencia en su árbol de
+// condiciones lo rompería en silencio (el resolver de valores no
+// encontraría la fila) — se bloquea con un mensaje explícito en vez de
+// dejarlo pasar. Mismo criterio que ya se usa para "módulos en uso".
+export async function countCriteriaUsingMetric(metricId: string): Promise<number> {
+  const rows = await db.select({ conditions: assignmentCriteria.conditions }).from(assignmentCriteria);
+  return rows.filter((r) => collectMetricIds(r.conditions as ConditionNode).includes(metricId)).length;
+}
+
+export async function deleteMetric(metricId: string): Promise<void> {
+  await db.delete(metricsCatalog).where(eq(metricsCatalog.id, metricId));
 }
 
 // "Módulos donde se usa" cada marcador (spec 22/23.3, catálogo de

@@ -58,6 +58,9 @@ export async function deleteResource(req: Request, res: Response) {
 
 export async function uploadResourceAudio(req: Request, res: Response) {
   if (!req.file) return err(res, 'No se recibió ningún audio.');
+  if (!req.file.mimetype.startsWith('audio/')) {
+    return err(res, 'El archivo debe ser un audio (.mp3, .wav, .m4a, .ogg).');
+  }
   const resource = await protocolsService.uploadResourceAudio(req.params.resourceId, req.file);
   if (!resource) return err(res, 'Recurso no encontrado.', 404);
   return ok(res, { resource });
@@ -65,6 +68,9 @@ export async function uploadResourceAudio(req: Request, res: Response) {
 
 export async function uploadResourceVideo(req: Request, res: Response) {
   if (!req.file) return err(res, 'No se recibió ningún video.');
+  if (!req.file.mimetype.startsWith('video/')) {
+    return err(res, 'El archivo debe ser un video (.mp4, .mov, .webm).');
+  }
   const resource = await protocolsService.uploadResourceVideo(req.params.resourceId, req.file);
   if (!resource) return err(res, 'Recurso no encontrado.', 404);
   return ok(res, { resource });

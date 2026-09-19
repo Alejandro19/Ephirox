@@ -6,6 +6,7 @@ export type LegalAcceptanceInput = {
   dataPolicyVersion: string;
   termsVersion: string;
   sensitiveDataConsent: boolean;
+  dataResearchConsent?: boolean;
   acceptedAt: string;
 };
 
@@ -25,8 +26,18 @@ export async function recordLegalAcceptance(executor: Executor, clientId: string
     dataPolicyVersion: input.dataPolicyVersion,
     termsVersion: input.termsVersion,
     sensitiveDataConsent: input.sensitiveDataConsent,
+    dataResearchConsent: input.dataResearchConsent ?? null,
     acceptedAt: new Date(input.acceptedAt),
   });
+}
+
+// "Consentimiento de datos" mostrado en el detalle de un caso etiquetado
+// (punto 24/25.4) — el de la ÚLTIMA aceptación del cliente, no por-caso.
+// null explícito (no false) cuando nunca se capturó este campo (cuenta
+// registrada antes de agregarlo) — se distingue de un "No" real.
+export async function getDataResearchConsentStatus(clientId: string): Promise<boolean | null> {
+  const latest = await findLatestAcceptanceByClientId(clientId);
+  return latest?.dataResearchConsent ?? null;
 }
 
 // Lectura — sección "Privacidad y datos" del panel de cuenta: muestra al

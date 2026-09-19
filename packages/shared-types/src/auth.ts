@@ -17,6 +17,10 @@ export const LegalAcceptanceInputSchema = z.object({
   dataPolicyVersion: z.string().min(1),
   termsVersion: z.string().min(1),
   sensitiveDataConsent: z.boolean(),
+  // Autorización específica y separada (punto 25.4) para usar los datos del
+  // cliente, anonimizados, en el dataset de casos etiquetados — opcional
+  // (no bloquea completar el registro), a diferencia de las otras dos.
+  dataResearchConsent: z.boolean().optional(),
   acceptedAt: z.string().datetime(),
 });
 export type LegalAcceptanceInput = z.infer<typeof LegalAcceptanceInputSchema>;

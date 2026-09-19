@@ -36,6 +36,8 @@ export async function createProtocol(input: StressProtocolInput, createdBy: stri
       mechanism: input.mechanism ?? null,
       status: input.status ?? 'borrador',
       sortOrder: input.sort_order ?? 0,
+      suggestedFrequency: input.suggested_frequency ?? null,
+      defaultCycleWeeks: input.default_cycle_weeks ?? 12,
       createdBy,
     })
     .returning();
@@ -49,6 +51,8 @@ export async function updateProtocol(protocolId: string, input: Partial<StressPr
   if (input.status !== undefined) fields.status = input.status;
   if (input.sort_order !== undefined) fields.sortOrder = input.sort_order;
   if (input.criteria_id !== undefined) fields.criteriaId = input.criteria_id;
+  if (input.suggested_frequency !== undefined) fields.suggestedFrequency = input.suggested_frequency;
+  if (input.default_cycle_weeks !== undefined) fields.defaultCycleWeeks = input.default_cycle_weeks;
   const [protocol] = await db.update(stressProtocols).set(fields).where(eq(stressProtocols.id, protocolId)).returning();
   return protocol ?? null;
 }

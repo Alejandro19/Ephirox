@@ -430,6 +430,8 @@ export const stressProtocols = pgTable('stress_protocols', {
   mechanism: text('mechanism'),
   status: text('status').notNull().default('borrador'), // 'borrador' | 'en_revision_clinica' | 'publicado'
   criteriaId: uuid('criteria_id').references(() => assignmentCriteria.id),
+  suggestedFrequency: text('suggested_frequency'),
+  defaultCycleWeeks: integer('default_cycle_weeks').notNull().default(12),
   createdBy: uuid('created_by').references(() => admins.id),
   sortOrder: integer('sort_order').notNull().default(0),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
@@ -470,6 +472,10 @@ export const stressCompletions = pgTable('stress_completions', {
   clientId: uuid('client_id').notNull().references(() => clients.id, { onDelete: 'cascade' }),
   techniqueId: uuid('technique_id').references(() => stressTechniques.id, { onDelete: 'set null' }),
   resourceId: uuid('resource_id').references(() => stressProtocolResources.id, { onDelete: 'set null' }),
+  // Contenido del "Journal de descarga" cuando el recurso completado es ese
+  // tipo — null para el resto (respiración/meditación/actividad no escriben
+  // nada, solo marcan hecho).
+  notes: text('notes'),
   completedDate: date('completed_date').notNull().defaultNow(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 }, (table) => ({
@@ -909,6 +915,17 @@ export const legalAcceptances = pgTable('legal_acceptances', {
   dataPolicyVersion: text('data_policy_version').notNull(),
   termsVersion: text('terms_version').notNull(),
   sensitiveDataConsent: boolean('sensitive_data_consent').notNull(),
+  // Autorización específica y separada (punto 25.4) para usar los datos del
+  // cliente, anonimizados, en el dataset propietario de casos etiquetados —
+  // distinta de sensitiveDataConsent (tratamiento de datos de salud para el
+  // servicio en sí). Nullable a propósito: las cuentas registradas antes de
+  // agregar esta casilla no tienen forma honesta de haberla aceptado, así
+  // que quedan en null ("pendiente"), nunca en true por default. No es
+  // obligatoria para completar el registro — solo condiciona si los casos
+  // de ese cliente entran al dataset agregado/export (ver
+  // labeled-cases.service.ts::isCaseDatasetEligible). Esto no reemplaza
+  // asesoría legal — la redacción final del texto la define Alejandro.
+  dataResearchConsent: boolean('data_research_consent'),
   acceptedAt: timestamp('accepted_at', { withTimezone: true }).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 }, (table) => ({
@@ -1008,6 +1025,12 @@ export const labeledCases = pgTable('labeled_cases', {
   clientId: uuid('client_id').notNull().references(() => clients.id, { onDelete: 'cascade' }),
   module: text('module').notNull(), // 'stress' | 'training' | 'nutrition' | 'rest'
   protocolId: uuid('protocol_id'),
+  // Regla de asignación vigente AL MOMENTO de crear el caso — copiada del
+  // protocolo, no referenciada en vivo: si la regla se edita después
+  // (nueva versión), este caso sigue mostrando la que realmente lo activó
+  // (punto 25 — "los casos ya creados conservan la regla vigente al
+  // momento de su asignación", para que el dataset siga siendo auditable).
+  criteriaId: uuid('criteria_id').references(() => assignmentCriteria.id),
   mentorId: uuid('mentor_id').references(() => mentors.id),
   assignedBy: uuid('assigned_by').notNull().references(() => admins.id),
   // Copia congelada del baseline del cliente al momento de asignar — igual
@@ -1016,7 +1039,10 @@ export const labeledCases = pgTable('labeled_cases', {
   baselineSnapshot: jsonb('baseline_snapshot').notNull().default({}),
   cycleWeeks: integer('cycle_weeks').notNull().default(12),
   assignedAt: timestamp('assigned_at', { withTimezone: true }).defaultNow(),
-  outcome: text('outcome'), // null mientras activo; 'mejora' | 'sin_cambio' | 'derivado' | 'cerrado'
+  // Escala estandarizada de 5 opciones (punto 25.3, ver OUTCOME_RATINGS) —
+  // null mientras el caso está activo; se fija sola con la valoración del
+  // último checkpoint al completarlo (ver updateCheckpoint).
+  outcome: text('outcome'),
   closedAt: timestamp('closed_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
@@ -1031,6 +1057,10 @@ export const labeledCaseCheckpoints = pgTable('labeled_case_checkpoints', {
   caseId: uuid('case_id').notNull().references(() => labeledCases.id, { onDelete: 'cascade' }),
   weekNumber: integer('week_number').notNull(), // 6 | 12
   status: text('status').notNull().default('pendiente'), // 'pendiente' | 'completado' | 'omitido'
+  // Valoración estandarizada de 5 opciones (punto 25.3, OUTCOME_RATINGS) —
+  // se fija al registrar el checkpoint como 'completado'; null mientras
+  // está pendiente/omitido.
+  valoracion: text('valoracion'),
   notes: text('notes'),
   completedAt: timestamp('completed_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),

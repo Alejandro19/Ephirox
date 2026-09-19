@@ -14,6 +14,15 @@ labeledCasesRouter.get('/admin/labeled-cases', authMiddleware, adminOnly, asyncH
 // creados para el módulo, cualquier estado.
 labeledCasesRouter.get('/admin/labeled-cases/recent', authMiddleware, adminOnly, asyncHandler(casesController.getRecentCases));
 
+// Panel "Casos Etiquetados" (punto 24) — tabla con estado/checkpoint
+// derivados, detalle completo, efectividad por protocolo y export CSV.
+// Registradas antes de "/:caseId/..." solo por prolijidad — no colisionan
+// porque cada una tiene un segmento extra que ":caseId" no matchea solo.
+labeledCasesRouter.get('/admin/labeled-cases/detailed', authMiddleware, adminOnly, asyncHandler(casesController.listCasesForModule));
+labeledCasesRouter.get('/admin/labeled-cases/export.csv', authMiddleware, adminOnly, asyncHandler(casesController.exportCasesCsv));
+labeledCasesRouter.get('/admin/labeled-cases/protocol/:protocolId/effectiveness', authMiddleware, adminOnly, asyncHandler(casesController.getProtocolEffectiveness));
+labeledCasesRouter.get('/admin/labeled-cases/:caseId/detail', authMiddleware, adminOnly, asyncHandler(casesController.getCaseDetail));
+
 labeledCasesRouter.post(
   '/admin/clients/:id/labeled-cases',
   authMiddleware,

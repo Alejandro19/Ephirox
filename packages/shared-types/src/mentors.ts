@@ -15,9 +15,18 @@ export const LABELED_CASE_MODULES = ['stress', 'training', 'nutrition', 'rest'] 
 export const LabeledCaseModuleSchema = z.enum(LABELED_CASE_MODULES);
 export type LabeledCaseModule = z.infer<typeof LabeledCaseModuleSchema>;
 
-export const LABELED_CASE_OUTCOMES = ['mejora', 'sin_cambio', 'derivado', 'cerrado'] as const;
-export const LabeledCaseOutcomeSchema = z.enum(LABELED_CASE_OUTCOMES);
-export type LabeledCaseOutcome = z.infer<typeof LabeledCaseOutcomeSchema>;
+// Valoración estandarizada de 5 opciones (punto 25.3) — reemplaza el enum
+// libre anterior ('mejora'|'sin_cambio'|'derivado'|'cerrado'): se usa tanto
+// para cada checkpoint como para la etiqueta final del caso, así ambas
+// hablan la misma escala y la etiqueta final puede derivarse sola del
+// último checkpoint registrado.
+export const OUTCOME_RATINGS = ['mejora_significativa', 'mejora_leve', 'sin_cambio', 'empeora_leve', 'empeora_significativa'] as const;
+export const OutcomeRatingSchema = z.enum(OUTCOME_RATINGS);
+export type OutcomeRating = z.infer<typeof OutcomeRatingSchema>;
+
+export const LABELED_CASE_OUTCOMES = OUTCOME_RATINGS;
+export const LabeledCaseOutcomeSchema = OutcomeRatingSchema;
+export type LabeledCaseOutcome = OutcomeRating;
 
 export const LabeledCaseInputSchema = z.object({
   module: LabeledCaseModuleSchema,
@@ -39,6 +48,7 @@ export type LabeledCaseCheckpointStatus = z.infer<typeof LabeledCaseCheckpointSt
 
 export const LabeledCaseCheckpointUpdateSchema = z.object({
   status: LabeledCaseCheckpointStatusSchema,
-  notes: z.string().nullable().optional(),
+  valoracion: OutcomeRatingSchema.nullable().optional(),
+  notes: z.string().max(140).nullable().optional(),
 });
 export type LabeledCaseCheckpointUpdate = z.infer<typeof LabeledCaseCheckpointUpdateSchema>;

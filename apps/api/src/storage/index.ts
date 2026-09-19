@@ -33,8 +33,21 @@ const storageClient = createClient(requireSupabaseUrl(), requireSupabaseServiceR
 // seguridad). No hay traversal al filesystem del host posible (esto es un
 // object key de Supabase Storage, no una ruta de disco), pero igual conviene
 // no confiar en el nombre tal cual.
+//
+// Supabase Storage además rechaza (400 "Invalid key") cualquier key con
+// espacios o con acentos/ñ que el navegador mande en forma NFD (una "ó"
+// guardada como "o" + acento combinante en vez de un solo carácter) — un
+// audio subido como "Manifestación 2026.m4a" fallaba en silencio para el
+// admin (solo "Error interno del servidor.", sin detalle) antes de esto.
+// normalize('NFD') + strip de marcas diacríticas separa la base ASCII del
+// acento; el resto de caracteres no permitidos se reemplaza por "_".
 function sanitizeFilename(name: string): string {
-  const base = name.replace(/[/\\]/g, '_').replace(/\.\./g, '_');
+  const withoutAccents = name.normalize('NFD').replace(/[̀-ͯ]/g, '');
+  const base = withoutAccents
+    .replace(/[/\\]/g, '_')
+    .replace(/\.\./g, '_')
+    .replace(/\s+/g, '_')
+    .replace(/[^A-Za-z0-9._-]/g, '_');
   return base.slice(-150) || 'archivo';
 }
 
