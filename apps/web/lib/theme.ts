@@ -22,8 +22,8 @@ export const THEME_MODE_STORAGE_KEY = "ephirox.theme-mode";
 // Los 8 módulos con toggle (ver spec §1.1) + Configuración + el menú
 // principal ("/") — los tres agregados a pedido explícito de Alejandro:
 // quedaban fijos en dark-brand sin importar el toggle elegido. Cualquier
-// otra ruta (login, admin, auth) sigue sin cubrir por el spec de reskin y
-// se trata como 'dashboard': dark-brand, sin toggle.
+// otra ruta (login, auth) sigue sin cubrir por el spec de reskin y se trata
+// como 'dashboard': dark-brand, sin toggle.
 const TOGGLEABLE_MODULE_PATHS = [
   "/onboarding",
   "/training",
@@ -45,6 +45,12 @@ export function screenForPathname(pathname: string): string {
   // /login y /set-password del lado cliente, y se quedan bloqueadas en
   // dark-brand.
   if (pathname === "/therapist") return "module";
+  // Todo /admin/* (Clientes, Protocolos, Reglas y Marcadores, etc.) también
+  // pasa a toggleable — pedido explícito: se veían con un fondo distinto
+  // (dark-brand, más negro) al resto de los módulos y sin el toggle
+  // CLARO/OSCURO visible, mientras que rutas visitadas desde el mismo panel
+  // admin como /blindspot ya lo tenían.
+  if (pathname === "/admin" || pathname.startsWith("/admin/")) return "module";
   if (
     TOGGLEABLE_MODULE_PATHS.some(
       (base) => pathname === base || pathname.startsWith(`${base}/`)

@@ -20,9 +20,13 @@ describe('screenForPathname / resolveTheme', () => {
     expect(resolveTheme(screenForPathname('/'), 'dark')).toBe('dark-carbon');
   });
 
-  it('still treats an uncovered route (e.g. admin) as brand-locked dark-brand', () => {
-    expect(screenForPathname('/admin')).toBe('dashboard');
-    expect(resolveTheme('dashboard', 'light')).toBe('dark-brand');
+  it('treats /admin and its sub-routes as a toggleable module — regression: used to be forced to dark-brand (más negro) without the toggle, inconsistent with other admin-visible routes like /blindspot', () => {
+    expect(screenForPathname('/admin')).toBe('module');
+    expect(screenForPathname('/admin/clients')).toBe('module');
+    expect(screenForPathname('/admin/stress-protocols')).toBe('module');
+    expect(isBrandLockedScreen(screenForPathname('/admin/clients'))).toBe(false);
+    expect(resolveTheme(screenForPathname('/admin/clients'), 'light')).toBe('light-premium');
+    expect(resolveTheme(screenForPathname('/admin/clients'), 'dark')).toBe('dark-carbon');
   });
 
   it('keeps login brand-locked', () => {

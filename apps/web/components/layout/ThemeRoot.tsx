@@ -45,7 +45,7 @@ const NO_FLASH_SCRIPT = `(function(){try{
   var mode=stored==='light'?'light':'dark';
   var path=window.location.pathname;
   var modules=['/onboarding','/training','/nutrition','/stress','/rest','/blindspot','/community','/evolution','/configuracion'];
-  var isModule=path==='/'||modules.some(function(base){return path===base||path.indexOf(base+'/')===0;});
+  var isModule=path==='/'||path==='/admin'||path.indexOf('/admin/')===0||modules.some(function(base){return path===base||path.indexOf(base+'/')===0;});
   var screen=path==='/login'?'login':(isModule?'module':'dashboard');
   var locked=(screen==='login'||screen==='splash'||screen==='dashboard');
   var theme=locked?'dark-brand':(mode==='light'?'light-premium':'dark-carbon');
