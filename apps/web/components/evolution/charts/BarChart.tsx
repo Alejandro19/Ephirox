@@ -44,7 +44,7 @@ export function BarChart({
   const barW = Math.max(6, (groupW - barGap * (barsPerGroup + 1)) / barsPerGroup);
 
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} width="100%" style={{ overflow: 'visible', display: 'block' }}>
+    <svg viewBox={`0 0 ${width} ${height}`} width="100%" height={height} preserveAspectRatio="none" style={{ overflow: 'visible', display: 'block' }}>
       {groups.map((g, gi) => {
         const gx = padX + gi * groupW;
         return (

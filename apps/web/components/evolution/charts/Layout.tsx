@@ -53,7 +53,7 @@ export function ChartCard({ title, caption, children }: { title: string; caption
     <div style={{ background: 'var(--eph-surface)', border: '1px solid var(--eph-line)', borderRadius: 14, padding: '20px 22px' }}>
       <div style={{ fontSize: 12.5, color: 'var(--eph-text)', fontWeight: 700 }}>{title}</div>
       {children}
-      {caption && <p style={{ fontSize: 12, color: 'var(--eph-faint)', lineHeight: 1.55, marginTop: 12 }}>{caption}</p>}
+      {caption && <p style={{ fontSize: 12, color: 'var(--eph-muted)', lineHeight: 1.55, marginTop: 12 }}>{caption}</p>}
     </div>
   );
 }

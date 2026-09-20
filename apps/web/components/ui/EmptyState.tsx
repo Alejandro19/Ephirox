@@ -6,7 +6,7 @@ export default function EmptyState({ message = "No hay datos por ahora." }: { me
       role="status"
       className="flex items-center justify-center text-center font-mono text-[10px] font-normal uppercase tracking-[0.16em]"
       style={{
-        color: "var(--eph-faint)",
+        color: "var(--eph-muted)",
         padding: "40px 16px",
         backgroundImage: "var(--eph-hatch)",
         border: "1px solid var(--eph-line)",

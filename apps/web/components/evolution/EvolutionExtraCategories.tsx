@@ -48,14 +48,10 @@ export function StressEvolutionSection({
       </StatRow>
       <ChartGrid>
         <ChartCard title="Capacidad de regulación — tendencia">
-          {capacityPoints.length >= 2 ? (
-            <Trend points={capacityPoints} baseline={capacityTypical} tip={tip} color="var(--eph-pillar-stress)" />
-          ) : (
-            <p style={{ fontSize: 12, color: 'var(--eph-faint)' }}>Necesitas más días de datos wearable para ver tu tendencia.</p>
-          )}
+          <Trend points={capacityPoints} baseline={capacityTypical} tip={tip} color="var(--eph-pillar-stress)" emptyMessage="Necesitas más días de datos para ver tu tendencia." />
         </ChartCard>
         <ChartCard title="Adherencia al protocolo activo — últimas 8 semanas">
-          <Trend points={adherencePoints} tip={tip} color="var(--eph-pillar-stress)" unit="%" />
+          <Trend points={adherencePoints} tip={tip} color="var(--eph-pillar-stress)" unit="%" emptyMessage="Necesitas más semanas de historial para ver tu tendencia." />
         </ChartCard>
       </ChartGrid>
     </>
@@ -127,13 +123,11 @@ export function SleepEvolutionSection({ metrics, tip }: { metrics: WearableMetri
           </ChartCard>
         </ChartGrid>
       )}
-      {wakeupPoints.length >= 2 && (
-        <div style={{ marginTop: 16 }}>
-          <ChartCard title="Hora de despertar — últimos 8 días" caption="Eje en hora del día (7.5 = 7:30 a. m.), no en duración.">
-            <Trend points={wakeupPoints} tip={tip} color="var(--eph-pillar-sleep)" unit="h" />
-          </ChartCard>
-        </div>
-      )}
+      <div style={{ marginTop: 16 }}>
+        <ChartCard title="Hora de despertar — últimos 8 días" caption="Eje en hora del día (7.5 = 7:30 a. m.), no en duración.">
+          <Trend points={wakeupPoints} tip={tip} color="var(--eph-pillar-sleep)" unit="h" emptyMessage="Necesitas más días de datos wearable para ver tu tendencia." />
+        </ChartCard>
+      </div>
     </>
   );
 }
@@ -168,10 +162,10 @@ export function RecoveryEvolutionSection({ metrics, tip }: { metrics: WearableMe
       </StatRow>
       <ChartGrid>
         <ChartCard title="HRV basal — tendencia">
-          {hrvPoints.length >= 2 ? <Trend points={hrvPoints} baseline={hrvTypical} unit=" ms" tip={tip} color="var(--eph-pillar-recovery)" /> : <p style={{ fontSize: 12, color: 'var(--eph-faint)' }}>Sin suficientes datos.</p>}
+          <Trend points={hrvPoints} baseline={hrvTypical} unit=" ms" tip={tip} color="var(--eph-pillar-recovery)" emptyMessage="Sin suficientes datos." />
         </ChartCard>
         <ChartCard title="FC en reposo — tendencia">
-          {fcPoints.length >= 2 ? <Trend points={fcPoints} baseline={fcTypical} unit=" bpm" tip={tip} color="var(--eph-pillar-recovery)" /> : <p style={{ fontSize: 12, color: 'var(--eph-faint)' }}>Sin suficientes datos.</p>}
+          <Trend points={fcPoints} baseline={fcTypical} unit=" bpm" tip={tip} color="var(--eph-pillar-recovery)" emptyMessage="Sin suficientes datos." />
         </ChartCard>
       </ChartGrid>
       {last14.length > 0 && (

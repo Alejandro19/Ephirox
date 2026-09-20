@@ -39,11 +39,9 @@ function EvoFisicaSparkCard({
           {good ? '▲' : '▼'} {deltaText}
         </div>
       )}
-      {points.length > 0 && (
-        <div style={{ marginTop: 10 }}>
-          <Trend points={points} width={160} height={50} color="var(--eph-accent)" padTop={8} padBottom={6} padX={6} tip={tip} unit={unit} />
-        </div>
-      )}
+      <div style={{ marginTop: 10 }}>
+        <Trend points={points} width={160} height={50} color="var(--eph-accent)" padTop={8} padBottom={6} padX={6} tip={tip} unit={unit} emptyMessage="Sin historial" />
+      </div>
     </div>
   );
 }
@@ -190,11 +188,7 @@ export function IndiceRendimientoSection({
         <span className="eph-num" style={{ fontFamily: 'var(--font-cormorant), serif', fontSize: 28, color: 'var(--eph-text)' }}>{value}</span>
         {typical != null && <span style={{ fontSize: 11.5, color: 'var(--eph-faint)' }}>Tu típico: <b style={{ color: 'var(--eph-muted)' }}>{typical}</b></span>}
       </div>
-      {points.length >= 2 ? (
-        <Trend points={points} baseline={typical} tip={tip} />
-      ) : (
-        <p style={{ fontSize: 12, color: 'var(--eph-faint)' }}>Necesitas más semanas de historial para ver tu tendencia.</p>
-      )}
+      <Trend points={points} baseline={typical} tip={tip} emptyMessage="Necesitas más semanas de historial para ver tu tendencia." />
     </ChartCard>
   );
 }
