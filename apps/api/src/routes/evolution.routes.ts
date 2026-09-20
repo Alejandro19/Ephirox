@@ -26,6 +26,16 @@ evolutionRouter.post(
   asyncHandler(evolutionController.createCheckin)
 );
 
+// GET /api/clients/:id/cohort-report — "Reporte de mi equipo" (spec 28).
+// Sin requireOnboardingComplete/requirePermission('evolution'): es su propia
+// puerta de acceso, verificada server-side dentro del controller contra
+// permissions.reporteEquipo (nunca solo ocultando la pestaña en el frontend).
+evolutionRouter.get(
+  '/clients/:id/cohort-report',
+  authMiddleware, ownerOrAdmin,
+  asyncHandler(evolutionController.getCohortReport)
+);
+
 // GET /api/clients/:id/personal-records
 evolutionRouter.get(
   '/clients/:id/personal-records',

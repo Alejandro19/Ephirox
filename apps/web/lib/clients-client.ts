@@ -62,6 +62,9 @@ export type ClientDetail = ClientSummary & {
   // a mano por un admin, uno por uno, para el cliente designado como líder
   // de su cohorte.
   permissions?: Record<string, boolean>;
+  // Agrupación de "Reporte de mi equipo" (spec 28) — id del cliente-líder de
+  // cuya cohorte este cliente es miembro; null si no pertenece a ninguna.
+  cohortLeaderId?: string | null;
 };
 
 export type MembershipPayment = {
@@ -187,6 +190,20 @@ export async function updateClientPermissions(id: string, permissions: Record<st
   });
   const body = await res.json();
   if (!body.success) throw new Error(body.error || 'Error al actualizar los permisos del cliente.');
+  return body.client;
+}
+
+// Agrupación de "Reporte de mi equipo" (spec 28) — a qué cliente-líder
+// pertenece este cliente. null desvincula al cliente de cualquier equipo.
+export async function updateClientCohortLeader(id: string, cohortLeaderId: string | null): Promise<ClientDetail> {
+  const res = await fetch(`${API_BASE_URL}/api/clients/${id}/cohort-leader`, {
+    method: 'PATCH',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ cohortLeaderId }),
+  });
+  const body = await res.json();
+  if (!body.success) throw new Error(body.error || 'Error al actualizar el equipo del cliente.');
   return body.client;
 }
 

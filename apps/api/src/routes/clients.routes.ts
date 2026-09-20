@@ -6,6 +6,7 @@ import {
   StatusPatchSchema,
   ClientTypePatchSchema,
   RenewPlanPatchSchema,
+  CohortLeaderPatchSchema,
 } from '@latribu/shared-types';
 import { validateBody } from '../middleware/validate.js';
 import { asyncHandler } from '../middleware/async-handler.js';
@@ -25,6 +26,7 @@ clientsRouter.put('/:id', authMiddleware, ownerOrAdmin, validateBody(ClientUpdat
 clientsRouter.patch('/:id/permissions', authMiddleware, adminOnly, validateBody(PermissionsPatchSchema), asyncHandler(clientsController.updatePermissions));
 clientsRouter.patch('/:id/status', authMiddleware, adminOnly, validateBody(StatusPatchSchema), asyncHandler(clientsController.updateStatus));
 clientsRouter.patch('/:id/client-type', authMiddleware, adminOnly, validateBody(ClientTypePatchSchema), asyncHandler(clientsController.updateClientType));
+clientsRouter.patch('/:id/cohort-leader', authMiddleware, adminOnly, validateBody(CohortLeaderPatchSchema), asyncHandler(clientsController.updateCohortLeader));
 clientsRouter.patch('/:id/renew-plan', authMiddleware, adminOnly, validateBody(RenewPlanPatchSchema), asyncHandler(clientsController.renewPlan));
 clientsRouter.patch('/:id/deletion-request/resolve', authMiddleware, adminOnly, asyncHandler(clientsController.resolveDeletionRequest));
 clientsRouter.post('/:id/resend-invitation', authMiddleware, adminOnly, asyncHandler(clientsController.resendInvitation));

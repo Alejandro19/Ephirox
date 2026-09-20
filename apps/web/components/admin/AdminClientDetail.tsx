@@ -6,6 +6,7 @@ import useSWR from "swr";
 import { getCheckinsStatus } from "../../lib/checkins-client";
 import {
   fetchClient,
+  fetchClients,
   activateClient,
   deactivateClient,
   saveClientType,
@@ -16,7 +17,9 @@ import {
   approveBaseline,
   approveWearable,
   updateClientPermissions,
+  updateClientCohortLeader,
   type ClientDetail,
+  type ClientSummary,
   type MembershipPayment,
 } from "../../lib/clients-client";
 import {
@@ -115,6 +118,10 @@ export default function AdminClientDetail({ clientId }: { clientId: string }) {
   const [approvingBaseline, setApprovingBaseline] = useState(false);
   const [approvingWearable, setApprovingWearable] = useState(false);
   const [savingReporteEquipo, setSavingReporteEquipo] = useState(false);
+  const [savingCohortLeader, setSavingCohortLeader] = useState(false);
+  // Lista completa solo para poblar el selector "Pertenece al equipo de" —
+  // se pide una sola vez por render de esta pantalla, no en cada tecla.
+  const { data: allClients } = useSWR("clients-list-for-cohort", () => fetchClients());
 
   const load = useCallback(async () => {
     setLoading(true); setError(null);
@@ -178,6 +185,23 @@ export default function AdminClientDetail({ clientId }: { clientId: string }) {
       showToast(e instanceof Error ? e.message : "Error.", "error");
     } finally {
       setSavingReporteEquipo(false);
+    }
+  };
+
+  // A qué cliente-líder pertenece este cliente (spec 28) — separado del
+  // toggle de arriba: una cosa es "quién puede VER la pestaña" (el líder),
+  // otra "de qué equipo es cada quien" (esta relación, la tienen los
+  // miembros del equipo, no el líder).
+  const handleChangeCohortLeader = async (leaderId: string) => {
+    setSavingCohortLeader(true);
+    try {
+      const updated = await updateClientCohortLeader(clientId, leaderId || null);
+      setClient(updated);
+      showToast(leaderId ? "Cliente asignado a ese equipo." : "Cliente desvinculado de su equipo.", "success");
+    } catch (e: unknown) {
+      showToast(e instanceof Error ? e.message : "Error.", "error");
+    } finally {
+      setSavingCohortLeader(false);
     }
   };
 
@@ -502,6 +526,33 @@ export default function AdminClientDetail({ clientId }: { clientId: string }) {
               Este cliente puede ver &quot;Reporte de mi equipo&quot;
             </span>
           </label>
+        </div>
+      )}
+
+      {/* Agrupación de cohorte (spec 28) — a qué líder pertenece este
+          cliente. Separado del checkbox de arriba: el líder ve el reporte,
+          los miembros de su equipo solo necesitan estar agrupados acá. */}
+      {(client.client_type || client.clientType) === "mentoring" && (
+        <div style={cardStyle}>
+          <h3 style={cardTitleStyle}>Equipo (cohorte)</h3>
+          <p style={{ fontSize: 12.5, color: "var(--eph-muted)", margin: "-8px 0 14px" }}>
+            Si este cliente es miembro del equipo de otro cliente designado como líder, sus datos (anonimizados) entran al &quot;Reporte de mi equipo&quot; de ese líder.
+          </p>
+          <label style={labelStyle} htmlFor="cohort-leader-select">Pertenece al equipo de</label>
+          <select
+            id="cohort-leader-select"
+            value={client.cohortLeaderId ?? ""}
+            disabled={savingCohortLeader}
+            onChange={(e) => handleChangeCohortLeader(e.target.value)}
+            style={{ ...inputStyle, height: 40, width: 280 }}
+          >
+            <option value="">— Ningún equipo —</option>
+            {(allClients ?? [])
+              .filter((c: ClientSummary) => c.id !== clientId && (c.client_type || c.clientType) === "mentoring")
+              .map((c: ClientSummary) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+          </select>
         </div>
       )}
 

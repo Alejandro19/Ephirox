@@ -16,6 +16,7 @@ import { CheckinAccordion } from './CheckinAccordion';
 import { InsightsSection } from '../insights/InsightsSection';
 import { ClientLabCheckpoints } from './ClientLabCheckpoints';
 import { BiologicalAgeCard } from './BiologicalAgeCard';
+import { CohortReportSection } from './CohortReportSection';
 import ChartTooltip, { type TooltipHandle } from './charts/Tooltip';
 import { CategorySection, CategoryFilterBar, type EvolutionCategory } from './charts/CategorySection';
 
@@ -37,6 +38,17 @@ const CATEGORIES: EvolutionCategory[] = [
 
 const subHeadingStyle: React.CSSProperties = { fontFamily: 'var(--font-cormorant), Georgia, serif', fontSize: 16, fontWeight: 400, color: 'var(--eph-text)', margin: '0 0 12px' };
 
+// Mismo patrón visual que las sub-pestañas de Clientes (Leads/Mentores/Frases,
+// ver app/(app)/admin/clients/page.tsx) — "Reporte de mi equipo" (spec 28)
+// solo se muestra si el propio cliente tiene permissions.reporteEquipo, pero
+// el backend re-verifica esto igual (nunca confía en que el tab esté oculto).
+const subtabButtonStyle = (active: boolean): React.CSSProperties => ({
+  border: 'none', background: 'transparent', cursor: 'pointer',
+  padding: '8px 4px', marginRight: 20, position: 'relative',
+  fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
+  fontSize: 12, fontWeight: 700, color: active ? 'var(--eph-accent)' : 'var(--eph-muted)',
+});
+
 async function fetchEvolutionBundle(clientId: string, days: number) {
   const [evo, fullClient, wellnessIndex, wellnessHistory, completions, regulationCapacity, wearableMetrics] = await Promise.all([
     getEvolutionData(clientId),
@@ -50,9 +62,12 @@ async function fetchEvolutionBundle(clientId: string, days: number) {
   return { evo, fullClient, wellnessIndex, wellnessHistory, completions, regulationCapacity, wearableMetrics: wearableMetrics.data };
 }
 
+type EvolutionSubtab = 'mievolucion' | 'equipo';
+
 export function ClientEvolutionPanel({ clientId }: { clientId: string }) {
   const [range, setRange] = useState<(typeof RANGE_OPTIONS)[number]>(30);
   const [activeCat, setActiveCat] = useState('todas');
+  const [sub, setSub] = useState<EvolutionSubtab>('mievolucion');
   const tip = useRef<TooltipHandle>(null);
   const { data, error, isLoading, mutate } = useSWR(['evolution-bundle', clientId, range], () =>
     fetchEvolutionBundle(clientId, range),
@@ -88,11 +103,31 @@ export function ClientEvolutionPanel({ clientId }: { clientId: string }) {
 
   const { evo, fullClient: client, wellnessIndex, wellnessHistory, completions, regulationCapacity, wearableMetrics } = data;
   const isMentoring = client?.clientType === 'mentoring';
+  const canSeeCohortReport = (client?.permissions as Record<string, boolean> | undefined)?.reporteEquipo === true;
 
   return (
     <div>
       <ChartTooltip ref={tip} />
       {header}
+
+      {canSeeCohortReport && (
+        <div style={{ display: 'flex', borderBottom: '1px solid var(--eph-line)', marginTop: 20, marginBottom: 4 }}>
+          {([
+            { key: 'mievolucion', label: 'Mi evolución' },
+            { key: 'equipo', label: 'Reporte de mi equipo' },
+          ] as const).map((t) => (
+            <button key={t.key} type="button" style={subtabButtonStyle(sub === t.key)} onClick={() => setSub(t.key)}>
+              {t.label}
+              {sub === t.key && <span style={{ position: 'absolute', left: 0, right: 20, bottom: -1, height: 2, background: 'var(--eph-accent)' }} />}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {sub === 'equipo' && canSeeCohortReport ? (
+        <CohortReportSection clientId={clientId} />
+      ) : (
+        <>
       {isMentoring && <InsightsSection clientId={clientId} moduleKey="miEvolucion" />}
 
       {/* Selector de rango (spec 27.1) — cambia la fila de cifras y la
@@ -171,6 +206,8 @@ export function ClientEvolutionPanel({ clientId }: { clientId: string }) {
       <div style={{ marginTop: 28 }}>
         <CheckinAccordion clientId={clientId} onSaved={() => mutate()} />
       </div>
+        </>
+      )}
     </div>
   );
 }

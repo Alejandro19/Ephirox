@@ -118,4 +118,45 @@ describe('clients patch routes', () => {
       .send({ plan_start_date: '2026-02-01', plan_end_date: '2026-01-01' });
     expect(res.status).toBe(400);
   });
+
+  // spec 28 — agrupación de "Reporte de mi equipo".
+  it('assigns and clears a cohort leader', async () => {
+    const [leader] = await db
+      .insert(clients)
+      .values({ name: 'Cohort Leader', email: `cohort-leader-${Date.now()}@example.com`, passwordHash: 'x' })
+      .returning();
+
+    const assign = await request(app)
+      .patch(`/api/clients/${clientId}/cohort-leader`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ cohortLeaderId: leader.id });
+    expect(assign.status).toBe(200);
+    expect(assign.body.client.cohortLeaderId).toBe(leader.id);
+
+    const clear = await request(app)
+      .patch(`/api/clients/${clientId}/cohort-leader`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ cohortLeaderId: null });
+    expect(clear.status).toBe(200);
+    expect(clear.body.client.cohortLeaderId).toBeNull();
+
+    await db.delete(clients).where(eq(clients.id, leader.id));
+  });
+
+  it('rejects a client being its own cohort leader', async () => {
+    const res = await request(app)
+      .patch(`/api/clients/${clientId}/cohort-leader`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ cohortLeaderId: clientId });
+    expect(res.status).toBe(422);
+  });
+
+  it('rejects the cohort-leader route for a non-admin caller', async () => {
+    const clientToken = signToken({ id: clientId, role: 'cliente', name: 'Patch Client', email: 'x@example.com' });
+    const res = await request(app)
+      .patch(`/api/clients/${clientId}/cohort-leader`)
+      .set('Authorization', `Bearer ${clientToken}`)
+      .send({ cohortLeaderId: null });
+    expect(res.status).toBe(403);
+  });
 });

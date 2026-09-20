@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { renderWithSWR as render } from './swr-test-utils';
 import AdminClientDetail from '../components/admin/AdminClientDetail';
 import * as clientsClient from '../lib/clients-client';
 import * as personalInfoClient from '../lib/personal-info-client';
@@ -20,9 +21,14 @@ const MENTORING_CLIENT: clientsClient.ClientDetail = {
   status: 'active', clientType: 'mentoring', permissions: {},
 } as clientsClient.ClientDetail;
 
-function mockFetches(permissions: Record<string, boolean> = {}) {
-  vi.mocked(clientsClient.fetchClient).mockResolvedValue({ ...MENTORING_CLIENT, permissions });
+function mockFetches(permissions: Record<string, boolean> = {}, cohortLeaderId: string | null = null) {
+  vi.mocked(clientsClient.fetchClient).mockResolvedValue({ ...MENTORING_CLIENT, permissions, cohortLeaderId });
   vi.mocked(clientsClient.fetchMembershipPayments).mockResolvedValue([]);
+  vi.mocked(clientsClient.fetchClients).mockResolvedValue([
+    { ...MENTORING_CLIENT, id: 'client-1' },
+    { ...MENTORING_CLIENT, id: 'leader-1', name: 'Líder de equipo' },
+    { id: 'coaching-1', name: 'No Mentoría', email: 'x@x.com', plan: '', status: 'active', clientType: 'coaching_1_1' },
+  ]);
   vi.mocked(personalInfoClient.getPersonalInfo).mockResolvedValue(null as unknown as PersonalInfo);
   vi.mocked(labPanelsClient.listLabPanels).mockResolvedValue([]);
   vi.mocked(checkinsClient.getCheckinsStatus).mockResolvedValue({
@@ -74,5 +80,40 @@ describe('AdminClientDetail — "Reporte de mi equipo" toggle', () => {
     expect(clientsClient.updateClientPermissions).toHaveBeenCalledWith('client-1', {
       stress: true, evolution: true, reporteEquipo: true,
     });
+  });
+});
+
+// Spec 28: agrupación de cohorte — a qué líder pertenece este cliente,
+// separado del toggle de arriba (ese habilita VER el reporte; esto agrupa
+// a los miembros del equipo).
+describe('AdminClientDetail — cohort leader selector', () => {
+  it('excludes itself and non-mentoring clients from the leader options', async () => {
+    mockFetches({}, null);
+    render(<AdminClientDetail clientId="client-1" />);
+    await screen.findByText('Líder de equipo');
+    const select = screen.getByLabelText('Pertenece al equipo de');
+    expect(screen.queryByText('No Mentoría')).not.toBeInTheDocument();
+    expect(select).toHaveValue('');
+  });
+
+  it('shows the currently assigned leader selected', async () => {
+    mockFetches({}, 'leader-1');
+    render(<AdminClientDetail clientId="client-1" />);
+    await screen.findByText('Líder de equipo');
+    const select = screen.getByLabelText('Pertenece al equipo de');
+    expect(select).toHaveValue('leader-1');
+  });
+
+  it('calls updateClientCohortLeader when a leader is chosen', async () => {
+    const user = userEvent.setup();
+    mockFetches({}, null);
+    vi.mocked(clientsClient.updateClientCohortLeader).mockResolvedValue({ ...MENTORING_CLIENT, cohortLeaderId: 'leader-1' });
+
+    render(<AdminClientDetail clientId="client-1" />);
+    await screen.findByText('Líder de equipo');
+    const select = screen.getByLabelText('Pertenece al equipo de');
+    await user.selectOptions(select, 'leader-1');
+
+    expect(clientsClient.updateClientCohortLeader).toHaveBeenCalledWith('client-1', 'leader-1');
   });
 });

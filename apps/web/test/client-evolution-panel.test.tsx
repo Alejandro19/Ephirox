@@ -6,11 +6,13 @@ import { ClientEvolutionPanel } from '../components/evolution/ClientEvolutionPan
 import * as evolutionClient from '../lib/evolution-client';
 import * as clientsClient from '../lib/clients-client';
 import * as wellnessIndexClient from '../lib/wellness-index-client';
+import * as cohortClient from '../lib/evolution-cohort-client';
 import { PermissionDeniedError } from '../lib/api-client';
 
 vi.mock('../lib/evolution-client');
 vi.mock('../lib/clients-client');
 vi.mock('../lib/wellness-index-client');
+vi.mock('../lib/evolution-cohort-client');
 
 const anthro: evolutionClient.AnthropometricRecord = {
   id: 'a1', clientId: 'client-1', fecha: '2026-07-01', semana: null, mesNum: 1,
@@ -29,15 +31,18 @@ function mockFetches({
   clientType = 'coaching_1_1',
   anthropometrics = [anthro],
   inbody = [inbodyPrev, inbodyLast],
+  permissions,
 }: {
   clientType?: string;
   anthropometrics?: evolutionClient.AnthropometricRecord[];
   inbody?: evolutionClient.InbodyRecord[];
+  permissions?: Record<string, boolean>;
 } = {}) {
   vi.mocked(evolutionClient.getEvolutionData).mockResolvedValue({ checkins: [], anthropometrics, inbody });
   vi.mocked(clientsClient.fetchClient).mockResolvedValue({
     id: 'client-1', name: 'Ana', email: 'a@x.com', plan: '', status: 'active', clientType,
     trainingDays: 4, objetivos: { peso: 'bajar', grasa_corporal: 'bajar', masa_muscular: 'subir' }, nextCheckinDate: null, inbodyCadenceType: 'mensual',
+    permissions,
   });
   vi.mocked(wellnessIndexClient.getWellnessIndex).mockResolvedValue({
     value: 72, previousValue: 64, delta: 8, trend: 'up', componentsUsed: { training: 60, sleep: 80 },
@@ -106,5 +111,31 @@ describe('ClientEvolutionPanel', () => {
     vi.mocked(evolutionClient.getEvolutionData).mockRejectedValue(new PermissionDeniedError('Este módulo no está disponible para tu tipo de cuenta.'));
     render(<ClientEvolutionPanel clientId="client-1" />);
     expect(await screen.findByText('Disponible en Premium')).toBeInTheDocument();
+  });
+
+  // spec 28 — la pestaña solo aparece si el propio cliente tiene el permiso.
+  it('does not show the "Reporte de mi equipo" tab without the permission', async () => {
+    mockFetches();
+    render(<ClientEvolutionPanel clientId="client-1" />);
+    await screen.findByText('Índice de rendimiento');
+    expect(screen.queryByText('Reporte de mi equipo')).not.toBeInTheDocument();
+  });
+
+  it('shows the "Reporte de mi equipo" tab and switches to it when the permission is granted', async () => {
+    const user = userEvent.setup();
+    mockFetches({ permissions: { reporteEquipo: true } });
+    vi.mocked(cohortClient.getCohortReport).mockResolvedValue({
+      enabled: true, memberCount: 2, atRiskCount: 1, avgRecoveryScore: 60,
+      members: [{ label: 'Miembro 1', regulationDeficit: 0, atRisk: true }, { label: 'Miembro 2', regulationDeficit: 0, atRisk: false }],
+      atRiskByWeek: [], signalsByPillar: [], avgRegulationByWeek: [], avgRecoveryByWeek: [],
+    });
+
+    render(<ClientEvolutionPanel clientId="client-1" />);
+    await screen.findByText('Índice de rendimiento');
+    const tabButton = screen.getByText('Reporte de mi equipo');
+    await user.click(tabButton);
+
+    expect(await screen.findByText('Miembros en el equipo')).toBeInTheDocument();
+    expect(screen.queryByText('Índice de rendimiento')).not.toBeInTheDocument();
   });
 });

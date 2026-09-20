@@ -205,6 +205,24 @@ export async function updatePermissions(id: string, permissions: Record<string, 
   return updateClient(id, { permissions });
 }
 
+export class SelfCohortLeaderError extends Error {
+  constructor() {
+    super('Un cliente no puede ser líder de su propio equipo.');
+  }
+}
+
+// Agrupación de "Reporte de mi equipo" (spec 28) — separado de updateClient
+// porque es una relación admin-only, no un dato editable por el cliente.
+export async function updateCohortLeader(id: string, cohortLeaderId: string | null): Promise<Client | null> {
+  if (cohortLeaderId === id) throw new SelfCohortLeaderError();
+  const [client] = await db
+    .update(clients)
+    .set({ cohortLeaderId, updatedAt: new Date() })
+    .where(eq(clients.id, id))
+    .returning();
+  return client ?? null;
+}
+
 export async function updateStatus(id: string, status: 'active' | 'inactive' | 'rejected'): Promise<Client | null> {
   // Activar (inactive -> active) es el único momento en que se asigna el
   // número de miembro — de forma atómica vía secuencia de Postgres dentro de

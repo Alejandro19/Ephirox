@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, boolean, integer, serial, date, jsonb, timestamp, numeric, unique, index } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, boolean, integer, serial, date, jsonb, timestamp, numeric, unique, index, type AnyPgColumn } from 'drizzle-orm/pg-core';
 
 export const admins = pgTable('admins', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -79,6 +79,12 @@ export const clients = pgTable('clients', {
   // quedan aprobados simultáneamente por primera vez — nunca se vuelve a
   // disparar (ver onboarding.service.ts::checkWeek1Activation).
   week1ActivatedAt: timestamp('week1_activated_at', { withTimezone: true }),
+  // Agrupación de "Reporte de mi equipo" (spec 28) — si apunta a otro
+  // cliente, este cliente es miembro del equipo liderado por ese cliente.
+  // El líder tiene esto en null. Separado a propósito de `permissions.
+  // reporteEquipo`: una cosa es "quién puede ver la pestaña" (permiso), otra
+  // "de qué equipo es cada quien" (agrupación) — ver evolution-cohort.service.ts.
+  cohortLeaderId: uuid('cohort_leader_id').references((): AnyPgColumn => clients.id),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 });

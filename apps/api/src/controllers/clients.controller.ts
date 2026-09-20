@@ -6,6 +6,7 @@ import type {
   StatusPatch,
   ClientTypePatch,
   RenewPlanPatch,
+  CohortLeaderPatch,
 } from '@latribu/shared-types';
 import * as clientsService from '../services/clients.service.js';
 import * as membershipPaymentsService from '../services/membership-payments.service.js';
@@ -63,6 +64,18 @@ export async function updatePermissions(req: Request, res: Response) {
   const client = await clientsService.updatePermissions(req.params.id, permissions);
   if (!client) return err(res, 'Cliente no encontrado.', 404);
   return ok(res, { client });
+}
+
+export async function updateCohortLeader(req: Request, res: Response) {
+  const { cohortLeaderId } = req.body as CohortLeaderPatch;
+  try {
+    const client = await clientsService.updateCohortLeader(req.params.id, cohortLeaderId);
+    if (!client) return err(res, 'Cliente no encontrado.', 404);
+    return ok(res, { client });
+  } catch (e) {
+    if (e instanceof clientsService.SelfCohortLeaderError) return err(res, e.message, 422);
+    throw e;
+  }
 }
 
 export async function updateStatus(req: Request, res: Response) {

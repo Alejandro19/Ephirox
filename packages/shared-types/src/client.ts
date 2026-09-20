@@ -56,6 +56,16 @@ export const ClientTypePatchSchema = z.object({
 });
 export type ClientTypePatch = z.infer<typeof ClientTypePatchSchema>;
 
+// Agrupación para "Reporte de mi equipo" (spec 28) — a qué cliente-líder
+// pertenece este cliente. null desvincula al cliente de cualquier equipo.
+// Admin-only, separado de ClientUpdateInputSchema por la misma razón que
+// status/client_type/permissions: es una relación, no un dato editable por
+// el propio dueño del registro.
+export const CohortLeaderPatchSchema = z.object({
+  cohortLeaderId: z.string().uuid().nullable(),
+});
+export type CohortLeaderPatch = z.infer<typeof CohortLeaderPatchSchema>;
+
 // Preferencias de notificación del cliente (panel de cuenta) — separado de
 // ClientUpdateInputSchema porque, igual que permissions/status, tiene su
 // propia ruta PATCH dedicada.
