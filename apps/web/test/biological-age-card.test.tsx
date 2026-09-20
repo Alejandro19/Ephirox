@@ -24,7 +24,8 @@ describe('BiologicalAgeCard', () => {
     ]);
     render(<BiologicalAgeCard clientId="client-1" />);
     expect(await screen.findByText('32.7')).toBeInTheDocument();
-    expect(screen.getByText('Edad cronológica: 38 años')).toBeInTheDocument();
+    expect(screen.getByText('38')).toBeInTheDocument();
+    expect(screen.getByText(/menor/)).toBeInTheDocument();
   });
 
   it('shows the empty state — never a fake value — when no approved panel has a complete PhenoAge calculation', async () => {

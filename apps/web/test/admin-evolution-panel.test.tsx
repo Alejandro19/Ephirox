@@ -29,6 +29,7 @@ function mockFetches({ clientType = 'coaching_1_1', nextCheckinDate = null as st
   vi.mocked(wellnessIndexClient.getWellnessIndex).mockResolvedValue({
     value: 72, previousValue: 64, delta: 8, trend: 'up', componentsUsed: { training: 60, sleep: 80, evolution: 70 },
   });
+  vi.mocked(wellnessIndexClient.getWellnessIndexHistory).mockResolvedValue({ typical: 65, points: [] });
 }
 
 describe('AdminEvolutionPanel', () => {

@@ -4,17 +4,11 @@ import userEvent from '@testing-library/user-event';
 import { renderWithSWR as render } from './swr-test-utils';
 import { ClientEvolutionPanel } from '../components/evolution/ClientEvolutionPanel';
 import * as evolutionClient from '../lib/evolution-client';
-import * as stressClient from '../lib/stress-client';
-import * as sleepClient from '../lib/sleep-client';
-import * as trainingClient from '../lib/training-client';
 import * as clientsClient from '../lib/clients-client';
 import * as wellnessIndexClient from '../lib/wellness-index-client';
 import { PermissionDeniedError } from '../lib/api-client';
 
 vi.mock('../lib/evolution-client');
-vi.mock('../lib/stress-client');
-vi.mock('../lib/sleep-client');
-vi.mock('../lib/training-client');
 vi.mock('../lib/clients-client');
 vi.mock('../lib/wellness-index-client');
 
@@ -33,47 +27,55 @@ const inbodyLast: evolutionClient.InbodyRecord = {
 
 function mockFetches({
   clientType = 'coaching_1_1',
-  trainingDays = 4,
   anthropometrics = [anthro],
   inbody = [inbodyPrev, inbodyLast],
 }: {
   clientType?: string;
-  trainingDays?: number;
   anthropometrics?: evolutionClient.AnthropometricRecord[];
   inbody?: evolutionClient.InbodyRecord[];
 } = {}) {
   vi.mocked(evolutionClient.getEvolutionData).mockResolvedValue({ checkins: [], anthropometrics, inbody });
-  vi.mocked(stressClient.listCompletions).mockResolvedValue([]);
-  vi.mocked(sleepClient.listLogs).mockResolvedValue([]);
-  vi.mocked(trainingClient.listTrainingCompletions).mockResolvedValue([]);
-  vi.mocked(trainingClient.getStreak).mockResolvedValue({
-    streakWeeks: 2, sessionsDoneThisWeek: 2, sessionsRequiredThisWeek: 4, protectorAvailable: true, protectorUsedThisWeek: false, atRisk: false,
-  });
   vi.mocked(clientsClient.fetchClient).mockResolvedValue({
     id: 'client-1', name: 'Ana', email: 'a@x.com', plan: '', status: 'active', clientType,
-    trainingDays, objetivos: { peso: 'bajar', grasa_corporal: 'bajar', masa_muscular: 'subir' }, nextCheckinDate: null, inbodyCadenceType: 'mensual',
+    trainingDays: 4, objetivos: { peso: 'bajar', grasa_corporal: 'bajar', masa_muscular: 'subir' }, nextCheckinDate: null, inbodyCadenceType: 'mensual',
   });
   vi.mocked(wellnessIndexClient.getWellnessIndex).mockResolvedValue({
-    value: 72, previousValue: 64, delta: 8, trend: 'up', componentsUsed: { training: 60, sleep: 80, evolution: 70 },
+    value: 72, previousValue: 64, delta: 8, trend: 'up', componentsUsed: { training: 60, sleep: 80 },
+  });
+  vi.mocked(wellnessIndexClient.getWellnessIndexHistory).mockResolvedValue({
+    typical: 65, points: [{ label: '2026-08-04', value: 60 }, { label: '2026-08-11', value: 72 }],
   });
 }
 
 describe('ClientEvolutionPanel', () => {
-  it('shows the wellness index hero and the general wellbeing summary', async () => {
+  it('shows the Índice de rendimiento value and its typical', async () => {
     mockFetches();
     render(<ClientEvolutionPanel clientId="client-1" />);
     expect(await screen.findByText('Índice de rendimiento')).toBeInTheDocument();
-    expect(screen.getByText('Panorama general')).toBeInTheDocument();
-    expect(screen.getByText('Sleep')).toBeInTheDocument();
-    expect(screen.getByText('Stress')).toBeInTheDocument();
+    expect(screen.getAllByText('72').length).toBeGreaterThan(0);
+    expect(screen.getByText('65')).toBeInTheDocument();
   });
 
-  it('shows the physical evolution KPIs computed from the latest measurement', async () => {
+  it('shows the physical evolution sparklines computed from the latest measurement', async () => {
     mockFetches();
     render(<ClientEvolutionPanel clientId="client-1" />);
-    expect(await screen.findByText('Tu evolución física')).toBeInTheDocument();
-    expect(screen.getAllByText('70 kg').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('22%').length).toBeGreaterThan(0);
+    expect(await screen.findByText('Evolución física')).toBeInTheDocument();
+    expect(screen.getByText('70')).toBeInTheDocument();
+    expect(screen.getByText('22')).toBeInTheDocument();
+  });
+
+  // spec 29.3 — el filtro por categoría desmonta las demás secciones, no
+  // solo las atenúa.
+  it('filters to a single category when its chip is clicked, hiding the others entirely', async () => {
+    const user = userEvent.setup();
+    mockFetches();
+    render(<ClientEvolutionPanel clientId="client-1" />);
+    await screen.findByText('Índice de rendimiento');
+    expect(screen.getByText('Evolución física')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /Rendimiento/ }));
+    expect(screen.queryByText('Evolución física')).not.toBeInTheDocument();
+    expect(screen.getByText('Índice de rendimiento')).toBeInTheDocument();
   });
 
   it('submits a monthly check-in through the accordion form', async () => {

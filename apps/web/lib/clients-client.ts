@@ -57,6 +57,11 @@ export type ClientDetail = ClientSummary & {
   wearableBaselineReadyAt?: string | null;
   wearableBaselineStableAt?: string | null;
   week1ActivatedAt?: string | null;
+  // Flags por-cliente (clients.permissions jsonb) — incluye "reporteEquipo"
+  // (spec 28): visibilidad de "Reporte de mi equipo" en Evolution, habilitada
+  // a mano por un admin, uno por uno, para el cliente designado como líder
+  // de su cohorte.
+  permissions?: Record<string, boolean>;
 };
 
 export type MembershipPayment = {
@@ -165,6 +170,23 @@ export async function rejectClient(id: string): Promise<ClientDetail> {
   });
   const body = await res.json();
   if (!body.success) throw new Error(body.error || 'Error al rechazar cliente.');
+  return body.client;
+}
+
+// PATCH /:id/permissions ya existía en el backend (adminOnly, validado con
+// Zod) — hasta ahora ninguna UI de admin lo llamaba, el jsonb solo se
+// mutaba automáticamente al asignar contenido (ver comentario en
+// clients.controller.ts). Primer uso manual: habilitar/deshabilitar
+// "Reporte de mi equipo" por cliente (spec 28) desde AdminClientDetail.
+export async function updateClientPermissions(id: string, permissions: Record<string, boolean>): Promise<ClientDetail> {
+  const res = await fetch(`${API_BASE_URL}/api/clients/${id}/permissions`, {
+    method: 'PATCH',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ permissions }),
+  });
+  const body = await res.json();
+  if (!body.success) throw new Error(body.error || 'Error al actualizar los permisos del cliente.');
   return body.client;
 }
 

@@ -15,6 +15,7 @@ import {
   resendInvitation,
   approveBaseline,
   approveWearable,
+  updateClientPermissions,
   type ClientDetail,
   type MembershipPayment,
 } from "../../lib/clients-client";
@@ -113,6 +114,7 @@ export default function AdminClientDetail({ clientId }: { clientId: string }) {
   const [labPanels, setLabPanels] = useState<LabPanel[]>([]);
   const [approvingBaseline, setApprovingBaseline] = useState(false);
   const [approvingWearable, setApprovingWearable] = useState(false);
+  const [savingReporteEquipo, setSavingReporteEquipo] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true); setError(null);
@@ -157,6 +159,26 @@ export default function AdminClientDetail({ clientId }: { clientId: string }) {
     try { setClient(await saveClientType(clientId, selectedType)); showToast("Tipo guardado.", "success"); }
     catch (e: unknown) { showToast(e instanceof Error ? e.message : "Error.", "error"); }
     finally { setActing(false); }
+  };
+
+  // Habilita/deshabilita si este cliente puede ver "Reporte de mi equipo"
+  // en Evolution (spec 28) — un checkbox por cliente, no una propiedad de
+  // tipo de cliente (Roles y Perfiles), porque es una designación individual
+  // ("líder de su cohorte"), no algo que aplique a todo Mentoría.
+  const handleToggleReporteEquipo = async (enabled: boolean) => {
+    setSavingReporteEquipo(true);
+    try {
+      // updatePermissions reemplaza el jsonb completo (no lo mergea) — hay
+      // que mandar los permisos existentes + el cambio, igual que ya hacen
+      // los demás lugares del backend que tocan este mismo campo.
+      const updated = await updateClientPermissions(clientId, { ...(client?.permissions ?? {}), reporteEquipo: enabled });
+      setClient(updated);
+      showToast(enabled ? 'Reporte de mi equipo habilitado para este cliente.' : 'Reporte de mi equipo deshabilitado.', 'success');
+    } catch (e: unknown) {
+      showToast(e instanceof Error ? e.message : "Error.", "error");
+    } finally {
+      setSavingReporteEquipo(false);
+    }
   };
 
   const handleSaveSegmentation = async () => {
@@ -458,6 +480,28 @@ export default function AdminClientDetail({ clientId }: { clientId: string }) {
               color: "var(--eph-body)",
               cursor: savingSegmentation ? "not-allowed" : "pointer" }}>
             Guardar segmentación</button>
+        </div>
+      )}
+
+      {/* Visibilidad de "Reporte de mi equipo" en Evolution (spec 28) — solo
+          Mentoría, un checkbox por cliente designado como líder de cohorte. */}
+      {(client.client_type || client.clientType) === "mentoring" && (
+        <div style={cardStyle}>
+          <h3 style={cardTitleStyle}>Reporte de mi equipo</h3>
+          <p style={{ fontSize: 12.5, color: "var(--eph-muted)", margin: "-8px 0 14px" }}>
+            Habilita esta pestaña dentro de Evolution solo para el cliente designado como líder de su cohorte — el resto de su equipo nunca la ve.
+          </p>
+          <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: savingReporteEquipo ? "not-allowed" : "pointer" }}>
+            <input
+              type="checkbox"
+              checked={client.permissions?.reporteEquipo === true}
+              disabled={savingReporteEquipo}
+              onChange={(e) => handleToggleReporteEquipo(e.target.checked)}
+            />
+            <span style={{ fontSize: 13, color: "var(--eph-text)" }}>
+              Este cliente puede ver &quot;Reporte de mi equipo&quot;
+            </span>
+          </label>
         </div>
       )}
 

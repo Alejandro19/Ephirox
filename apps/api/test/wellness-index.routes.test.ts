@@ -111,3 +111,46 @@ describe('wellness-index route', () => {
     expect(res.status).toBe(403);
   });
 });
+
+describe('wellness-index history route (Evolution, spec 27.2)', () => {
+  const app = createApp();
+  let clientId: string;
+  let clientToken: string;
+
+  beforeAll(async () => {
+    const [client] = await db
+      .insert(clients)
+      .values({ name: 'Wellness History Client', email: `wellness-history-${Date.now()}@example.com`, status: 'active', clientType: 'coaching_1_1' })
+      .returning();
+    clientId = client.id;
+    clientToken = signToken({ id: clientId, role: 'cliente', name: client.name, email: client.email });
+  });
+
+  afterAll(async () => {
+    await db.delete(clients).where(eq(clients.id, clientId));
+  });
+
+  afterEach(async () => {
+    await db.delete(wellnessIndexHistory).where(eq(wellnessIndexHistory.clientId, clientId));
+  });
+
+  it('returns an empty history and a null typical when there is no data yet', async () => {
+    const res = await request(app).get(`/api/clients/${clientId}/wellness-index/history?days=30`).set('Authorization', `Bearer ${clientToken}`);
+    expect(res.status).toBe(200);
+    expect(res.body.data).toEqual({ points: [], typical: null });
+  });
+
+  it('returns the points within the requested window and their average as "típico"', async () => {
+    const daysAgo = (n: number) => new Date(Date.now() - n * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    await db.insert(wellnessIndexHistory).values([
+      { clientId, periodStart: daysAgo(60), value: 100, componentsUsed: {} }, // fuera de la ventana de 30 días
+      { clientId, periodStart: daysAgo(14), value: 60, componentsUsed: {} },
+      { clientId, periodStart: daysAgo(7), value: 80, componentsUsed: {} },
+    ]);
+
+    const res = await request(app).get(`/api/clients/${clientId}/wellness-index/history?days=30`).set('Authorization', `Bearer ${clientToken}`);
+    expect(res.status).toBe(200);
+    expect(res.body.data.points).toHaveLength(2);
+    expect(res.body.data.typical).toBe(70);
+  });
+});

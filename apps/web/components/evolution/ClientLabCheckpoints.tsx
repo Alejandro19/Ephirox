@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { listLabPanels, extractLabPanel, upsertLabPanel, type LabPanel, type ExtractedMarker } from '../../lib/lab-panels-client';
-import { OCR_FIELD_MAP } from '../../lib/parse-lab-ocr-text';
+import { OCR_FIELD_MAP, type LabFieldMeta } from '../../lib/parse-lab-ocr-text';
+import { RangeBar, type RangeZone } from './charts/RangeBar';
 import FloatingField from '../ui/FloatingField';
 import FileField from '../ui/FileField';
 
@@ -10,6 +11,26 @@ import FileField from '../ui/FileField';
 // aquí puramente como metadata de display, nunca para parsear (eso vive en
 // el backend, ver lab-ai-extraction.service.ts).
 const MARKER_LABELS = new Map(OCR_FIELD_MAP.map((f) => [f.field, f]));
+
+// Zonas de referencia para el RangeBar (spec 27.6) — deriva bajo/normal/alto
+// del rango óptimo ya definido en OCR_FIELD_MAP (mismo dato que ya se usaba
+// para el status del grid, ahora también dibuja la barra). No se estira más
+// allá del rango real para marcadores con "sin límite superior" (ej. HDL,
+// opt[1] >= 900) — ahí "alto" no aplica.
+function buildRangeZones(meta: LabFieldMeta): { domainMin: number; domainMax: number; zones: RangeZone[] } {
+  const [min, max] = meta.opt;
+  const span = Math.max(1, max - min);
+  const pad = Math.min(span * 0.6, Math.max(span, min || 1));
+  const domainMin = Math.max(0, min - pad);
+  const noUpperBound = max >= 900;
+  const domainMax = noUpperBound ? max : max + pad;
+  const zones: RangeZone[] = [
+    { min: domainMin, max: min, color: 'var(--eph-low)', label: `Bajo (<${min})` },
+    { min, max, color: 'var(--eph-good)', label: noUpperBound ? `Normal (≥${min})` : `Normal (${min}–${max})` },
+  ];
+  if (!noUpperBound) zones.push({ min: max, max: domainMax, color: 'var(--eph-warn)', label: `Alto (>${max})` });
+  return { domainMin, domainMax, zones };
+}
 
 const CHECKPOINTS = [6, 12] as const;
 const CHECKPOINT_LABELS: Record<number, string> = { 6: 'Semana 6', 12: 'Semana 12' };
@@ -88,9 +109,9 @@ function CheckpointCard({ clientId, semana, panel, onSaved }: { clientId: string
     : (markers ?? []).map((m) => ({ id: m.marker_id, value: m.value, detected: m.detected }));
 
   return (
-    <div className="border p-5" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface)' }}>
-      <div className="mb-3 flex items-center gap-2">
-        <span className="font-display text-[15px]" style={{ color: 'var(--eph-text)' }}>Laboratorio {CHECKPOINT_LABELS[semana]}</span>
+    <div className="border p-7" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface)', borderRadius: 14 }}>
+      <div className="mb-4 flex items-center gap-2">
+        <span className="font-display text-xl" style={{ color: 'var(--eph-text)' }}>Laboratorio {CHECKPOINT_LABELS[semana]}</span>
         {alreadySaved && (
           <span className={`inline-block rounded-[999px] px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.08em] ${statusBadgeClasses(panel!.status)}`}>
             {STATUS_LABELS[panel!.status] || panel!.status}
@@ -121,30 +142,29 @@ function CheckpointCard({ clientId, semana, panel, onSaved }: { clientId: string
       )}
 
       {displayMarkers.length > 0 && (
-        <div className="mb-4 overflow-x-auto border" style={{ borderColor: 'var(--eph-line)' }}>
-          <table className="w-full border-collapse font-body text-sm">
-            <thead>
-              <tr className="border-b font-mono text-[10px] uppercase tracking-[0.08em]" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface-2)', color: 'var(--eph-muted)' }}>
-                <th className="p-2.5">Biomarcador</th>
-                <th className="p-2.5 text-right">Valor</th>
-                <th className="p-2.5">Unidad</th>
-              </tr>
-            </thead>
-            <tbody>
-              {displayMarkers.map((m) => {
-                const meta = MARKER_LABELS.get(m.id);
-                return (
-                  <tr key={m.id} className="border-b border-[var(--eph-line)] last:border-0">
-                    <td className="p-2.5 text-[var(--eph-text)]">{meta?.lbl || m.id}</td>
-                    <td className="p-2.5 text-right font-semibold" style={{ color: m.detected ? 'var(--eph-accent)' : 'var(--eph-muted)' }}>
-                      {m.detected ? m.value : 'No detectado'}
-                    </td>
-                    <td className="p-2.5 text-[var(--eph-muted)]">{m.detected ? meta?.unit : '—'}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+        <div className="mb-4">
+          {displayMarkers.map((m) => {
+            const meta = MARKER_LABELS.get(m.id);
+            if (!m.detected || m.value == null || !meta) {
+              return (
+                <div key={m.id} style={{ padding: '10px 0', borderBottom: '1px solid var(--eph-line)', fontSize: 13, color: 'var(--eph-muted)' }}>
+                  {meta?.lbl || m.id} — No detectado
+                </div>
+              );
+            }
+            const { domainMin, domainMax, zones } = buildRangeZones(meta);
+            return (
+              <RangeBar
+                key={m.id}
+                name={meta.lbl}
+                value={m.value}
+                unit={` ${meta.unit}`}
+                zones={zones}
+                domainMin={domainMin}
+                domainMax={domainMax}
+              />
+            );
+          })}
         </div>
       )}
 
@@ -174,15 +194,14 @@ export function ClientLabCheckpoints({ clientId }: { clientId: string }) {
 
   if (panels === null) return null;
 
+  // Más protagonismo (pedido explícito) — ancho completo, sin compartir
+  // espacio con ninguna otra card; ya no lleva su propio <h2>: vive dentro
+  // del wrapper de categoría "Salud" (CategorySection) en ClientEvolutionPanel.
   return (
-    <section className="rounded-[0] border border-[var(--eph-line)] bg-[var(--eph-surface)] p-6 mb-5">
-      <h2 className="mb-1 font-display text-lg" style={{ color: 'var(--eph-text)' }}>Laboratorios de seguimiento</h2>
-      <p className="mb-4 font-body text-xs" style={{ color: 'var(--eph-muted)' }}>Carga tus laboratorios de Semana 6 y Semana 12 cuando corresponda.</p>
-      <div className="space-y-4">
-        {CHECKPOINTS.map((semana) => (
-          <CheckpointCard key={semana} clientId={clientId} semana={semana} panel={panels.find((p) => p.semanaNumero === semana)} onSaved={load} />
-        ))}
-      </div>
-    </section>
+    <div className="space-y-5">
+      {CHECKPOINTS.map((semana) => (
+        <CheckpointCard key={semana} clientId={clientId} semana={semana} panel={panels.find((p) => p.semanaNumero === semana)} onSaved={load} />
+      ))}
+    </div>
   );
 }

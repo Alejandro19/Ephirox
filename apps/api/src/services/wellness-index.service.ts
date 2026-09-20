@@ -1,4 +1,4 @@
-import { and, desc, eq, lt } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, lt } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import {
   clients,
@@ -140,4 +140,26 @@ export async function computeWellnessIndexForClient(clientId: string): Promise<W
   const trend: WellnessIndexResult['trend'] = delta == null ? 'none' : delta > 0 ? 'up' : delta < 0 ? 'down' : 'stable';
 
   return { value, previousValue, delta, trend, componentsUsed };
+}
+
+export type WellnessIndexHistoryResult = {
+  points: { label: string; value: number }[];
+  typical: number | null;
+};
+
+// Historial + "típico" (promedio del período) para la gráfica de tendencia
+// de "Índice de rendimiento" en Evolution (spec 27.2) — wellness_index_history
+// ya guarda una fila por semana ISO (ver computeWellnessIndexForClient de
+// arriba), esto solo la lee con una ventana de días.
+export async function getWellnessIndexHistoryForClient(clientId: string, days: number): Promise<WellnessIndexHistoryResult> {
+  const sinceDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const rows = await db
+    .select()
+    .from(wellnessIndexHistory)
+    .where(and(eq(wellnessIndexHistory.clientId, clientId), gte(wellnessIndexHistory.periodStart, sinceDate)))
+    .orderBy(asc(wellnessIndexHistory.periodStart));
+
+  const points = rows.map((r) => ({ label: r.periodStart as unknown as string, value: r.value }));
+  const typical = points.length ? Math.round(points.reduce((s, p) => s + p.value, 0) / points.length) : null;
+  return { points, typical };
 }

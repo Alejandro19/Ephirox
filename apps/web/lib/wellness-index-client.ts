@@ -19,3 +19,19 @@ export async function getWellnessIndex(clientId: string): Promise<WellnessIndexR
   const body = await res.json();
   return body.data ?? null;
 }
+
+export type WellnessIndexHistory = {
+  points: { label: string; value: number }[];
+  typical: number | null;
+};
+
+// Historial + "típico" para la gráfica de tendencia de Índice de rendimiento
+// (Evolution, spec 27.2) — days: 7/30/90, mismo selector de rango del módulo.
+export async function getWellnessIndexHistory(clientId: string, days: number): Promise<WellnessIndexHistory> {
+  const res = await fetch(`${API_BASE_URL}/api/clients/${clientId}/wellness-index/history?days=${days}`, {
+    credentials: 'include',
+  });
+  if (!res.ok) return { points: [], typical: null };
+  const body = await res.json();
+  return body.data ?? { points: [], typical: null };
+}

@@ -81,6 +81,33 @@
   --eph-hatch:repeating-linear-gradient(135deg,#f4f2ec 0 8px,#ebe7dc 8px 16px);
 }
 
+/* Evolution — colores fijos de estado + paleta de 4 pilares ---
+   Identidad propia del módulo (spec punto 28.5: "nunca reasignada"), no
+   derivan de --eph-accent/--eph-danger porque esos cambian de significado
+   entre módulos. Mismos valores en dark-brand/dark-carbon (el mockup es
+   dark-only); light-premium usa versiones oscurecidas para contraste sobre
+   blanco, mismo criterio que --eph-danger en ese tema. */
+[data-theme="dark-brand"], [data-theme="dark-carbon"] {
+  --eph-good:#84a06e;
+  --eph-warn:#c98a4b;
+  --eph-low:#b15c4a;
+  --eph-pillar-sleep:#3987e5;
+  --eph-pillar-workout:#d95926;
+  --eph-pillar-nutrition:#199e70;
+  --eph-pillar-stress:#c98500;
+  --eph-pillar-recovery:#8a7fd9;
+}
+[data-theme="light-premium"] {
+  --eph-good:#5f7a4a;
+  --eph-warn:#a66a30;
+  --eph-low:#954a3a;
+  --eph-pillar-sleep:#1f5aa8;
+  --eph-pillar-workout:#b8451a;
+  --eph-pillar-nutrition:#147d59;
+  --eph-pillar-stress:#a66c00;
+  --eph-pillar-recovery:#6c5fc4;
+}
+
 /* Controles nativos (audio, etc.) ------------------------------
    Sin esto, el reproductor <audio> nativo usa el chrome por-defecto
    del navegador (claro, sin relación con la marca) sin importar el

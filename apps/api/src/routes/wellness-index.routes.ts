@@ -14,3 +14,11 @@ wellnessIndexRouter.get(
   authMiddleware, ownerOrAdmin,
   asyncHandler(wellnessIndexController.getWellnessIndex)
 );
+
+// GET /api/clients/:id/wellness-index/history?days= — historial + "típico"
+// para la gráfica de tendencia de Índice de rendimiento (Evolution, spec 27.2).
+wellnessIndexRouter.get(
+  '/clients/:id/wellness-index/history',
+  authMiddleware, ownerOrAdmin,
+  asyncHandler(wellnessIndexController.getWellnessIndexHistory)
+);

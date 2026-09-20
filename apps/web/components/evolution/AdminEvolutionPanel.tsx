@@ -1,27 +1,18 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import useSWR from 'swr';
 import { getEvolutionData, updateNextCheckinDate } from '../../lib/evolution-client';
-import { listCompletions as listStressCompletions, type StressCompletion } from '../../lib/stress-client';
-import { calculateStressWeeklyStats } from '../../lib/stress-logic';
-import { listLogs as listSleepLogs, type SleepLog } from '../../lib/sleep-client';
-import { listTrainingCompletions, type TrainingCompletion } from '../../lib/training-client';
-import { calculateDisciplineStats } from '../../lib/training-home-logic';
 import { fetchClient, type ClientDetail } from '../../lib/clients-client';
-import { getWellnessIndex } from '../../lib/wellness-index-client';
+import { getWellnessIndex, getWellnessIndexHistory } from '../../lib/wellness-index-client';
 import { listLabPanels, type LabPanel } from '../../lib/lab-panels-client';
 import { AdminLabPanelReview } from '../admin/AdminLabPanelReview';
-import {
-  calculateSleepQualityAvg,
-  formatSleepHours,
-  monthlyAverages,
-  getWellnessTrendStatus,
-} from '../../lib/evolution-logic';
 import { showToast } from '../layout/AppShell';
-import { WellnessIndexHero, BienestarGeneral, EvolucionFisicaSection } from './EvolutionVisuals';
+import { EvolucionFisicaSection, ComposicionCorporalSection, IndiceRendimientoSection } from './EvolutionVisuals';
 import { CheckinAccordion } from './CheckinAccordion';
 import { InsightsSection } from '../insights/InsightsSection';
+import ChartTooltip, { type TooltipHandle } from './charts/Tooltip';
+import { CategorySection, CategoryFilterBar, type EvolutionCategory } from './charts/CategorySection';
 
 const cardStyle: React.CSSProperties = {
   background: 'var(--eph-surface)', border: '1px solid var(--eph-line)',
@@ -44,31 +35,33 @@ const primaryButtonStyle: React.CSSProperties = {
   fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
   background: 'var(--eph-accent)', color: 'var(--eph-ink)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.14em', cursor: 'pointer',
 };
+const subHeadingStyle: React.CSSProperties = { fontFamily: 'var(--font-cormorant), Georgia, serif', fontSize: 16, fontWeight: 400, color: 'var(--eph-text)', margin: '0 0 12px' };
 
-function clientTz(): string {
-  try {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
-  } catch {
-    return 'UTC';
-  }
-}
+const RANGE_OPTIONS = [7, 30, 90] as const;
+const CATEGORIES: EvolutionCategory[] = [
+  { key: 'todas', label: 'Todas', color: 'var(--eph-muted)' },
+  { key: 'rendimiento', label: 'Rendimiento', color: 'var(--eph-accent)' },
+  { key: 'fisico', label: 'Físico', color: 'var(--eph-pillar-workout)' },
+  { key: 'salud', label: 'Salud', color: 'var(--eph-accent-hi)' },
+];
 
-async function fetchEvolutionBundle(clientId: string) {
-  const [evo, stressCompletions, fullClient, sleepLogs, trainingCompletions, wellnessIndex, labPanels] = await Promise.all([
+async function fetchEvolutionBundle(clientId: string, days: number) {
+  const [evo, fullClient, wellnessIndex, wellnessHistory, labPanels] = await Promise.all([
     getEvolutionData(clientId),
-    listStressCompletions(clientId).catch(() => [] as StressCompletion[]),
     fetchClient(clientId).catch(() => null as ClientDetail | null),
-    listSleepLogs(clientId).catch(() => [] as SleepLog[]),
-    listTrainingCompletions(clientId).catch(() => [] as TrainingCompletion[]),
     getWellnessIndex(clientId).catch(() => null),
+    getWellnessIndexHistory(clientId, days).catch(() => ({ points: [], typical: null })),
     listLabPanels(clientId).catch(() => [] as LabPanel[]),
   ]);
-  return { evo, stressCompletions, fullClient, sleepLogs, trainingCompletions, wellnessIndex, labPanels };
+  return { evo, fullClient, wellnessIndex, wellnessHistory, labPanels };
 }
 
 export function AdminEvolutionPanel({ clientId }: { clientId: string }) {
-  const { data, error, isLoading, mutate } = useSWR(['evolution-bundle', clientId], () =>
-    fetchEvolutionBundle(clientId),
+  const [range, setRange] = useState<(typeof RANGE_OPTIONS)[number]>(30);
+  const [activeCat, setActiveCat] = useState('todas');
+  const tip = useRef<TooltipHandle>(null);
+  const { data, error, isLoading, mutate } = useSWR(['evolution-bundle', clientId, range], () =>
+    fetchEvolutionBundle(clientId, range),
   );
   const [nextCheckinDate, setNextCheckinDate] = useState('');
   const [saving, setSaving] = useState(false);
@@ -94,21 +87,13 @@ export function AdminEvolutionPanel({ clientId }: { clientId: string }) {
   if (error) return <p role="alert" style={{ color: 'var(--eph-danger)' }}>{(error as Error).message}</p>;
   if (!data) return null;
 
-  const { evo, stressCompletions, fullClient: client, sleepLogs, trainingCompletions, wellnessIndex, labPanels } = data;
-
-  const sleepAvg = calculateSleepQualityAvg(evo.checkins);
-  const weeklyRegulation = calculateStressWeeklyStats(stressCompletions).count;
-
-  const sleepMonths = monthlyAverages(sleepLogs, 'date', 'quality');
-  const sleepLast = sleepMonths.length ? sleepMonths[sleepMonths.length - 1].avg : null;
-  const sleepPrev = sleepMonths.length >= 2 ? sleepMonths[sleepMonths.length - 2].avg : null;
-  const sleepDelta = sleepLast != null && sleepPrev != null ? sleepLast - sleepPrev : null;
-
-  const disciplineStats = client?.trainingDays ? calculateDisciplineStats(trainingCompletions, client.trainingDays) : null;
+  const { evo, fullClient: client, wellnessIndex, wellnessHistory, labPanels } = data;
+  const isMentoring = client?.clientType === 'mentoring';
 
   return (
     <div>
-      {client?.clientType === 'mentoring' && <InsightsSection clientId={clientId} moduleKey="miEvolucion" />}
+      <ChartTooltip ref={tip} />
+      {isMentoring && <InsightsSection clientId={clientId} moduleKey="miEvolucion" />}
       <div style={cardStyle}>
         <h3 style={cardTitleStyle}>Próxima medición (admin)</h3>
         <label style={labelStyle} htmlFor="ev-next-checkin">Fecha de la próxima medición</label>
@@ -120,27 +105,54 @@ export function AdminEvolutionPanel({ clientId }: { clientId: string }) {
         </div>
       </div>
 
-      <WellnessIndexHero index={wellnessIndex?.value ?? null} />
-      <BienestarGeneral
-        sleepAvg={sleepAvg != null ? formatSleepHours(sleepAvg) : null}
-        weeklyRegulation={weeklyRegulation}
-        sleepDelta={sleepDelta}
-        sleepStatus={getWellnessTrendStatus(sleepDelta)}
-      />
-      <EvolucionFisicaSection
-        anthropometrics={evo?.anthropometrics ?? []}
-        inbody={evo?.inbody ?? []}
-        objetivos={client?.objetivos}
-        inbodyCadenceType={client?.inbodyCadenceType}
-        disciplineStats={disciplineStats}
-        streakWeeks={null}
-      />
+      <div style={{ display: 'flex', gap: 6, background: 'var(--eph-surface-2)', border: '1px solid var(--eph-line)', borderRadius: 999, padding: 4, width: 'fit-content', marginTop: 8, marginBottom: 8 }}>
+        {RANGE_OPTIONS.map((r) => (
+          <button
+            key={r}
+            type="button"
+            onClick={() => setRange(r)}
+            style={{
+              border: 'none', background: range === r ? 'var(--eph-accent)' : 'transparent',
+              color: range === r ? 'var(--eph-ink)' : 'var(--eph-muted)', padding: '7px 16px',
+              borderRadius: 999, fontSize: 12, fontWeight: 700, cursor: 'pointer',
+              fontFamily: 'var(--font-jetbrains-mono), ui-monospace, monospace',
+            }}
+          >
+            {r} días
+          </button>
+        ))}
+      </div>
 
-      <CheckinAccordion clientId={clientId} onSaved={() => mutate()} />
+      <CategoryFilterBar cats={CATEGORIES} active={activeCat} onChange={setActiveCat} />
 
-      {client?.clientType === 'mentoring' && (
-        <div style={cardStyle}>
-          <h3 style={cardTitleStyle}>Laboratorios de seguimiento</h3>
+      <CategorySection catKey="rendimiento" active={activeCat} color="var(--eph-accent)" label="Rendimiento">
+        <h3 style={subHeadingStyle}>Índice de rendimiento</h3>
+        <IndiceRendimientoSection
+          value={wellnessIndex?.value ?? null}
+          typical={wellnessHistory.typical}
+          points={wellnessHistory.points}
+          componentsUsed={wellnessIndex?.componentsUsed}
+          tip={tip}
+        />
+      </CategorySection>
+
+      <CategorySection catKey="fisico" active={activeCat} color="var(--eph-pillar-workout)" label="Físico">
+        <h3 style={subHeadingStyle}>Evolución física</h3>
+        <EvolucionFisicaSection
+          anthropometrics={evo?.anthropometrics ?? []}
+          inbody={evo?.inbody ?? []}
+          objetivos={client?.objetivos}
+          inbodyCadenceType={client?.inbodyCadenceType}
+          tip={tip}
+        />
+        <div style={{ marginTop: 24 }}>
+          <ComposicionCorporalSection inbody={evo?.inbody ?? []} tip={tip} />
+        </div>
+      </CategorySection>
+
+      {isMentoring && (
+        <CategorySection catKey="salud" active={activeCat} color="var(--eph-accent-hi)" label="Salud">
+          <h3 style={subHeadingStyle}>Laboratorios de seguimiento</h3>
           {[6, 12].map((semana) => (
             <div key={semana} style={{ marginBottom: 20 }}>
               <span style={labelStyle}>Semana {semana}</span>
@@ -154,8 +166,12 @@ export function AdminEvolutionPanel({ clientId }: { clientId: string }) {
               </div>
             </div>
           ))}
-        </div>
+        </CategorySection>
       )}
+
+      <div style={{ marginTop: 8 }}>
+        <CheckinAccordion clientId={clientId} onSaved={() => mutate()} />
+      </div>
     </div>
   );
 }
