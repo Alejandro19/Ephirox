@@ -9,6 +9,7 @@ import * as sleepClient from '../lib/sleep-client';
 import * as trainingClient from '../lib/training-client';
 import * as clientsClient from '../lib/clients-client';
 import * as wellnessIndexClient from '../lib/wellness-index-client';
+import * as wearableClient from '../lib/wearable-client';
 
 vi.mock('../lib/evolution-client');
 vi.mock('../lib/stress-client');
@@ -16,6 +17,7 @@ vi.mock('../lib/sleep-client');
 vi.mock('../lib/training-client');
 vi.mock('../lib/clients-client');
 vi.mock('../lib/wellness-index-client');
+vi.mock('../lib/wearable-client');
 
 function mockFetches({ clientType = 'coaching_1_1', nextCheckinDate = null as string | null } = {}) {
   vi.mocked(evolutionClient.getEvolutionData).mockResolvedValue({ checkins: [], anthropometrics: [], inbody: [] });
@@ -30,6 +32,8 @@ function mockFetches({ clientType = 'coaching_1_1', nextCheckinDate = null as st
     value: 72, previousValue: 64, delta: 8, trend: 'up', componentsUsed: { training: 60, sleep: 80, evolution: 70 },
   });
   vi.mocked(wellnessIndexClient.getWellnessIndexHistory).mockResolvedValue({ typical: 65, points: [] });
+  vi.mocked(stressClient.getRegulationCapacityOverview).mockResolvedValue({ enabled: false, today: null, trend: [], baseline: null });
+  vi.mocked(wearableClient.getMetricas).mockResolvedValue({ total: 0, promedios: {}, data: [] });
 }
 
 describe('AdminEvolutionPanel', () => {

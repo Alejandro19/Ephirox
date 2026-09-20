@@ -46,6 +46,13 @@ export type WearableMetrica = {
   temperaturaPiel: number | string | null;
   horaDormir: string | null;
   horaDespertar: string | null;
+  // Ya venían en la fila real (db.select() sin allowlist de columnas en
+  // obtenerMetricas) pero no estaban tipados en el frontend — usados recién
+  // ahora para Evolution → Recuperación (spec 29.1).
+  recoveryScore: number | null;
+  readinessScore: number | null;
+  pasos: number | null;
+  caloriasActivas: number | null;
 };
 
 export async function getMetricas(

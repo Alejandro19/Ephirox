@@ -6,9 +6,12 @@ import { getEvolutionData } from '../../lib/evolution-client';
 import { fetchClient, type ClientDetail } from '../../lib/clients-client';
 import { PermissionDeniedError } from '../../lib/api-client';
 import { getWellnessIndex, getWellnessIndexHistory } from '../../lib/wellness-index-client';
+import { listCompletions, getRegulationCapacityOverview, type StressCompletion, type RegulationCapacityOverview } from '../../lib/stress-client';
+import { getMetricas, type WearableMetrica } from '../../lib/wearable-client';
 import IdentityHeader from '../ui/IdentityHeader';
 import LockedBenefit from '../ui/LockedBenefit';
 import { EvolucionFisicaSection, ComposicionCorporalSection, IndiceRendimientoSection } from './EvolutionVisuals';
+import { StressEvolutionSection, SleepEvolutionSection, RecoveryEvolutionSection } from './EvolutionExtraCategories';
 import { CheckinAccordion } from './CheckinAccordion';
 import { InsightsSection } from '../insights/InsightsSection';
 import { ClientLabCheckpoints } from './ClientLabCheckpoints';
@@ -17,26 +20,34 @@ import ChartTooltip, { type TooltipHandle } from './charts/Tooltip';
 import { CategorySection, CategoryFilterBar, type EvolutionCategory } from './charts/CategorySection';
 
 const RANGE_OPTIONS = [7, 30, 90] as const;
+// Ventana fija para las gráficas de Stress/Sleep/Recuperación (8 semanas de
+// wearable/completions) — el selector 7/30/90 solo controla Índice de
+// rendimiento por ahora, igual límite que ya tenía el propio mockup.
+const EXTRA_CATEGORY_DAYS = 56;
 
-// Solo Rendimiento/Físico/Salud tienen contenido en esta fase — Stress/
-// Sleep/Recuperación se agregan en la siguiente ronda (spec 29.1).
 const CATEGORIES: EvolutionCategory[] = [
   { key: 'todas', label: 'Todas', color: 'var(--eph-muted)' },
   { key: 'rendimiento', label: 'Rendimiento', color: 'var(--eph-accent)' },
   { key: 'fisico', label: 'Físico', color: 'var(--eph-pillar-workout)' },
+  { key: 'stress', label: 'Stress', color: 'var(--eph-pillar-stress)' },
+  { key: 'sleep', label: 'Sleep', color: 'var(--eph-pillar-sleep)' },
+  { key: 'recuperacion', label: 'Recuperación', color: 'var(--eph-pillar-recovery)' },
   { key: 'salud', label: 'Salud', color: 'var(--eph-accent-hi)' },
 ];
 
 const subHeadingStyle: React.CSSProperties = { fontFamily: 'var(--font-cormorant), Georgia, serif', fontSize: 16, fontWeight: 400, color: 'var(--eph-text)', margin: '0 0 12px' };
 
 async function fetchEvolutionBundle(clientId: string, days: number) {
-  const [evo, fullClient, wellnessIndex, wellnessHistory] = await Promise.all([
+  const [evo, fullClient, wellnessIndex, wellnessHistory, completions, regulationCapacity, wearableMetrics] = await Promise.all([
     getEvolutionData(clientId),
     fetchClient(clientId).catch(() => null as ClientDetail | null),
     getWellnessIndex(clientId).catch(() => null),
     getWellnessIndexHistory(clientId, days).catch(() => ({ points: [], typical: null })),
+    listCompletions(clientId).catch(() => [] as StressCompletion[]),
+    getRegulationCapacityOverview(clientId).catch(() => null as RegulationCapacityOverview | null),
+    getMetricas(clientId, EXTRA_CATEGORY_DAYS).catch(() => ({ total: 0, promedios: {}, data: [] as WearableMetrica[] })),
   ]);
-  return { evo, fullClient, wellnessIndex, wellnessHistory };
+  return { evo, fullClient, wellnessIndex, wellnessHistory, completions, regulationCapacity, wearableMetrics: wearableMetrics.data };
 }
 
 export function ClientEvolutionPanel({ clientId }: { clientId: string }) {
@@ -75,7 +86,7 @@ export function ClientEvolutionPanel({ clientId }: { clientId: string }) {
   }
   if (!data) return null;
 
-  const { evo, fullClient: client, wellnessIndex, wellnessHistory } = data;
+  const { evo, fullClient: client, wellnessIndex, wellnessHistory, completions, regulationCapacity, wearableMetrics } = data;
   const isMentoring = client?.clientType === 'mentoring';
 
   return (
@@ -129,6 +140,18 @@ export function ClientEvolutionPanel({ clientId }: { clientId: string }) {
         <div style={{ marginTop: 24 }}>
           <ComposicionCorporalSection inbody={evo?.inbody ?? []} tip={tip} />
         </div>
+      </CategorySection>
+
+      <CategorySection catKey="stress" active={activeCat} color="var(--eph-pillar-stress)" label="Stress">
+        <StressEvolutionSection regulationCapacity={regulationCapacity} completions={completions} tip={tip} />
+      </CategorySection>
+
+      <CategorySection catKey="sleep" active={activeCat} color="var(--eph-pillar-sleep)" label="Sleep">
+        <SleepEvolutionSection metrics={wearableMetrics} tip={tip} />
+      </CategorySection>
+
+      <CategorySection catKey="recuperacion" active={activeCat} color="var(--eph-pillar-recovery)" label="Recuperación">
+        <RecoveryEvolutionSection metrics={wearableMetrics} tip={tip} />
       </CategorySection>
 
       <CategorySection catKey="salud" active={activeCat} color="var(--eph-accent-hi)" label="Salud">

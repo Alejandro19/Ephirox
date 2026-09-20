@@ -20,14 +20,14 @@ const sampleMetrics: wearableClient.WearableMetrica[] = [
     fcReposo: 54, hrvNocturno: 62, suenoTotalMinutos: 462,
     suenoProfundoMinutos: 111, suenoRemMinutos: 212, suenoLigeroMinutos: 112, suenoDespiertoMinutos: 15,
     suenoScore: 86, tasaRespiratoria: 14.2, temperaturaPiel: 0.2,
-    horaDormir: '2026-08-04T23:48:00Z', horaDespertar: '2026-08-05T07:30:00Z',
+    horaDormir: '2026-08-04T23:48:00Z', horaDespertar: '2026-08-05T07:30:00Z', recoveryScore: null, readinessScore: null, pasos: null, caloriasActivas: null,
   },
   {
     id: 'm1', dispositivo: 'oura', fecha: '2026-08-04',
     fcReposo: 56, hrvNocturno: 57, suenoTotalMinutos: 420,
     suenoProfundoMinutos: 100, suenoRemMinutos: 190, suenoLigeroMinutos: 100, suenoDespiertoMinutos: 12,
     suenoScore: 78, tasaRespiratoria: 14.0, temperaturaPiel: 0.1,
-    horaDormir: '2026-08-04T00:00:00Z', horaDespertar: '2026-08-04T07:00:00Z',
+    horaDormir: '2026-08-04T00:00:00Z', horaDespertar: '2026-08-04T07:00:00Z', recoveryScore: null, readinessScore: null, pasos: null, caloriasActivas: null,
   },
 ];
 
@@ -125,7 +125,7 @@ describe('ClientRestPanel', () => {
       fcReposo: null, hrvNocturno: null, suenoTotalMinutos: null,
       suenoProfundoMinutos: null, suenoRemMinutos: null, suenoLigeroMinutos: null, suenoDespiertoMinutos: null,
       suenoScore: null, tasaRespiratoria: null, temperaturaPiel: -0.2,
-      horaDormir: null, horaDespertar: null,
+      horaDormir: null, horaDespertar: null, recoveryScore: null, readinessScore: null, pasos: null, caloriasActivas: null,
     };
     mockFetches({ metrics: [partialToday, ...sampleMetrics] });
     render(<ClientRestPanel clientId="client-1" />);
@@ -204,7 +204,7 @@ describe('ClientRestPanel', () => {
       fcReposo: null, hrvNocturno: null, suenoTotalMinutos: null,
       suenoProfundoMinutos: null, suenoRemMinutos: null, suenoLigeroMinutos: null, suenoDespiertoMinutos: null,
       suenoScore: null, tasaRespiratoria: null, temperaturaPiel: -0.1,
-      horaDormir: null, horaDespertar: null,
+      horaDormir: null, horaDespertar: null, recoveryScore: null, readinessScore: null, pasos: null, caloriasActivas: null,
     };
     const completeToday: wearableClient.WearableMetrica = { ...partialToday, suenoTotalMinutos: 400, suenoScore: 82 };
 

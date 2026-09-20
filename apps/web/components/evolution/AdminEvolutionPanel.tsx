@@ -5,14 +5,19 @@ import useSWR from 'swr';
 import { getEvolutionData, updateNextCheckinDate } from '../../lib/evolution-client';
 import { fetchClient, type ClientDetail } from '../../lib/clients-client';
 import { getWellnessIndex, getWellnessIndexHistory } from '../../lib/wellness-index-client';
+import { listCompletions, getRegulationCapacityOverview, type StressCompletion, type RegulationCapacityOverview } from '../../lib/stress-client';
+import { getMetricas, type WearableMetrica } from '../../lib/wearable-client';
 import { listLabPanels, type LabPanel } from '../../lib/lab-panels-client';
 import { AdminLabPanelReview } from '../admin/AdminLabPanelReview';
 import { showToast } from '../layout/AppShell';
 import { EvolucionFisicaSection, ComposicionCorporalSection, IndiceRendimientoSection } from './EvolutionVisuals';
+import { StressEvolutionSection, SleepEvolutionSection, RecoveryEvolutionSection } from './EvolutionExtraCategories';
 import { CheckinAccordion } from './CheckinAccordion';
 import { InsightsSection } from '../insights/InsightsSection';
 import ChartTooltip, { type TooltipHandle } from './charts/Tooltip';
 import { CategorySection, CategoryFilterBar, type EvolutionCategory } from './charts/CategorySection';
+
+const EXTRA_CATEGORY_DAYS = 56;
 
 const cardStyle: React.CSSProperties = {
   background: 'var(--eph-surface)', border: '1px solid var(--eph-line)',
@@ -42,18 +47,24 @@ const CATEGORIES: EvolutionCategory[] = [
   { key: 'todas', label: 'Todas', color: 'var(--eph-muted)' },
   { key: 'rendimiento', label: 'Rendimiento', color: 'var(--eph-accent)' },
   { key: 'fisico', label: 'Físico', color: 'var(--eph-pillar-workout)' },
+  { key: 'stress', label: 'Stress', color: 'var(--eph-pillar-stress)' },
+  { key: 'sleep', label: 'Sleep', color: 'var(--eph-pillar-sleep)' },
+  { key: 'recuperacion', label: 'Recuperación', color: 'var(--eph-pillar-recovery)' },
   { key: 'salud', label: 'Salud', color: 'var(--eph-accent-hi)' },
 ];
 
 async function fetchEvolutionBundle(clientId: string, days: number) {
-  const [evo, fullClient, wellnessIndex, wellnessHistory, labPanels] = await Promise.all([
+  const [evo, fullClient, wellnessIndex, wellnessHistory, labPanels, completions, regulationCapacity, wearableMetrics] = await Promise.all([
     getEvolutionData(clientId),
     fetchClient(clientId).catch(() => null as ClientDetail | null),
     getWellnessIndex(clientId).catch(() => null),
     getWellnessIndexHistory(clientId, days).catch(() => ({ points: [], typical: null })),
     listLabPanels(clientId).catch(() => [] as LabPanel[]),
+    listCompletions(clientId).catch(() => [] as StressCompletion[]),
+    getRegulationCapacityOverview(clientId).catch(() => null as RegulationCapacityOverview | null),
+    getMetricas(clientId, EXTRA_CATEGORY_DAYS).catch(() => ({ total: 0, promedios: {}, data: [] as WearableMetrica[] })),
   ]);
-  return { evo, fullClient, wellnessIndex, wellnessHistory, labPanels };
+  return { evo, fullClient, wellnessIndex, wellnessHistory, labPanels, completions, regulationCapacity, wearableMetrics: wearableMetrics.data };
 }
 
 export function AdminEvolutionPanel({ clientId }: { clientId: string }) {
@@ -87,7 +98,7 @@ export function AdminEvolutionPanel({ clientId }: { clientId: string }) {
   if (error) return <p role="alert" style={{ color: 'var(--eph-danger)' }}>{(error as Error).message}</p>;
   if (!data) return null;
 
-  const { evo, fullClient: client, wellnessIndex, wellnessHistory, labPanels } = data;
+  const { evo, fullClient: client, wellnessIndex, wellnessHistory, labPanels, completions, regulationCapacity, wearableMetrics } = data;
   const isMentoring = client?.clientType === 'mentoring';
 
   return (
@@ -148,6 +159,18 @@ export function AdminEvolutionPanel({ clientId }: { clientId: string }) {
         <div style={{ marginTop: 24 }}>
           <ComposicionCorporalSection inbody={evo?.inbody ?? []} tip={tip} />
         </div>
+      </CategorySection>
+
+      <CategorySection catKey="stress" active={activeCat} color="var(--eph-pillar-stress)" label="Stress">
+        <StressEvolutionSection regulationCapacity={regulationCapacity} completions={completions} tip={tip} />
+      </CategorySection>
+
+      <CategorySection catKey="sleep" active={activeCat} color="var(--eph-pillar-sleep)" label="Sleep">
+        <SleepEvolutionSection metrics={wearableMetrics} tip={tip} />
+      </CategorySection>
+
+      <CategorySection catKey="recuperacion" active={activeCat} color="var(--eph-pillar-recovery)" label="Recuperación">
+        <RecoveryEvolutionSection metrics={wearableMetrics} tip={tip} />
       </CategorySection>
 
       {isMentoring && (

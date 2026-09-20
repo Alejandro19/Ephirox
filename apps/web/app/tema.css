@@ -96,6 +96,12 @@
   --eph-pillar-nutrition:#199e70;
   --eph-pillar-stress:#c98500;
   --eph-pillar-recovery:#8a7fd9;
+  /* Rampa ordinal de un solo tono para "Etapas de sueño" (spec 29.1) —
+     sueno-3 coincide a propósito con --eph-pillar-sleep. */
+  --eph-sleep-stage-1:#8fb8ec;
+  --eph-sleep-stage-2:#5c93dd;
+  --eph-sleep-stage-3:#3987e5;
+  --eph-sleep-stage-4:#1f5aa8;
 }
 [data-theme="light-premium"] {
   --eph-good:#5f7a4a;
@@ -106,6 +112,10 @@
   --eph-pillar-nutrition:#147d59;
   --eph-pillar-stress:#a66c00;
   --eph-pillar-recovery:#6c5fc4;
+  --eph-sleep-stage-1:#bcd6f2;
+  --eph-sleep-stage-2:#7fa9e0;
+  --eph-sleep-stage-3:#3987e5;
+  --eph-sleep-stage-4:#1f5aa8;
 }
 
 /* Controles nativos (audio, etc.) ------------------------------

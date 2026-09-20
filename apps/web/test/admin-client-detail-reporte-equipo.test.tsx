@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import AdminClientDetail from '../components/admin/AdminClientDetail';
 import * as clientsClient from '../lib/clients-client';
 import * as personalInfoClient from '../lib/personal-info-client';
+import type { PersonalInfo } from '../lib/personal-info-client';
 import * as labPanelsClient from '../lib/lab-panels-client';
 import * as checkinsClient from '../lib/checkins-client';
 
@@ -22,9 +23,12 @@ const MENTORING_CLIENT: clientsClient.ClientDetail = {
 function mockFetches(permissions: Record<string, boolean> = {}) {
   vi.mocked(clientsClient.fetchClient).mockResolvedValue({ ...MENTORING_CLIENT, permissions });
   vi.mocked(clientsClient.fetchMembershipPayments).mockResolvedValue([]);
-  vi.mocked(personalInfoClient.getPersonalInfo).mockResolvedValue(null);
+  vi.mocked(personalInfoClient.getPersonalInfo).mockResolvedValue(null as unknown as PersonalInfo);
   vi.mocked(labPanelsClient.listLabPanels).mockResolvedValue([]);
-  vi.mocked(checkinsClient.getCheckinsStatus).mockResolvedValue({ lastResponseAt: null });
+  vi.mocked(checkinsClient.getCheckinsStatus).mockResolvedValue({
+    dailyDoneToday: false, weeklyDueThisWeek: false, periodConfirmationDue: false,
+    lastResponseAt: null, dailyStreakDays: 0, weeklyStreakWeeks: 0, weeklyRitualWindowOpen: false,
+  });
 }
 
 // Spec 28: campo nuevo de admin, por-cliente, para habilitar/deshabilitar
