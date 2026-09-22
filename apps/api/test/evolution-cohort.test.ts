@@ -3,7 +3,7 @@ import request from 'supertest';
 import { eq } from 'drizzle-orm';
 import { createApp } from '../src/app.js';
 import { db } from '../src/db/index.js';
-import { admins, clients, legalAcceptances, wearableMetricas } from '../src/models/schema.js';
+import { admins, clients, legalAcceptances, wearableMetricas, regulationCapacityBaselines, regulationCapacityHistory } from '../src/models/schema.js';
 import { hashPassword, signToken } from '../src/services/auth.service.js';
 import { getCohortReport, listCohortMemberIds } from '../src/services/evolution-cohort.service.js';
 
@@ -66,6 +66,8 @@ describe('evolution cohort report (spec 28)', () => {
   });
 
   afterAll(async () => {
+    await db.delete(regulationCapacityHistory).where(eq(regulationCapacityHistory.clientId, consentedMemberId));
+    await db.delete(regulationCapacityBaselines).where(eq(regulationCapacityBaselines.clientId, consentedMemberId));
     await db.delete(wearableMetricas).where(eq(wearableMetricas.clientId, consentedMemberId));
     await db.delete(wearableMetricas).where(eq(wearableMetricas.clientId, noConsentMemberId));
     await db.delete(legalAcceptances).where(eq(legalAcceptances.clientId, consentedMemberId));
@@ -116,4 +118,25 @@ describe('evolution cohort report (spec 28)', () => {
     const res = await request(app).get(`/api/clients/${leaderId}/cohort-report`).set('Authorization', `Bearer ${signToken({ id: consentedMemberId, role: 'cliente', name: 'x', email: 'x@example.com' })}`);
     expect(res.status).toBe(403);
   });
+
+  // Regresión: la tendencia semanal de la cohorte usaba la lectura de
+  // Capacidad de regulación del propio cliente, truncada a los 14 días de
+  // su dashboard individual — con más historial que eso, atRiskByWeek/
+  // avgRegulationByWeek quedaban cortados a ~2 semanas en vez de las 8
+  // esperadas. Se sembraron 42 días (6 semanas) de historial para verificarlo.
+  it('covers more than 2 weeks of regulation-capacity trend when more than 14 days of history exist', async () => {
+    await db.insert(regulationCapacityBaselines).values({
+      clientId: consentedMemberId, hrvAvg: 45, fcReposoAvg: 58, suenoScoreAvg: 75, daysUsed: 7,
+    });
+    const today = new Date();
+    const rows = Array.from({ length: 42 }, (_, i) => {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      return { clientId: consentedMemberId, fecha: d.toISOString().slice(0, 10), score: 80 };
+    });
+    await db.insert(regulationCapacityHistory).values(rows);
+
+    const report = await getCohortReport(leaderId);
+    expect(report.avgRegulationByWeek.length).toBeGreaterThan(2);
+  }, 20000);
 });

@@ -5,6 +5,7 @@ import type { RegulationCapacityOverview } from '../../lib/stress-client';
 import type { StressCompletion } from '../../lib/stress-client';
 import type { WearableMetrica } from '../../lib/wearable-client';
 import { weeklyAdherenceTrend } from '../../lib/stress-logic';
+import { formatClockTime } from '../../lib/rest-logic';
 import EmptyState from '../ui/EmptyState';
 import { Trend, type TrendPoint } from './charts/Trend';
 import { ProportionBar, type ProportionSegment } from './charts/ProportionBar';
@@ -60,10 +61,13 @@ export function StressEvolutionSection({
 
 // ─── Sleep — cifras + etapas + tendencia de hora de despertar (spec 29.1) ──
 
-function timeToDecimalHour(hhmm: string): number | null {
-  const m = hhmm.match(/^(\d{1,2}):(\d{2})/);
-  if (!m) return null;
-  return Number(m[1]) + Number(m[2]) / 60;
+// wearable_metricas.hora_dormir/hora_despertar son timestamptz completos
+// (hora de inicio/fin de la sesión de sueño, ver whoop.service.ts), nunca un
+// string "HH:MM" — se parsean como fecha real y se toma la hora local.
+function timeToDecimalHour(iso: string): number | null {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.getHours() + d.getMinutes() / 60;
 }
 
 function formatMinutesAsHours(minutes: number): string {
@@ -108,7 +112,7 @@ export function SleepEvolutionSection({ metrics, tip }: { metrics: WearableMetri
     <>
       <StatRow>
         <KpiTile label="Sleep score" value={last.suenoScore ?? '—'} typical={scoreTypical ?? undefined} />
-        <KpiTile label="Hora de dormir" value={last.horaDormir ?? '—'} />
+        <KpiTile label="Hora de dormir" value={last.horaDormir ? formatClockTime(last.horaDormir) : '—'} />
         <KpiTile
           label="Sueño total"
           value={last.suenoTotalMinutos != null ? formatMinutesAsHours(Number(last.suenoTotalMinutos)) : '—'}

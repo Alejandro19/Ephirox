@@ -40,7 +40,12 @@ type MemberSignals = {
 
 async function collectMemberSignals(clientId: string): Promise<MemberSignals> {
   const [regulation, wearable] = await Promise.all([
-    getRegulationCapacityOverview(clientId).catch(() => null),
+    // Ventana ancha (56 días, no los 14 del dashboard individual del
+    // cliente) — la tendencia semanal de la cohorte necesita más historial
+    // del que trae la lectura por defecto (bug real: con el default de 14
+    // días, atRiskByWeek/avgRegulationByWeek solo alcanzaban a cubrir ~2
+    // semanas en vez de las 8 esperadas).
+    getRegulationCapacityOverview(clientId, RECOVERY_WINDOW_DAYS).catch(() => null),
     obtenerMetricas({ clienteId: clientId, dias: RECOVERY_WINDOW_DAYS }).catch(() => []),
   ]);
 

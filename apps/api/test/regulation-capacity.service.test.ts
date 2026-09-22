@@ -85,10 +85,20 @@ describe('regulation-capacity.service (Fase 7 — índice propio "Capacidad de r
     expect(rows).toHaveLength(1); // sigue habiendo solo la fila del 09-08, nada para el 09-30
   });
 
-  it('getRegulationCapacityOverview returns enabled:false while the feature flag is off, regardless of stored history', async () => {
+  it('getRegulationCapacityOverview returns the stored baseline/trend while the feature flag is on', async () => {
     const overview = await getRegulationCapacityOverview(clientId);
-    expect(overview.enabled).toBe(false);
-    expect(overview.today).toBeNull();
-    expect(overview.baseline).toBeNull();
+    expect(overview.enabled).toBe(true);
+    expect(overview.baseline).not.toBeNull();
+    expect(overview.trend.length).toBeGreaterThan(0);
+  });
+
+  // Regresión: evolution-cohort.service.ts necesita una ventana más ancha
+  // que los 14 días por defecto del dashboard individual del cliente para
+  // armar su tendencia de 8 semanas — sin este parámetro, `trend` siempre
+  // quedaba truncado a 14 días sin importar cuánto historial hubiera.
+  it('accepts a wider days window than the default 14', async () => {
+    const overview = await getRegulationCapacityOverview(clientId, 90);
+    expect(overview.enabled).toBe(true);
+    expect(overview.trend.length).toBeGreaterThan(0);
   });
 });

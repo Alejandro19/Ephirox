@@ -45,9 +45,9 @@ describe('SleepEvolutionSection', () => {
     const metrics = [
       metrica({ fecha: '2026-08-30', suenoScore: 70 }),
       metrica({
-        fecha: '2026-08-31', suenoScore: 82, suenoTotalMinutos: 450, horaDormir: '23:00',
+        fecha: '2026-08-31', suenoScore: 82, suenoTotalMinutos: 450, horaDormir: '2026-08-30T23:00:00.000Z',
         suenoRemMinutos: 90, suenoProfundoMinutos: 80, suenoLigeroMinutos: 250, suenoDespiertoMinutos: 30,
-        horaDespertar: '07:00',
+        horaDespertar: '2026-08-31T07:00:00.000Z',
       }),
     ];
     render(<SleepEvolutionSection metrics={metrics} />);
@@ -55,6 +55,26 @@ describe('SleepEvolutionSection', () => {
     expect(screen.getByText('82')).toBeInTheDocument();
     expect(screen.getByText('Etapas de sueño — última noche')).toBeInTheDocument();
     expect(screen.getByText('REM')).toBeInTheDocument();
+  });
+
+  // Regresión: horaDormir/horaDespertar son timestamptz completos (hora de
+  // inicio/fin de sesión de sueño), nunca un string "HH:MM" — un parseo
+  // ingenuo con regex dejaba "Hora de dormir" mostrando el ISO crudo y la
+  // tendencia de "Hora de despertar" siempre vacía con datos reales.
+  it('formats horaDormir as a clock time, never the raw ISO string', () => {
+    const metrics = [metrica({ fecha: '2026-08-31', horaDormir: '2026-08-30T23:15:00.000Z' })];
+    render(<SleepEvolutionSection metrics={metrics} />);
+    expect(screen.queryByText('2026-08-30T23:15:00.000Z')).not.toBeInTheDocument();
+    expect(screen.getByText('Hora de dormir')).toBeInTheDocument();
+  });
+
+  it('plots the hora de despertar trend from ISO wake-up timestamps', () => {
+    const metrics = Array.from({ length: 3 }, (_, i) =>
+      metrica({ fecha: `2026-08-2${i}`, horaDespertar: `2026-08-2${i}T07:30:00.000Z` })
+    );
+    render(<SleepEvolutionSection metrics={metrics} />);
+    expect(screen.getByText('Hora de despertar — últimos 8 días')).toBeInTheDocument();
+    expect(screen.queryByText('Necesitas más días de datos wearable para ver tu tendencia.')).not.toBeInTheDocument();
   });
 });
 

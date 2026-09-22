@@ -11,11 +11,14 @@ import { computeRegulationCapacity, BASELINE_MIN_DAYS, type DailyRegulationScore
 
 const TREND_DAYS = 14;
 
-// Apagado hasta aprobación clínica de los pesos 50/30/20 (ver
-// regulation-capacity-logic.ts) — mientras esté en false, getRegulationCapacityOverview
-// devuelve enabled:false y el cliente sigue mostrando el placeholder de
-// Carga Cognitiva escalado (RegulationCapacityCard.tsx, Fase 1).
-export const REGULATION_CAPACITY_ENABLED_IN_PRODUCTION = false;
+// Encendido a pedido explícito de Alejandro (2026-09-22) para poder ver en
+// funcionamiento las gráficas de Stress en Evolution y la señal de riesgo
+// por Estrés en Reporte de mi equipo con datos de ejemplo — antes estaba
+// apagado hasta aprobación clínica de los pesos 50/30/20 (ver
+// regulation-capacity-logic.ts). Mientras esté en false,
+// getRegulationCapacityOverview devuelve enabled:false y el cliente sigue
+// mostrando el placeholder de Carga Cognitiva escalado (RegulationCapacityCard.tsx, Fase 1).
+export const REGULATION_CAPACITY_ENABLED_IN_PRODUCTION = true;
 
 function average(values: (number | null)[]): number | null {
   const nums = values.filter((v): v is number => v != null);
@@ -106,8 +109,11 @@ export type RegulationCapacityOverview = {
 };
 
 // Vista de lectura — nunca calcula al vuelo, solo lee lo que el job nocturno
-// ya guardó (mismo criterio que getCognitiveLoadOverview).
-export async function getRegulationCapacityOverview(clientId: string): Promise<RegulationCapacityOverview> {
+// ya guardó (mismo criterio que getCognitiveLoadOverview). `days` por
+// defecto es TREND_DAYS (14, la ventana del propio dashboard del cliente) —
+// evolution-cohort.service.ts pasa una ventana más ancha (8 semanas) para su
+// tendencia semanal, reutilizando esta misma lectura en vez de duplicarla.
+export async function getRegulationCapacityOverview(clientId: string, days: number = TREND_DAYS): Promise<RegulationCapacityOverview> {
   if (!REGULATION_CAPACITY_ENABLED_IN_PRODUCTION) {
     return { enabled: false, today: null, trend: [], baseline: null };
   }
@@ -125,7 +131,7 @@ export async function getRegulationCapacityOverview(clientId: string): Promise<R
   return {
     enabled: true,
     today: todayRow?.score ?? null,
-    trend: history.slice(-TREND_DAYS),
+    trend: history.slice(-days),
     baseline: baseline
       ? { hrvAvg: baseline.hrvAvg, fcReposoAvg: baseline.fcReposoAvg, suenoScoreAvg: baseline.suenoScoreAvg, daysUsed: baseline.daysUsed }
       : null,
