@@ -1116,6 +1116,14 @@ Tanda larga de fixes/pedidos encadenados sobre la landing, mismo patrón de veri
 - **Datos que el mockup inventa no se inventan en producto:** se omitieron "Agua corporal" (no hay campo absoluto) y "Movimiento diario" (no hay umbral de pasos validado).
 - **El nombre que muestra WhatsApp al abrir el chat es el perfil de la cuenta** del número; para mostrar "Ephirox" + logo hay que convertirlo a WhatsApp Business (no se cambia desde el código).
 
+### 5. Continuación 2026-09-24 — Slogan "con IA", botón "Habla con un asesor", y "Junta Directiva" con el diseño de DÍA 90
+- **Slogan** del Hero y del login: "BIENESTAR ÉLITE CON IA PARA FOUNDERS Y C‑LEVELS" (`91a3883`).
+- **Botón del header** pasa a "Habla con un asesor" en desktop y mobile (abre `ChatWidget`); reglas nuevas para ≤380px en `landing.css` (marca, ícono y botón deberían caber en 320px, **calculado, no medido**: Chrome headless no generó capturas en esa sesión) (`63bb1e3`). Fila "Acceso" de la tabla comparativa incluye Top Sellers (`59bc8b4`).
+- **"El reporte que le llevas a tu Junta Directiva"** (`JuntaChart.tsx`): se reconstruyó con el diseño de DÍA 90 (título a la izquierda, riel dorado + filas que se expanden a la derecha, activación por clic/teclado, no por hover, porque el desplegable es alto y con hover las filas saltarían). Luego, a pedido, **sin gráficos ni cifras**: solo el texto descriptivo de cada punto (los datos de cifra/glosa/fuente/gráfico siguen en `JUNTA_PUNTOS`, `content.ts`, por si se retoman). Título "El reporte que le llevas a tu *Junta Directiva*." (itálica dorada), centrado en su columna, más pequeño y con filete dorado. Commits `7830ed4`, `a12e500`, `9afa7b3`, `e09003d`, `81ebbb6`.
+- **"Lo que cambia":** la columna DESPUÉS usa la tipografía de la tabla comparativa (Jost 300, 16–18px) y ANTES baja a 14px (`a12e500`).
+- **CSS sin uso que quedó a propósito** en `landing.css`: estilos `dif-*` (carrusel eliminado), gráficos y panel antiguo de la Junta (`junta-chart-*`, `junta-panel*`, `junta-index*`).
+- Sigue pendiente revisar en navegador real (desktop y celular a 320/375px) el Hero, el modal de demo, el chat, "Lo que cambia" y la Junta.
+
 ## Próximas actividades — Siguiente sesión (actualizada 2026-09-03, 2026-09-04, 2026-09-12, 2026-09-13, 2026-09-15, 2026-09-16, 2026-09-24)
 
 ### Actividad 1 — Confirmar que el login desde el celular ya funciona
