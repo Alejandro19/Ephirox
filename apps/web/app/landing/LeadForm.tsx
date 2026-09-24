@@ -17,14 +17,24 @@ function applyDialCode(current: string, oldCode: string, newCode: string): strin
   return rest ? `${newCode} ${rest}` : `${newCode} `;
 }
 
-export function LeadForm() {
+export function LeadForm({
+  initialCorreo = '',
+  initialCelular,
+  revealAll = false,
+  submitLabel = 'Solicitar una demo',
+}: {
+  initialCorreo?: string;
+  initialCelular?: string;
+  revealAll?: boolean;
+  submitLabel?: string;
+} = {}) {
   const [enviado, setEnviado] = useState(false);
   const [nombre, setNombre] = useState('');
   const [apellido, setApellido] = useState('');
-  const [correo, setCorreo] = useState('');
+  const [correo, setCorreo] = useState(initialCorreo);
   const [correoError, setCorreoError] = useState<string | null>(null);
   const [pais, setPais] = useState(DEFAULT_COUNTRY.name);
-  const [celular, setCelular] = useState(`${DEFAULT_COUNTRY.dialCode} `);
+  const [celular, setCelular] = useState(initialCelular?.trim() ? initialCelular : `${DEFAULT_COUNTRY.dialCode} `);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,7 +48,7 @@ export function LeadForm() {
   // Revelado progresivo (punto 12.1): el Paso 2 aparece en cuanto Nombre y
   // Apellido tienen contenido real — mismo mecanismo en web y en mobile, no
   // depende del ancho de pantalla.
-  const showStep2 = nombre.trim().length > 0 && apellido.trim().length > 0;
+  const showStep2 = revealAll || (nombre.trim().length > 0 && apellido.trim().length > 0);
 
   function validateCorreo(value: string): boolean {
     if (!value || !value.includes('@') || !isCorporateEmail(value)) {
@@ -167,7 +177,7 @@ export function LeadForm() {
 
       {error && <p role="alert" className="field-full" style={{ margin: 0, fontSize: 14, color: '#B0432C' }}>{error}</p>}
       <button type="submit" className="submit-btn field-full" disabled={saving} style={{ opacity: saving ? 0.6 : 1, cursor: saving ? 'default' : 'pointer' }}>
-        {saving ? 'Enviando…' : 'Solicitar una demo'}
+        {saving ? 'Enviando…' : submitLabel}
       </button>
     </form>
   );

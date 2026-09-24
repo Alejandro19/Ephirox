@@ -1011,3 +1011,60 @@
 @media (prefers-reduced-motion: reduce) {
   .eph-landing2 .back-to-top { transition: opacity 200ms ease-out; transform: none; }
 }
+
+/* ── Formulario compacto del Hero + modal de registro completo ── */
+.eph-landing2 .hero-demo-form { background: rgba(243,237,225,0.94); color: var(--ink); border-radius: 18px; padding: 16px 18px; max-width: 640px; box-shadow: 0 10px 40px rgba(0,0,0,0.28); }
+.eph-landing2 .hero-demo-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; }
+.eph-landing2 .hero-demo-form label { display: grid; gap: 6px; flex: 1 1 170px; min-width: 0; }
+.eph-landing2 .hero-demo-form label span { font-family: 'Jost', sans-serif; font-size: 12px; color: rgba(23,19,14,0.7); }
+.eph-landing2 .hero-demo-form input { width: 100%; box-sizing: border-box; height: 44px; padding: 0 14px; font-size: 14px; font-family: inherit; color: var(--ink); background: #fff; border: 1px solid rgba(23,19,14,0.16); border-radius: 12px; outline: none; }
+.eph-landing2 .hero-demo-form input::placeholder { color: rgba(23,19,14,0.36); }
+.eph-landing2 .hero-demo-form input:focus { border-color: var(--gold-dark); }
+.eph-landing2 .hero-demo-form input[aria-invalid="true"] { border-color: #B0432C; }
+.eph-landing2 .hero-demo-btn { flex: 1 1 100%; height: 44px; padding: 0 22px; border: 0; border-radius: 999px; background: var(--ink); color: var(--cream); font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: background 180ms ease-out; }
+.eph-landing2 .hero-demo-btn:hover { background: #2A2118; }
+@media (min-width: 620px) { .eph-landing2 .hero-demo-btn { flex: 0 0 auto; } }
+.eph-landing2 .hero-demo-msg { margin: 10px 0 0; font-size: 13.5px; color: #2E7D4F; }
+.eph-landing2 .hero-demo-msg.is-error { color: #B0432C; }
+
+.eph-landing2 .lead-modal-backdrop { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 20px; background: rgba(11,10,8,0.62); backdrop-filter: blur(6px); overflow-y: auto; }
+.eph-landing2 .lead-modal { position: relative; width: 100%; max-width: 720px; max-height: calc(100vh - 40px); overflow-y: auto; background: #EFE8DA; color: var(--ink); border-radius: 20px; padding: clamp(24px, 3vw, 36px); box-shadow: 0 24px 80px rgba(0,0,0,0.45); }
+.eph-landing2 .lead-modal h2 { margin: 0 40px 22px 0; font-family: 'Cormorant Garamond', serif; font-weight: 400; font-size: clamp(26px, 3vw, 32px); color: var(--ink); }
+.eph-landing2 .lead-modal-close { position: absolute; top: 14px; right: 16px; width: 36px; height: 36px; border: 0; background: transparent; font-size: 26px; line-height: 1; color: rgba(23,19,14,0.6); cursor: pointer; }
+.eph-landing2 .lead-modal-close:hover { color: var(--ink); }
+
+.eph-landing2 .wa-float { position: fixed; right: clamp(16px, 3vw, 28px); bottom: clamp(16px, 3vw, 28px); z-index: 55; display: inline-flex; align-items: center; gap: 10px; height: 48px; padding: 0 20px; border-radius: 999px; background: #14241B; color: #F5F1E8; font-family: 'Jost', sans-serif; font-size: 14px; font-weight: 600; text-decoration: none; box-shadow: 0 8px 28px rgba(0,0,0,0.4); }
+.eph-landing2 .wa-float svg { color: #25D366; }
+.eph-landing2 .wa-float:hover { background: #1B3226; }
+.eph-landing2 .back-to-top { bottom: calc(clamp(16px, 3vw, 28px) + 62px); }
+@media (max-width: 480px) { .eph-landing2 .wa-float span { display: none; } .eph-landing2 .wa-float { width: 48px; padding: 0; justify-content: center; } }
+
+/* Título del Hero con más protagonismo (sin competir con el h1) */
+.eph-landing2 .hero-content .hero-kicker { font-size: clamp(19px, 2.1vw, 27px); font-weight: 400; letter-spacing: 0.05em; color: var(--gold-light); margin-bottom: 0; line-height: 1.3; }
+@media (max-width: 768px) { .eph-landing2 .hero-content .hero-kicker { font-size: 18px; margin-bottom: 0; } }
+
+/* Formulario del Hero: misma proporción que la referencia */
+.eph-landing2 .hero-demo-form { max-width: 530px; width: 100%; padding: 20px; border-radius: 24px; background: rgba(243,237,225,0.92); }
+.eph-landing2 .hero-demo-row { flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+.eph-landing2 .hero-demo-form label { flex: 1 1 122px; }
+.eph-landing2 .hero-demo-form label span { font-size: 14px; font-weight: 500; color: var(--ink); }
+.eph-landing2 .hero-demo-form input { height: 48px; border-radius: 14px; font-size: 14px; }
+.eph-landing2 .hero-demo-btn { height: 48px; font-size: 15px; font-weight: 700; padding: 0 26px; }
+
+/* Ventana "Chatea con nosotros" */
+.eph-landing2 .wa-float { border: 0; cursor: pointer; }
+.eph-landing2 .wa-panel { position: fixed; right: clamp(16px, 3vw, 28px); bottom: calc(clamp(16px, 3vw, 28px) + 62px); z-index: 56; width: min(340px, calc(100vw - 32px)); border-radius: 18px; overflow: hidden; background: #F5F1E8; color: var(--ink); box-shadow: 0 18px 60px rgba(0,0,0,0.5); }
+.eph-landing2 .wa-panel-head { display: flex; align-items: center; gap: 12px; padding: 16px 18px; background: #17130F; color: var(--cream); }
+.eph-landing2 .wa-panel-head div { display: grid; gap: 2px; flex: 1; }
+.eph-landing2 .wa-panel-head strong { font-size: 15px; }
+.eph-landing2 .wa-panel-head div span { font-size: 12px; color: rgba(245,241,232,0.65); }
+.eph-landing2 .wa-avatar { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: var(--gold); color: var(--ink); font-weight: 700; }
+.eph-landing2 .wa-panel-close { border: 0; background: transparent; color: var(--cream); font-size: 24px; cursor: pointer; line-height: 1; }
+.eph-landing2 .wa-panel-body { display: grid; gap: 10px; padding: 16px; }
+.eph-landing2 .wa-greeting { margin: 0 0 4px; padding: 12px 14px; background: #fff; border-radius: 12px; font-size: 14px; line-height: 1.45; }
+.eph-landing2 .wa-option { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: #fff; border: 1px solid rgba(23,19,14,0.12); border-radius: 12px; color: var(--ink); text-decoration: none; font-size: 14px; font-weight: 600; }
+.eph-landing2 .wa-option:hover { border-color: var(--gold-dark); }
+.eph-landing2 .wa-option-icon { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%; background: #F3EDE1; }
+.eph-landing2 .wa-option-label { flex: 1; }
+.eph-landing2 .wa-interested { display: flex; align-items: center; justify-content: center; gap: 10px; height: 46px; border-radius: 12px; background: #25D366; color: #06210F; font-size: 14px; font-weight: 700; text-decoration: none; }
+.eph-landing2 .wa-interested:hover { background: #1FBE5A; }

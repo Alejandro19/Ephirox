@@ -11,10 +11,14 @@ import { CategoriaTable } from './CategoriaTable';
 import { Dia90Rail } from './Dia90Rail';
 import { JuntaSection } from './JuntaChart';
 import { DifCarousel } from './DifCarousel';
-import { LeadForm } from './LeadForm';
+import { HeroDemoForm } from './HeroDemoForm';
+import { LeadModal } from './LeadModal';
+import { ChatWidget } from './ChatWidget';
 import { ScrollReveal } from './ScrollReveal';
 import { OptimizacionMobileCarousel } from './OptimizacionMobileCarousel';
 import { CostosMobileCarousel } from './CostosMobileCarousel';
+import { COACH_WHATSAPP_NUMBER } from '@/lib/constants';
+
 
 // Puerto 1:1 de docs/ephirox-landing.html — mismo copy, mismas imágenes
 // (docs/img, copiadas a public/landing), mismas interacciones (tarjeta de
@@ -78,6 +82,8 @@ function handleAnchorClick(e: React.MouseEvent<HTMLAnchorElement>) {
 export function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [leadModal, setLeadModal] = useState<{ correo: string; celular: string } | null>(null);
 
   useEffect(() => {
     let raf: number | null = null;
@@ -98,6 +104,11 @@ export function LandingPage() {
     };
   }, []);
 
+  function openLeadModal(e: React.MouseEvent<HTMLAnchorElement>) {
+    e.preventDefault();
+    setLeadModal({ correo: '', celular: '' });
+  }
+
   function scrollToTop() {
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
@@ -116,9 +127,9 @@ export function LandingPage() {
             <span className="header-login-full">¿Ya eres miembro? Iniciar sesión →</span>
             <span className="header-login-short"><LoginIcon size={20} /></span>
           </a>
-          <a className="cta-pill link-hover pill-hover eph-a" href="#llevarlo" onClick={handleAnchorClick} style={{ animationDelay: '200ms' }}>
-            <span className="cta-pill-full">Llevar Ephirox a mi empresa</span>
-            <span className="cta-pill-short">Llevar a mi empresa</span>
+          <a className="cta-pill link-hover pill-hover eph-a" href="#chat" onClick={(e) => { e.preventDefault(); setChatOpen(true); }} style={{ animationDelay: '200ms' }}>
+            <span className="cta-pill-full">Hablá con nuestro equipo</span>
+            <span className="cta-pill-short">Hablar con nosotros</span>
           </a>
         </div>
       </header>
@@ -148,15 +159,15 @@ export function LandingPage() {
           </div>
 
           <div className="hero-content">
-            <span className="hero-kicker eph-a" style={{ animationDelay: '260ms' }}>
-              BIENESTAR ÉLITE PARA FOUNDERS Y <span style={{ whiteSpace: 'nowrap' }}>C‑LEVELS</span>
-            </span>
             <h1 className="eph-a" style={{ animationDelay: '320ms' }}>
               Tu empresa llega hasta donde tu <em className="serif">cuerpo</em> te lo permite.
             </h1>
-            <p className="lead eph-a" style={{ animationDelay: '520ms' }}>
-              Ephirox mide lo que sucede dentro de ti — antes de que te pase factura.
-            </p>
+            <span className="hero-kicker eph-a" style={{ animationDelay: '520ms' }}>
+              Bienestar élite para líderes de alto nivel
+            </span>
+            <div className="eph-a" style={{ animationDelay: '620ms' }}>
+              <HeroDemoForm onContinue={(correo, celular) => setLeadModal({ correo, celular })} />
+            </div>
           </div>
 
           <HeroStatCard className="eph-a" style={{ animationDelay: '760ms' }} />
@@ -279,9 +290,6 @@ export function LandingPage() {
               style={{ objectFit: 'cover', filter: 'saturate(0.9) contrast(1.03)' }}
             />
             <div className="divider-banner-shade" />
-            <div className="divider-banner-text">
-              <p>Redefining limits.</p>
-            </div>
           </div>
 
           <section className="dia90-section">
@@ -305,17 +313,6 @@ export function LandingPage() {
           </div>
         </section>
 
-        <section className="llevarlo" id="llevarlo">
-          <div className="llevarlo-wrap">
-            <div className="llevarlo-copy">
-              <span className="llevarlo-rule" aria-hidden="true" />
-              <h2>Llevar Ephirox a mi <em>empresa</em>.</h2>
-            </div>
-            <div className="llevarlo-form">
-              <LeadForm />
-            </div>
-          </div>
-        </section>
       </main>
 
       <footer className="site-footer">
@@ -330,7 +327,7 @@ export function LandingPage() {
               <span>Privado y confidencial.</span>
               <span>Cada protocolo validado por un especialista humano.</span>
             </div>
-            <a className="cta-pill link-hover pill-hover" href="#llevarlo" onClick={handleAnchorClick} style={{ justifySelf: 'start' }}>Contactar</a>
+            <a className="cta-pill link-hover pill-hover" href="#" onClick={openLeadModal} style={{ justifySelf: 'start' }}>Contactar</a>
           </div>
 
           <div className="footer-col">
@@ -342,7 +339,7 @@ export function LandingPage() {
 
           <div className="footer-col">
             <span className="eyebrow">COMPAÑÍA</span>
-            <a className="link-hover" href="#llevarlo" onClick={handleAnchorClick}>Llevarlo a mi empresa</a>
+            <a className="link-hover" href="#" onClick={openLeadModal}>Llevarlo a mi empresa</a>
           </div>
 
           <div className="footer-col">
@@ -370,6 +367,10 @@ export function LandingPage() {
           </div>
         </div>
       </footer>
+
+      <ChatWidget open={chatOpen} onToggle={setChatOpen} whatsappNumber={COACH_WHATSAPP_NUMBER} />
+
+      {leadModal && <LeadModal correo={leadModal.correo} celular={leadModal.celular} onClose={() => setLeadModal(null)} />}
 
       <button
         type="button"
