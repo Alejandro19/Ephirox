@@ -314,11 +314,9 @@ export function LandingPage() {
               <RingIcon size={22} />
               <span>EPHIROX</span>
             </div>
-            <span className="claim">El lujo de tener salud.</span>
             <div className="notes">
               <span>Ephirox es la plataforma de bienestar con inteligencia artificial para founders, C-Levels y Top Sellers que quieren sostener su rendimiento sin sacrificar su salud.</span>
             </div>
-            <a className="cta-pill link-hover pill-hover" href="#" onClick={openLeadModal} style={{ justifySelf: 'start' }}>Contactar</a>
           </div>
 
           <div className="footer-col">
