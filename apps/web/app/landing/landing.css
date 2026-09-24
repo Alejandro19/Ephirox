@@ -1092,3 +1092,12 @@
 .eph-landing2 .footer-brand { max-width: 46ch; gap: 22px; }
 .eph-landing2 .footer-brand .notes span { font-size: 15px; font-weight: 300; line-height: 1.6; color: rgba(245,241,232,0.75); }
 .eph-landing2 .footer-bottom { justify-content: flex-start; gap: 16px 36px; padding-bottom: 8px; }
+
+/* Header en móviles angostos: "Habla con un asesor" + marca + ícono caben en 320px */
+@media (max-width: 380px) {
+  .eph-landing2 header.site-header { padding: 12px; gap: 6px; }
+  .eph-landing2 .brand { gap: 9px; }
+  .eph-landing2 .brand span { font-size: 17px; letter-spacing: 0.14em; text-indent: 0.14em; }
+  .eph-landing2 .header-actions { gap: 8px; }
+  .eph-landing2 .cta-pill { font-size: 11px; padding: 7px 11px; }
+}

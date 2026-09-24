@@ -126,8 +126,8 @@ export function LandingPage() {
             <span className="header-login-short"><LoginIcon size={20} /></span>
           </a>
           <a className="cta-pill link-hover pill-hover eph-a" href="#chat" onClick={(e) => { e.preventDefault(); setChatOpen(true); }} style={{ animationDelay: '200ms' }}>
-            <span className="cta-pill-full">Hablá con nuestro equipo</span>
-            <span className="cta-pill-short">Hablar con nosotros</span>
+            <span className="cta-pill-full">Habla con un asesor</span>
+            <span className="cta-pill-short">Habla con un asesor</span>
           </a>
         </div>
       </header>
