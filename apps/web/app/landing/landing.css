@@ -1121,4 +1121,7 @@
 /* Junta: título centrado (vertical y horizontal) en su columna y más grande, para aprovechar el espacio en blanco */
 .eph-landing2 .junta-d90.dia90-wrap { align-items: center; }
 .eph-landing2 .junta-d90 .dia90-head { justify-items: center; align-content: center; text-align: center; }
-.eph-landing2 .junta-d90 .dia90-head h2 { font-size: clamp(34px, 4.4vw, 56px); max-width: 13ch; }
+.eph-landing2 .junta-d90 .dia90-head { gap: 22px; }
+.eph-landing2 .junta-rule { width: 44px; height: 1px; background: var(--gold); }
+.eph-landing2 .junta-d90 .dia90-head h2 { font-size: clamp(28px, 3vw, 40px); font-weight: 300; line-height: 1.18; letter-spacing: -0.005em; max-width: 16ch; }
+.eph-landing2 .junta-d90 .dia90-head h2 em { font-style: italic; font-weight: 400; color: var(--gold); }
