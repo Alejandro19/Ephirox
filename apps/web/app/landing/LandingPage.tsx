@@ -10,7 +10,6 @@ import { PasosMobileList } from './PasosMobileList';
 import { CategoriaTable } from './CategoriaTable';
 import { Dia90Rail } from './Dia90Rail';
 import { JuntaSection } from './JuntaChart';
-import { DifCarousel } from './DifCarousel';
 import { HeroDemoForm } from './HeroDemoForm';
 import { LeadModal } from './LeadModal';
 import { ChatWidget } from './ChatWidget';
@@ -306,13 +305,6 @@ export function LandingPage() {
         <section className="junta-section">
           <JuntaSection />
         </section>
-
-        <section className="dif-section">
-          <div className="dif-wrap">
-            <DifCarousel />
-          </div>
-        </section>
-
       </main>
 
       <footer className="site-footer">
@@ -324,8 +316,7 @@ export function LandingPage() {
             </div>
             <span className="claim">El lujo de tener salud.</span>
             <div className="notes">
-              <span>Privado y confidencial.</span>
-              <span>Cada protocolo validado por un especialista humano.</span>
+              <span>Ephirox es la plataforma de bienestar con inteligencia artificial para founders, C-Levels y Top Sellers que quieren sostener su rendimiento sin sacrificar su salud.</span>
             </div>
             <a className="cta-pill link-hover pill-hover" href="#" onClick={openLeadModal} style={{ justifySelf: 'start' }}>Contactar</a>
           </div>
@@ -335,11 +326,7 @@ export function LandingPage() {
             <a className="link-hover" href="#contexto" onClick={handleAnchorClick}>El costo de no verlo</a>
             <a className="link-hover" href="#categoria" onClick={handleAnchorClick}>¿Por qué Ephirox?</a>
             <a className="link-hover" href="#beneficios" onClick={handleAnchorClick}>Beneficios</a>
-          </div>
-
-          <div className="footer-col">
-            <span className="eyebrow">COMPAÑÍA</span>
-            <a className="link-hover" href="#" onClick={openLeadModal}>Llevarlo a mi empresa</a>
+            <a className="link-hover" href="#" onClick={openLeadModal}>Solicitar una Demo</a>
           </div>
 
           <div className="footer-col">
@@ -360,7 +347,7 @@ export function LandingPage() {
         </div>
 
         <div className="footer-bottom">
-          <span className="copy">© 2026 Ephirox. Programa de optimización de hábitos y alto rendimiento. No constituye diagnóstico ni tratamiento médico.</span>
+          <span className="copy">© 2026 Ephirox. No constituye diagnóstico ni tratamiento médico.</span>
           <div className="legal">
             <a className="link-hover" href="/terminos">Términos</a>
             <a className="link-hover" href="/privacidad">Privacidad</a>
