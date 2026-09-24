@@ -1090,5 +1090,5 @@
 /* Footer: la descripción de marca es lo principal; los links legales van a la izquierda para no chocar con el botón fijo de chat */
 @media (min-width: 900px) { .eph-landing2 .footer-grid { grid-template-columns: minmax(0, 1.9fr) minmax(0, 1fr) minmax(0, 1fr); } }
 .eph-landing2 .footer-brand { max-width: 52ch; gap: 22px; }
-.eph-landing2 .footer-brand .notes span { font-size: clamp(17px, 1.6vw, 20px); font-weight: 300; line-height: 1.6; color: rgba(245,241,232,0.88); }
+.eph-landing2 .footer-brand .notes span { font-size: clamp(15px, 1.25vw, 17px); font-weight: 300; line-height: 1.6; color: rgba(245,241,232,0.85); }
 .eph-landing2 .footer-bottom { justify-content: flex-start; gap: 16px 36px; padding-bottom: 8px; }
