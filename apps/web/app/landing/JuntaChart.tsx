@@ -16,7 +16,7 @@ export function JuntaSection() {
     <div className="dia90-wrap junta-d90">
       <div className="dia90-head">
         <span className="junta-rule" aria-hidden="true" />
-        <h2>El reporte que le llevas a tu <em>Junta</em>.</h2>
+        <h2>El reporte que le llevas a tu <em>Junta Directiva</em>.</h2>
       </div>
 
       <div className="dia90-rail-grid">
