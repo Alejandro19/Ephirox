@@ -403,8 +403,8 @@
 .eph-landing2 .shift-labels .label-antes { flex: 0 1 280px; }
 .eph-landing2 .shift-labels .label-despues { flex: 0 1 520px; }
 .eph-landing2 .shift-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: clamp(24px, 6vw, 84px); padding: clamp(14px, 2vh, 22px) 0; border-top: 1px solid rgba(23,19,14,0.14); }
-.eph-landing2 .shift-row .antes { flex: 0 1 280px; margin: 0; font-size: 15px; line-height: 1.5; color: rgba(23,19,14,0.6); font-style: italic; max-width: 30ch; }
-.eph-landing2 .shift-row .despues { flex: 0 1 520px; margin: 0; font-family: 'Cormorant Garamond', serif; font-weight: 400; font-size: clamp(17px, 1.4vw, 20px); line-height: 1.3; max-width: 560px; text-wrap: pretty; }
+.eph-landing2 .shift-row .antes { flex: 0 1 280px; margin: 0; font-size: 14px; line-height: 1.5; color: rgba(23,19,14,0.6); font-style: italic; max-width: 30ch; }
+.eph-landing2 .shift-row .despues { flex: 0 1 520px; margin: 0; font-family: 'Jost', sans-serif; font-weight: 300; font-size: clamp(16px, 1.3vw, 18px); line-height: 1.55; color: rgba(23,19,14,0.9); max-width: 560px; text-wrap: pretty; }
 
 .eph-landing2 .divider-banner { position: relative; height: clamp(220px, 34vw, 420px); overflow: hidden; }
 .eph-landing2 .divider-banner img { object-position: 50% 28%; }
@@ -1109,10 +1109,10 @@
 .eph-landing2 .junta-d90 .dia90-row { cursor: pointer; }
 .eph-landing2 .junta-d90 .dia90-row .t { font-size: clamp(20px, 2vw, 24px); }
 .eph-landing2 .junta-d90 .dia90-row .t .junta-index-num { margin-right: 10px; }
-.eph-landing2 .junta-d90 .dia90-row.is-active .d { max-height: 720px; margin-top: 10px; }
+.eph-landing2 .junta-d90 .dia90-row.is-active .d { max-height: 260px; margin-top: 10px; }
 .eph-landing2 .junta-detail { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: 20px 28px; padding-bottom: 4px; }
 .eph-landing2 .junta-detail-side { display: grid; gap: 14px; align-content: start; }
-.eph-landing2 .junta-d90 .junta-panel-texto p { font-size: 14.5px; line-height: 1.6; }
+.eph-landing2 .junta-d90 .junta-panel-texto p { font-size: 15px; line-height: 1.65; max-width: 60ch; }
 .eph-landing2 .junta-d90 .junta-panel-cifra { border-top: 0; padding-top: 0; }
 .eph-landing2 .junta-d90 .junta-panel-chart { padding-top: 12px; }
 .eph-landing2 .junta-d90 .junta-cifra { font-size: clamp(32px, 3vw, 40px); }
