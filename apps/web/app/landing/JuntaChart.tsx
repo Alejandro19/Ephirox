@@ -3,74 +3,80 @@
 import { useId, useState } from 'react';
 import { JUNTA_PUNTOS, type JuntaBarra, type JuntaPunto } from './content';
 
-// Índice + panel de altura fija (nunca acordeón) — el alto de la sección no
-// puede cambiar al pasar de un punto a otro, o empuja la card clara que
-// viene justo después. Cada punto tiene su propia forma de gráfico
-// (cohorte/barras/timeline/ciclos), no la misma serie repintada — ver
-// JUNTA_PUNTOS en content.ts.
+// Mismo diseño que tenía DÍA 90 (riel dorado + filas que se expanden): el
+// título del reporte a la izquierda y la lista de puntos a la derecha; al
+// elegir un punto (clic o teclado) se despliega su detalle completo (texto,
+// cifra, glosa, fuente y gráfico). Cada punto tiene su propia forma de
+// gráfico (cohorte/barras/timeline/ciclos) — ver JUNTA_PUNTOS en content.ts.
 export function JuntaSection() {
   const [active, setActive] = useState(0);
-  const current = JUNTA_PUNTOS[active];
   const baseId = useId();
 
   return (
-    <div className="junta-wrap">
-      <div className="junta-head">
+    <div className="dia90-wrap junta-d90">
+      <div className="dia90-head">
         <h2>El reporte que le llevas a tu Junta.</h2>
       </div>
 
-      <div className="junta-body">
-        <div className="junta-index-col">
+      <div className="dia90-rail-grid">
+        <div className="dia90-rail-track">
+          <div className="dia90-rail-fill" style={{ height: `${((active + 1) / JUNTA_PUNTOS.length) * 100}%` }} />
+        </div>
+        <div className="dia90-rows" role="list">
           <p className="rows-hint">Selecciona cada punto para ver el detalle.</p>
-          <div className="junta-index" role="tablist" aria-label="Puntos del acta">
-            {JUNTA_PUNTOS.map((p, i) => {
-              const isActive = i === active;
-              return (
-                <button
-                  key={p.num}
-                  type="button"
-                  role="tab"
-                  id={`${baseId}-tab-${i}`}
-                  aria-selected={isActive}
-                  aria-controls={`${baseId}-panel`}
-                  className={`junta-index-row${isActive ? ' is-active' : ''}`}
-                  onClick={() => setActive(i)}
-                >
-                  <span className="junta-index-num">{p.num}</span>
-                  <span className="junta-index-titulo">{p.titulo}</span>
-                </button>
-              );
-            })}
+          {JUNTA_PUNTOS.map((p, i) => {
+            const isActive = i === active;
+            const pick = () => setActive(i);
+            return (
+              <div
+                key={p.num}
+                role="listitem"
+                className={`dia90-row${isActive ? ' is-active' : ''}`}
+                tabIndex={0}
+                aria-expanded={isActive}
+                aria-controls={`${baseId}-d-${i}`}
+                onFocus={pick}
+                onClick={pick}
+                style={{ transform: `translateX(${isActive ? 8 : 0}px)`, opacity: isActive ? 1 : 0.72 }}
+              >
+                <div className="t" style={{ color: isActive ? '#E3C795' : '#F5F1E8' }}>
+                  <span className="junta-index-num">{p.num}</span> {p.titulo}
+                </div>
+                <div className="d" id={`${baseId}-d-${i}`} aria-hidden={!isActive}>
+                  <JuntaDetail punto={p} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function JuntaDetail({ punto }: { punto: JuntaPunto }) {
+  return (
+    <div className="junta-detail">
+      <div className="junta-panel-texto">
+        <span className="junta-panel-kicker">{punto.num} — {punto.kicker}</span>
+        <p>{punto.texto}</p>
+      </div>
+
+      <div className="junta-detail-side">
+        <div className="junta-panel-cifra">
+          <span className="junta-cifra">{punto.cifra}</span>
+          <div className="junta-glosa-col">
+            <p className="junta-glosa">{punto.glosa}</p>
+            {punto.fuente && <span className="junta-fuente">{punto.fuente}</span>}
           </div>
         </div>
 
-        <div
-          className="junta-panel"
-          role="tabpanel"
-          id={`${baseId}-panel`}
-          aria-labelledby={`${baseId}-tab-${active}`}
-          key={active}
-        >
-          <div className="junta-panel-texto">
-            <span className="junta-panel-kicker">{current.num} — {current.kicker}</span>
-            <p>{current.texto}</p>
+        {punto.chart !== 'none' && (
+          <div className="junta-panel-chart">
+            <JuntaChartVisual punto={punto} />
+            <span className="junta-chart-pie">{punto.pie}</span>
           </div>
-
-          <div className="junta-panel-cifra">
-            <span className="junta-cifra">{current.cifra}</span>
-            <div className="junta-glosa-col">
-              <p className="junta-glosa">{current.glosa}</p>
-              {current.fuente && <span className="junta-fuente">{current.fuente}</span>}
-            </div>
-          </div>
-
-          {current.chart !== 'none' && (
-            <div className="junta-panel-chart">
-              <JuntaChartVisual punto={current} />
-              <span className="junta-chart-pie">{current.pie}</span>
-            </div>
-          )}
-        </div>
+        )}
       </div>
     </div>
   );

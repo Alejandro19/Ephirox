@@ -1101,3 +1101,19 @@
   .eph-landing2 .header-actions { gap: 8px; }
   .eph-landing2 .cta-pill { font-size: 11px; padding: 7px 11px; }
 }
+
+/* "El reporte que le llevas a tu Junta" con el diseño de DÍA 90 (riel + filas expandibles) */
+.eph-landing2 .junta-section { padding-top: clamp(44px, 6.5vh, 80px); padding-bottom: clamp(44px, 6.5vh, 80px); }
+.eph-landing2 .junta-d90.dia90-wrap { max-width: 1120px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); }
+.eph-landing2 .junta-d90 .dia90-head h2 { font-weight: 300; color: rgba(251,248,241,0.96); }
+.eph-landing2 .junta-d90 .dia90-row { cursor: pointer; }
+.eph-landing2 .junta-d90 .dia90-row .t { font-size: clamp(20px, 2vw, 24px); }
+.eph-landing2 .junta-d90 .dia90-row .t .junta-index-num { margin-right: 10px; }
+.eph-landing2 .junta-d90 .dia90-row.is-active .d { max-height: 720px; margin-top: 10px; }
+.eph-landing2 .junta-detail { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: 20px 28px; padding-bottom: 4px; }
+.eph-landing2 .junta-detail-side { display: grid; gap: 14px; align-content: start; }
+.eph-landing2 .junta-d90 .junta-panel-texto p { font-size: 14.5px; line-height: 1.6; }
+.eph-landing2 .junta-d90 .junta-panel-cifra { border-top: 0; padding-top: 0; }
+.eph-landing2 .junta-d90 .junta-panel-chart { padding-top: 12px; }
+.eph-landing2 .junta-d90 .junta-cifra { font-size: clamp(32px, 3vw, 40px); }
+.eph-landing2 .junta-d90 .dia90-row.is-active .t .junta-index-num { color: #C9A66B; }
