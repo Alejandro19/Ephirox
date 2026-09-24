@@ -391,8 +391,8 @@
 }
 
 .eph-landing2 #beneficios { background: var(--bg-light); color: var(--ink); }
-.eph-landing2 .cambia-section { padding: clamp(36px, 6vh, 64px) clamp(22px, 6vw, 92px) clamp(24px, 3.5vh, 40px); }
-.eph-landing2 .cambia-wrap { max-width: 1120px; margin: 0 auto; display: grid; gap: clamp(14px, 2.2vh, 24px); }
+.eph-landing2 .cambia-section { padding: clamp(28px, 4.5vh, 52px) clamp(22px, 6vw, 92px) clamp(24px, 3.5vh, 40px); }
+.eph-landing2 .cambia-wrap { max-width: 1120px; margin: 0 auto; display: grid; gap: clamp(28px, 4vh, 44px); }
 .eph-landing2 .cambia-head { display: grid; gap: 14px; }
 .eph-landing2 .cambia-head .eyebrow { font-size: 12px; letter-spacing: 0.14em; color: rgba(23,19,14,0.42); }
 .eph-landing2 .cambia-head h2 { margin: 0; font-weight: 200; font-size: clamp(26px, 3.2vw, 38px); line-height: 1.12; letter-spacing: -0.015em; max-width: 24ch; text-wrap: pretty; }
