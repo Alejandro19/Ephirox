@@ -392,7 +392,7 @@
 
 .eph-landing2 #beneficios { background: var(--bg-light); color: var(--ink); }
 .eph-landing2 .cambia-section { padding: clamp(28px, 4.5vh, 52px) clamp(22px, 6vw, 92px) clamp(24px, 3.5vh, 40px); }
-.eph-landing2 .cambia-wrap { max-width: 1120px; margin: 0 auto; display: grid; gap: clamp(28px, 4vh, 44px); }
+.eph-landing2 .cambia-wrap { max-width: 1120px; margin: 0 auto; display: grid; gap: clamp(44px, 7vh, 72px); }
 .eph-landing2 .cambia-head { display: grid; gap: 14px; }
 .eph-landing2 .cambia-head .eyebrow { font-size: 12px; letter-spacing: 0.14em; color: rgba(23,19,14,0.42); }
 .eph-landing2 .cambia-head h2 { margin: 0; font-weight: 200; font-size: clamp(26px, 3.2vw, 38px); line-height: 1.12; letter-spacing: -0.015em; max-width: 24ch; text-wrap: pretty; }
@@ -1038,7 +1038,7 @@
 
 /* Botón fijo + ventana "Chatea con nosotros" — compacta para no tapar al ejecutivo del Hero */
 .eph-landing2 .wa-float { position: fixed; right: clamp(16px, 3vw, 28px); bottom: clamp(16px, 3vw, 28px); z-index: 55; display: inline-flex; align-items: center; gap: 9px; height: 44px; padding: 0 18px; border: 1px solid rgba(201,166,107,0.4); border-radius: 999px; background: rgba(20,17,13,0.88); backdrop-filter: blur(6px); color: var(--cream); font-family: 'Jost', sans-serif; font-size: 13px; font-weight: 400; letter-spacing: 0.02em; cursor: pointer; }
-.eph-landing2 .wa-float svg { color: var(--gold); }
+.eph-landing2 .wa-float svg { color: #25D366; }
 .eph-landing2 .wa-float:hover { border-color: var(--gold); }
 .eph-landing2 .back-to-top { bottom: calc(clamp(16px, 3vw, 28px) + 56px); }
 @media (max-width: 480px) { .eph-landing2 .wa-float span { display: none; } .eph-landing2 .wa-float { width: 44px; padding: 0; justify-content: center; } }
