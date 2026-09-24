@@ -1013,13 +1013,13 @@
 }
 
 /* ── Formulario compacto del Hero + modal de registro completo ── */
-.eph-landing2 .hero-content .hero-kicker { font-size: clamp(12px, 1.2vw, 15px); font-weight: 400; letter-spacing: 0.16em; color: rgba(202,160,87,0.62); margin-bottom: 0; line-height: 1.4; }
-@media (max-width: 768px) { .eph-landing2 .hero-content .hero-kicker { font-size: 11px; margin-bottom: 0; } }
+.eph-landing2 .hero-content .hero-kicker { font-size: clamp(11px, 0.95vw, 13px); font-weight: 400; letter-spacing: 0.16em; color: rgba(202,160,87,0.62); margin-bottom: 0; line-height: 1.4; }
+@media (max-width: 768px) { .eph-landing2 .hero-content .hero-kicker { font-size: 10px; margin-bottom: 0; } }
 
 .eph-landing2 .hero-demo-form { width: 100%; max-width: 500px; box-sizing: border-box; padding: 12px 14px; border-radius: 16px; background: rgba(20,17,13,0.72); border: 1px solid rgba(201,166,107,0.28); backdrop-filter: blur(8px); }
 .eph-landing2 .hero-demo-row { display: flex; align-items: flex-end; gap: 10px; }
 .eph-landing2 .hero-demo-form label { display: grid; gap: 5px; flex: 1 1 0; min-width: 0; }
-.eph-landing2 .hero-demo-form label span { font-family: 'Jost', sans-serif; font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 400; color: rgba(245,241,232,0.55); }
+.eph-landing2 .hero-demo-form label span { font-family: 'Jost', sans-serif; font-size: 12px; letter-spacing: 0.01em; text-transform: none; font-weight: 400; color: rgba(245,241,232,0.65); }
 .eph-landing2 .hero-demo-form input { width: 100%; box-sizing: border-box; height: 38px; padding: 0 12px; font-size: 13px; font-family: inherit; color: var(--cream); background: rgba(245,241,232,0.06); border: 1px solid rgba(201,166,107,0.28); border-radius: 10px; outline: none; }
 .eph-landing2 .hero-demo-form input::placeholder { color: rgba(245,241,232,0.32); }
 .eph-landing2 .hero-demo-form input:focus { border-color: var(--gold); }

@@ -53,7 +53,7 @@ export function HeroDemoForm({ onContinue }: { onContinue: (correo: string, celu
             aria-invalid={error === WHATSAPP_ERROR ? 'true' : undefined}
           />
         </label>
-        <button type="submit" className="hero-demo-btn">Solicite una demo en vivo</button>
+        <button type="submit" className="hero-demo-btn">Solicitar una Demo</button>
       </div>
       {error && <p role="alert" className="hero-demo-msg is-error">{error}</p>}
       {!error && continued && <p role="status" className="hero-demo-msg">Gracias, ahora cuéntenos un poco más sobre su negocio.</p>}

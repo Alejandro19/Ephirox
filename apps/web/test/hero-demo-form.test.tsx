@@ -11,7 +11,7 @@ describe('HeroDemoForm', () => {
     render(<HeroDemoForm onContinue={onContinue} />);
     await user.type(screen.getByPlaceholderText('su@empresa.com'), 'ana@gmail.com');
     await user.type(screen.getByPlaceholderText('+57 300 123 4567'), '300 123 4567');
-    await user.click(screen.getByRole('button', { name: 'Solicite una demo en vivo' }));
+    await user.click(screen.getByRole('button', { name: 'Solicitar una Demo' }));
     expect(onContinue).not.toHaveBeenCalled();
     expect(screen.getByText('Introduce un correo electrónico corporativo válido.')).toBeInTheDocument();
   });
@@ -22,7 +22,7 @@ describe('HeroDemoForm', () => {
     render(<HeroDemoForm onContinue={onContinue} />);
     await user.type(screen.getByPlaceholderText('su@empresa.com'), 'ana@acme.com');
     await user.type(screen.getByPlaceholderText('+57 300 123 4567'), '300 123 4567');
-    await user.click(screen.getByRole('button', { name: 'Solicite una demo en vivo' }));
+    await user.click(screen.getByRole('button', { name: 'Solicitar una Demo' }));
     expect(onContinue).toHaveBeenCalledWith('ana@acme.com', '+57 300 123 4567');
     expect(screen.getByText('Gracias, ahora cuéntenos un poco más sobre su negocio.')).toBeInTheDocument();
   });

@@ -64,6 +64,18 @@
   letter-spacing: 0.01em;
   color: #c9a66b;
 }
+.eph-login-tagline--brand {
+  margin: 14px 0 0;
+  max-width: 300px;
+  text-align: center;
+  font-family: var(--font-jost), 'Jost', sans-serif;
+  font-style: normal;
+  font-weight: 400;
+  font-size: clamp(10px, 1vw, 12px);
+  letter-spacing: 0.16em;
+  line-height: 1.7;
+  color: rgba(202, 160, 87, 0.62);
+}
 .eph-login-caption {
   position: absolute;
   left: 50%;
