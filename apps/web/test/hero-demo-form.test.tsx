@@ -36,7 +36,7 @@ describe('LeadModal', () => {
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('nombre@empresa.com')).toHaveValue('ana@acme.com');
     expect(screen.getByPlaceholderText('+57 300 123 4567')).toHaveValue('+57 300 123 4567');
-    expect(screen.getByText('Empresa')).toBeInTheDocument();
+    expect(screen.getByText('Nombre de la empresa')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Completar registro' })).toBeInTheDocument();
     await user.keyboard('{Escape}');
     expect(onClose).toHaveBeenCalled();

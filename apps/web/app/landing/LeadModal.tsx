@@ -20,7 +20,7 @@ export function LeadModal({ correo, celular, onClose }: { correo: string; celula
       <div className="lead-modal" role="dialog" aria-modal="true" aria-labelledby="lead-modal-title">
         <button type="button" className="lead-modal-close" aria-label="Cerrar" onClick={onClose}>×</button>
         <h2 id="lead-modal-title">Agende una demo personalizada</h2>
-        <LeadForm initialCorreo={correo} initialCelular={celular} revealAll submitLabel="Completar registro" />
+        <LeadForm initialCorreo={correo} initialCelular={celular || undefined} />
       </div>
     </div>
   );
