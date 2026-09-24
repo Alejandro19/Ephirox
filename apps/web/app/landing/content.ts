@@ -85,17 +85,11 @@ export const COMPARACION: CompareRow[] = [
 ];
 
 export const SHIFTS = [
-  { antes: 'Entreno si tengo tiempo, y como por intuición.', despues: 'Sé exactamente cómo entrenar y comer para potenciar mi salud y vitalidad — con datos, no por intuición.' },
-  { antes: 'Decido sin saber si estoy en mi mejor momento mental.', despues: 'Sé con datos cuándo mi juicio está en su punto más alto, y agendo ahí lo que importa.' },
-  { antes: 'El descanso se siente como tiempo perdido.', despues: 'Cada hora de sueño está calibrada para sostener mi ventaja.' },
+  { antes: 'Entreno si tengo tiempo, por intuición.', despues: 'Sé exactamente cómo y cuándo entrenar según mi estilo de vida y mis objetivos — con datos, no por intuición.' },
+  { antes: 'Como entre reuniones, improvisando lo que sea.', despues: 'Tengo un plan de alimentación que se adapta a mí, no una dieta genérica.' },
+  { antes: 'Decido sin saber si estoy en mi mejor momento mental.', despues: 'Sueño, recuperación y estrés registrados: sé en qué estado tomé cada decisión crítica, y puedo repetirlo a voluntad.' },
+  { antes: 'Mis datos están repartidos en cinco apps que no se hablan entre sí.', despues: 'Todo vive en un solo lugar — una plataforma que conoce mi contexto completo, no otra app más sin rumbo.' },
   { antes: 'Estoy solo en esto.', despues: 'Pertenezco a un círculo de pares que entienden esta presión.' },
-] as const;
-
-export const HITOS = [
-  { titulo: 'Piensas con la misma nitidez a las 4pm que a las 8am.', detalle: 'Menos caídas de foco, con el registro que lo respalda.' },
-  { titulo: 'El día ya no se te acaba a media tarde.', detalle: 'Entrenamiento y nutrición ajustados a tu propio gasto energético, no a una rutina estándar.' },
-  { titulo: 'Sabes en qué estado tomaste cada decisión crítica — y puedes repetirlo a voluntad.', detalle: 'Sueño, recuperación y estrés, registrados — tu mejor día, listo para repetirse.' },
-  { titulo: 'Diriges tu capacidad, en vez de improvisar con lo que te queda de ella.', detalle: 'Lo que antes era tu punto ciego, ahora tiene alertas — antes del agotamiento, no explicaciones después de la caída.' },
 ] as const;
 
 export type JuntaBarra = { label: string; value: string; width: number; gold: boolean };

@@ -8,7 +8,6 @@ import { HeroStatCard } from './HeroStatCard';
 import { PasosSticky } from './PasosSticky';
 import { PasosMobileList } from './PasosMobileList';
 import { CategoriaTable } from './CategoriaTable';
-import { Dia90Rail } from './Dia90Rail';
 import { JuntaSection } from './JuntaChart';
 import { HeroDemoForm } from './HeroDemoForm';
 import { LeadModal } from './LeadModal';
@@ -290,16 +289,6 @@ export function LandingPage() {
             />
             <div className="divider-banner-shade" />
           </div>
-
-          <section className="dia90-section">
-            <div className="dia90-wrap">
-              <div className="dia90-head">
-                <span className="eyebrow">DÍA 90</span>
-                <h2>Lo que vas a reconocer en ti al tercer mes.</h2>
-              </div>
-              <Dia90Rail />
-            </div>
-          </section>
         </div>
 
         <section className="junta-section">
