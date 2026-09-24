@@ -180,7 +180,7 @@ export function LandingPage() {
                   <span className="diagnostico-chip" key={c}>{c}</span>
                 ))}
               </div>
-              <p className="diagnostico-llano">Comes mal, duermes peor, vives en estado de alerta. Nada cambió.</p>
+              <p className="diagnostico-llano">Comes mal, duermes fatal, vives en estado de alerta. Nada cambió.</p>
             </ScrollReveal>
 
             <span className="costura costura-baja" aria-hidden="true" />
