@@ -183,12 +183,6 @@ export function LandingPage() {
               <p className="diagnostico-llano">Comes mal, duermes peor, vives en estado de alerta. Nada cambió.</p>
             </ScrollReveal>
 
-            <ScrollReveal className="reconocimiento-bloque">
-              <span className="reconocimiento-rule" aria-hidden="true" />
-              <p className="reconocimiento-sentencia">No es falta de disciplina. Es <span className="reconocimiento-sentencia-accent">tu punto ciego</span>:</p>
-              <p className="reconocimiento-aclaracion">lo que tu cuerpo lleva meses diciéndote, y que ningún chequeo te ha mostrado.</p>
-            </ScrollReveal>
-
             <span className="costura costura-baja" aria-hidden="true" />
           </div>
         </section>
