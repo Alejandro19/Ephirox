@@ -163,7 +163,7 @@ export function LandingPage() {
               Tu empresa llega hasta donde tu <em className="serif">cuerpo</em> te lo permite.
             </h1>
             <span className="hero-kicker eph-a" style={{ animationDelay: '520ms' }}>
-              Bienestar élite para líderes de alto nivel
+              BIENESTAR ÉLITE PARA FOUNDERS Y <span style={{ whiteSpace: 'nowrap' }}>C‑LEVELS</span>
             </span>
             <div className="eph-a" style={{ animationDelay: '620ms' }}>
               <HeroDemoForm onContinue={(correo, celular) => setLeadModal({ correo, celular })} />
