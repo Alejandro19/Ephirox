@@ -1065,7 +1065,7 @@
 .eph-landing2 .lead-modal-close { color: rgba(245,241,232,0.6); }
 .eph-landing2 .lead-modal-close:hover { color: var(--cream); }
 .eph-landing2 .lead-modal form.contact-form { gap: 16px 14px; }
-.eph-landing2 .lead-modal form.contact-form label span { font-size: 10.5px; color: rgba(245,241,232,0.55); }
+.eph-landing2 .lead-modal form.contact-form label span { font-size: 13px; letter-spacing: 0.01em; text-transform: none; color: rgba(245,241,232,0.7); }
 .eph-landing2 .lead-modal form.contact-form input,
 .eph-landing2 .lead-modal form.contact-form select { height: 40px; padding: 0 12px; font-size: 14px; color: var(--cream); background: rgba(245,241,232,0.06); border: 1px solid rgba(201,166,107,0.28); border-radius: 10px; }
 .eph-landing2 .lead-modal form.contact-form select option { color: var(--ink); }

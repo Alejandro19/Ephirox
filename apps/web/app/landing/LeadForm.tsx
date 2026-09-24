@@ -83,7 +83,7 @@ export function LeadForm({
         <input name="empresa" placeholder="Nombre de tu empresa" value={empresa} onChange={(e) => { setEmpresa(e.target.value); if (error) setError(null); }} />
       </label>
       <label className="field-half">
-        <span>Correo de trabajo</span>
+        <span>Email</span>
         <input
           name="correo"
           type="email"
@@ -101,9 +101,9 @@ export function LeadForm({
       </label>
       {correoError && <p id="correo-error" role="alert" className="field-full field-error">{correoError}</p>}
       <label className="field-half">
-        <span>Tamaño de cohorte</span>
+        <span>Cantidad de cohorte</span>
         <select name="tamano" defaultValue="">
-          <option value="" disabled>Selecciona…</option>
+          <option value="" disabled>Elija una opción</option>
           {EMPRESA_TAMANOS.map((t) => <option key={t} value={t}>{t}</option>)}
         </select>
       </label>

@@ -13,7 +13,7 @@ describe('LeadForm (formulario completo del Hero)', () => {
 
   it('shows the fields in order: empresa, correo, WhatsApp, cohorte, sitio web', () => {
     render(<LeadForm initialCorreo="ana@acme.com" initialCelular="+57 300 123 4567" />);
-    const labels = ['Nombre de la empresa', 'Correo de trabajo', 'WhatsApp', 'Tamaño de cohorte', 'Sitio web de la empresa'].map((l) => screen.getByText(l));
+    const labels = ['Nombre de la empresa', 'Email', 'WhatsApp', 'Cantidad de cohorte', 'Sitio web de la empresa'].map((l) => screen.getByText(l));
     labels.forEach((el, i) => {
       if (i > 0) expect(labels[i - 1].compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     });
@@ -35,7 +35,7 @@ describe('LeadForm (formulario completo del Hero)', () => {
     render(<LeadForm initialCorreo="ana@acme.com" initialCelular="+57 300 123 4567" />);
 
     await user.type(screen.getByPlaceholderText('Nombre de tu empresa'), 'Acme Corp');
-    await user.selectOptions(screen.getByLabelText('Tamaño de cohorte'), '11 – 30');
+    await user.selectOptions(screen.getByLabelText('Cantidad de cohorte'), '11 – 30');
     await user.type(screen.getByPlaceholderText('empresa.com'), 'acme.com');
     await user.click(screen.getByRole('button', { name: 'Completar registro' }));
 
