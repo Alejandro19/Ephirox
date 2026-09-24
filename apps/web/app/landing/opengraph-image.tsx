@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og';
 
 export const runtime = 'edge';
-export const alt = 'Ephirox — Redefining limits.';
+export const alt = 'Ephirox — Bienestar élite con IA para Founders y C-Levels';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
@@ -21,13 +21,11 @@ async function loadGoogleFont(family: string, text: string) {
 
 export default async function Image() {
   const WORDMARK = 'EPHIROX';
-  const TAGLINE = 'Redefining limits.';
-  const CAPTION = 'SISTEMA DE OPTIMIZACIÓN EJECUTIVA';
+  const TAGLINE = 'Bienestar élite con IA para Founders y C-Levels';
 
-  const [wordmarkFont, taglineFont, captionFont] = await Promise.all([
+  const [wordmarkFont, taglineFont] = await Promise.all([
     loadGoogleFont('Cormorant+Garamond:wght@300', WORDMARK),
     loadGoogleFont('Cormorant+Garamond:ital,wght@1,500', TAGLINE),
-    loadGoogleFont('JetBrains+Mono:wght@300', CAPTION),
   ]);
 
   return new ImageResponse(
@@ -81,25 +79,11 @@ export default async function Image() {
             fontFamily: 'Cormorant Garamond',
             fontStyle: 'italic',
             fontWeight: 500,
-            fontSize: 32,
+            fontSize: 34,
             color: '#C9A66B',
           }}
         >
           {TAGLINE}
-        </div>
-
-        <div
-          style={{
-            display: 'flex',
-            marginTop: 44,
-            fontFamily: 'JetBrains Mono',
-            fontWeight: 300,
-            fontSize: 15,
-            letterSpacing: 6,
-            color: 'rgba(245,241,232,0.45)',
-          }}
-        >
-          {CAPTION}
         </div>
       </div>
     ),
@@ -108,7 +92,6 @@ export default async function Image() {
       fonts: [
         { name: 'Cormorant Garamond', data: wordmarkFont, weight: 300, style: 'normal' },
         { name: 'Cormorant Garamond', data: taglineFont, weight: 500, style: 'italic' },
-        { name: 'JetBrains Mono', data: captionFont, weight: 300, style: 'normal' },
       ],
     }
   );
