@@ -383,7 +383,7 @@ export default function LoginPage(): React.ReactElement {
             <div className="eph-login-mark">
               <Isotipo size={100} tone="mono" className="eph-login-ring" />
               <p className="font-display uppercase eph-login-wordmark">Ephirox</p>
-              <p className="eph-login-tagline eph-login-tagline--brand">BIENESTAR ÉLITE PARA FOUNDERS Y <span style={{ whiteSpace: 'nowrap' }}>C‑LEVELS</span></p>
+              <p className="eph-login-tagline eph-login-tagline--brand">BIENESTAR ÉLITE CON IA PARA FOUNDERS Y <span style={{ whiteSpace: 'nowrap' }}>C‑LEVELS</span></p>
             </div>
           </div>
 
