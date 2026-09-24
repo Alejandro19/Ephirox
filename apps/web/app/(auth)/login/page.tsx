@@ -547,7 +547,7 @@ export default function LoginPage(): React.ReactElement {
                 </div>
 
                 <p className="font-body" style={{ textAlign: 'center', margin: 0, fontSize: 14, fontWeight: 300, color: 'rgba(245,241,232,0.62)' }}>
-                  ¿Sin acceso todavía? <a href="https://ephirox.com/#llevarlo" className="eph-login-footer-link">Solicitar cohorte</a>
+                  ¿Sin acceso todavía? <a href="https://ephirox.com/" className="eph-login-footer-link">Solicitar una DEMO</a>
                 </p>
               </form>
             )}
