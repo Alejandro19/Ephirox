@@ -5,6 +5,7 @@ import { AdminTrainingPanel } from '../components/training/AdminTrainingPanel';
 import type { Exercise } from '../lib/training-client';
 import * as trainingClient from '../lib/training-client';
 import * as quotesClient from '../lib/quotes-client';
+import { showToast } from '../components/layout/AppShell';
 
 vi.mock('../lib/training-client');
 vi.mock('../lib/quotes-client');
@@ -24,6 +25,8 @@ function exercise(overrides: Partial<Exercise> = {}): Exercise {
     duration: null,
     restTime: '01:00',
     youtubeUrl: null,
+    videoUrl: null,
+    videoName: null,
     description: null,
     recommendations: null,
     sortOrder: 0,
@@ -182,5 +185,61 @@ describe('AdminTrainingPanel', () => {
     const row = screen.getByText('Plancha').closest('tr') as HTMLElement;
     expect(within(row).getByText('Core')).toBeInTheDocument();
     expect(within(row).getByText('Día 2')).toBeInTheDocument();
+  });
+
+  describe('video del ejercicio (YouTube o archivo)', () => {
+    function pickFile(input: HTMLElement, file: File) {
+      fireEvent.change(input, { target: { files: [file] } });
+    }
+
+    async function openNewRowVideoUpload() {
+      render(<AdminTrainingPanel clientId="c1" />);
+      await screen.findByText('Sentadilla');
+      fireEvent.click(screen.getByRole('button', { name: '+ Agregar ejercicio' }));
+      fireEvent.change(screen.getByPlaceholderText('Título del ejercicio'), { target: { value: 'Zancadas' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Subir archivo' }));
+    }
+
+    it('keeps the YouTube link option available by default', async () => {
+      render(<AdminTrainingPanel clientId="c1" />);
+      await screen.findByText('Sentadilla');
+      fireEvent.click(screen.getByRole('button', { name: '+ Agregar ejercicio' }));
+      expect(screen.getByLabelText('Link de YouTube')).toBeInTheDocument();
+    });
+
+    it('shows the format and size rules when uploading a file', async () => {
+      await openNewRowVideoUpload();
+      expect(screen.getByText(/MP4 o WebM · máximo 30 MB/)).toBeInTheDocument();
+    });
+
+    it('rejects a wrong format or an oversized file without selecting it', async () => {
+      await openNewRowVideoUpload();
+      const input = screen.getByLabelText('Archivo de video');
+
+      pickFile(input, new File(['%PDF'], 'doc.pdf', { type: 'application/pdf' }));
+      expect(showToast).toHaveBeenCalledWith('Formato no permitido: sube un video MP4 o WebM.', 'error');
+
+      const big = new File(['x'], 'grande.mp4', { type: 'video/mp4' });
+      Object.defineProperty(big, 'size', { value: 31 * 1024 * 1024 });
+      pickFile(input, big);
+      expect(showToast).toHaveBeenLastCalledWith(expect.stringContaining('máximo es 30 MB'), 'error');
+      expect(screen.queryByText(/Se subirá:/)).not.toBeInTheDocument();
+    });
+
+    it('uploads the chosen file after the exercise is saved (Guardar todo), not before', async () => {
+      vi.mocked(trainingClient.createExercise).mockResolvedValue(exercise({ id: 'e2', title: 'Zancadas' }));
+      await openNewRowVideoUpload();
+      const file = new File(['video'], 'zancadas.mp4', { type: 'video/mp4' });
+      pickFile(screen.getByLabelText('Archivo de video'), file);
+      expect(screen.getByText('Se subirá: zancadas.mp4')).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Guardar fila' }));
+      expect(trainingClient.uploadExerciseVideo).not.toHaveBeenCalled();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Guardar todo' }));
+      await waitFor(() => expect(trainingClient.uploadExerciseVideo).toHaveBeenCalledWith('c1', 'e2', file));
+      // Con archivo elegido no viaja ningún link de YouTube.
+      expect(trainingClient.createExercise).toHaveBeenCalledWith('c1', expect.objectContaining({ youtube_url: null }));
+    });
   });
 });

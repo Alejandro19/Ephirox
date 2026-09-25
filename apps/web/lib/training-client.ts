@@ -3,11 +3,12 @@ import { PermissionDeniedError } from './api-client';
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3003';
 
 async function authorizedRequest<T>(path: string, method: string, body?: unknown): Promise<T> {
+  const isFormData = body instanceof FormData;
   const res = await fetch(`${API_BASE_URL}${path}`, {
     method,
     credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
-    body: body != null ? JSON.stringify(body) : undefined,
+    headers: isFormData ? {} : { 'Content-Type': 'application/json' },
+    body: isFormData ? body : body != null ? JSON.stringify(body) : undefined,
   });
   if (res.status === 403) {
     const errorBody = await res.json().catch(() => ({}));
@@ -29,6 +30,8 @@ export type Exercise = {
   duration: string | null;
   restTime: string | null;
   youtubeUrl: string | null;
+  videoUrl: string | null;
+  videoName: string | null;
   description: string | null;
   recommendations: string | null;
   sortOrder: number;
@@ -193,4 +196,28 @@ export async function getPhraseByContext(clientId: string, context: 'confirmacio
   );
   if (!body.success) throw new Error(body.error || 'Error al obtener la frase.');
   return body.phrase;
+}
+
+// Video subido como alternativa al link de YouTube — las reglas de formato y
+// peso viven en @latribu/shared-types (EXERCISE_VIDEO_*) y el backend las
+// vuelve a validar.
+export async function uploadExerciseVideo(clientId: string, exerciseId: string, file: File): Promise<Exercise> {
+  const formData = new FormData();
+  formData.append('video', file);
+  const body = await authorizedRequest<{ success: boolean; exercise: Exercise; error?: string }>(
+    `/api/clients/${clientId}/exercises/${exerciseId}/video`,
+    'POST',
+    formData
+  );
+  if (!body.success) throw new Error(body.error || 'Error al subir el video.');
+  return body.exercise;
+}
+
+export async function removeExerciseVideo(clientId: string, exerciseId: string): Promise<Exercise> {
+  const body = await authorizedRequest<{ success: boolean; exercise: Exercise; error?: string }>(
+    `/api/clients/${clientId}/exercises/${exerciseId}/video`,
+    'DELETE'
+  );
+  if (!body.success) throw new Error(body.error || 'Error al quitar el video.');
+  return body.exercise;
 }

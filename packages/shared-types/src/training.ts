@@ -4,6 +4,13 @@ export const EXERCISE_CATEGORIES = ['warmup', 'strength', 'core', 'cardio', 'str
 export const ExerciseCategorySchema = z.enum(EXERCISE_CATEGORIES);
 export type ExerciseCategory = z.infer<typeof ExerciseCategorySchema>;
 
+// Reglas del video subido para un ejercicio (alternativa al link de YouTube).
+// Se mantienen chicas a propósito: los videos viven en Supabase Storage y no
+// deben ocupar mucho espacio — MP4/WebM cortos, hasta 30 MB.
+export const EXERCISE_VIDEO_MAX_BYTES = 30 * 1024 * 1024;
+export const EXERCISE_VIDEO_ALLOWED_TYPES = ['video/mp4', 'video/webm'] as const;
+export const EXERCISE_VIDEO_RULES_TEXT = 'MP4 o WebM · máximo 30 MB · recomendado: 720p y menos de 60 s.';
+
 export const ExerciseInputSchema = z.object({
   title: z.string().min(1),
   day_number: z.coerce.number().int().min(1).max(7),

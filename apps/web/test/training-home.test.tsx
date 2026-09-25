@@ -15,6 +15,8 @@ function exercise(id: string, dayNumber: number): Exercise {
     duration: null,
     restTime: '01:00',
     youtubeUrl: null,
+    videoUrl: null,
+    videoName: null,
     description: null,
     recommendations: null,
     sortOrder: 0,

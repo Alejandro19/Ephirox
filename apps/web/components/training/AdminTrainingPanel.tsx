@@ -12,7 +12,10 @@ import {
   updateExercise,
   deleteExercise,
   updateTrainingDays,
+  uploadExerciseVideo,
+  removeExerciseVideo,
 } from '../../lib/training-client';
+import { EXERCISE_VIDEO_ALLOWED_TYPES, EXERCISE_VIDEO_MAX_BYTES, EXERCISE_VIDEO_RULES_TEXT } from '@latribu/shared-types';
 import { listQuotes, getClientAssignedQuoteId, assignQuote } from '../../lib/quotes-client';
 import { CATEGORY_LABELS } from './TrainingVisuals';
 import { AdminAchievementsPanel } from './AdminAchievementsPanel';
@@ -37,6 +40,12 @@ type RowDraft = {
   duration: string;
   restTime: string;
   youtubeUrl: string;
+  // 'youtube' = link externo; 'upload' = archivo propio (uno u otro, no ambos).
+  videoSource: 'youtube' | 'upload';
+  videoUrl: string | null;
+  videoName: string | null;
+  videoFile: File | null;
+  removeVideo: boolean;
   description: string;
   mode: 'read' | 'edit';
   isNew: boolean;
@@ -54,6 +63,11 @@ function toRowDraft(ex: Exercise): RowDraft {
     duration: ex.duration ?? '',
     restTime: ex.restTime ?? '',
     youtubeUrl: ex.youtubeUrl ?? '',
+    videoSource: ex.videoUrl ? 'upload' : 'youtube',
+    videoUrl: ex.videoUrl ?? null,
+    videoName: ex.videoName ?? null,
+    videoFile: null,
+    removeVideo: false,
     description: ex.description ?? '',
     mode: 'read',
     isNew: false,
@@ -69,7 +83,7 @@ function toExerciseInput(row: RowDraft): ExerciseInput {
     reps: row.reps.trim() || null,
     duration: row.duration.trim() || null,
     rest_time: row.restTime.trim() || null,
-    youtube_url: row.youtubeUrl.trim() || null,
+    youtube_url: row.videoSource === 'youtube' ? row.youtubeUrl.trim() || null : null,
     description: row.description.trim() || null,
   };
 }
@@ -125,6 +139,75 @@ type RowViewProps = {
   onDelete: () => void;
 };
 
+function validateVideoFile(file: File): string | null {
+  if (!(EXERCISE_VIDEO_ALLOWED_TYPES as readonly string[]).includes(file.type)) {
+    return 'Formato no permitido: sube un video MP4 o WebM.';
+  }
+  if (file.size > EXERCISE_VIDEO_MAX_BYTES) {
+    return `El video pesa ${(file.size / 1024 / 1024).toFixed(1)} MB y el máximo es 30 MB.`;
+  }
+  return null;
+}
+
+// Video del ejercicio: link de YouTube (como siempre) o archivo propio con
+// reglas de formato y peso. La subida real ocurre al "Guardar todo".
+function VideoField({ row, onChange }: { row: RowDraft; onChange: (patch: Partial<RowDraft>) => void }) {
+  const tabStyle = (active: boolean): React.CSSProperties => ({
+    border: '1px solid var(--eph-line-2)', background: active ? 'var(--eph-surface-2)' : 'transparent',
+    color: active ? 'var(--eph-text)' : 'var(--eph-muted)', fontSize: 11, padding: '3px 9px', cursor: 'pointer',
+  });
+  const hasStoredVideo = !!row.videoUrl && !row.removeVideo;
+
+  function handleFile(file: File | null) {
+    if (!file) return;
+    const problem = validateVideoFile(file);
+    if (problem) {
+      showToast(problem, 'error');
+      return;
+    }
+    onChange({ videoFile: file, removeVideo: false });
+  }
+
+  return (
+    <div style={{ display: 'grid', gap: 6 }}>
+      <div style={{ display: 'flex', gap: 4 }}>
+        <button type="button" style={tabStyle(row.videoSource === 'youtube')} onClick={() => onChange({ videoSource: 'youtube' })}>YouTube</button>
+        <button type="button" style={tabStyle(row.videoSource === 'upload')} onClick={() => onChange({ videoSource: 'upload' })}>Subir archivo</button>
+      </div>
+      {row.videoSource === 'youtube' ? (
+        <input
+          style={fieldStyle}
+          value={row.youtubeUrl}
+          onChange={(e) => onChange({ youtubeUrl: e.target.value })}
+          placeholder="https://youtube.com/watch?v=..."
+          aria-label="Link de YouTube"
+        />
+      ) : (
+        <div style={{ display: 'grid', gap: 4 }}>
+          <input
+            type="file"
+            accept="video/mp4,video/webm"
+            aria-label="Archivo de video"
+            style={{ fontSize: 11, maxWidth: 210 }}
+            onChange={(e) => { handleFile(e.target.files?.[0] ?? null); e.target.value = ''; }}
+          />
+          {row.videoFile && <span style={{ fontSize: 11, color: 'var(--eph-accent)' }}>Se subirá: {row.videoFile.name}</span>}
+          {!row.videoFile && hasStoredVideo && (
+            <span style={{ fontSize: 11, color: 'var(--eph-muted)' }}>
+              Actual: {row.videoName ?? 'video subido'}{' '}
+              <button type="button" onClick={() => onChange({ removeVideo: true })} style={{ background: 'none', border: 'none', color: 'var(--eph-danger)', cursor: 'pointer', fontSize: 11, padding: 0 }}>
+                Quitar
+              </button>
+            </span>
+          )}
+          {row.removeVideo && <span style={{ fontSize: 11, color: 'var(--eph-danger)' }}>Se quitará al guardar.</span>}
+          <span style={{ fontSize: 10.5, color: 'var(--eph-muted)' }}>{EXERCISE_VIDEO_RULES_TEXT}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function RowView({ row, onChange, onEdit, onConfirm, onCancel, onDelete }: RowViewProps) {
   if (row.mode === 'read') {
     return (
@@ -137,7 +220,15 @@ function RowView({ row, onChange, onEdit, onConfirm, onCancel, onDelete }: RowVi
         <td style={tdStyle}>{row.duration || '—'}</td>
         <td style={tdStyle}>{row.restTime || '—'}</td>
         <td style={tdStyle}>
-          {row.youtubeUrl ? (
+          {row.videoSource === 'upload' && (row.videoFile || row.videoUrl) ? (
+            row.videoUrl && !row.videoFile ? (
+              <a href={row.videoUrl} target="_blank" rel="noreferrer" style={{ color: 'var(--eph-accent)' }} title={row.videoName ?? undefined}>
+                Ver video (archivo)
+              </a>
+            ) : (
+              <span style={{ color: 'var(--eph-muted)' }}>Archivo por subir: {row.videoFile?.name}</span>
+            )
+          ) : row.youtubeUrl ? (
             <a href={row.youtubeUrl} target="_blank" rel="noreferrer" style={{ color: 'var(--eph-accent)' }}>
               Ver video
             </a>
@@ -206,13 +297,8 @@ function RowView({ row, onChange, onEdit, onConfirm, onCancel, onDelete }: RowVi
       <td style={tdStyle}>
         <input style={fieldStyle} value={row.restTime} onChange={(e) => onChange({ restTime: e.target.value })} placeholder="mm:ss" />
       </td>
-      <td style={tdStyle}>
-        <input
-          style={fieldStyle}
-          value={row.youtubeUrl}
-          onChange={(e) => onChange({ youtubeUrl: e.target.value })}
-          placeholder="https://youtube.com/watch?v=..."
-        />
+      <td style={{ ...tdStyle, minWidth: 220 }}>
+        <VideoField row={row} onChange={onChange} />
       </td>
       <td style={tdStyle}>
         <input
@@ -293,6 +379,11 @@ export function AdminTrainingPanel({ clientId }: AdminTrainingPanelProps) {
         duration: '',
         restTime: '',
         youtubeUrl: '',
+        videoSource: 'youtube',
+        videoUrl: null,
+        videoName: null,
+        videoFile: null,
+        removeVideo: false,
         description: '',
         mode: 'edit',
         isNew: true,
@@ -355,7 +446,14 @@ export function AdminTrainingPanel({ clientId }: AdminTrainingPanelProps) {
       for (const id of pendingDeleteIds) ops.push(deleteExercise(clientId, id));
       for (const row of rows) {
         const input = toExerciseInput(row);
-        ops.push(row.isNew ? createExercise(clientId, input) : updateExercise(clientId, row.id as string, input));
+        ops.push(
+          (async () => {
+            const saved = row.isNew ? await createExercise(clientId, input) : await updateExercise(clientId, row.id as string, input);
+            // El video subido va después de guardar la fila (necesita su id).
+            if (row.videoSource === 'upload' && row.videoFile) await uploadExerciseVideo(clientId, saved.id, row.videoFile);
+            else if (row.videoSource === 'upload' && row.removeVideo && row.videoUrl) await removeExerciseVideo(clientId, saved.id);
+          })()
+        );
       }
       await Promise.all(ops);
       await refetch();
@@ -450,7 +548,7 @@ export function AdminTrainingPanel({ clientId }: AdminTrainingPanelProps) {
                   <th style={thStyle}>Repeticiones</th>
                   <th style={thStyle}>Duración</th>
                   <th style={thStyle}>Descanso</th>
-                  <th style={thStyle}>Video (YouTube)</th>
+                  <th style={thStyle}>Video</th>
                   <th style={thStyle}>Descripción</th>
                   <th style={thStyle}>Acciones</th>
                 </tr>

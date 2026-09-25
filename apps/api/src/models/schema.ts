@@ -247,6 +247,10 @@ export const exercises = pgTable('exercises', {
   description: text('description'),
   recommendations: text('recommendations'),
   youtubeUrl: text('youtube_url'),
+  // Video subido (alternativa a youtubeUrl, mutuamente excluyentes) — ver
+  // exercise-video.ts para las reglas de formato/peso.
+  videoUrl: text('video_url'),
+  videoName: text('video_name'),
   sortOrder: integer('sort_order').notNull().default(0),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),

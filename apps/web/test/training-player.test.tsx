@@ -15,6 +15,8 @@ function exercise(id: string, overrides: Partial<Exercise> = {}): Exercise {
     duration: null,
     restTime: '00:02',
     youtubeUrl: null,
+    videoUrl: null,
+    videoName: null,
     description: null,
     recommendations: null,
     sortOrder: 0,
@@ -113,5 +115,33 @@ describe('TrainingPlayer', () => {
     });
     expect(onMarkComplete).toHaveBeenCalledWith('e1');
     expect(screen.getByText(/Descanso: \d+s/)).toBeInTheDocument();
+  });
+
+  it('plays an uploaded video with the native player, taking precedence over a YouTube link', () => {
+    const { container } = render(
+      <TrainingPlayer
+        exercises={[exercise('e1', { videoUrl: 'https://cdn.example.com/e1.mp4', videoName: 'e1.mp4' })]}
+        completedIds={new Set()}
+        onMarkComplete={vi.fn()}
+        onExit={vi.fn()}
+      />
+    );
+    const video = container.querySelector('video');
+    expect(video).toBeInTheDocument();
+    expect(video).toHaveAttribute('src', 'https://cdn.example.com/e1.mp4');
+    expect(container.querySelector('iframe')).not.toBeInTheDocument();
+  });
+
+  it('still embeds a YouTube video when there is no uploaded file', () => {
+    const { container } = render(
+      <TrainingPlayer
+        exercises={[exercise('e1', { youtubeUrl: 'https://www.youtube.com/watch?v=abc123' })]}
+        completedIds={new Set()}
+        onMarkComplete={vi.fn()}
+        onExit={vi.fn()}
+      />
+    );
+    expect(container.querySelector('iframe')).toBeInTheDocument();
+    expect(container.querySelector('video')).not.toBeInTheDocument();
   });
 });

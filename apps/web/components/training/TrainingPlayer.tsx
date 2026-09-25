@@ -125,7 +125,18 @@ export function TrainingPlayer({ exercises, completedIds, onMarkComplete, onExit
       </div>
 
       <div className="border p-[26px]" style={{ borderColor: 'var(--eph-line)', background: 'var(--eph-surface)' }}>
-        {embedUrl ? (
+        {current.videoUrl ? (
+          <video
+            key={current.videoUrl}
+            src={current.videoUrl}
+            controls
+            playsInline
+            preload="metadata"
+            className="w-full bg-black"
+            style={{ maxHeight: 480 }}
+            aria-label={current.title}
+          />
+        ) : embedUrl ? (
           <div className="relative overflow-hidden bg-black pt-[56.25%]">
             <iframe
               src={embedUrl}

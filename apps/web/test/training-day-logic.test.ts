@@ -14,6 +14,8 @@ function exercise(id: string, category: Exercise['category']): Exercise {
     duration: null,
     restTime: '01:00',
     youtubeUrl: null,
+    videoUrl: null,
+    videoName: null,
     description: null,
     recommendations: null,
     sortOrder: 0,

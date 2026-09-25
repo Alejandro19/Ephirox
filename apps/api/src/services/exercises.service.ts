@@ -2,6 +2,8 @@ import { and, eq, asc } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import { exercises, clients, clientNotifications, type Exercise } from '../models/schema.js';
 import type { ExerciseInput } from '@latribu/shared-types';
+import { uploadFile, deleteFile } from '../storage/index.js';
+import { validateExerciseVideo } from './exercise-video.js';
 
 export async function listExercisesByClient(clientId: string): Promise<Exercise[]> {
   return db
@@ -81,16 +83,57 @@ export async function updateExercise(exerciseId: string, input: ExerciseInput): 
     sortOrder = newGroupSiblings.reduce((max, ex) => Math.max(max, ex.sortOrder), -1) + 1;
   }
 
+  // YouTube y video subido son mutuamente excluyentes: elegir un link
+  // reemplaza (y borra del storage) cualquier video subido antes.
+  const replacingWithYoutube = !!input.youtube_url && !!current.videoUrl;
+  if (replacingWithYoutube) await deleteFile(current.videoUrl);
+
   const [exercise] = await db
     .update(exercises)
-    .set({ ...toExerciseFields(input), ...(sortOrder !== undefined ? { sortOrder } : {}), updatedAt: new Date() })
+    .set({
+      ...toExerciseFields(input),
+      ...(replacingWithYoutube ? { videoUrl: null, videoName: null } : {}),
+      ...(sortOrder !== undefined ? { sortOrder } : {}),
+      updatedAt: new Date(),
+    })
     .where(eq(exercises.id, exerciseId))
     .returning();
   return exercise ?? null;
 }
 
 export async function deleteExercise(exerciseId: string): Promise<void> {
+  const current = await findExerciseById(exerciseId);
   await db.delete(exercises).where(eq(exercises.id, exerciseId));
+  if (current?.videoUrl) await deleteFile(current.videoUrl);
+}
+
+export async function uploadExerciseVideo(
+  exerciseId: string,
+  file: { buffer: Buffer; mimetype: string; originalname: string }
+): Promise<Exercise | null> {
+  validateExerciseVideo(file);
+  const current = await findExerciseById(exerciseId);
+  if (!current) return null;
+  const videoUrl = await uploadFile(`${current.clientId}/workout`, file.buffer, file.mimetype, file.originalname);
+  const [exercise] = await db
+    .update(exercises)
+    .set({ videoUrl, videoName: file.originalname, youtubeUrl: null, updatedAt: new Date() })
+    .where(eq(exercises.id, exerciseId))
+    .returning();
+  if (current.videoUrl) await deleteFile(current.videoUrl);
+  return exercise ?? null;
+}
+
+export async function removeExerciseVideo(exerciseId: string): Promise<Exercise | null> {
+  const current = await findExerciseById(exerciseId);
+  if (!current) return null;
+  const [exercise] = await db
+    .update(exercises)
+    .set({ videoUrl: null, videoName: null, updatedAt: new Date() })
+    .where(eq(exercises.id, exerciseId))
+    .returning();
+  if (current.videoUrl) await deleteFile(current.videoUrl);
+  return exercise ?? null;
 }
 
 export async function findExerciseById(exerciseId: string): Promise<Exercise | undefined> {

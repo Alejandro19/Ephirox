@@ -20,6 +20,8 @@ function exercise(id: string, dayNumber: number, category: trainingClient.Exerci
     duration: null,
     restTime: '00:01',
     youtubeUrl: null,
+    videoUrl: null,
+    videoName: null,
     description: null,
     recommendations: null,
     sortOrder: 0,
