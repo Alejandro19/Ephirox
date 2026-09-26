@@ -1277,3 +1277,20 @@
 .eph-landing2 .hero-stat-card.senales-card { background: linear-gradient(165deg, rgba(38,33,27,0.95) 0%, rgba(20,17,13,0.95) 100%); box-shadow: 0 28px 70px rgba(0,0,0,0.5); }
 .eph-landing2 .senales-cierre-inner { border-top-color: rgba(245,241,232,0.12); }
 .eph-landing2 .senales-cierre-inner p { color: rgba(245,241,232,0.78); }
+
+/* Textos de transición un poco más grandes. */
+.eph-landing2 .contexto-eyebrow { font-size: 14px; }
+.eph-landing2 .contexto-titulo { font-size: clamp(17px, 1.8vw, 20px); }
+.eph-landing2 .score-final-texto { font-size: clamp(28px, 3.3vw, 40px); }
+
+/* Chips de resultados: una sola fila alineada en escritorio; 2x2 en móvil. */
+@media (min-width: 769px) {
+  .eph-landing2 .beneficios-grid { display: grid; grid-template-columns: repeat(4, 1fr); align-items: start; justify-items: center; }
+  .eph-landing2 .beneficio { width: 100%; }
+}
+@media (max-width: 768px) {
+  .eph-landing2 .beneficios-grid { display: grid; grid-template-columns: repeat(2, 1fr); justify-items: center; }
+  .eph-landing2 .beneficio { max-width: none; width: 100%; }
+  /* Solo en móvil: la tabla comparativa no se muestra (título e imagen se quedan). */
+  .eph-landing2 .table-scroll-wrap { display: none; }
+}
