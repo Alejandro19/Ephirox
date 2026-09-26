@@ -223,45 +223,6 @@ export function LandingPage() {
           </ScrollReveal>
         </section>
 
-        <div className="medimos-intro">
-          <ScrollReveal>
-            <span className="eyebrow">¿CÓMO LO MEDIMOS?</span>
-            <h2>No es una sensación. Es un registro.</h2>
-          </ScrollReveal>
-        </div>
-
-        <PasosSticky />
-        <PasosMobileList />
-
-        <section className="optimizacion">
-          <div className="optimizacion-wrap">
-            <ScrollReveal>
-              <h2 className="optimizacion-titulo">Con tu <span className="optimizacion-titulo-accent">estado interior</span> medido, optimizamos:</h2>
-            </ScrollReveal>
-            <ScrollReveal className="opt-grid">
-              {OPTIMIZACION.map((o) => (
-                <div className="opt-card" key={o.label}>
-                  <Image src={o.img} alt={o.alt} fill quality={82} sizes="(min-width: 769px) 25vw, 90vw" style={{ objectFit: 'cover', objectPosition: 'center' }} className="opt-card-bg" />
-                  <div className="opt-card-text">
-                    <span className="opt-card-label">{o.label}</span>
-                    <p className="opt-card-desc">{o.texto}</p>
-                  </div>
-                </div>
-              ))}
-            </ScrollReveal>
-            <OptimizacionMobileCarousel />
-          </div>
-        </section>
-
-        <section className="categoria" id="categoria">
-          <div className="categoria-wrap">
-            <ScrollReveal className="categoria-head">
-              <h2><span className="a">Anticipamos</span><em className="b">lo que otros descubren demasiado tarde</em></h2>
-            </ScrollReveal>
-            <CategoriaTable />
-          </div>
-        </section>
-
         <div id="beneficios">
           <section className="cambia-section">
             <div className="cambia-wrap">
@@ -295,6 +256,45 @@ export function LandingPage() {
             <div className="divider-banner-shade" />
           </div>
         </div>
+
+        <section className="optimizacion">
+          <div className="optimizacion-wrap">
+            <ScrollReveal>
+              <h2 className="optimizacion-titulo">Con tu <span className="optimizacion-titulo-accent">estado interior</span> medido, optimizamos:</h2>
+            </ScrollReveal>
+            <ScrollReveal className="opt-grid">
+              {OPTIMIZACION.map((o) => (
+                <div className="opt-card" key={o.label}>
+                  <Image src={o.img} alt={o.alt} fill quality={82} sizes="(min-width: 769px) 25vw, 90vw" style={{ objectFit: 'cover', objectPosition: 'center' }} className="opt-card-bg" />
+                  <div className="opt-card-text">
+                    <span className="opt-card-label">{o.label}</span>
+                    <p className="opt-card-desc">{o.texto}</p>
+                  </div>
+                </div>
+              ))}
+            </ScrollReveal>
+            <OptimizacionMobileCarousel />
+          </div>
+        </section>
+
+        <div className="medimos-intro">
+          <ScrollReveal>
+            <span className="eyebrow">¿CÓMO LO MEDIMOS?</span>
+            <h2>No es una sensación. Es un registro.</h2>
+          </ScrollReveal>
+        </div>
+
+        <PasosSticky />
+        <PasosMobileList />
+
+        <section className="categoria" id="categoria">
+          <div className="categoria-wrap">
+            <ScrollReveal className="categoria-head">
+              <h2><span className="a">Anticipamos</span><em className="b">lo que otros descubren demasiado tarde</em></h2>
+            </ScrollReveal>
+            <CategoriaTable />
+          </div>
+        </section>
 
         <section className="junta-section">
           <JuntaSection />
