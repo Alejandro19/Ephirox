@@ -1181,3 +1181,5 @@
 .eph-landing2 .score-final .score-primary { margin-top: 6px; }
 .eph-landing2 .score-disclaimer { font-size: 11px; color: rgba(245,241,232,0.4); }
 @media (max-width: 520px) { .eph-landing2 .score-bar-row { grid-template-columns: 1fr; gap: 4px; } }
+
+.eph-landing2 .score-link { display: inline-flex; align-items: center; text-decoration: none; }

@@ -12,6 +12,13 @@ async function answerAll(user: ReturnType<typeof userEvent.setup>, label: string
   }
 }
 
+async function fillContact(user: ReturnType<typeof userEvent.setup>) {
+  await user.type(screen.getByPlaceholderText('Tu nombre'), 'Ana Ríos');
+  await user.type(screen.getByPlaceholderText('Nombre de tu empresa'), 'Acme');
+  await user.type(screen.getByPlaceholderText('nombre@empresa.com'), 'ana@acme.com');
+  await user.type(screen.getByPlaceholderText('+57 300 123 4567'), '300 123 4567');
+}
+
 describe('ExecutiveScoreModal', () => {
   beforeEach(() => vi.clearAllMocks());
 
@@ -22,50 +29,60 @@ describe('ExecutiveScoreModal', () => {
     expect(screen.queryByText(/wellness|burnout|health/i)).not.toBeInTheDocument();
   });
 
-  it('walks 15 questions, then the 3 business questions, and shows a high score with the Optimización segment', async () => {
+  it('asks for contact BEFORE showing the result, then shows the score, segment and executive language', async () => {
     const user = userEvent.setup();
+    vi.mocked(enterpriseLeadsClient.createEnterpriseLead).mockResolvedValue();
     render(<ExecutiveScoreModal onClose={vi.fn()} />);
     await user.click(screen.getByRole('button', { name: 'Comenzar evaluación' }));
     expect(screen.getByText(/1 de 15/)).toBeInTheDocument();
     await answerAll(user, 'Siempre');
 
     expect(screen.getByText('¿Cuántas personas dependen directamente de tus decisiones?')).toBeInTheDocument();
-    const verResultado = screen.getByRole('button', { name: 'Ver mi resultado' });
-    expect(verResultado).toBeDisabled();
+    const continuar = screen.getByRole('button', { name: 'Continuar' });
+    expect(continuar).toBeDisabled();
     await user.click(screen.getByRole('button', { name: '50 – 200' }));
     await user.click(screen.getAllByRole('button', { name: 'Sí' })[0]);
     await user.click(screen.getAllByRole('button', { name: 'No' })[1]);
-    await user.click(verResultado);
+    await user.click(continuar);
 
-    expect(screen.getByLabelText('100 de 100')).toBeInTheDocument();
+    // El resultado todavía NO se ve: primero el contacto.
+    expect(screen.queryByLabelText('100 de 100')).not.toBeInTheDocument();
+    expect(screen.getByText('Tu resultado está listo')).toBeInTheDocument();
+    await fillContact(user);
+    await user.click(screen.getByRole('button', { name: 'Ver mi resultado' }));
+
+    expect(await screen.findByLabelText('100 de 100')).toBeInTheDocument();
     expect(screen.getByText(/Optimización\./)).toBeInTheDocument();
     expect(screen.getByText('Fortaleza principal')).toBeInTheDocument();
     expect(screen.getByText('Principal riesgo')).toBeInTheDocument();
     expect(screen.getByText('Tu rendimiento actual tiene oportunidades de mejora.')).toBeInTheDocument();
     expect(screen.queryByText(/compra ahora/i)).not.toBeInTheDocument();
+    const cta = screen.getByRole('link', { name: 'Solicitar revisión ejecutiva' });
+    expect(cta.getAttribute('href')).toContain('https://wa.me/573214973677?text=');
   });
 
-  it('sends the answers with the lead when the executive review is requested', async () => {
+  it('saves the lead with the answers before revealing the result, and does not reveal it if saving fails', async () => {
     const user = userEvent.setup();
-    vi.mocked(enterpriseLeadsClient.createEnterpriseLead).mockResolvedValue();
+    vi.mocked(enterpriseLeadsClient.createEnterpriseLead).mockRejectedValueOnce(new Error('Sin conexión'));
     render(<ExecutiveScoreModal onClose={vi.fn()} />);
     await user.click(screen.getByRole('button', { name: 'Comenzar evaluación' }));
     await answerAll(user, 'A veces'); // 2 en todo → 50/100 → riesgo elevado
     await user.click(screen.getByRole('button', { name: 'Menos de 10' }));
     await user.click(screen.getAllByRole('button', { name: 'No' })[0]);
     await user.click(screen.getAllByRole('button', { name: 'Sí' })[1]); // evaluar equipo
+    await user.click(screen.getByRole('button', { name: 'Continuar' }));
+    await fillContact(user);
     await user.click(screen.getByRole('button', { name: 'Ver mi resultado' }));
-    expect(screen.getByLabelText('50 de 100')).toBeInTheDocument();
+
+    // Primer intento falla: sigue en el formulario, sin resultado.
+    expect(await screen.findByText('Sin conexión')).toBeInTheDocument();
+    expect(screen.queryByLabelText('50 de 100')).not.toBeInTheDocument();
+
+    vi.mocked(enterpriseLeadsClient.createEnterpriseLead).mockResolvedValue();
+    await user.click(screen.getByRole('button', { name: 'Ver mi resultado' }));
+    expect(await screen.findByLabelText('50 de 100')).toBeInTheDocument();
     expect(screen.getByText(/Riesgo elevado\./)).toBeInTheDocument();
-
-    await user.click(screen.getByRole('button', { name: 'Solicitar revisión ejecutiva' }));
-    await user.type(screen.getByPlaceholderText('Tu nombre'), 'Ana Ríos');
-    await user.type(screen.getByPlaceholderText('Nombre de tu empresa'), 'Acme');
-    await user.type(screen.getByPlaceholderText('nombre@empresa.com'), 'ana@acme.com');
-    await user.type(screen.getByPlaceholderText('+57 300 123 4567'), '300 123 4567');
-    await user.click(screen.getByRole('button', { name: 'Solicitar revisión ejecutiva' }));
-
-    expect(enterpriseLeadsClient.createEnterpriseLead).toHaveBeenCalledWith(
+    expect(enterpriseLeadsClient.createEnterpriseLead).toHaveBeenLastCalledWith(
       expect.objectContaining({
         nombre: 'Ana Ríos',
         empresa: 'Acme',

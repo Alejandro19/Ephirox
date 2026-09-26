@@ -13,15 +13,18 @@ import {
   computeExecutiveResult,
   type ExecutiveEvaluation,
 } from '@latribu/shared-types';
+import { COACH_WHATSAPP_NUMBER } from '@/lib/constants';
 import { LeadForm } from './LeadForm';
 
-type Step = 'intro' | 'preguntas' | 'negocio' | 'resultado' | 'contacto';
+type Step = 'intro' | 'preguntas' | 'negocio' | 'contacto' | 'resultado';
 type Negocio = { personas: (typeof EXECUTIVE_PERSONAS)[number] | null; equipoDirectivo: boolean | null; evaluarEquipo: boolean | null };
 
 // Executive Performance Score™ — auditoría breve de rendimiento ejecutivo.
 // Flujo: intro discreta → 15 preguntas (una por pantalla) → 3 preguntas de
-// contexto empresarial → resultado en lenguaje ejecutivo → "Solicitar
-// revisión ejecutiva" (captura de contacto). Nunca "compra ahora".
+// contexto empresarial → captura de contacto (el resultado es la recompensa,
+// así que el lead queda guardado ANTES de verlo) → resultado en lenguaje
+// ejecutivo → "Solicitar revisión ejecutiva" (abre WhatsApp para agendar).
+// Nunca "compra ahora".
 export function ExecutiveScoreModal({ onClose }: { onClose: () => void }) {
   const [step, setStep] = useState<Step>('intro');
   const [index, setIndex] = useState(0);
@@ -52,6 +55,7 @@ export function ExecutiveScoreModal({ onClose }: { onClose: () => void }) {
 
   function back() {
     if (step === 'negocio') { setStep('preguntas'); setIndex(total - 1); return; }
+    if (step === 'contacto') { setStep('negocio'); return; }
     if (index > 0) setIndex(index - 1);
     else setStep('intro');
   }
@@ -109,20 +113,21 @@ export function ExecutiveScoreModal({ onClose }: { onClose: () => void }) {
             <YesNo legend="¿Te interesaría evaluar también a tu equipo de liderazgo?" value={negocio.evaluarEquipo} onChange={(v) => setNegocio({ ...negocio, evaluarEquipo: v })} />
             <div className="score-actions">
               <button type="button" className="score-back" onClick={back}>← Atrás</button>
-              <button type="button" className="score-primary" disabled={!negocioCompleto} onClick={() => setStep('resultado')}>Ver mi resultado</button>
+              <button type="button" className="score-primary" disabled={!negocioCompleto} onClick={() => setStep('contacto')}>Continuar</button>
             </div>
           </div>
         )}
 
-        {step === 'resultado' && evaluacion && <Resultado evaluacion={evaluacion} onContinue={() => setStep('contacto')} />}
-
         {step === 'contacto' && evaluacion && (
           <div className="score-contacto">
-            <span className="score-kicker">Revisión ejecutiva</span>
-            <h2>Cuéntanos dónde escribirte.</h2>
-            <LeadForm compact evaluacion={evaluacion} submitLabel="Solicitar revisión ejecutiva" />
+            <span className="score-kicker">Tu resultado está listo</span>
+            <h2>Déjanos tus datos para mostrarte tu perfil ejecutivo.</h2>
+            <LeadForm compact evaluacion={evaluacion} submitLabel="Ver mi resultado" onSubmitted={() => setStep('resultado')} />
+            <button type="button" className="score-back" onClick={back}>← Atrás</button>
           </div>
         )}
+
+        {step === 'resultado' && evaluacion && <Resultado evaluacion={evaluacion} />}
       </div>
     </div>
   );
@@ -140,11 +145,12 @@ function YesNo({ legend, value, onChange }: { legend: string; value: boolean | n
   );
 }
 
-function Resultado({ evaluacion, onContinue }: { evaluacion: ExecutiveEvaluation; onContinue: () => void }) {
+function Resultado({ evaluacion }: { evaluacion: ExecutiveEvaluation }) {
   const result = computeExecutiveResult(evaluacion.respuestas);
   const segmento = SEGMENTO_INFO[result.segmento];
   const fortaleza = FORTALEZAS[result.fortaleza];
   const riesgo = RIESGOS[result.riesgo];
+  const whatsappUrl = `https://wa.me/${COACH_WHATSAPP_NUMBER}?text=${encodeURIComponent(`Hola, hice el Executive Performance Score (${result.score}/100) y quiero solicitar mi revisión ejecutiva.`)}`;
 
   return (
     <div className="score-result">
@@ -186,7 +192,7 @@ function Resultado({ evaluacion, onContinue }: { evaluacion: ExecutiveEvaluation
         <h3>Tu rendimiento actual tiene oportunidades de mejora.</h3>
         <p>Tus resultados sugieren que existen factores invisibles que podrían afectar tu energía, claridad mental y capacidad de liderazgo.</p>
         <p>Agenda una sesión estratégica para revisar tus resultados y determinar si calificas para el Executive Program.</p>
-        <button type="button" className="score-primary" onClick={onContinue}>Solicitar revisión ejecutiva</button>
+        <a className="score-primary score-link" href={whatsappUrl} target="_blank" rel="noopener noreferrer">Solicitar revisión ejecutiva</a>
         <span className="score-disclaimer">Indicador orientativo de rendimiento ejecutivo; no constituye diagnóstico ni tratamiento médico.</span>
       </div>
     </div>

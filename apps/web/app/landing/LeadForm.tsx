@@ -16,6 +16,7 @@ export function LeadForm({
   submitLabel = 'Completar registro',
   compact = false,
   evaluacion,
+  onSubmitted,
 }: {
   initialCorreo?: string;
   initialCelular?: string;
@@ -24,6 +25,9 @@ export function LeadForm({
   // (sin tamaño de cohorte ni sitio web) y adjunta las respuestas del score.
   compact?: boolean;
   evaluacion?: ExecutiveEvaluation;
+  // Si se pasa, al guardar el lead se llama esto en vez de mostrar el
+  // "gracias" propio (el Executive Score sigue con su pantalla de resultado).
+  onSubmitted?: () => void;
 } = {}) {
   const [enviado, setEnviado] = useState(false);
   const [nombre, setNombre] = useState('');
@@ -72,7 +76,8 @@ export function LeadForm({
         sitioWeb: String(data.get('sitioWeb') || '').trim() || undefined,
         ...(evaluacion ? { evaluacion } : {}),
       });
-      setEnviado(true);
+      if (onSubmitted) onSubmitted();
+      else setEnviado(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No pudimos enviar tu solicitud. Intenta de nuevo.');
     } finally {
