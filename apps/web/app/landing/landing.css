@@ -1294,3 +1294,7 @@
   /* Solo en móvil: la tabla comparativa no se muestra (título e imagen se quedan). */
   .eph-landing2 .table-scroll-wrap { display: none; }
 }
+
+/* Puente de "El costo de no actuar": más presencia por peso y aire, no por tamaño. */
+.eph-landing2 .contexto-titulo { font-weight: 500; margin: clamp(10px, 2vh, 20px) 0 clamp(14px, 3vh, 28px); }
+.eph-landing2 .contexto-titulo em { font-family: 'Cormorant Garamond', serif; font-style: italic; font-weight: 500; font-size: 1.16em; color: #8C6A2F; }

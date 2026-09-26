@@ -162,7 +162,7 @@ export function LandingPage() {
 
           <div className="hero-content">
             <h1 className="eph-a" style={{ animationDelay: '320ms' }}>
-              Tu próximo cuello de botella no está en tu empresa. <em className="serif">Está en ti.</em>
+              Tu empresa llega hasta donde tu cuerpo te lo permite.
             </h1>
             <p className="lead eph-a" style={{ animationDelay: '520ms' }}>
               Ephirox detecta las señales invisibles que afectan tu rendimiento, claridad mental y capacidad de liderazgo antes de que impacten tu empresa.
@@ -204,7 +204,7 @@ export function LandingPage() {
             <ScrollReveal className="senales-head">
               <span className="eyebrow senales-eyebrow">EL ENEMIGO INVISIBLE</span>
               <h2 className="senales-titulo">Los síntomas aparecen tarde. <em>Las señales no.</em></h2>
-              <p className="senales-sub">Sigues operando mientras te deterioras en silencio — el negocio lo siente antes que tú.</p>
+              <p className="senales-sub">Sigues operando mientras te deterioras en silencio — hasta que el cuerpo te pasa la cuenta.</p>
             </ScrollReveal>
             <ScrollReveal className="senales-card-col">
               <HeroStatCard className="senales-card" items={SENAL_ITEMS} />
