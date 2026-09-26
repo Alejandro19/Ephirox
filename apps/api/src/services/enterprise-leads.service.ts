@@ -1,12 +1,33 @@
 import nodemailer from 'nodemailer';
 import { desc, eq } from 'drizzle-orm';
-import type { EnterpriseLeadInput, EnterpriseLeadEstadoUpdate } from '@latribu/shared-types';
+import { computeExecutiveResult, programFor, type EnterpriseLeadInput, type EnterpriseLeadEstadoUpdate } from '@latribu/shared-types';
 import { db } from '../db/index.js';
 import { enterpriseLeads, adminNotifications, type EnterpriseLeadRow } from '../models/schema.js';
 import { renderEmailHtml } from './email-template.js';
 
 export async function createEnterpriseLead(input: EnterpriseLeadInput): Promise<EnterpriseLeadRow> {
-  const [row] = await db.insert(enterpriseLeads).values(input).returning();
+  const { evaluacion, ...contacto } = input;
+  // score/segmento/programa se recalculan acá desde las respuestas — el
+  // cliente nunca los manda, así que no se pueden falsear.
+  let extras: Partial<typeof enterpriseLeads.$inferInsert> = {};
+  if (evaluacion) {
+    const result = computeExecutiveResult(evaluacion.respuestas);
+    extras = {
+      score: result.score,
+      segmento: result.segmento,
+      programa: programFor(result.segmento, evaluacion.evaluarEquipo),
+      evaluacion: {
+        categorias: result.categorias,
+        fortaleza: result.fortaleza,
+        riesgo: result.riesgo,
+        personas: evaluacion.personas,
+        equipoDirectivo: evaluacion.equipoDirectivo,
+        evaluarEquipo: evaluacion.evaluarEquipo,
+        respuestas: evaluacion.respuestas,
+      },
+    };
+  }
+  const [row] = await db.insert(enterpriseLeads).values({ ...contacto, ...extras }).returning();
   await Promise.all([notifyEnterpriseLead(row), createAdminAlert(row)]);
   return row;
 }
@@ -38,7 +59,7 @@ async function createAdminAlert(lead: EnterpriseLeadRow): Promise<void> {
   const contexto = lead.empresa ? ` — ${lead.empresa}${lead.rol ? ` (${lead.rol})` : ''}` : '';
   await db.insert(adminNotifications).values({
     type: 'enterprise_lead',
-    message: `Nueva solicitud de demo: ${lead.nombre}${contexto}`,
+    message: `Nueva solicitud de demo: ${lead.nombre}${contexto}${lead.score != null ? ` — Score ${lead.score}/100 (${lead.programa})` : ''}`,
   });
 }
 
@@ -69,6 +90,7 @@ ${lead.rol ? `<p style="margin:0 0 6px;"><strong>Cargo:</strong> ${lead.rol}</p>
 ${lead.tamano ? `<p style="margin:0 0 6px;"><strong>Tamaño de cohorte:</strong> ${lead.tamano}</p>` : ''}
 ${lead.pais ? `<p style="margin:0 0 6px;"><strong>Sede / país:</strong> ${lead.pais}</p>` : ''}
 ${lead.sitioWeb ? `<p style="margin:0 0 6px;"><strong>Sitio web:</strong> ${lead.sitioWeb}</p>` : ''}
+${lead.score != null ? `<p style="margin:0 0 6px;"><strong>Executive Performance Score:</strong> ${lead.score}/100 (${lead.segmento ?? '—'}) — programa: ${lead.programa ?? '—'}</p>` : ''}
 ${lead.quien ? `<p style="margin:0;"><strong>Quién más debería estar:</strong> ${lead.quien}</p>` : ''}`,
   });
 

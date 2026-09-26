@@ -12,6 +12,7 @@ import { JuntaSection } from './JuntaChart';
 import { HeroDemoForm } from './HeroDemoForm';
 import { LeadModal } from './LeadModal';
 import { ChatWidget } from './ChatWidget';
+import { ExecutiveScoreModal } from './ExecutiveScoreModal';
 import { ScrollReveal } from './ScrollReveal';
 import { OptimizacionMobileCarousel } from './OptimizacionMobileCarousel';
 import { CostosMobileCarousel } from './CostosMobileCarousel';
@@ -85,6 +86,7 @@ export function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  const [scoreOpen, setScoreOpen] = useState(false);
   const [leadModal, setLeadModal] = useState<{ correo: string; celular: string } | null>(null);
 
   useEffect(() => {
@@ -167,6 +169,9 @@ export function LandingPage() {
             <p className="lead eph-a" style={{ animationDelay: '520ms' }}>
               Ephirox detecta las señales invisibles que afectan tu rendimiento, claridad mental y capacidad de liderazgo antes de que impacten tu empresa.
             </p>
+            <button type="button" className="hero-score-cta eph-a" style={{ animationDelay: '620ms' }} onClick={() => setScoreOpen(true)}>
+              Descubre tu Executive Performance Score™ <span aria-hidden="true">→</span>
+            </button>
             {SHOW_HERO_DEMO_FORM && (
               <div className="eph-a" style={{ animationDelay: '620ms' }}>
                 <HeroDemoForm onContinue={(correo, celular) => setLeadModal({ correo, celular })} />
@@ -343,6 +348,8 @@ export function LandingPage() {
       </footer>
 
       <ChatWidget open={chatOpen} onToggle={setChatOpen} whatsappNumber={COACH_WHATSAPP_NUMBER} />
+
+      {scoreOpen && <ExecutiveScoreModal onClose={() => setScoreOpen(false)} />}
 
       {leadModal && <LeadModal correo={leadModal.correo} celular={leadModal.celular} onClose={() => setLeadModal(null)} />}
 

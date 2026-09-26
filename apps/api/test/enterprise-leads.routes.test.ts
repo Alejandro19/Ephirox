@@ -99,4 +99,57 @@ describe('enterprise leads routes', () => {
     createdLeadIds.push(rows[0].id);
     expect(rows[0]).toMatchObject({ pais: 'México', sitioWeb: 'gamma.com' });
   });
+
+  // Executive Performance Score: el backend recalcula todo desde las
+  // respuestas — el score/segmento/programa nunca vienen del cliente.
+  describe('evaluación Executive Performance Score', () => {
+    const contacto = { nombre: 'Score Co', empresa: 'Score Co', correo: 'ceo@scoreco.com', celular: '+57 300 000 0000' };
+    const respuestasBajas = Array(15).fill(1); // 25/100 en todas las categorías
+
+    it('guarda score, segmento y programa recalculados desde las respuestas', async () => {
+      const res = await request(app)
+        .post('/api/enterprise-leads')
+        .send({ ...contacto, evaluacion: { respuestas: respuestasBajas, personas: '50 – 200', equipoDirectivo: true, evaluarEquipo: false } });
+      expect(res.status).toBe(201);
+
+      const rows = await db.select().from(enterpriseLeads).where(eq(enterpriseLeads.correo, 'ceo@scoreco.com'));
+      createdLeadIds.push(...rows.map((r) => r.id));
+      expect(rows).toHaveLength(1);
+      expect(rows[0].score).toBe(25);
+      expect(rows[0].segmento).toBe('riesgo_elevado');
+      expect(rows[0].programa).toBe('executive_prioritario');
+      expect(rows[0].evaluacion).toMatchObject({ personas: '50 – 200', equipoDirectivo: true, evaluarEquipo: false });
+    });
+
+    it('marca el lead para Corporate Program cuando quiere evaluar a su equipo', async () => {
+      const res = await request(app)
+        .post('/api/enterprise-leads')
+        .send({ ...contacto, correo: 'ceo2@scoreco.com', evaluacion: { respuestas: Array(15).fill(4), personas: 'Más de 200', equipoDirectivo: true, evaluarEquipo: true } });
+      expect(res.status).toBe(201);
+      const [row] = await db.select().from(enterpriseLeads).where(eq(enterpriseLeads.correo, 'ceo2@scoreco.com'));
+      createdLeadIds.push(row.id);
+      expect(row.score).toBe(100);
+      expect(row.segmento).toBe('optimizacion');
+      expect(row.programa).toBe('corporate');
+    });
+
+    it('ignora un score/segmento mandado por el cliente', async () => {
+      const res = await request(app)
+        .post('/api/enterprise-leads')
+        .send({ ...contacto, correo: 'ceo3@scoreco.com', score: 99, programa: 'corporate', evaluacion: { respuestas: respuestasBajas, personas: 'Menos de 10', equipoDirectivo: false, evaluarEquipo: false } });
+      // Los campos desconocidos se descartan y el valor real sale del cálculo.
+      expect(res.status).toBe(201);
+      const [row] = await db.select().from(enterpriseLeads).where(eq(enterpriseLeads.correo, 'ceo3@scoreco.com'));
+      createdLeadIds.push(row.id);
+      expect(row.score).toBe(25);
+      expect(row.programa).toBe('executive_prioritario');
+    });
+
+    it('rechaza una evaluación con respuestas incompletas o fuera de rango', async () => {
+      const incompleta = await request(app).post('/api/enterprise-leads').send({ ...contacto, evaluacion: { respuestas: [1, 2], personas: '10 – 50', equipoDirectivo: true, evaluarEquipo: false } });
+      expect(incompleta.status).toBe(400);
+      const fuera = await request(app).post('/api/enterprise-leads').send({ ...contacto, evaluacion: { respuestas: Array(15).fill(9), personas: '10 – 50', equipoDirectivo: true, evaluarEquipo: false } });
+      expect(fuera.status).toBe(400);
+    });
+  });
 });

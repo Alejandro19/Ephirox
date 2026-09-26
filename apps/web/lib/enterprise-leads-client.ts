@@ -1,3 +1,5 @@
+import type { ExecutiveEvaluation } from '@latribu/shared-types';
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3003';
 
 export type EnterpriseLeadInput = {
@@ -13,6 +15,8 @@ export type EnterpriseLeadInput = {
   pais?: string;
   sitioWeb?: string;
   quien?: string;
+  // Respuestas del Executive Performance Score — el backend recalcula el score.
+  evaluacion?: ExecutiveEvaluation;
 };
 
 // Endpoint público, sin sesión — a diferencia del resto de lib/*-client.ts,

@@ -1237,6 +1237,14 @@ export const enterpriseLeads = pgTable('enterprise_leads', {
   // sede/país (prellenado "Colombia" en el formulario) y sitio web (opcional).
   pais: text('pais'),
   sitioWeb: text('sitio_web'),
+  // Executive Performance Score (CTA del Hero): score 0-100, segmento
+  // (optimizacion | riesgo_moderado | riesgo_elevado), programa destino
+  // (executive | executive_prioritario | corporate) y el detalle de la
+  // evaluación — recalculados en el backend desde las respuestas.
+  score: integer('score'),
+  segmento: text('segmento'),
+  programa: text('programa'),
+  evaluacion: jsonb('evaluacion'),
   // Pipeline del submódulo admin "Leads por contactar".
   estado: text('estado').notNull().default('nuevo'), // nuevo | contactado | preparando_propuesta | propuesta_entregada | cerrado
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),

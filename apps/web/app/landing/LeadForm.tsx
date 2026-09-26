@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { createEnterpriseLead } from '../../lib/enterprise-leads-client';
-import { EMPRESA_TAMANOS, isCorporateEmail } from '@latribu/shared-types';
+import { EMPRESA_TAMANOS, isCorporateEmail, type ExecutiveEvaluation } from '@latribu/shared-types';
 
 const CORREO_ERROR = 'Introduce un correo electrónico corporativo válido.';
 
@@ -14,12 +14,19 @@ export function LeadForm({
   initialCorreo = '',
   initialCelular = '+57 ',
   submitLabel = 'Completar registro',
+  compact = false,
+  evaluacion,
 }: {
   initialCorreo?: string;
   initialCelular?: string;
   submitLabel?: string;
+  // Modo del Executive Performance Score: pide Nombre + Empresa + contacto
+  // (sin tamaño de cohorte ni sitio web) y adjunta las respuestas del score.
+  compact?: boolean;
+  evaluacion?: ExecutiveEvaluation;
 } = {}) {
   const [enviado, setEnviado] = useState(false);
+  const [nombre, setNombre] = useState('');
   const [empresa, setEmpresa] = useState('');
   const [correo, setCorreo] = useState(initialCorreo);
   const [correoError, setCorreoError] = useState<string | null>(null);
@@ -47,17 +54,23 @@ export function LeadForm({
       setError('Indica el nombre de la empresa.');
       return;
     }
+    const nombreValue = nombre.trim();
+    if (compact && !nombreValue) {
+      setError('Indica tu nombre.');
+      return;
+    }
 
     setSaving(true);
     setError(null);
     try {
       await createEnterpriseLead({
-        nombre: empresaValue,
+        nombre: compact ? nombreValue : empresaValue,
         correo: correoValue,
         celular: celular.trim(),
         empresa: empresaValue,
         tamano: String(data.get('tamano') || '').trim() || undefined,
         sitioWeb: String(data.get('sitioWeb') || '').trim() || undefined,
+        ...(evaluacion ? { evaluacion } : {}),
       });
       setEnviado(true);
     } catch (err) {
@@ -78,6 +91,12 @@ export function LeadForm({
 
   return (
     <form className="contact-form" onSubmit={handleSubmit} noValidate>
+      {compact && (
+        <label className="field-full">
+          <span>Nombre y apellido</span>
+          <input name="nombre" placeholder="Tu nombre" value={nombre} onChange={(e) => { setNombre(e.target.value); if (error) setError(null); }} />
+        </label>
+      )}
       <label className="field-full">
         <span>Nombre de la empresa</span>
         <input name="empresa" placeholder="Nombre de tu empresa" value={empresa} onChange={(e) => { setEmpresa(e.target.value); if (error) setError(null); }} />
@@ -100,17 +119,21 @@ export function LeadForm({
         <input name="celular" type="tel" placeholder="+57 300 123 4567" value={celular} onChange={(e) => setCelular(e.target.value)} />
       </label>
       {correoError && <p id="correo-error" role="alert" className="field-full field-error">{correoError}</p>}
+      {!compact && (
+        <>
       <label className="field-half">
-        <span>Cantidad de cohorte</span>
-        <select name="tamano" defaultValue="">
-          <option value="" disabled>Elija una opción</option>
-          {EMPRESA_TAMANOS.map((t) => <option key={t} value={t}>{t}</option>)}
-        </select>
-      </label>
-      <label className="field-half">
-        <span>Sitio web de la empresa</span>
-        <input name="sitioWeb" placeholder="empresa.com" />
-      </label>
+          <span>Cantidad de cohorte</span>
+          <select name="tamano" defaultValue="">
+            <option value="" disabled>Elija una opción</option>
+            {EMPRESA_TAMANOS.map((t) => <option key={t} value={t}>{t}</option>)}
+          </select>
+        </label>
+        <label className="field-half">
+          <span>Sitio web de la empresa</span>
+          <input name="sitioWeb" placeholder="empresa.com" />
+        </label>
+        </>
+      )}
 
       {error && <p role="alert" className="field-full field-error">{error}</p>}
       <button type="submit" className="submit-btn field-full" disabled={saving} style={{ opacity: saving ? 0.6 : 1, cursor: saving ? 'default' : 'pointer' }}>

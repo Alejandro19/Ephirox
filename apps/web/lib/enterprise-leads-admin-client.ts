@@ -28,6 +28,10 @@ export type AdminEnterpriseLead = {
   pais: string | null;
   sitioWeb: string | null;
   quien: string | null;
+  // Executive Performance Score (CTA del Hero) — null si el lead vino del formulario normal.
+  score: number | null;
+  segmento: string | null;
+  programa: string | null;
   estado: EnterpriseLeadEstado;
   createdAt: string;
 };

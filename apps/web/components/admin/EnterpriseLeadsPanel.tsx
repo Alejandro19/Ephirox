@@ -1,5 +1,6 @@
 'use client';
 
+import { PROGRAMA_LABELS, SEGMENTO_INFO, type ExecutivePrograma, type ExecutiveSegmento } from '@latribu/shared-types';
 import { useEffect, useState, useCallback } from 'react';
 import {
   type AdminEnterpriseLead,
@@ -139,6 +140,8 @@ export function EnterpriseLeadsPanel() {
                 <th style={thStyle}>Equipo</th>
                 <th style={thStyle}>País</th>
                 <th style={thStyle}>Sitio web</th>
+                <th style={thStyle}>Score</th>
+                <th style={thStyle}>Programa</th>
                 <th style={thStyle}>Fecha</th>
                 <th style={thStyle}>Estado</th>
               </tr>
@@ -154,6 +157,8 @@ export function EnterpriseLeadsPanel() {
                   <td style={tdStyle}>{lead.tamano || '—'}</td>
                   <td style={tdStyle}>{lead.pais || '—'}</td>
                   <td style={tdStyle}>{lead.sitioWeb || '—'}</td>
+                  <td style={tdStyle} title={lead.segmento ? SEGMENTO_INFO[lead.segmento as ExecutiveSegmento]?.label : undefined}>{lead.score != null ? `${lead.score}/100` : '—'}</td>
+                  <td style={tdStyle}>{lead.programa ? PROGRAMA_LABELS[lead.programa as ExecutivePrograma] ?? lead.programa : '—'}</td>
                   <td style={tdStyle}>{new Date(lead.createdAt).toLocaleDateString('es-CO')}</td>
                   <td style={tdStyle}>
                     <select

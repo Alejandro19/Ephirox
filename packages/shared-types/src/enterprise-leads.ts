@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { ExecutiveEvaluationSchema } from './executive-score.js';
 
 // Formulario "Llevar Ephirox a mi empresa" de la landing pública
 // (ephirox.com/landing) — endpoint sin autenticación, expuesto a internet.
@@ -43,6 +44,9 @@ export const EnterpriseLeadInputSchema = z.object({
   pais: z.string().max(100).optional(),
   sitioWeb: z.string().max(300).optional(),
   quien: z.string().max(200).optional(),
+  // Respuestas del Executive Performance Score (CTA del Hero) — el backend
+  // recalcula score/segmento/programa desde acá, nunca los toma del cliente.
+  evaluacion: ExecutiveEvaluationSchema.optional(),
 });
 export type EnterpriseLeadInput = z.infer<typeof EnterpriseLeadInputSchema>;
 
