@@ -180,3 +180,12 @@ export const JUNTA_PUNTOS: JuntaPunto[] = [
 ];
 
 export const APP_LOGIN_URL = 'https://app.ephirox.com/login';
+
+// Sección "El enemigo invisible": solo el problema, sin mencionar wearables,
+// IA, dashboards, protocolos ni producto (eso llega en "¿Cómo lo medimos?").
+export const SENALES = [
+  { id: 'sueno', label: 'Sueño', kicker: 'Recuperación insuficiente', texto: 'Dormir no garantiza recuperarse. Incluso pequeñas alteraciones en el sueño pueden afectar energía, memoria, regulación emocional y toma de decisiones.' },
+  { id: 'estres', label: 'Estrés', kicker: 'Sobrecarga invisible', texto: 'El estrés sostenido puede mantener al cuerpo funcionando, mientras reduce progresivamente la claridad mental y la capacidad de liderazgo.' },
+  { id: 'recuperacion', label: 'Recuperación', kicker: 'Rendir no significa recuperarse', texto: 'Muchos ejecutivos mantienen altos niveles de ejecución mientras acumulan fatiga que termina impactando su rendimiento.' },
+  { id: 'biomarcadores', label: 'Biomarcadores', kicker: 'Lo que aún no se siente', texto: 'Inflamación, alteraciones metabólicas y otros indicadores suelen aparecer mucho antes que los síntomas visibles.' },
+] as const;

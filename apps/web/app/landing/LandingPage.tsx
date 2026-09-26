@@ -1,9 +1,9 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactElement } from 'react';
 import './landing.css';
-import { COSTOS, OPTIMIZACION, SHIFTS, YA_INTENTASTE, APP_LOGIN_URL } from './content';
+import { SENALES, COSTOS, OPTIMIZACION, SHIFTS, YA_INTENTASTE, APP_LOGIN_URL } from './content';
 import { HeroStatCard } from './HeroStatCard';
 import { PasosSticky } from './PasosSticky';
 import { PasosMobileList } from './PasosMobileList';
@@ -81,6 +81,14 @@ function handleAnchorClick(e: React.MouseEvent<HTMLAnchorElement>) {
 // Formulario del Hero oculto temporalmente (pedido de Alejandro) — poner en
 // true para volver a mostrarlo; el modal de demo sigue abriéndose desde el footer.
 const SHOW_HERO_DEMO_FORM = false;
+
+const svg = { width: 26, height: 26, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.4, strokeLinecap: 'round', strokeLinejoin: 'round' } as const;
+const SENAL_ICONS: Record<string, ReactElement> = {
+  sueno: (<svg {...svg}><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5Z" /></svg>),
+  estres: (<svg {...svg}><path d="M3 12h3l2.5-6 4 12 2.5-6H21" /></svg>),
+  recuperacion: (<svg {...svg}><path d="M20 12a8 8 0 1 1-2.6-5.9" /><path d="M20 4v4h-4" /></svg>),
+  biomarcadores: (<svg {...svg}><path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.8 3h10.4A2 2 0 0 0 19 18l-5-9V3" /><path d="M8 15h8" /></svg>),
+};
 
 export function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
@@ -220,6 +228,25 @@ export function LandingPage() {
               ))}
             </ScrollReveal>
             <CostosMobileCarousel />
+          </div>
+        </section>
+
+        <section className="senales" id="senales">
+          <div className="senales-wrap">
+            <ScrollReveal className="senales-head">
+              <h2 className="senales-titulo">Los síntomas aparecen tarde. <em>Las señales no.</em></h2>
+              <p className="senales-sub">La mayoría de los líderes siguen operando mientras su capacidad de recuperación, claridad mental y resiliencia se deterioran gradualmente. Cuando los síntomas aparecen, el impacto ya suele sentirse en el negocio.</p>
+            </ScrollReveal>
+            <ScrollReveal className="senales-grid">
+              {SENALES.map((s) => (
+                <div className={`senal-card senal-${s.id}`} key={s.id}>
+                  <span className="senal-icon" aria-hidden="true">{SENAL_ICONS[s.id]}</span>
+                  <span className="senal-label">{s.label}</span>
+                  <span className="senal-kicker">{s.kicker}</span>
+                  <p>{s.texto}</p>
+                </div>
+              ))}
+            </ScrollReveal>
           </div>
         </section>
 
