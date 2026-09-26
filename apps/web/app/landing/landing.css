@@ -1243,3 +1243,27 @@
 @media (max-width: 768px) {
   .eph-landing2 .wa-float { right: 16px; bottom: 16px; padding: 0 16px 0 14px; }
 }
+
+/* Cierre de "El enemigo invisible": la invitación al Score dentro de la misma sección. */
+.eph-landing2 .senales-wrap { grid-template-areas: "head card" "cierre cierre"; }
+.eph-landing2 .senales-head { grid-area: head; }
+.eph-landing2 .senales-card-col { grid-area: card; }
+.eph-landing2 .senales-cierre { grid-area: cierre; }
+.eph-landing2 .senales-cierre-inner { display: grid; gap: 20px; justify-items: center; text-align: center; padding-top: clamp(24px, 4vh, 40px); border-top: 1px solid rgba(23,19,14,0.12); }
+.eph-landing2 .senales-cierre-inner p { margin: 0; max-width: 52ch; font-size: clamp(16px, 1.6vw, 19px); line-height: 1.6; color: rgba(23,19,14,0.72); text-wrap: balance; }
+@media (max-width: 860px) { .eph-landing2 .senales-wrap { grid-template-areas: "head" "card" "cierre"; } }
+
+/* Chips de resultados: kicker y borde iguales a los del resto del sitio, centrados. */
+.eph-landing2 .beneficios-kicker { text-align: center; color: rgba(23,19,14,0.42); }
+.eph-landing2 .beneficios-grid { justify-content: center; }
+.eph-landing2 .beneficio { justify-items: center; text-align: center; }
+.eph-landing2 .beneficio-chip { justify-self: center; font-family: 'Jost', sans-serif; font-style: normal; font-weight: 300; font-size: 14px; letter-spacing: 0.02em; padding: 10px 20px; border: 1px solid rgba(201,166,107,0.45); color: var(--gold-dark); }
+@media (max-width: 520px) {
+  .eph-landing2 .beneficios-grid { display: grid; grid-template-columns: repeat(2, 1fr); justify-items: center; }
+  .eph-landing2 .beneficio { max-width: none; width: 100%; }
+}
+
+/* CTA final: anillos del Hero de fondo y respiro vertical como las demás secciones. */
+.eph-landing2 section.score-final { position: relative; overflow: hidden; padding: clamp(64px, 10vh, 120px) clamp(22px, 6vw, 92px); }
+.eph-landing2 section.score-final .hero-ring { top: 50%; }
+.eph-landing2 section.score-final .score-final-wrap { position: relative; }

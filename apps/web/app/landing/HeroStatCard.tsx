@@ -24,6 +24,10 @@ export function HeroStatCard({ className = '', style, items = HERO_STATS }: { cl
                 opacity: isActive ? 1 : 0,
                 transform: `translateX(${isActive ? 0 : i < active ? 24 : -18}px)`,
                 pointerEvents: isActive ? 'auto' : 'none',
+                // El bloque saliente termina de irse (320ms) antes de que entre el siguiente.
+                transition: isActive
+                  ? 'opacity 480ms ease-out 340ms, transform 640ms cubic-bezier(0.16,1,0.3,1) 340ms'
+                  : 'opacity 320ms ease-out, transform 320ms ease-out',
               }}
             >
               <span className="stat-num">{h.cifra}</span>

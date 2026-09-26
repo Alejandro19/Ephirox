@@ -204,20 +204,18 @@ export function LandingPage() {
             <ScrollReveal className="senales-head">
               <span className="eyebrow senales-eyebrow">EL ENEMIGO INVISIBLE</span>
               <h2 className="senales-titulo">Los síntomas aparecen tarde. <em>Las señales no.</em></h2>
-              <p className="senales-sub">La mayoría de los líderes siguen operando mientras su capacidad de recuperación, claridad mental y resiliencia se deterioran gradualmente. Cuando los síntomas aparecen, el impacto ya suele sentirse en el negocio.</p>
+              <p className="senales-sub">Sigues operando mientras te deterioras en silencio — el negocio lo siente antes que tú.</p>
             </ScrollReveal>
             <ScrollReveal className="senales-card-col">
               <HeroStatCard className="senales-card" items={SENAL_ITEMS} />
             </ScrollReveal>
+            <ScrollReveal className="senales-cierre" >
+              <div id="score" className="senales-cierre-inner">
+                <p>¿Cuáles de estas señales ya tienes? Evalúa en minutos tu energía, claridad mental, recuperación y resiliencia.</p>
+                <button type="button" className="score-section-cta" onClick={() => setScoreOpen(true)}>Obtener Executive Score</button>
+              </div>
+            </ScrollReveal>
           </div>
-        </section>
-
-        <section className="score-section" id="score">
-          <ScrollReveal className="score-section-wrap">
-            <h2 className="score-section-titulo">Descubre si ya existen señales que están <em>limitando tu rendimiento.</em></h2>
-            <p className="score-section-sub">Evalúa en minutos tu energía, claridad mental, recuperación y resiliencia para identificar riesgos ocultos antes de que impacten tu capacidad de liderazgo.</p>
-            <button type="button" className="score-section-cta" onClick={() => setScoreOpen(true)}>Obtener Executive Score</button>
-          </ScrollReveal>
         </section>
 
         <div id="beneficios">
@@ -299,6 +297,12 @@ export function LandingPage() {
         </section>
 
         <section className="score-final">
+          <div className="hero-ring eph-ring" aria-hidden="true">
+            <svg viewBox="0 0 132 132" style={{ width: '100%', height: '100%' }}>
+              <circle cx="66" cy="66" r="62" fill="none" stroke="#C9A66B" strokeOpacity="0.16" strokeWidth="0.3" strokeDasharray="329 60.6" transform="rotate(-61.9 66 66)" />
+              <circle cx="66" cy="66" r="47" fill="none" stroke="#C9A66B" strokeOpacity="0.09" strokeWidth="0.25" strokeDasharray="250 45.3" transform="rotate(-242.3 66 66)" />
+            </svg>
+          </div>
           <ScrollReveal className="score-final-wrap">
             <p className="score-final-texto">El primer paso no es un contrato. Es un diagnóstico de minutos.</p>
             <a className="score-final-cta" href="#score" onClick={handleAnchorClick}>Solicitar Executive Score <span aria-hidden="true">→</span></a>
