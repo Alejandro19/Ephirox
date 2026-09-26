@@ -1125,3 +1125,7 @@
 .eph-landing2 .junta-rule { width: 44px; height: 1px; background: var(--gold); }
 .eph-landing2 .junta-d90 .dia90-head h2 { font-size: clamp(28px, 3vw, 40px); font-weight: 300; line-height: 1.18; letter-spacing: -0.005em; max-width: 18ch; }
 .eph-landing2 .junta-d90 .dia90-head h2 em { font-style: italic; font-weight: 400; color: var(--gold); }
+
+/* Hero: el título nuevo es una frase larga — más ancho, y el subtítulo (antes kicker) en texto corrido */
+.eph-landing2 .hero-content h1 { max-width: 19ch; }
+.eph-landing2 .hero-content .lead { max-width: 52ch; }

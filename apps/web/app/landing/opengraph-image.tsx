@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og';
 
 export const runtime = 'edge';
-export const alt = 'Ephirox — Bienestar élite con IA para Founders y C-Levels';
+export const alt = 'Ephirox — Bienestar élite para Founders y C-Levels';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
@@ -21,7 +21,7 @@ async function loadGoogleFont(family: string, text: string) {
 
 export default async function Image() {
   const WORDMARK = 'EPHIROX';
-  const TAGLINE = 'Bienestar élite con IA para Founders y C-Levels';
+  const TAGLINE = 'BIENESTAR ÉLITE PARA FOUNDERS Y C-LEVELS';
 
   const [wordmarkFont, taglineFont] = await Promise.all([
     loadGoogleFont('Cormorant+Garamond:wght@300', WORDMARK),
@@ -79,7 +79,8 @@ export default async function Image() {
             fontFamily: 'Cormorant Garamond',
             fontStyle: 'italic',
             fontWeight: 500,
-            fontSize: 34,
+            fontSize: 30,
+            letterSpacing: 5,
             color: '#C9A66B',
           }}
         >

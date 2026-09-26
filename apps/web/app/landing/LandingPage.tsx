@@ -158,11 +158,11 @@ export function LandingPage() {
 
           <div className="hero-content">
             <h1 className="eph-a" style={{ animationDelay: '320ms' }}>
-              Tu empresa llega hasta donde tu <em className="serif">cuerpo</em> te lo permite.
+              Tu próximo cuello de botella no está en tu empresa. <em className="serif">Está en ti.</em>
             </h1>
-            <span className="hero-kicker eph-a" style={{ animationDelay: '520ms' }}>
-              BIENESTAR ÉLITE CON IA PARA FOUNDERS Y <span style={{ whiteSpace: 'nowrap' }}>C‑LEVELS</span>
-            </span>
+            <p className="lead eph-a" style={{ animationDelay: '520ms' }}>
+              Ephirox detecta las señales invisibles que afectan tu rendimiento, claridad mental y capacidad de liderazgo antes de que impacten tu empresa.
+            </p>
             <div className="eph-a" style={{ animationDelay: '620ms' }}>
               <HeroDemoForm onContinue={(correo, celular) => setLeadModal({ correo, celular })} />
             </div>
