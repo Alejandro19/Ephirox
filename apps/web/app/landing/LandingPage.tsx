@@ -77,6 +77,10 @@ function handleAnchorClick(e: React.MouseEvent<HTMLAnchorElement>) {
   el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
 }
 
+// Formulario del Hero oculto temporalmente (pedido de Alejandro) — poner en
+// true para volver a mostrarlo; el modal de demo sigue abriéndose desde el footer.
+const SHOW_HERO_DEMO_FORM = false;
+
 export function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
@@ -163,9 +167,11 @@ export function LandingPage() {
             <p className="lead eph-a" style={{ animationDelay: '520ms' }}>
               Ephirox detecta las señales invisibles que afectan tu rendimiento, claridad mental y capacidad de liderazgo antes de que impacten tu empresa.
             </p>
-            <div className="eph-a" style={{ animationDelay: '620ms' }}>
-              <HeroDemoForm onContinue={(correo, celular) => setLeadModal({ correo, celular })} />
-            </div>
+            {SHOW_HERO_DEMO_FORM && (
+              <div className="eph-a" style={{ animationDelay: '620ms' }}>
+                <HeroDemoForm onContinue={(correo, celular) => setLeadModal({ correo, celular })} />
+              </div>
+            )}
           </div>
 
           <HeroStatCard className="eph-a" style={{ animationDelay: '760ms' }} />
@@ -192,7 +198,7 @@ export function LandingPage() {
             <span className="costura costura-entra" aria-hidden="true" />
 
             <ScrollReveal className="contexto-fila">
-              <span className="eyebrow contexto-eyebrow">EL COSTO</span>
+              <span className="eyebrow contexto-eyebrow">EL COSTO DE NO ACTUAR</span>
               <h2 className="contexto-titulo">Lo que sientes tú, ya se lo estás cobrando a tu <em>empresa</em>.</h2>
             </ScrollReveal>
 

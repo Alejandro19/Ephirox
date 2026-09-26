@@ -1129,3 +1129,7 @@
 /* Hero: el título nuevo es una frase larga — más ancho, y el subtítulo (antes kicker) en texto corrido */
 .eph-landing2 .hero-content h1 { max-width: 19ch; }
 .eph-landing2 .hero-content .lead { max-width: 52ch; }
+
+/* Hero: título y subtítulo más contenidos, para no invadir la foto del ejecutivo */
+.eph-landing2 .hero-content h1 { font-size: clamp(30px, 3.4vw, 50px); max-width: 20ch; }
+.eph-landing2 .hero-content .lead { font-size: clamp(14px, 1.3vw, 17px); max-width: 46ch; line-height: 1.6; }
