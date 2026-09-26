@@ -78,7 +78,7 @@ export const COMPARACION: CompareRow[] = [
   {
     indicador: 'Acceso',
     trad: 'Abierto a cualquiera, beneficio genérico de nómina.',
-    eph: 'Reservado por cohorte ejecutiva, dentro de la empresa (founders, C-Levels, Top Sellers).',
+    eph: 'Reservado por cohorte ejecutiva, dentro de la empresa (founders, C-Levels).',
     dif: 'Élite, no es masivo',
     mobileHide: true,
   },

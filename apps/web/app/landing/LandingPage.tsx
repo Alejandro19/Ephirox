@@ -110,11 +110,6 @@ export function LandingPage() {
     };
   }, []);
 
-  function openLeadModal(e: React.MouseEvent<HTMLAnchorElement>) {
-    e.preventDefault();
-    setLeadModal({ correo: '', celular: '' });
-  }
-
   function scrollToTop() {
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
@@ -184,6 +179,7 @@ export function LandingPage() {
           <div className="contexto-wrap">
             <ScrollReveal className="contexto-fila">
               <span className="eyebrow contexto-eyebrow">EL COSTO DE NO ACTUAR</span>
+              <h2 className="contexto-titulo">Lo que sientes tú, ya se lo estás cobrando a tu <em>empresa</em>.</h2>
             </ScrollReveal>
 
             <ScrollReveal className="costos-grid">
@@ -205,6 +201,7 @@ export function LandingPage() {
         <section className="senales" id="senales">
           <div className="senales-wrap">
             <ScrollReveal className="senales-head">
+              <span className="eyebrow senales-eyebrow">EL ENEMIGO INVISIBLE</span>
               <h2 className="senales-titulo">Los síntomas aparecen tarde. <em>Las señales no.</em></h2>
               <p className="senales-sub">La mayoría de los líderes siguen operando mientras su capacidad de recuperación, claridad mental y resiliencia se deterioran gradualmente. Cuando los síntomas aparecen, el impacto ya suele sentirse en el negocio.</p>
             </ScrollReveal>
@@ -289,6 +286,7 @@ export function LandingPage() {
 
         <section className="score-final">
           <ScrollReveal className="score-final-wrap">
+            <p className="score-final-texto">El primer paso no es un contrato. Es un diagnóstico de minutos.</p>
             <a className="score-final-cta" href="#score" onClick={handleAnchorClick}>Solicitar Executive Score <span aria-hidden="true">→</span></a>
           </ScrollReveal>
         </section>
@@ -311,7 +309,6 @@ export function LandingPage() {
             <a className="link-hover" href="#contexto" onClick={handleAnchorClick}>El costo de no verlo</a>
             <a className="link-hover" href="#categoria" onClick={handleAnchorClick}>¿Por qué Ephirox?</a>
             <a className="link-hover" href="#beneficios" onClick={handleAnchorClick}>Beneficios</a>
-            <a className="link-hover" href="#" onClick={openLeadModal}>Solicitar una Demo</a>
           </div>
 
           <div className="footer-col">
