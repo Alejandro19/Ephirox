@@ -12,6 +12,12 @@ async function answerAll(user: ReturnType<typeof userEvent.setup>, label: string
   }
 }
 
+async function submitContactAndVerify(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole('button', { name: 'Ver mi resultado' }));
+  await user.type(await screen.findByPlaceholderText('000000'), '123456');
+  await user.click(screen.getByRole('button', { name: 'Verificar y continuar' }));
+}
+
 async function fillContact(user: ReturnType<typeof userEvent.setup>) {
   await user.type(screen.getByPlaceholderText('Tu nombre'), 'Ana Ríos');
   await user.type(screen.getByPlaceholderText('Nombre de tu empresa'), 'Acme');
@@ -31,6 +37,8 @@ describe('ExecutiveScoreModal', () => {
 
   it('asks for contact BEFORE showing the result, then shows the score, segment and executive language', async () => {
     const user = userEvent.setup();
+    vi.mocked(enterpriseLeadsClient.requestLeadVerification).mockResolvedValue();
+    vi.mocked(enterpriseLeadsClient.confirmLeadVerification).mockResolvedValue('tok');
     vi.mocked(enterpriseLeadsClient.createEnterpriseLead).mockResolvedValue();
     render(<ExecutiveScoreModal onClose={vi.fn()} />);
     await user.click(screen.getByRole('button', { name: 'Comenzar evaluación' }));
@@ -49,7 +57,7 @@ describe('ExecutiveScoreModal', () => {
     expect(screen.queryByLabelText('100 de 100')).not.toBeInTheDocument();
     expect(screen.getByText('Tu resultado está listo')).toBeInTheDocument();
     await fillContact(user);
-    await user.click(screen.getByRole('button', { name: 'Ver mi resultado' }));
+    await submitContactAndVerify(user);
 
     expect(await screen.findByLabelText('100 de 100')).toBeInTheDocument();
     expect(screen.getByText(/Optimización\./)).toBeInTheDocument();
@@ -63,6 +71,8 @@ describe('ExecutiveScoreModal', () => {
 
   it('saves the lead with the answers before revealing the result, and does not reveal it if saving fails', async () => {
     const user = userEvent.setup();
+    vi.mocked(enterpriseLeadsClient.requestLeadVerification).mockResolvedValue();
+    vi.mocked(enterpriseLeadsClient.confirmLeadVerification).mockResolvedValue('tok');
     vi.mocked(enterpriseLeadsClient.createEnterpriseLead).mockRejectedValueOnce(new Error('Sin conexión'));
     render(<ExecutiveScoreModal onClose={vi.fn()} />);
     await user.click(screen.getByRole('button', { name: 'Comenzar evaluación' }));
@@ -72,14 +82,14 @@ describe('ExecutiveScoreModal', () => {
     await user.click(screen.getAllByRole('button', { name: 'Sí' })[1]); // evaluar equipo
     await user.click(screen.getByRole('button', { name: 'Continuar' }));
     await fillContact(user);
-    await user.click(screen.getByRole('button', { name: 'Ver mi resultado' }));
+    await submitContactAndVerify(user);
 
     // Primer intento falla: sigue en el formulario, sin resultado.
     expect(await screen.findByText('Sin conexión')).toBeInTheDocument();
     expect(screen.queryByLabelText('50 de 100')).not.toBeInTheDocument();
 
     vi.mocked(enterpriseLeadsClient.createEnterpriseLead).mockResolvedValue();
-    await user.click(screen.getByRole('button', { name: 'Ver mi resultado' }));
+    await user.click(screen.getByRole('button', { name: 'Verificar y continuar' }));
     expect(await screen.findByLabelText('50 de 100')).toBeInTheDocument();
     expect(screen.getByText(/Riesgo elevado\./)).toBeInTheDocument();
     expect(enterpriseLeadsClient.createEnterpriseLead).toHaveBeenLastCalledWith(

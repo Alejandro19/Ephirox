@@ -29,8 +29,10 @@ describe('LeadForm (formulario completo del Hero)', () => {
     expect(await screen.findByText('Introduce un correo electrónico corporativo válido.')).toBeInTheDocument();
   });
 
-  it('submits the lead using the company name as the contact name', async () => {
+  it('verifies the email with a code BEFORE saving the lead, then saves it using the company name as contact name', async () => {
     const user = userEvent.setup();
+    vi.mocked(enterpriseLeadsClient.requestLeadVerification).mockResolvedValue();
+    vi.mocked(enterpriseLeadsClient.confirmLeadVerification).mockResolvedValue('token-verificado');
     vi.mocked(enterpriseLeadsClient.createEnterpriseLead).mockResolvedValue();
     render(<LeadForm initialCorreo="ana@acme.com" initialCelular="+57 300 123 4567" />);
 
@@ -39,6 +41,14 @@ describe('LeadForm (formulario completo del Hero)', () => {
     await user.type(screen.getByPlaceholderText('empresa.com'), 'acme.com');
     await user.click(screen.getByRole('button', { name: 'Completar registro' }));
 
+    // Primero se pide el código; el lead todavía no se guardó.
+    expect(enterpriseLeadsClient.requestLeadVerification).toHaveBeenCalledWith('ana@acme.com');
+    expect(enterpriseLeadsClient.createEnterpriseLead).not.toHaveBeenCalled();
+    await user.type(await screen.findByPlaceholderText('000000'), '123456');
+    await user.click(screen.getByRole('button', { name: 'Verificar y continuar' }));
+
+    await screen.findByText(/Gracias por tu interés en Ephirox/);
+    expect(enterpriseLeadsClient.confirmLeadVerification).toHaveBeenCalledWith('ana@acme.com', '123456');
     expect(enterpriseLeadsClient.createEnterpriseLead).toHaveBeenCalledWith({
       nombre: 'Acme Corp',
       correo: 'ana@acme.com',
@@ -46,8 +56,31 @@ describe('LeadForm (formulario completo del Hero)', () => {
       empresa: 'Acme Corp',
       tamano: '11 – 30',
       sitioWeb: 'acme.com',
+      verificationToken: 'token-verificado',
+      hp: '',
     });
-    expect(await screen.findByText(/Gracias por tu interés en Ephirox/)).toBeInTheDocument();
+  });
+
+  it('does not save the lead when the code is wrong', async () => {
+    const user = userEvent.setup();
+    vi.mocked(enterpriseLeadsClient.requestLeadVerification).mockResolvedValue();
+    vi.mocked(enterpriseLeadsClient.confirmLeadVerification).mockRejectedValue(new Error('El código no es correcto o ya venció.'));
+    render(<LeadForm initialCorreo="ana@acme.com" initialCelular="+57 300 123 4567" />);
+    await user.type(screen.getByPlaceholderText('Nombre de tu empresa'), 'Acme Corp');
+    await user.click(screen.getByRole('button', { name: 'Completar registro' }));
+    await user.type(await screen.findByPlaceholderText('000000'), '000000');
+    await user.click(screen.getByRole('button', { name: 'Verificar y continuar' }));
+    expect(await screen.findByText('El código no es correcto o ya venció.')).toBeInTheDocument();
+    expect(enterpriseLeadsClient.createEnterpriseLead).not.toHaveBeenCalled();
+  });
+
+  it('rejects an obviously fake WhatsApp before asking for any code', async () => {
+    const user = userEvent.setup();
+    render(<LeadForm initialCorreo="ana@acme.com" initialCelular="1234567890" />);
+    await user.type(screen.getByPlaceholderText('Nombre de tu empresa'), 'Acme Corp');
+    await user.click(screen.getByRole('button', { name: 'Completar registro' }));
+    expect(await screen.findByText(/número de WhatsApp válido/)).toBeInTheDocument();
+    expect(enterpriseLeadsClient.requestLeadVerification).not.toHaveBeenCalled();
   });
 
   it('blocks submission when the email is personal or the company is empty', async () => {

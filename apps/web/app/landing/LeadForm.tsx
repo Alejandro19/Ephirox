@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { createEnterpriseLead } from '../../lib/enterprise-leads-client';
-import { EMPRESA_TAMANOS, isCorporateEmail, type ExecutiveEvaluation } from '@latribu/shared-types';
+import { createEnterpriseLead, requestLeadVerification, confirmLeadVerification } from '../../lib/enterprise-leads-client';
+import { EMPRESA_TAMANOS, LEAD_CODE_LENGTH, PHONE_ERROR, TEXT_ERROR, isCorporateEmail, isPlausiblePhone, isPlausibleText, type ExecutiveEvaluation } from '@latribu/shared-types';
 
 const CORREO_ERROR = 'Introduce un correo electrónico corporativo válido.';
 
@@ -37,6 +37,13 @@ export function LeadForm({
   const [celular, setCelular] = useState(initialCelular);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Verificación del correo: se pide un código antes de guardar el lead, para
+  // asegurar que el correo existe y es de quien lo escribe.
+  const [codeStep, setCodeStep] = useState(false);
+  const [code, setCode] = useState('');
+  const [hp, setHp] = useState('');
+  const [verified, setVerified] = useState<{ correo: string; token: string } | null>(null);
+  const [extra, setExtra] = useState<{ tamano?: string; sitioWeb?: string }>({});
 
   function validateCorreo(value: string): boolean {
     if (!value || !value.includes('@') || !isCorporateEmail(value)) {
@@ -47,39 +54,86 @@ export function LeadForm({
     return true;
   }
 
+  async function saveLead(token: string) {
+    const empresaValue = empresa.trim();
+    await createEnterpriseLead({
+      nombre: compact ? nombre.trim() : empresaValue,
+      correo: correo.trim(),
+      celular: celular.trim(),
+      empresa: empresaValue,
+      tamano: extra.tamano,
+      sitioWeb: extra.sitioWeb,
+      ...(evaluacion ? { evaluacion } : {}),
+      verificationToken: token,
+      hp,
+    });
+    if (onSubmitted) onSubmitted();
+    else setEnviado(true);
+  }
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const data = new FormData(e.currentTarget);
     const correoValue = correo.trim();
     if (!validateCorreo(correoValue)) return;
 
-    const empresaValue = empresa.trim();
-    if (!empresaValue) {
-      setError('Indica el nombre de la empresa.');
+    if (!isPlausibleText(empresa)) {
+      setError(empresa.trim() ? TEXT_ERROR : 'Indica el nombre de la empresa.');
       return;
     }
-    const nombreValue = nombre.trim();
-    if (compact && !nombreValue) {
-      setError('Indica tu nombre.');
+    if (compact && !isPlausibleText(nombre)) {
+      setError(nombre.trim() ? TEXT_ERROR : 'Indica tu nombre.');
+      return;
+    }
+    if (!isPlausiblePhone(celular)) {
+      setError(PHONE_ERROR);
       return;
     }
 
+    setExtra({
+      tamano: String(data.get('tamano') || '').trim() || undefined,
+      sitioWeb: String(data.get('sitioWeb') || '').trim() || undefined,
+    });
     setSaving(true);
     setError(null);
     try {
-      await createEnterpriseLead({
-        nombre: compact ? nombreValue : empresaValue,
-        correo: correoValue,
-        celular: celular.trim(),
-        empresa: empresaValue,
-        tamano: String(data.get('tamano') || '').trim() || undefined,
-        sitioWeb: String(data.get('sitioWeb') || '').trim() || undefined,
-        ...(evaluacion ? { evaluacion } : {}),
-      });
-      if (onSubmitted) onSubmitted();
-      else setEnviado(true);
+      // Correo ya verificado en esta sesión: se guarda directo. Si no, se
+      // manda el código y se pide antes de guardar.
+      if (verified && verified.correo === correoValue.toLowerCase()) {
+        await saveLead(verified.token);
+      } else {
+        await requestLeadVerification(correoValue);
+        setCode('');
+        setCodeStep(true);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No pudimos enviar tu solicitud. Intenta de nuevo.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleConfirmCode() {
+    setSaving(true);
+    setError(null);
+    try {
+      const token = await confirmLeadVerification(correo.trim(), code.trim());
+      setVerified({ correo: correo.trim().toLowerCase(), token });
+      await saveLead(token);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No pudimos verificar el código. Intenta de nuevo.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleResend() {
+    setSaving(true);
+    setError(null);
+    try {
+      await requestLeadVerification(correo.trim());
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No pudimos reenviar el código.');
     } finally {
       setSaving(false);
     }
@@ -94,8 +148,48 @@ export function LeadForm({
     );
   }
 
+  if (codeStep) {
+    return (
+      <div className="contact-form code-step">
+        <p className="field-full" style={{ margin: 0, fontSize: 14, lineHeight: 1.6 }}>
+          Te enviamos un código de {LEAD_CODE_LENGTH} dígitos a <strong>{correo.trim()}</strong>. Escríbelo para confirmar tu correo.
+        </p>
+        <label className="field-full">
+          <span>Código de verificación</span>
+          <input
+            name="code"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            maxLength={LEAD_CODE_LENGTH}
+            placeholder="000000"
+            value={code}
+            onChange={(e) => { setCode(e.target.value.replace(/\D/g, '')); if (error) setError(null); }}
+          />
+        </label>
+        {error && <p role="alert" className="field-full field-error">{error}</p>}
+        <button type="button" className="submit-btn field-full" disabled={saving || code.length !== LEAD_CODE_LENGTH} onClick={handleConfirmCode} style={{ opacity: saving || code.length !== LEAD_CODE_LENGTH ? 0.6 : 1 }}>
+          {saving ? 'Verificando…' : 'Verificar y continuar'}
+        </button>
+        <div className="field-full" style={{ display: 'flex', gap: 18, fontSize: 13 }}>
+          <button type="button" onClick={handleResend} disabled={saving} style={{ background: 'none', border: 0, color: 'inherit', textDecoration: 'underline', cursor: 'pointer', padding: 0 }}>Reenviar código</button>
+          <button type="button" onClick={() => { setCodeStep(false); setError(null); }} style={{ background: 'none', border: 0, color: 'inherit', textDecoration: 'underline', cursor: 'pointer', padding: 0 }}>Cambiar correo</button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <form className="contact-form" onSubmit={handleSubmit} noValidate>
+      {/* Honeypot: fuera de pantalla y sin foco; una persona no lo ve, un bot sí lo llena. */}
+      <input
+        name="website"
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+        value={hp}
+        onChange={(e) => setHp(e.target.value)}
+        style={{ position: 'absolute', left: '-9999px', width: 1, height: 1, opacity: 0 }}
+      />
       {compact && (
         <label className="field-full">
           <span>Nombre y apellido</span>
