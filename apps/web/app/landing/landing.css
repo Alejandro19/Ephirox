@@ -191,7 +191,7 @@
 .eph-landing2 .contexto-wrap {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 clamp(26px, 4vw, 64px) clamp(48px, 5vw, 76px);
+  padding: clamp(56px, 7vw, 96px) clamp(26px, 4vw, 64px) clamp(48px, 5vw, 76px);
   display: grid;
   gap: 32px;
 }

@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { useEffect, useState, type ReactElement } from 'react';
 import './landing.css';
-import { SENALES, COSTOS, OPTIMIZACION, SHIFTS, YA_INTENTASTE, APP_LOGIN_URL } from './content';
+import { SENALES, COSTOS, OPTIMIZACION, SHIFTS, APP_LOGIN_URL } from './content';
 import { HeroStatCard } from './HeroStatCard';
 import { PasosSticky } from './PasosSticky';
 import { PasosMobileList } from './PasosMobileList';
@@ -190,29 +190,10 @@ export function LandingPage() {
           <HeroStatCard className="eph-a" style={{ animationDelay: '760ms' }} />
         </section>
 
-        <section className="reconocimiento-section">
-          <div className="reconocimiento-wrap">
-            <ScrollReveal className="diagnostico">
-              <span className="diagnostico-label">YA LO INTENTASTE</span>
-              <div className="diagnostico-chips">
-                {YA_INTENTASTE.map((c) => (
-                  <span className="diagnostico-chip" key={c}>{c}</span>
-                ))}
-              </div>
-              <p className="diagnostico-llano">El cuerpo te pasa factura. Comes mal, duermes fatal, vives en estado de alerta. Nada cambió.</p>
-            </ScrollReveal>
-
-            <span className="costura costura-baja" aria-hidden="true" />
-          </div>
-        </section>
-
         <section className="contexto" id="contexto">
           <div className="contexto-wrap">
-            <span className="costura costura-entra" aria-hidden="true" />
-
             <ScrollReveal className="contexto-fila">
               <span className="eyebrow contexto-eyebrow">EL COSTO DE NO ACTUAR</span>
-              <h2 className="contexto-titulo">Lo que sientes tú, ya se lo estás cobrando a tu <em>empresa</em>.</h2>
             </ScrollReveal>
 
             <ScrollReveal className="costos-grid">
