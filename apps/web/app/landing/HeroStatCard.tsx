@@ -4,13 +4,17 @@ import type { CSSProperties } from 'react';
 import { HERO_STATS, HERO_INTERVAL_MS } from './content';
 import { useAutoRotate } from './useAutoRotate';
 
-export function HeroStatCard({ className = '', style }: { className?: string; style?: CSSProperties } = {}) {
-  const { active, running, pick, pause, resume } = useAutoRotate(HERO_STATS.length, HERO_INTERVAL_MS);
+type StatItem = { readonly cifra: string; readonly texto: string; readonly fuente: string };
+
+// Mismo componente y diseño en el Hero (datos HERO_STATS) y en la sección de
+// señales (sueño / estrés / recuperación / biomarcadores): solo cambian `items`.
+export function HeroStatCard({ className = '', style, items = HERO_STATS }: { className?: string; style?: CSSProperties; items?: readonly StatItem[] } = {}) {
+  const { active, running, pick, pause, resume } = useAutoRotate(items.length, HERO_INTERVAL_MS);
 
   return (
     <div className={`hero-stat-card${className ? ` ${className}` : ''}`} style={style} onMouseEnter={pause} onMouseLeave={resume}>
       <div className="hero-card-stack">
-        {HERO_STATS.map((h, i) => {
+        {items.map((h, i) => {
           const isActive = i === active;
           return (
             <div
@@ -32,7 +36,7 @@ export function HeroStatCard({ className = '', style }: { className?: string; st
         })}
       </div>
       <div className="hero-progress">
-        {HERO_STATS.map((h, i) => {
+        {items.map((h, i) => {
           const isActive = i === active;
           return (
             <button key={h.cifra} type="button" aria-label={h.cifra} onClick={() => pick(i)}>

@@ -1135,8 +1135,6 @@
 .eph-landing2 .hero-content .lead { font-size: clamp(14px, 1.3vw, 17px); max-width: 46ch; line-height: 1.6; }
 
 /* ── Executive Performance Score™ ── */
-.eph-landing2 .hero-score-cta { justify-self: start; display: inline-flex; align-items: center; gap: 8px; margin-top: -8px; padding: 6px 0; border: 0; border-bottom: 1px solid rgba(201,166,107,0.45); background: none; color: var(--gold-light); font-family: 'Jost', sans-serif; font-size: 13px; font-weight: 400; letter-spacing: 0.04em; cursor: pointer; transition: border-color 200ms ease-out, color 200ms ease-out; }
-.eph-landing2 .hero-score-cta:hover { border-bottom-color: var(--gold); color: var(--cream); }
 .eph-landing2 .score-modal { max-width: 640px; min-height: 360px; }
 .eph-landing2 .score-modal h2 { font-size: clamp(22px, 2.6vw, 30px); line-height: 1.22; margin: 10px 40px 18px 0; }
 .eph-landing2 .score-kicker { display: block; font-family: 'Jost', sans-serif; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(202,160,87,0.75); }
@@ -1184,27 +1182,33 @@
 
 .eph-landing2 .score-link { display: inline-flex; align-items: center; text-decoration: none; }
 
-/* Sección "El enemigo invisible": 4 bloques del mismo peso entre "El costo de
-   no actuar" y "¿Cómo lo medimos?". Colores = pilares del producto (sueño
-   azul, estrés dorado, recuperación violeta) en su variante oscura para
-   fondo claro; Biomarcadores va apagado a propósito (algo latente). */
-.eph-landing2 section.senales { background: var(--bg-light); color: var(--ink); padding: clamp(56px, 8vh, 96px) clamp(22px, 6vw, 92px) 0; }
-.eph-landing2 .senales-wrap { max-width: 1200px; margin: 0 auto; display: grid; gap: clamp(30px, 4vw, 48px); }
-.eph-landing2 .senales-head { display: grid; gap: 16px; justify-items: center; text-align: center; }
-.eph-landing2 .senales-titulo { margin: 0; font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: clamp(30px, 3.8vw, 48px); line-height: 1.08; text-wrap: balance; color: #17130E; }
-.eph-landing2 .senales-titulo em { font-style: italic; color: #8C6A2F; }
-.eph-landing2 .senales-sub { margin: 0; max-width: 62ch; font-size: clamp(15px, 1.5vw, 17px); line-height: 1.65; color: rgba(23,19,14,0.62); text-wrap: pretty; }
-.eph-landing2 .senales-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(14px, 1.6vw, 22px); }
-.eph-landing2 .senal-card { --c: rgba(23,19,14,0.45); display: flex; flex-direction: column; gap: 10px; padding: clamp(20px, 2vw, 28px); border-radius: 14px; background: rgba(255,255,255,0.5); border: 1px solid rgba(23,19,14,0.08); border-top: 2px solid var(--c); }
-.eph-landing2 .senal-sueno { --c: #1f5aa8; }
-.eph-landing2 .senal-estres { --c: #a66c00; }
-.eph-landing2 .senal-recuperacion { --c: #6d5fc4; }
-.eph-landing2 .senal-icon { display: inline-flex; color: var(--c); margin-bottom: 4px; }
-.eph-landing2 .senal-label { font-family: 'Jost', sans-serif; font-size: 12px; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; color: var(--c); }
-.eph-landing2 .senal-kicker { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: clamp(20px, 1.9vw, 24px); line-height: 1.15; color: #17130E; }
-.eph-landing2 .senal-card p { margin: 0; font-size: 14.5px; line-height: 1.6; color: rgba(23,19,14,0.66); }
-@media (max-width: 1024px) { .eph-landing2 .senales-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 560px) { .eph-landing2 .senales-grid { grid-template-columns: 1fr; } }
+/* Sección "Los síntomas aparecen tarde": título a la izquierda y, a la
+   derecha, la MISMA card rotativa del Hero (HeroStatCard) con sueño, estrés,
+   recuperación y biomarcadores. */
+.eph-landing2 section.senales { background: var(--bg-light); color: var(--ink); padding: clamp(56px, 8vh, 96px) clamp(22px, 6vw, 92px); }
+.eph-landing2 .senales-wrap { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); gap: clamp(32px, 6vw, 96px); align-items: center; }
+.eph-landing2 .senales-head { display: grid; gap: 20px; }
+.eph-landing2 .senales-titulo { margin: 0; font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: clamp(32px, 4vw, 52px); line-height: 1.06; text-wrap: balance; color: #17130E; }
+.eph-landing2 .senales-titulo em { display: block; font-style: italic; color: #8C6A2F; }
+.eph-landing2 .senales-sub { margin: 0; max-width: 52ch; font-size: clamp(15px, 1.5vw, 17px); line-height: 1.7; color: rgba(23,19,14,0.62); text-wrap: pretty; }
+.eph-landing2 .senales-card-col { display: flex; justify-content: center; }
+.eph-landing2 .hero-stat-card.senales-card { position: relative; right: auto; bottom: auto; width: 100%; max-width: 380px; aspect-ratio: auto; min-height: 300px; margin: 0; padding: clamp(24px, 2.4vw, 32px); }
+.eph-landing2 .senales-card .stat-num { font-size: clamp(34px, 3.4vw, 44px); line-height: 1.05; }
+.eph-landing2 .senales-card .stat-text-wrap p { font-size: 15px; }
+.eph-landing2 .senales-card .stat-source { font-size: 11px; color: rgba(201,166,107,0.7); }
+@media (max-width: 860px) {
+  .eph-landing2 .senales-wrap { grid-template-columns: 1fr; }
+  .eph-landing2 .senales-card-col { justify-content: flex-start; }
+}
+
+/* Sección del Executive Score: cierre oscuro con un solo CTA. */
+.eph-landing2 section.score-section { background: #0F0D0A; color: var(--cream); padding: clamp(64px, 10vh, 120px) clamp(22px, 6vw, 92px); text-align: center; }
+.eph-landing2 .score-section-wrap { max-width: 760px; margin: 0 auto; display: grid; gap: 22px; justify-items: center; }
+.eph-landing2 .score-section-titulo { margin: 0; font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: clamp(30px, 3.8vw, 48px); line-height: 1.1; text-wrap: balance; color: var(--cream); }
+.eph-landing2 .score-section-titulo em { font-style: italic; color: var(--gold); }
+.eph-landing2 .score-section-sub { margin: 0; max-width: 58ch; font-size: clamp(15px, 1.5vw, 17px); line-height: 1.7; color: rgba(245,241,232,0.68); text-wrap: pretty; }
+.eph-landing2 .score-section-cta { margin-top: 10px; padding: 15px 34px; border: 0; border-radius: 999px; background: var(--gold); color: #17130E; font-size: 13px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: background 200ms ease-out, transform 200ms ease-out; }
+.eph-landing2 .score-section-cta:hover { background: var(--gold-light); transform: translateY(-1px); }
 
 /* Hero (escritorio): bloque de texto desplazado a la derecha. */
 @media (min-width: 1025px) {
