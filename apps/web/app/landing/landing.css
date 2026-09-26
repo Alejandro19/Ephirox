@@ -1214,3 +1214,16 @@
 @media (min-width: 1025px) {
   .eph-landing2 .hero-content { padding-left: clamp(96px, 11vw, 190px); }
 }
+
+/* Cierre de "Lo que cambia": 4 beneficios sutiles en fila. */
+.eph-landing2 .beneficios-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(20px, 3vw, 44px); padding-top: clamp(28px, 4vh, 44px); border-top: 1px solid rgba(23,19,14,0.12); }
+.eph-landing2 .beneficio { display: grid; gap: 8px; align-content: start; }
+.eph-landing2 .beneficio-titulo { font-family: 'Cormorant Garamond', serif; font-style: italic; font-weight: 400; font-size: clamp(22px, 2.2vw, 28px); line-height: 1.1; color: var(--gold-dark); }
+.eph-landing2 .beneficio p { margin: 0; font-size: 14px; line-height: 1.6; color: rgba(23,19,14,0.62); text-wrap: pretty; }
+@media (max-width: 900px) { .eph-landing2 .beneficios-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 520px) { .eph-landing2 .beneficios-grid { grid-template-columns: 1fr; } }
+
+/* CTA final, después de la Junta Directiva: lleva a la sección del Score. */
+.eph-landing2 section.score-final { background: #17130E; padding: 0 clamp(22px, 6vw, 92px) clamp(56px, 9vh, 104px); text-align: center; }
+.eph-landing2 .score-final-cta { display: inline-flex; align-items: center; gap: 10px; padding: 15px 34px; border-radius: 999px; background: var(--gold); color: #17130E; font-size: 13px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; transition: background 200ms ease-out, transform 200ms ease-out; }
+.eph-landing2 a.score-final-cta:hover { background: var(--gold-light); color: #17130E; transform: translateY(-1px); }

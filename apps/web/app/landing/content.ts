@@ -189,3 +189,11 @@ export const SENALES = [
   { id: 'recuperacion', label: 'Recuperación', kicker: 'Rendir no significa recuperarse', texto: 'Muchos ejecutivos mantienen altos niveles de ejecución mientras acumulan fatiga que termina impactando su rendimiento.' },
   { id: 'biomarcadores', label: 'Biomarcadores', kicker: 'Lo que aún no se siente', texto: 'Inflamación, alteraciones metabólicas y otros indicadores suelen aparecer mucho antes que los síntomas visibles.' },
 ] as const;
+
+// Cierre de "Lo que cambia": lo que el líder gana, en positivo.
+export const BENEFICIOS = [
+  { titulo: 'Energía', sub: 'Capacidad de ejecución sostenida durante jornadas de alta exigencia.' },
+  { titulo: 'Claridad mental', sub: 'Decisiones más precisas en momentos críticos.' },
+  { titulo: 'Resiliencia', sub: 'Mantener el rendimiento bajo presión sin desgaste acumulativo.' },
+  { titulo: 'Recuperación', sub: 'La capacidad de volver a tu mejor estado una y otra vez.' },
+] as const;

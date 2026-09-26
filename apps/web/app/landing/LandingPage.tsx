@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import './landing.css';
-import { SENALES, COSTOS, OPTIMIZACION, SHIFTS, APP_LOGIN_URL } from './content';
+import { SENALES, COSTOS, BENEFICIOS, SHIFTS, APP_LOGIN_URL } from './content';
 import { HeroStatCard } from './HeroStatCard';
 import { PasosSticky } from './PasosSticky';
 import { PasosMobileList } from './PasosMobileList';
@@ -14,7 +14,6 @@ import { LeadModal } from './LeadModal';
 import { ChatWidget } from './ChatWidget';
 import { ExecutiveScoreModal } from './ExecutiveScoreModal';
 import { ScrollReveal } from './ScrollReveal';
-import { OptimizacionMobileCarousel } from './OptimizacionMobileCarousel';
 import { CostosMobileCarousel } from './CostosMobileCarousel';
 import { COACH_WHATSAPP_NUMBER } from '@/lib/constants';
 
@@ -242,6 +241,14 @@ export function LandingPage() {
                   </ScrollReveal>
                 ))}
               </div>
+              <ScrollReveal className="beneficios-grid">
+                {BENEFICIOS.map((b) => (
+                  <div className="beneficio" key={b.titulo}>
+                    <span className="beneficio-titulo">{b.titulo}</span>
+                    <p>{b.sub}</p>
+                  </div>
+                ))}
+              </ScrollReveal>
             </div>
           </section>
 
@@ -256,26 +263,6 @@ export function LandingPage() {
             <div className="divider-banner-shade" />
           </div>
         </div>
-
-        <section className="optimizacion">
-          <div className="optimizacion-wrap">
-            <ScrollReveal>
-              <h2 className="optimizacion-titulo">Con tu <span className="optimizacion-titulo-accent">estado interior</span> medido, optimizamos:</h2>
-            </ScrollReveal>
-            <ScrollReveal className="opt-grid">
-              {OPTIMIZACION.map((o) => (
-                <div className="opt-card" key={o.label}>
-                  <Image src={o.img} alt={o.alt} fill quality={82} sizes="(min-width: 769px) 25vw, 90vw" style={{ objectFit: 'cover', objectPosition: 'center' }} className="opt-card-bg" />
-                  <div className="opt-card-text">
-                    <span className="opt-card-label">{o.label}</span>
-                    <p className="opt-card-desc">{o.texto}</p>
-                  </div>
-                </div>
-              ))}
-            </ScrollReveal>
-            <OptimizacionMobileCarousel />
-          </div>
-        </section>
 
         <div className="medimos-intro">
           <ScrollReveal>
@@ -299,6 +286,12 @@ export function LandingPage() {
         <section className="junta-section">
           <JuntaSection />
         </section>
+
+        <section className="score-final">
+          <ScrollReveal className="score-final-wrap">
+            <a className="score-final-cta" href="#score" onClick={handleAnchorClick}>Solicitar Executive Score <span aria-hidden="true">→</span></a>
+          </ScrollReveal>
+        </section>
       </main>
 
       <footer className="site-footer">
@@ -309,7 +302,7 @@ export function LandingPage() {
               <span>EPHIROX</span>
             </div>
             <div className="notes">
-              <span>Ephirox es la plataforma de bienestar con inteligencia artificial para founders, C-Levels y Top Sellers que quieren sostener su rendimiento sin sacrificar su salud.</span>
+              <span>Ephirox es la plataforma de bienestar con inteligencia artificial para founders y C-Levels que quieren sostener su rendimiento sin sacrificar su salud.</span>
             </div>
           </div>
 
