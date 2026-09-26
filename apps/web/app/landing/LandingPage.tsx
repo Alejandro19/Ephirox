@@ -88,6 +88,7 @@ export function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  const [beneficiosOpen, setBeneficiosOpen] = useState<string[]>([]);
   const [scoreOpen, setScoreOpen] = useState(false);
   const [leadModal, setLeadModal] = useState<{ correo: string; celular: string } | null>(null);
 
@@ -238,14 +239,27 @@ export function LandingPage() {
                   </ScrollReveal>
                 ))}
               </div>
-              <ScrollReveal className="beneficios-grid">
-                {BENEFICIOS.map((b) => (
-                  <div className="beneficio" key={b.titulo}>
-                    <span className="beneficio-titulo">{b.titulo}</span>
-                    <p>{b.sub}</p>
-                  </div>
-                ))}
-              </ScrollReveal>
+              <div className="beneficios-bloque">
+                <span className="eyebrow beneficios-kicker">Y ESO SE TRADUCE EN:</span>
+                <ScrollReveal className="beneficios-grid">
+                  {BENEFICIOS.map((b) => {
+                    const open = beneficiosOpen.includes(b.titulo);
+                    return (
+                      <div className={`beneficio${open ? ' is-open' : ''}`} key={b.titulo}>
+                        <button
+                          type="button"
+                          className="beneficio-chip"
+                          aria-expanded={open}
+                          onClick={() => setBeneficiosOpen((cur) => (cur.includes(b.titulo) ? cur.filter((t) => t !== b.titulo) : [...cur, b.titulo]))}
+                        >
+                          {b.titulo}
+                        </button>
+                        <div className="beneficio-desc"><p>{b.sub}</p></div>
+                      </div>
+                    );
+                  })}
+                </ScrollReveal>
+              </div>
             </div>
           </section>
 

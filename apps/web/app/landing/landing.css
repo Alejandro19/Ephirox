@@ -1206,13 +1206,22 @@
   .eph-landing2 .hero-content { padding-left: clamp(96px, 11vw, 190px); }
 }
 
-/* Cierre de "Lo que cambia": 4 beneficios sutiles en fila. */
-.eph-landing2 .beneficios-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(20px, 3vw, 44px); padding-top: clamp(28px, 4vh, 44px); border-top: 1px solid rgba(23,19,14,0.12); }
-.eph-landing2 .beneficio { display: grid; gap: 8px; align-content: start; }
-.eph-landing2 .beneficio-titulo { font-family: 'Cormorant Garamond', serif; font-style: italic; font-weight: 400; font-size: clamp(22px, 2.2vw, 28px); line-height: 1.1; color: var(--gold-dark); }
-.eph-landing2 .beneficio p { margin: 0; font-size: 14px; line-height: 1.6; color: rgba(23,19,14,0.62); text-wrap: pretty; }
-@media (max-width: 900px) { .eph-landing2 .beneficios-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 520px) { .eph-landing2 .beneficios-grid { grid-template-columns: 1fr; } }
+/* Cierre de "Lo que cambia": kicker + 4 chips; la descripción se revela al
+   pasar el mouse (escritorio) o al tocar el chip (móvil). */
+.eph-landing2 .beneficios-bloque { display: grid; gap: 18px; margin-top: clamp(28px, 6vh, 64px); padding-top: clamp(32px, 5vh, 52px); border-top: 1px solid rgba(23,19,14,0.12); }
+.eph-landing2 .beneficios-kicker { font-size: 12px; letter-spacing: 0.14em; color: var(--gold-dark); }
+.eph-landing2 .beneficios-grid { display: flex; flex-wrap: wrap; gap: 12px 14px; align-items: flex-start; }
+.eph-landing2 .beneficio { display: grid; gap: 0; max-width: 300px; }
+.eph-landing2 .beneficio-chip { justify-self: start; padding: 8px 20px; border: 1px solid rgba(140,106,47,0.38); border-radius: 999px; background: transparent; cursor: pointer; font-family: 'Cormorant Garamond', serif; font-style: italic; font-weight: 400; font-size: clamp(18px, 1.8vw, 22px); line-height: 1.2; color: var(--gold-dark); transition: background 200ms ease-out, border-color 200ms ease-out; }
+.eph-landing2 .beneficio-chip:hover, .eph-landing2 .beneficio.is-open .beneficio-chip { background: rgba(140,106,47,0.09); border-color: var(--gold-dark); }
+.eph-landing2 .beneficio-desc { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 260ms ease-out; }
+.eph-landing2 .beneficio-desc p { min-height: 0; overflow: hidden; margin: 0; padding: 0 6px; font-size: 14px; line-height: 1.6; color: rgba(23,19,14,0.62); text-wrap: pretty; }
+.eph-landing2 .beneficio.is-open .beneficio-desc { grid-template-rows: 1fr; }
+.eph-landing2 .beneficio.is-open .beneficio-desc p { padding-top: 10px; }
+@media (hover: hover) {
+  .eph-landing2 .beneficio:hover .beneficio-desc { grid-template-rows: 1fr; }
+  .eph-landing2 .beneficio:hover .beneficio-desc p { padding-top: 10px; }
+}
 
 /* CTA final, después de la Junta Directiva: lleva a la sección del Score. */
 .eph-landing2 section.score-final { background: #17130E; padding: 0 clamp(22px, 6vw, 92px) clamp(56px, 9vh, 104px); text-align: center; }
