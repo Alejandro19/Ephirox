@@ -1,7 +1,26 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
+import { resolve4 } from 'node:dns/promises';
 import nodemailer from 'nodemailer';
 import { LEAD_CODE_LENGTH } from '@latribu/shared-types';
 import { renderEmailHtml } from './email-template.js';
+
+// nodemailer resuelve tanto la IPv4 como la IPv6 del host SMTP y elige una AL
+// AZAR para conectarse (lib/shared/index.js del paquete, formatDNSValue).
+// Railway no tiene salida de red IPv6 funcional — cuando le toca la IPv6, la
+// conexión se cuelga con ETIMEDOUT/ENETUNREACH (visto en los logs de
+// producción con smtp.hostinger.com, detrás de Cloudflare). Se resuelve el
+// registro A a mano y se fuerza esa IP, con `servername` para que el
+// certificado TLS (emitido para el nombre de dominio) siga validando aunque
+// la conexión ya no vaya al nombre sino a la IP.
+async function resolveSmtpHost(host: string): Promise<{ host: string; servername?: string }> {
+  try {
+    const addresses = await resolve4(host);
+    if (addresses[0]) return { host: addresses[0], servername: host };
+  } catch {
+    // Sin registro A (o el host ya era una IP): se deja tal cual.
+  }
+  return { host };
+}
 
 // Verificación del correo de un lead (formularios públicos de la landing):
 // se manda un código de 6 dígitos al correo y solo quien lo recibe puede
@@ -70,11 +89,13 @@ export async function sendLeadVerificationCode(correo: string): Promise<void> {
     return;
   }
 
+  const { host, servername } = await resolveSmtpHost(EMAIL_HOST);
   const transporter = nodemailer.createTransport({
-    host: EMAIL_HOST,
+    host,
     port: Number(EMAIL_PORT),
     secure: process.env.EMAIL_SECURE === 'true',
     auth: { user: EMAIL_USER, pass: EMAIL_PASS },
+    ...(servername ? { tls: { servername } } : {}),
     // Sin esto, un SMTP mal configurado (host/puerto/secure incorrectos)
     // deja la petición colgada varios minutos (los timeouts por defecto de
     // nodemailer son de hasta 10 min) — el usuario ve el botón "Enviando…"
