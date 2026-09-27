@@ -817,6 +817,12 @@
 
   .eph-landing2 .image-card { max-width: none; margin: 0; }
   .eph-landing2 section.categoria { padding-top: 40px; padding-bottom: 0; }
+
+  /* Móvil: la tabla ya está oculta (ver @media 768px) — el kicker y el
+     título de "¿Por qué Ephirox?" solo se muestran completos junto a ella
+     en escritorio, así que en móvil se ocultan y la imagen se agranda. */
+  .eph-landing2 .categoria-head { display: none; }
+  .eph-landing2 .image-card-inner { height: clamp(280px, 74vw, 460px); }
 }
 
 @media (max-width: 768px) {
