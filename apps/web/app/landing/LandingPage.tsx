@@ -162,7 +162,7 @@ export function LandingPage() {
 
           <div className="hero-content">
             <h1 className="eph-a" style={{ animationDelay: '320ms' }}>
-              Tu empresa llega hasta donde tu <em className="serif">cuerpo</em> te lo permite.
+              Tu empresa llega hasta<br className="hero-h1-break" /> donde tu <em className="serif">cuerpo</em> te lo permite.
             </h1>
             <p className="lead eph-a" style={{ animationDelay: '520ms' }}>
               Ephirox detecta las señales invisibles que afectan tu energía, claridad mental y capacidad de liderazgo antes de que te pasen factura.
