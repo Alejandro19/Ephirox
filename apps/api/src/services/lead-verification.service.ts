@@ -75,6 +75,13 @@ export async function sendLeadVerificationCode(correo: string): Promise<void> {
     port: Number(EMAIL_PORT),
     secure: process.env.EMAIL_SECURE === 'true',
     auth: { user: EMAIL_USER, pass: EMAIL_PASS },
+    // Sin esto, un SMTP mal configurado (host/puerto/secure incorrectos)
+    // deja la petición colgada varios minutos (los timeouts por defecto de
+    // nodemailer son de hasta 10 min) — el usuario ve el botón "Enviando…"
+    // sin que nunca llegue una respuesta. Con esto, falla rápido y visible.
+    connectionTimeout: 10_000,
+    greetingTimeout: 10_000,
+    socketTimeout: 10_000,
   });
   await transporter.sendMail({
     from: process.env.NOTIFICATION_FROM || 'no-reply@ephirox.com',
