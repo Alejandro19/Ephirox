@@ -338,9 +338,6 @@
 .eph-landing2 section.categoria { background: var(--bg-light); color: var(--ink); padding: clamp(48px, 7vh, 80px) clamp(22px, 6vw, 92px) 0; }
 .eph-landing2 .categoria-wrap { max-width: 1120px; margin: 0 auto; display: grid; gap: clamp(24px, 3.2vw, 36px); }
 .eph-landing2 .categoria-head { display: grid; gap: 8px; justify-items: start; text-align: left; }
-.eph-landing2 .categoria-head h2 { margin: 0; display: grid; gap: 2px; justify-items: center; font-weight: 200; line-height: 1; letter-spacing: -0.02em; }
-.eph-landing2 .categoria-head h2 .a { font-size: clamp(38px, 6.2vw, 78px); font-weight: 200; letter-spacing: -0.03em; color: var(--ink); }
-.eph-landing2 .categoria-head h2 .b { font-family: 'Cormorant Garamond', serif; font-weight: 400; font-style: italic; font-size: clamp(18px, 2.5vw, 31px); line-height: 1.16; letter-spacing: 0.005em; color: var(--gold-dark); }
 .eph-landing2 .categoria-head p { margin: 0; font-size: 17px; line-height: 1.62; color: rgba(23,19,14,0.62); max-width: 66ch; text-wrap: pretty; }
 .eph-landing2 .table-scroll-wrap { overflow-x: auto; margin: 0 calc(-1 * clamp(22px, 6vw, 92px)); padding: 0 clamp(22px, 6vw, 92px); }
 .eph-landing2 .table-card { min-width: 860px; border: 1px solid rgba(140,106,47,0.34); border-radius: 16px; overflow: hidden; background: linear-gradient(160deg, #FBF8F1 0%, #F7F2E7 100%); }
