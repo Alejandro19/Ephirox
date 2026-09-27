@@ -1298,3 +1298,17 @@
 /* Puente de "El costo de no actuar": más presencia por peso y aire, no por tamaño. */
 .eph-landing2 .contexto-titulo { font-weight: 500; margin: clamp(10px, 2vh, 20px) 0 clamp(14px, 3vh, 28px); }
 .eph-landing2 .contexto-titulo em { font-family: 'Cormorant Garamond', serif; font-style: italic; font-weight: 500; font-size: 1.16em; color: #8C6A2F; }
+
+/* Hero: título más hacia la izquierda, sobre la zona más oscura de la foto. */
+@media (min-width: 1025px) {
+  .eph-landing2 .hero-content { padding-left: clamp(20px, 5vw, 60px); }
+}
+
+/* Más color en los rótulos ANTES/DESPUÉS y en "Y ESO SE TRADUCE EN:". */
+.eph-landing2 .shift-labels span { color: var(--gold-dark); font-weight: 500; }
+.eph-landing2 .beneficios-kicker { color: var(--gold-dark); font-weight: 500; }
+
+/* Kicker + título nuevos de "¿Por qué Ephirox?" (antes "Anticipamos..."). */
+.eph-landing2 .categoria-eyebrow { font-size: 12px; letter-spacing: 0.14em; color: rgba(23,19,14,0.42); }
+.eph-landing2 .categoria-titulo { margin: 0; font-weight: 200; font-size: clamp(34px, 5vw, 58px); line-height: 1.08; letter-spacing: -0.02em; color: var(--ink); text-wrap: balance; }
+.eph-landing2 .categoria-titulo em { font-family: 'Cormorant Garamond', serif; font-style: italic; font-weight: 400; color: var(--gold-dark); }
