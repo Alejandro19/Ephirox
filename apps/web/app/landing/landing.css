@@ -1212,11 +1212,6 @@
 .eph-landing2 .score-section-cta { margin-top: 10px; padding: 15px 34px; border: 0; border-radius: 999px; background: var(--gold); color: #17130E; font-size: 13px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: background 200ms ease-out, transform 200ms ease-out; }
 .eph-landing2 .score-section-cta:hover { background: var(--gold-light); transform: translateY(-1px); }
 
-/* Hero (escritorio): bloque de texto desplazado a la derecha. */
-@media (min-width: 1025px) {
-  .eph-landing2 .hero-content { padding-left: clamp(96px, 11vw, 190px); }
-}
-
 /* Cierre de "Lo que cambia": kicker + 4 chips; la descripción se revela al
    pasar el mouse (escritorio) o al tocar el chip (móvil). */
 .eph-landing2 .beneficios-bloque { display: grid; gap: 18px; margin-top: clamp(28px, 6vh, 64px); padding-top: clamp(32px, 5vh, 52px); border-top: 1px solid rgba(23,19,14,0.12); }
@@ -1310,9 +1305,11 @@
 .eph-landing2 .contexto-titulo { font-weight: 500; margin: clamp(10px, 2vh, 20px) 0 clamp(14px, 3vh, 28px); }
 .eph-landing2 .contexto-titulo em { font-family: 'Cormorant Garamond', serif; font-style: italic; font-weight: 500; font-size: 1.16em; color: #8C6A2F; }
 
-/* Hero: título más hacia la izquierda, sobre la zona más oscura de la foto. */
+/* Hero: título más hacia la izquierda, sobre la zona más oscura de la foto —
+   para que el punto final de la última línea no quede pegado a la imagen. */
 @media (min-width: 1025px) {
-  .eph-landing2 .hero-content { padding-left: clamp(20px, 5vw, 60px); }
+  .eph-landing2 .hero-content { padding-left: 0; }
+  .eph-landing2 .hero-content h1 { max-width: 15ch; }
 }
 
 /* Más color en los rótulos ANTES/DESPUÉS y en "Y ESO SE TRADUCE EN:". */

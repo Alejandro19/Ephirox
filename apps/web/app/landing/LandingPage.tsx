@@ -211,7 +211,7 @@ export function LandingPage() {
             <ScrollReveal className="senales-cierre" >
               <div id="score" className="senales-cierre-inner">
                 <p>¿Cuáles de estas señales ya tienes? Evalúa en minutos tu energía, claridad mental, recuperación y resiliencia.</p>
-                <button type="button" className="score-section-cta" onClick={() => setScoreOpen(true)}>Obtener Executive Score</button>
+                <button type="button" className="score-section-cta" onClick={() => setScoreOpen(true)}>Solicitar Executive Score</button>
               </div>
             </ScrollReveal>
           </div>
