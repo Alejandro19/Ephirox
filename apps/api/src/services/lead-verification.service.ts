@@ -1,26 +1,7 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
-import { resolve4 } from 'node:dns/promises';
-import nodemailer from 'nodemailer';
 import { LEAD_CODE_LENGTH } from '@latribu/shared-types';
 import { renderEmailHtml } from './email-template.js';
-
-// nodemailer resuelve tanto la IPv4 como la IPv6 del host SMTP y elige una AL
-// AZAR para conectarse (lib/shared/index.js del paquete, formatDNSValue).
-// Railway no tiene salida de red IPv6 funcional — cuando le toca la IPv6, la
-// conexión se cuelga con ETIMEDOUT/ENETUNREACH (visto en los logs de
-// producción con smtp.hostinger.com, detrás de Cloudflare). Se resuelve el
-// registro A a mano y se fuerza esa IP, con `servername` para que el
-// certificado TLS (emitido para el nombre de dominio) siga validando aunque
-// la conexión ya no vaya al nombre sino a la IP.
-async function resolveSmtpHost(host: string): Promise<{ host: string; servername?: string }> {
-  try {
-    const addresses = await resolve4(host);
-    if (addresses[0]) return { host: addresses[0], servername: host };
-  } catch {
-    // Sin registro A (o el host ya era una IP): se deja tal cual.
-  }
-  return { host };
-}
+import { sendTransactionalEmail, EmailNotConfiguredError } from './mailer.js';
 
 // Verificación del correo de un lead (formularios públicos de la landing):
 // se manda un código de 6 dígitos al correo y solo quien lo recibe puede
@@ -32,7 +13,7 @@ async function resolveSmtpHost(host: string): Promise<{ host: string; servername
 const WINDOW_MS = 10 * 60 * 1000;
 const TOKEN_TTL_MS = 30 * 60 * 1000;
 
-export class LeadEmailNotConfiguredError extends Error {}
+export class LeadEmailNotConfiguredError extends EmailNotConfiguredError {}
 
 function secret(): string {
   const value = process.env.JWT_SECRET;
@@ -79,40 +60,21 @@ export function isLeadTokenValid(correo: string, token: string | undefined): boo
 
 export async function sendLeadVerificationCode(correo: string): Promise<void> {
   const code = computeLeadCode(correo);
-  const { EMAIL_HOST, EMAIL_PORT, EMAIL_USER, EMAIL_PASS } = process.env;
-
-  if (!EMAIL_HOST || !EMAIL_PORT || !EMAIL_USER || !EMAIL_PASS) {
-    // En producción sin correo configurado NO se abre la puerta: verificar el
-    // correo es justo el control. En local/tests se muestra el código en consola.
-    if (process.env.NODE_ENV === 'production') throw new LeadEmailNotConfiguredError();
-    console.log(`lead-verification: correo no configurado; código para ${correo}: ${code}`);
-    return;
-  }
-
-  const { host, servername } = await resolveSmtpHost(EMAIL_HOST);
-  const transporter = nodemailer.createTransport({
-    host,
-    port: Number(EMAIL_PORT),
-    secure: process.env.EMAIL_SECURE === 'true',
-    auth: { user: EMAIL_USER, pass: EMAIL_PASS },
-    ...(servername ? { tls: { servername } } : {}),
-    // Sin esto, un SMTP mal configurado (host/puerto/secure incorrectos)
-    // deja la petición colgada varios minutos (los timeouts por defecto de
-    // nodemailer son de hasta 10 min) — el usuario ve el botón "Enviando…"
-    // sin que nunca llegue una respuesta. Con esto, falla rápido y visible.
-    connectionTimeout: 10_000,
-    greetingTimeout: 10_000,
-    socketTimeout: 10_000,
-  });
-  await transporter.sendMail({
-    from: process.env.NOTIFICATION_FROM || 'no-reply@ephirox.com',
-    to: correo,
-    subject: 'Tu código de verificación de Ephirox',
-    html: renderEmailHtml({
-      preheader: `Tu código es ${code}`,
-      bodyHtml: `<p style="margin:0 0 14px;">Tu código de verificación es:</p>
+  try {
+    await sendTransactionalEmail({
+      to: correo,
+      subject: 'Tu código de verificación de Ephirox',
+      html: renderEmailHtml({
+        preheader: `Tu código es ${code}`,
+        bodyHtml: `<p style="margin:0 0 14px;">Tu código de verificación es:</p>
 <p style="margin:0 0 14px;font-size:28px;letter-spacing:6px;"><strong>${code}</strong></p>
 <p style="margin:0;">Vence en unos minutos. Si no lo solicitaste, ignora este mensaje.</p>`,
-    }),
-  });
+      }),
+    });
+  } catch (e) {
+    // Se relanza como el tipo específico de este módulo — el controller
+    // solo conoce LeadEmailNotConfiguredError, no el genérico del mailer.
+    if (e instanceof EmailNotConfiguredError) throw new LeadEmailNotConfiguredError();
+    throw e;
+  }
 }
