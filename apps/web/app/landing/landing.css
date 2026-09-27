@@ -816,13 +816,16 @@
   .eph-landing2 .trad-full { display: none !important; }
 
   .eph-landing2 .image-card { max-width: none; margin: 0; }
-  .eph-landing2 section.categoria { padding-top: 40px; padding-bottom: 0; }
+  .eph-landing2 section.categoria { padding-top: 0; padding-bottom: 0; }
 
   /* Móvil: la tabla ya está oculta (ver @media 768px) — el kicker y el
      título de "¿Por qué Ephirox?" solo se muestran completos junto a ella
-     en escritorio, así que en móvil se ocultan y la imagen se agranda. */
+     en escritorio, así que en móvil se ocultan y la imagen queda como único
+     contenido de la sección: full-bleed (sin borde ni esquinas redondeadas,
+     igual que en escritorio) y sin padding arriba/abajo, para que quede
+     pegada a las secciones oscuras de arriba y abajo, sin franja beige. */
   .eph-landing2 .categoria-head { display: none; }
-  .eph-landing2 .image-card-inner { height: clamp(280px, 74vw, 460px); }
+  .eph-landing2 .image-card-inner { height: clamp(280px, 74vw, 460px); border-radius: 0; border: 0; }
 }
 
 @media (max-width: 768px) {
