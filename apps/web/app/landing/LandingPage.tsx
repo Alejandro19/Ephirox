@@ -111,6 +111,16 @@ export function LandingPage() {
     };
   }, []);
 
+  useEffect(() => {
+    // Entradas directas al Score (ej. el link "Solicitar Executive Score"
+    // del login) abren el cuestionario de una vez, sin pasar primero por
+    // el cierre de "El enemigo invisible".
+    if (new URLSearchParams(window.location.search).get('executiveScore') === '1') {
+      setScoreOpen(true);
+      window.history.replaceState(null, '', window.location.pathname + window.location.hash);
+    }
+  }, []);
+
   function scrollToTop() {
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
