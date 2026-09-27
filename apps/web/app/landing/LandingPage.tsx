@@ -84,12 +84,12 @@ const SENAL_ITEMS = SENALES.map((s) => ({ cifra: s.label, texto: s.texto, fuente
 
 const SHOW_HERO_DEMO_FORM = false;
 
-export function LandingPage() {
+export function LandingPage({ initialScoreOpen = false }: { initialScoreOpen?: boolean } = {}) {
   const [scrolled, setScrolled] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [beneficiosOpen, setBeneficiosOpen] = useState<string[]>([]);
-  const [scoreOpen, setScoreOpen] = useState(false);
+  const [scoreOpen, setScoreOpen] = useState(initialScoreOpen);
   const [leadModal, setLeadModal] = useState<{ correo: string; celular: string } | null>(null);
 
   useEffect(() => {
@@ -112,11 +112,10 @@ export function LandingPage() {
   }, []);
 
   useEffect(() => {
-    // Entradas directas al Score (ej. el link "Solicitar Executive Score"
-    // del login) abren el cuestionario de una vez, sin pasar primero por
-    // el cierre de "El enemigo invisible".
+    // El modal ya se decide en el servidor (initialScoreOpen, ver page.tsx)
+    // para que no haya flash del Hero — acá solo se limpia el parámetro de
+    // la URL una vez montado, así una recarga no lo vuelve a abrir solo.
     if (new URLSearchParams(window.location.search).get('executiveScore') === '1') {
-      setScoreOpen(true);
       window.history.replaceState(null, '', window.location.pathname + window.location.hash);
     }
   }, []);

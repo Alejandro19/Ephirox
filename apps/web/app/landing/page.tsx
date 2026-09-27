@@ -28,6 +28,17 @@ export const metadata: Metadata = {
   },
 };
 
-export default function Page() {
-  return <LandingPage />;
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  // Entradas directas al Score (ej. el link "Solicitar Executive Score" del
+  // login) abren el modal ya en el HTML servido, para que no se vea el Hero
+  // ni un instante antes de que el cliente lo abra — se decide acá, no en un
+  // useEffect, porque un useEffect solo corre después de que el navegador ya
+  // pintó el Hero servido por el servidor.
+  const sp = await searchParams;
+  const initialScoreOpen = sp.executiveScore === '1';
+  return <LandingPage initialScoreOpen={initialScoreOpen} />;
 }
