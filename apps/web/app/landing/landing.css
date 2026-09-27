@@ -337,7 +337,7 @@
 
 .eph-landing2 section.categoria { background: var(--bg-light); color: var(--ink); padding: clamp(74px, 11vh, 130px) clamp(22px, 6vw, 92px) 0; }
 .eph-landing2 .categoria-wrap { max-width: 1120px; margin: 0 auto; display: grid; gap: clamp(34px, 4.6vw, 54px); }
-.eph-landing2 .categoria-head { display: grid; gap: 22px; justify-items: center; text-align: center; }
+.eph-landing2 .categoria-head { display: grid; gap: 22px; justify-items: start; text-align: left; }
 .eph-landing2 .categoria-head h2 { margin: 0; display: grid; gap: 2px; justify-items: center; font-weight: 200; line-height: 1; letter-spacing: -0.02em; }
 .eph-landing2 .categoria-head h2 .a { font-size: clamp(38px, 6.2vw, 78px); font-weight: 200; letter-spacing: -0.03em; color: var(--ink); }
 .eph-landing2 .categoria-head h2 .b { font-family: 'Cormorant Garamond', serif; font-weight: 400; font-style: italic; font-size: clamp(18px, 2.5vw, 31px); line-height: 1.16; letter-spacing: 0.005em; color: var(--gold-dark); }
@@ -1310,5 +1310,16 @@
 
 /* Kicker + título nuevos de "¿Por qué Ephirox?" (antes "Anticipamos..."). */
 .eph-landing2 .categoria-eyebrow { font-size: 12px; letter-spacing: 0.14em; color: rgba(23,19,14,0.42); }
-.eph-landing2 .categoria-titulo { margin: 0; font-weight: 200; font-size: clamp(34px, 5vw, 58px); line-height: 1.08; letter-spacing: -0.02em; color: var(--ink); text-wrap: balance; }
+.eph-landing2 .categoria-titulo { margin: 0; max-width: 18ch; font-weight: 200; font-size: clamp(28px, 3.6vw, 42px); line-height: 1.12; letter-spacing: -0.02em; color: var(--ink); text-wrap: balance; }
 .eph-landing2 .categoria-titulo em { font-family: 'Cormorant Garamond', serif; font-style: italic; font-weight: 400; color: var(--gold-dark); }
+
+/* Tabla comparativa: más compacta para verse completa de una mirada. */
+.eph-landing2 .table-card { min-width: 720px; }
+.eph-landing2 .compare-head-row span { padding: clamp(12px, 1.4vw, 16px) clamp(12px, 1.4vw, 18px); font-size: clamp(14px, 1.3vw, 16px); }
+.eph-landing2 .compare-head-row span.ephirox-col { font-size: clamp(16px, 1.6vw, 20px); }
+.eph-landing2 .compare-row-card .cell-capacidad,
+.eph-landing2 .compare-row-card .cell-field { padding: clamp(12px, 1.4vw, 18px) clamp(12px, 1.4vw, 18px); }
+.eph-landing2 .compare-row-card .cell-capacidad { font-size: clamp(15px, 1.4vw, 18px); line-height: 1.2; }
+.eph-landing2 .compare-row-card .cell-field { font-size: 13px; line-height: 1.4; }
+.eph-landing2 .compare-row-card .cell-ephirox { font-size: 13.5px; line-height: 1.4; }
+.eph-landing2 .compare-row-card .cell-field:last-child { font-size: 13px; line-height: 1.35; }
