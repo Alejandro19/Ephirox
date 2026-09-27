@@ -826,6 +826,11 @@
      pegada a las secciones oscuras de arriba y abajo, sin franja beige. */
   .eph-landing2 .categoria-head { display: none; }
   .eph-landing2 .image-card-inner { height: clamp(280px, 74vw, 460px); border-radius: 0; border: 0; }
+  /* La foto trae un margen claro pegado a su borde izquierdo: en desktop el
+     recorte panorámico (100vw) ya lo deja fuera, pero en el recuadro angosto
+     de mobile alcanza a asomar — se corrige recentrando el encuadre más a
+     la derecha para que el recorte empiece después de ese margen. */
+  .eph-landing2 .image-card-img { object-position: 68% 42%; }
 }
 
 @media (max-width: 768px) {
