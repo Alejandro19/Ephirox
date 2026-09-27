@@ -286,7 +286,7 @@ export function LandingPage() {
           <div className="categoria-wrap">
             <ScrollReveal className="categoria-head">
               <span className="eyebrow categoria-eyebrow">¿POR QUÉ EPHIROX?</span>
-              <h2 className="categoria-titulo">No reaccionamos al riesgo, <em>lo anticipamos</em>.</h2>
+              <h2 className="categoria-titulo">No reaccionamos al riesgo,<br />lo <em>anticipamos</em>.</h2>
             </ScrollReveal>
             <CategoriaTable />
           </div>
