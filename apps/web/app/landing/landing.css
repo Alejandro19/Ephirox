@@ -1160,7 +1160,7 @@
    antes, ya que el h2 del modal se oculta en este paso), fila input+botón,
    y los links de ayuda al final, cada bloque con su propio aire. */
 .eph-landing2 .code-step { display: grid; gap: 20px; }
-.eph-landing2 .code-step-intro { margin: 0; max-width: 44ch; font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: clamp(19px, 2.1vw, 23px); line-height: 1.4; color: var(--cream); }
+.eph-landing2 .code-step-intro { margin: 0; max-width: 44ch; font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: clamp(16px, 1.8vw, 19px); line-height: 1.4; color: var(--cream); }
 .eph-landing2 .code-step-intro strong { color: var(--gold-light); font-weight: 500; }
 .eph-landing2 .code-step-row { display: flex; align-items: flex-end; gap: 14px; flex-wrap: wrap; }
 .eph-landing2 .code-step-input { flex: 1 1 200px; display: grid; gap: 8px; }
