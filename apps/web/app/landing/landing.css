@@ -818,14 +818,17 @@
   .eph-landing2 .trad-mobile { display: block !important; }
   .eph-landing2 .trad-full { display: none !important; }
 
-  /* "max-width:none;margin:0" no bastaba: solo llenaba el ancho ya angosto
-     que dejaba el padding lateral de section.categoria (6vw), que nunca se
-     puso en cero — por eso seguía viéndose una franja del fondo de la
-     sección a los lados. Se usa la misma técnica de full-bleed real que ya
-     usa desktop (100vw + márgenes negativos), que ignora ese padding.
-     Con 4px de sobra (2px por lado) para que nunca quede corta. */
-  .eph-landing2 .image-card { max-width: none; width: calc(100vw + 4px); margin: 0 calc(50% - 50vw - 2px); }
-  .eph-landing2 section.categoria { padding-top: 0; padding-bottom: 0; }
+  /* Los 3 intentos anteriores usaban trucos de vw/márgenes negativos para
+     "romper" el ancho hacia afuera del padding lateral de la sección — una
+     técnica que depende de que el navegador redondee exactamente igual en
+     los dos lados, y que en la práctica seguía fallando. Se resuelve de
+     raíz: en vez de pelear contra el padding de la sección, se le quita el
+     padding lateral a la sección misma en este breakpoint (el único
+     contenido visible acá es la imagen; el kicker/título y la tabla ya
+     están ocultos), así la imagen no necesita ningún truco — solo ocupa el
+     100% de un contenedor que ya no tiene relleno. */
+  .eph-landing2 section.categoria { padding: 0; }
+  .eph-landing2 .image-card { max-width: none; width: 100%; margin: 0; }
 
   /* Móvil: la tabla ya está oculta (ver @media 768px) — el kicker y el
      título de "¿Por qué Ephirox?" solo se muestran completos junto a ella
