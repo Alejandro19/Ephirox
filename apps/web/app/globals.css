@@ -76,9 +76,19 @@
    protección contra desborde horizontal funciona igual. */
 html {
   overflow-x: hidden;
+  /* overflow-x:hidden evita que SE PUEDA hacer scroll horizontal, pero en
+     Safari de iOS no evita el "rebote" elástico del borde durante un gesto
+     de scroll con el mínimo componente horizontal — eso deja ver el fondo
+     del body a un lado u otro por un instante (confirmado con capturas
+     reales: la franja cambia de lado entre dos momentos de scroll de la
+     misma página). overscroll-behavior-x es la propiedad hecha para apagar
+     justo ese rebote, sin tocar overflow ni arriesgar el position:sticky
+     de PasosSticky.tsx. */
+  overscroll-behavior-x: none;
 }
 
 body {
+  overscroll-behavior-x: none;
   margin: 0;
   font-family: 'Inter', sans-serif;
   background: var(--cream);
