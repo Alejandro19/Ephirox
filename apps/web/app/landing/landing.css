@@ -1353,7 +1353,7 @@
    JSX) para que el título quede siempre en exactamente 2 líneas en
    escritorio; el ancho solo necesita alcanzar para la línea más larga. */
 @media (min-width: 1025px) {
-  .eph-landing2 .hero-content { padding-left: 0; }
+  .eph-landing2 .hero-content { padding-left: clamp(48px, 6vw, 96px); }
   .eph-landing2 .hero-content h1 { max-width: 34ch; }
 }
 @media (max-width: 1024px) {
