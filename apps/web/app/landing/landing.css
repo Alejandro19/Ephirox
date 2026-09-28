@@ -1043,7 +1043,6 @@
 .eph-landing2 .wa-float svg { color: #25D366; }
 .eph-landing2 .wa-float:hover { border-color: var(--gold); }
 .eph-landing2 .back-to-top { bottom: calc(clamp(16px, 3vw, 28px) + 56px); }
-@media (max-width: 480px) { .eph-landing2 .wa-float span { display: none; } .eph-landing2 .wa-float { width: 44px; padding: 0; justify-content: center; } }
 
 .eph-landing2 .wa-panel { position: fixed; right: clamp(16px, 3vw, 28px); bottom: calc(clamp(16px, 3vw, 28px) + 56px); z-index: 56; width: min(264px, calc(100vw - 32px)); border-radius: 14px; overflow: hidden; background: rgba(20,17,13,0.94); backdrop-filter: blur(10px); border: 1px solid rgba(201,166,107,0.28); color: var(--cream); box-shadow: 0 14px 44px rgba(0,0,0,0.5); font-family: 'Jost', sans-serif; }
 .eph-landing2 .wa-panel-head { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 1px solid rgba(201,166,107,0.16); }
@@ -1279,15 +1278,13 @@
 .eph-landing2 .wa-float { line-height: 1; box-sizing: border-box; }
 .eph-landing2 .wa-float svg { display: block; flex: 0 0 auto; }
 .eph-landing2 .wa-float span { display: block; line-height: 1; white-space: nowrap; }
-@media (min-width: 481px) and (max-width: 768px) {
-  .eph-landing2 .wa-float { right: 16px; bottom: 16px; padding: 0 16px 0 14px; }
-}
-/* En 480px o menos, el botón vuelve a ser solo el ícono circular (44px, sin
-   padding) — antes esta regla de acá arriba (max-width:768px, sin piso)
-   pisaba ese padding:0 por venir después en el archivo, y el ícono quedaba
-   comprimido y asomando fuera del círculo. */
-@media (max-width: 480px) {
-  .eph-landing2 .wa-float { right: 16px; bottom: 16px; padding: 0; }
+/* Móvil (mismo límite de 768px que usa el resto del sitio): un solo botón
+   circular con el ícono, sin el texto "Chatea con nosotros" — antes había
+   dos reglas separadas (una para ≤480px, otra para ≤768px) que se pisaban
+   entre sí y dejaban el botón mal armado en varios anchos de teléfono. */
+@media (max-width: 768px) {
+  .eph-landing2 .wa-float span { display: none; }
+  .eph-landing2 .wa-float { width: 44px; height: 44px; padding: 0; justify-content: center; right: 16px; bottom: 16px; }
 }
 
 /* Cierre de "El enemigo invisible": la invitación al Score dentro de la misma sección. */
