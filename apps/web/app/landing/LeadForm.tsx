@@ -249,6 +249,11 @@ export function LeadForm({
       <button type="submit" className="submit-btn field-full" disabled={saving} style={{ opacity: saving ? 0.6 : 1, cursor: saving ? 'default' : 'pointer' }}>
         {saving ? 'Enviando…' : submitLabel}
       </button>
+      {/* El correo se manda por una API externa (Resend) — el viaje de ida y
+          vuelta real toma un par de segundos. Sin este texto, el formulario
+          se queda quieto con un botón atenuado y da la sensación de que algo
+          se colgó en vez de estar progresando. */}
+      {saving && <p className="field-full" style={{ margin: 0, fontSize: 13, opacity: 0.65 }}>Confirmando tu correo, un momento…</p>}
     </form>
   );
 }
