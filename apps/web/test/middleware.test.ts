@@ -53,6 +53,12 @@ describe('middleware', () => {
       expect(res.headers.get('x-middleware-rewrite')).toBe('https://www.ephirox.com/landing');
     });
 
+    it('conserva el query string al reescribir "/" a /landing (ej. ?executiveScore=1 del link del login)', () => {
+      const req = new NextRequest('https://ephirox.com/?executiveScore=1', { headers: { host: 'ephirox.com' } });
+      const res = middleware(req);
+      expect(res.headers.get('x-middleware-rewrite')).toBe('https://ephirox.com/landing?executiveScore=1');
+    });
+
     it('redirige cualquier otra ruta (ej. el NFC) al dominio real del producto, preservando path y query', () => {
       const req = new NextRequest('https://ephirox.com/training?m=entrenamiento&a=confirmar', { headers: { host: 'ephirox.com' } });
       const res = middleware(req);

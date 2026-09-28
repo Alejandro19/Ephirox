@@ -30,7 +30,14 @@ export function middleware(request: NextRequest) {
       return NextResponse.next();
     }
     if (pathname === "/") {
-      return NextResponse.rewrite(new URL("/landing", request.url));
+      // "new URL('/landing', request.url)" descarta el query string original
+      // (una ruta absoluta reemplaza path+search+hash del base) — el link
+      // "?executiveScore=1" del login nunca llegaba a page.tsx por acá,
+      // así que el modal jamás se abría solo, aunque el código en sí
+      // (lectura de searchParams en page.tsx) estuviera bien.
+      const rewritten = new URL("/landing", request.url);
+      rewritten.search = request.nextUrl.search;
+      return NextResponse.rewrite(rewritten);
     }
     // /landing servía el mismo contenido que "/" (arriba) como una segunda
     // URL indexable — Google veía ephirox.com/ y ephirox.com/landing como
