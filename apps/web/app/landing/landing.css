@@ -819,7 +819,12 @@
   .eph-landing2 .trad-mobile { display: block !important; }
   .eph-landing2 .trad-full { display: none !important; }
 
-  .eph-landing2 .image-card { max-width: none; margin: 0; }
+  /* "max-width:none;margin:0" no bastaba: solo llenaba el ancho ya angosto
+     que dejaba el padding lateral de section.categoria (6vw), que nunca se
+     puso en cero — por eso seguía viéndose una franja del fondo de la
+     sección a los lados. Se usa la misma técnica de full-bleed real que ya
+     usa desktop (100vw + márgenes negativos), que ignora ese padding. */
+  .eph-landing2 .image-card { max-width: none; width: 100vw; position: relative; left: 50%; right: 50%; margin-left: -50vw; margin-right: -50vw; }
   .eph-landing2 section.categoria { padding-top: 0; padding-bottom: 0; }
 
   /* Móvil: la tabla ya está oculta (ver @media 768px) — el kicker y el
