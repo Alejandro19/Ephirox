@@ -26,18 +26,8 @@ type Negocio = { personas: (typeof EXECUTIVE_PERSONAS)[number] | null; equipoDir
 // así que el lead queda guardado ANTES de verlo) → resultado en lenguaje
 // ejecutivo → "Agendar sesión estratégica" (abre WhatsApp para agendar).
 // Nunca "compra ahora".
-export function ExecutiveScoreModal({
-  onClose,
-  skipIntro = false,
-}: {
-  onClose: () => void;
-  // El link del login y el CTA final de la página abren directo al
-  // cuestionario, sin pasar por la pantalla de "Comenzar evaluación" — esa
-  // intro sigue existiendo para el botón dentro de "El enemigo invisible",
-  // que ya tiene contexto propio alrededor.
-  skipIntro?: boolean;
-}) {
-  const [step, setStep] = useState<Step>(skipIntro ? 'preguntas' : 'intro');
+export function ExecutiveScoreModal({ onClose }: { onClose: () => void }) {
+  const [step, setStep] = useState<Step>('intro');
   const [index, setIndex] = useState(0);
   const [respuestas, setRespuestas] = useState<number[]>([]);
   const [negocio, setNegocio] = useState<Negocio>({ personas: null, equipoDirectivo: null, evaluarEquipo: null });
