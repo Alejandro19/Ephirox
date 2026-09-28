@@ -1382,9 +1382,18 @@
      header. Una captura nueva con el recuadro de referencia confirma que la
      posición de ANTES de ese ajuste (~10vw / ~35vh) ya coincidía con la zona
      pedida — se revierte a esos valores. */
-  .eph-landing2 .hero-content { padding-left: clamp(48px, 10vw, 160px); padding-top: clamp(140px, 35vh, 340px); }
+  /* .hero-content trae max-width:1180px + margin:0 auto de la regla base
+     (para el layout de 2 columnas de todo el Hero) — eso lo auto-centra
+     dentro de la sección y, en pantallas anchas, le suma un offset extra
+     ANTES de su propio padding-left (a 1440px: ~130px de ese centrado +
+     144px del padding = ~274px reales hasta el título, no los ~150px que
+     parecía indicar el padding solo). Se quita ese max-width acá para que
+     el padding-left sea el único responsable del margen — el ancho del
+     bloque de texto ya lo limitan h1/.lead por su cuenta, no hace falta
+     que lo limite también el contenedor. */
+  .eph-landing2 .hero-content { max-width: none; padding-left: clamp(48px, 10vw, 160px); padding-top: clamp(140px, 35vh, 340px); }
   .eph-landing2 .hero-content h1,
-  .eph-landing2 .hero-content .lead { max-width: 36vw; }
+  .eph-landing2 .hero-content .lead { max-width: clamp(420px, 43vw, 620px); }
   .eph-landing2 .hero-h1-break { display: none; }
 }
 @media (max-width: 1024px) {
