@@ -1279,8 +1279,15 @@
 .eph-landing2 .wa-float { line-height: 1; box-sizing: border-box; }
 .eph-landing2 .wa-float svg { display: block; flex: 0 0 auto; }
 .eph-landing2 .wa-float span { display: block; line-height: 1; white-space: nowrap; }
-@media (max-width: 768px) {
+@media (min-width: 481px) and (max-width: 768px) {
   .eph-landing2 .wa-float { right: 16px; bottom: 16px; padding: 0 16px 0 14px; }
+}
+/* En 480px o menos, el botón vuelve a ser solo el ícono circular (44px, sin
+   padding) — antes esta regla de acá arriba (max-width:768px, sin piso)
+   pisaba ese padding:0 por venir después en el archivo, y el ícono quedaba
+   comprimido y asomando fuera del círculo. */
+@media (max-width: 480px) {
+  .eph-landing2 .wa-float { right: 16px; bottom: 16px; padding: 0; }
 }
 
 /* Cierre de "El enemigo invisible": la invitación al Score dentro de la misma sección. */
