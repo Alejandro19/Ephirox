@@ -86,7 +86,7 @@ export const RIESGOS: Record<ExecutiveCategory, { titulo: string; texto: string;
   recuperacion: {
     titulo: 'Recuperación insuficiente',
     texto: `Tu perfil indica un descanso que podría no estar reponiendo tu capacidad de un día al siguiente.${MAYOR_PALANCA}`,
-    impactos: ['Energía al iniciar el día', 'Foco sostenido', 'Resistencia a la carga'],
+    impactos: ['Velocidad de decisión', 'Energía estratégica', 'Capacidad de liderazgo'],
   },
   riesgo: {
     titulo: 'Exposición sin monitoreo',

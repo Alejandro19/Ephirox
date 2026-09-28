@@ -1355,11 +1355,12 @@
    naturalmente, leyéndose de arriba hacia abajo dentro de esa columna. */
 @media (min-width: 1025px) {
   .eph-landing2 section.hero { display: block; }
-  /* Subido 4 "líneas" (~220px, tomando ~55px como una línea del título) y
-     corrido 2 "líneas" (~110px) hacia la izquierda respecto al punto de
-     partida anterior — pedido explícito sobre una captura, sin verificar
-     todavía en pantalla. */
-  .eph-landing2 .hero-content { padding-left: clamp(0px, calc(10vw - 110px), 50px); padding-top: clamp(0px, calc(35vh - 220px), 120px); }
+  /* El ajuste de "sube 4 líneas / corre 2 a la izquierda" del cambio
+     anterior se pasó de largo: subía el título hasta pisar el logo del
+     header. Una captura nueva con el recuadro de referencia confirma que la
+     posición de ANTES de ese ajuste (~10vw / ~35vh) ya coincidía con la zona
+     pedida — se revierte a esos valores. */
+  .eph-landing2 .hero-content { padding-left: clamp(48px, 10vw, 160px); padding-top: clamp(140px, 35vh, 340px); }
   .eph-landing2 .hero-content h1,
   .eph-landing2 .hero-content .lead { max-width: 36vw; }
   .eph-landing2 .hero-h1-break { display: none; }
