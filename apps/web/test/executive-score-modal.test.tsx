@@ -65,7 +65,7 @@ describe('ExecutiveScoreModal', () => {
     expect(screen.getByText('Principal riesgo')).toBeInTheDocument();
     expect(screen.getByText('Tu rendimiento actual tiene oportunidades de mejora.')).toBeInTheDocument();
     expect(screen.queryByText(/compra ahora/i)).not.toBeInTheDocument();
-    const cta = screen.getByRole('link', { name: 'Solicitar revisión ejecutiva' });
+    const cta = screen.getByRole('link', { name: 'Agendar sesión estratégica' });
     expect(cta.getAttribute('href')).toContain('https://wa.me/573214973677?text=');
   });
 

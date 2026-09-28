@@ -24,7 +24,7 @@ type Negocio = { personas: (typeof EXECUTIVE_PERSONAS)[number] | null; equipoDir
 // Flujo: intro discreta → 15 preguntas (una por pantalla) → 3 preguntas de
 // contexto empresarial → captura de contacto (el resultado es la recompensa,
 // así que el lead queda guardado ANTES de verlo) → resultado en lenguaje
-// ejecutivo → "Solicitar revisión ejecutiva" (abre WhatsApp para agendar).
+// ejecutivo → "Agendar sesión estratégica" (abre WhatsApp para agendar).
 // Nunca "compra ahora".
 export function ExecutiveScoreModal({ onClose }: { onClose: () => void }) {
   const [step, setStep] = useState<Step>('intro');
@@ -206,8 +206,10 @@ function Resultado({ evaluacion, contacto }: { evaluacion: ExecutiveEvaluation; 
         <h3>Tu rendimiento actual tiene oportunidades de mejora.</h3>
         <p>Tus resultados sugieren que existen factores invisibles que podrían afectar tu energía, claridad mental y capacidad de liderazgo.</p>
         <p>Agenda una sesión estratégica para revisar tus resultados y determinar si calificas para el Executive Program.</p>
-        <a className="score-primary score-link" href={whatsappUrl} target="_blank" rel="noopener noreferrer">Solicitar revisión ejecutiva</a>
-        <button type="button" className="score-secondary" onClick={handleDescargarInforme}>Recibir mi Informe Ejecutivo</button>
+        <div className="score-final-actions">
+          <a className="score-primary score-link" href={whatsappUrl} target="_blank" rel="noopener noreferrer">Agendar sesión estratégica</a>
+          <button type="button" className="score-secondary" onClick={handleDescargarInforme}>Descargar Informe Ejecutivo</button>
+        </div>
         <span className="score-disclaimer">Indicador orientativo de rendimiento ejecutivo; no constituye diagnóstico ni tratamiento médico.</span>
       </div>
     </div>
