@@ -367,8 +367,11 @@
   /* "left:50%;right:50%;margin:-50vw" puede dejar un hilo de 1-2px sin
      cubrir en un lado (depende de la anchura exacta del padre, redondeos de
      vw) — "margin: 0 calc(50% - 50vw)" con solo width:100vw es la misma
-     idea pero sin ese punto flaco: no depende de left/right en absoluto. */
-  .eph-landing2 .image-card { max-width: none; width: 100vw; margin: 0 calc(50% - 50vw); }
+     idea pero sin ese punto flaco: no depende de left/right en absoluto.
+     Se le suma además 4px de margen de sobra (2px por lado) a propósito,
+     para que sobre por encima del borde en vez de quedar corta — el
+     body ya tiene overflow-x:hidden, así que ese sobrante nunca se ve. */
+  .eph-landing2 .image-card { max-width: none; width: calc(100vw + 4px); margin: 0 calc(50% - 50vw - 2px); }
   .eph-landing2 .image-card-inner { border-radius: 0; border: 0; aspect-ratio: auto; height: clamp(220px, 34vw, 420px); }
   /* La foto trae un margen claro pegado a su borde izquierdo (mismo motivo
      que el ajuste ya hecho para mobile) — acá el recorte panorámico es más
@@ -819,8 +822,9 @@
      que dejaba el padding lateral de section.categoria (6vw), que nunca se
      puso en cero — por eso seguía viéndose una franja del fondo de la
      sección a los lados. Se usa la misma técnica de full-bleed real que ya
-     usa desktop (100vw + márgenes negativos), que ignora ese padding. */
-  .eph-landing2 .image-card { max-width: none; width: 100vw; margin: 0 calc(50% - 50vw); }
+     usa desktop (100vw + márgenes negativos), que ignora ese padding.
+     Con 4px de sobra (2px por lado) para que nunca quede corta. */
+  .eph-landing2 .image-card { max-width: none; width: calc(100vw + 4px); margin: 0 calc(50% - 50vw - 2px); }
   .eph-landing2 section.categoria { padding-top: 0; padding-bottom: 0; }
 
   /* Móvil: la tabla ya está oculta (ver @media 768px) — el kicker y el
