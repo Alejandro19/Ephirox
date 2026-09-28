@@ -61,7 +61,7 @@ describe('ExecutiveScoreModal', () => {
 
     expect(await screen.findByLabelText('100 de 100')).toBeInTheDocument();
     expect(screen.getByText(/Optimización\./)).toBeInTheDocument();
-    expect(screen.getByText('Fortaleza principal')).toBeInTheDocument();
+    expect(screen.getByText('Mayor fortaleza')).toBeInTheDocument();
     expect(screen.getByText('Principal riesgo')).toBeInTheDocument();
     expect(screen.getByText('Tu rendimiento actual tiene oportunidades de mejora.')).toBeInTheDocument();
     expect(screen.queryByText(/compra ahora/i)).not.toBeInTheDocument();

@@ -91,7 +91,7 @@ export function generateExecutivePdf(input: {
   doc.addPage();
   y = 30;
   y = kicker(doc, 'Interpretación ejecutiva', y);
-  y = heading(doc, 'Fortaleza principal y principal riesgo', y, 16);
+  y = heading(doc, 'Mayor fortaleza y principal riesgo', y, 16);
   y += 4;
   const colW = (CONTENT_W - 10) / 2;
   const colStartY = y;
@@ -99,7 +99,7 @@ export function generateExecutivePdf(input: {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   doc.setTextColor(GOLD);
-  doc.text('FORTALEZA PRINCIPAL', MARGIN, y);
+  doc.text('MAYOR FORTALEZA', MARGIN, y);
   let yLeft = y + 7;
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(13);
@@ -141,7 +141,7 @@ export function generateExecutivePdf(input: {
   // Página 3 — Interpretación ejecutiva: 5 barras + contexto
   doc.addPage();
   y = 30;
-  y = kicker(doc, 'Perfil por dimensión', y);
+  y = kicker(doc, 'Perfil de rendimiento', y);
   y = heading(doc, 'Interpretación ejecutiva', y, 16);
   y += 6;
 

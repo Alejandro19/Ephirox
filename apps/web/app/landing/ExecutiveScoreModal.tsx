@@ -176,7 +176,7 @@ function Resultado({ evaluacion, contacto }: { evaluacion: ExecutiveEvaluation; 
 
       <div className="score-cards">
         <div className="score-card">
-          <span className="score-card-label">Fortaleza principal</span>
+          <span className="score-card-label">Mayor fortaleza</span>
           <strong>{fortaleza.titulo}</strong>
           <p>{fortaleza.texto}</p>
         </div>
@@ -193,13 +193,16 @@ function Resultado({ evaluacion, contacto }: { evaluacion: ExecutiveEvaluation; 
         <ul>{riesgo.impactos.map((i) => <li key={i}>{i}</li>)}</ul>
       </div>
 
-      <div className="score-bars" aria-label="Perfil por dimensión">
+      <div className="score-bars-section">
+        <span className="score-card-label">Perfil de rendimiento</span>
+        <div className="score-bars" aria-label="Perfil por dimensión">
         {EXECUTIVE_CATEGORIES.map((c) => (
           <div key={c} className="score-bar-row">
             <span>{EXECUTIVE_CATEGORY_LABELS[c]}</span>
             <div className="score-bar"><div style={{ width: `${Math.max(6, result.categorias[c])}%` }} /></div>
           </div>
         ))}
+        </div>
       </div>
 
       <div className="score-final">
