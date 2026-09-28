@@ -364,15 +364,11 @@
    foto de la junta directiva (.divider-banner) — antes era una card
    angosta de 620px que quedaba "flotando" sola en medio de la sección. */
 @media (min-width: 641px) {
-  .eph-landing2 .image-card {
-    max-width: none;
-    width: 100vw;
-    position: relative;
-    left: 50%;
-    right: 50%;
-    margin-left: -50vw;
-    margin-right: -50vw;
-  }
+  /* "left:50%;right:50%;margin:-50vw" puede dejar un hilo de 1-2px sin
+     cubrir en un lado (depende de la anchura exacta del padre, redondeos de
+     vw) — "margin: 0 calc(50% - 50vw)" con solo width:100vw es la misma
+     idea pero sin ese punto flaco: no depende de left/right en absoluto. */
+  .eph-landing2 .image-card { max-width: none; width: 100vw; margin: 0 calc(50% - 50vw); }
   .eph-landing2 .image-card-inner { border-radius: 0; border: 0; aspect-ratio: auto; height: clamp(220px, 34vw, 420px); }
   /* La foto trae un margen claro pegado a su borde izquierdo (mismo motivo
      que el ajuste ya hecho para mobile) — acá el recorte panorámico es más
@@ -824,7 +820,7 @@
      puso en cero — por eso seguía viéndose una franja del fondo de la
      sección a los lados. Se usa la misma técnica de full-bleed real que ya
      usa desktop (100vw + márgenes negativos), que ignora ese padding. */
-  .eph-landing2 .image-card { max-width: none; width: 100vw; position: relative; left: 50%; right: 50%; margin-left: -50vw; margin-right: -50vw; }
+  .eph-landing2 .image-card { max-width: none; width: 100vw; margin: 0 calc(50% - 50vw); }
   .eph-landing2 section.categoria { padding-top: 0; padding-bottom: 0; }
 
   /* Móvil: la tabla ya está oculta (ver @media 768px) — el kicker y el
