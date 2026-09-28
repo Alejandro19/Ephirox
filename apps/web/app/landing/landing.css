@@ -1156,6 +1156,16 @@
 /* Hero: título y subtítulo más contenidos, para no invadir la foto del ejecutivo */
 .eph-landing2 .hero-content h1 { font-size: clamp(30px, 3.4vw, 50px); max-width: 20ch; }
 .eph-landing2 .hero-content .lead { font-size: clamp(14px, 1.3vw, 17px); max-width: 46ch; line-height: 1.6; }
+/* Mobile/tablet (<1025px): mismo criterio que en escritorio (angostar la
+   columna para que el título envuelva a varias líneas en vez de una o dos
+   muy largas) — acá el ancho previo (20ch) queda anulado por este, más
+   angosto, para acercar el resultado a como se ve en escritorio.
+   Sin poder verlo en un navegador real, el número exacto de líneas puede
+   variar según el ancho del teléfono — si no queda en 3 líneas, avisar con
+   una captura y se recalibra este valor. */
+@media (max-width: 1024px) {
+  .eph-landing2 .hero-content h1 { max-width: 15ch; }
+}
 
 /* ── Executive Performance Score™ ── */
 .eph-landing2 .score-modal { max-width: 640px; min-height: 360px; }
