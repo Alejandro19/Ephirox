@@ -1347,19 +1347,18 @@
 .eph-landing2 .contexto-titulo { font-weight: 500; margin: clamp(10px, 2vh, 20px) 0 clamp(14px, 3vh, 28px); }
 .eph-landing2 .contexto-titulo em { font-family: 'Cormorant Garamond', serif; font-style: italic; font-weight: 500; font-size: 1.16em; color: #8C6A2F; }
 
-/* Hero (escritorio): título y subtítulo centrados verticalmente en la
-   sección — antes quedaban pegados arriba, solo por el padding-top fijo de
-   .hero-content, lejos del centro salvo que se adivinara el valor exacto de
-   ese padding. Centrar el propio contenedor .hero por flex es más robusto
-   (se ajusta solo a la altura real del bloque, sin necesidad de un clamp
-   calibrado a mano). El margen izquierdo vuelve a ser el original (el
-   padding base de .hero-content, sin este override).
-   El salto de línea es explícito (className hero-h1-break en el <br/> del
-   JSX) para que el título quede siempre en exactamente 2 líneas en
-   escritorio; el ancho solo necesita alcanzar para la línea más larga. */
+/* Hero (escritorio): título y subtítulo acotados a una zona concreta —
+   margen izquierdo, ancho máximo y arranque vertical, medidos sobre la
+   captura de referencia (~10vw desde la izquierda, ~39vw de ancho, empieza
+   ~35vh desde arriba). El salto de línea forzado (hero-h1-break) ya no
+   aplica: con este ancho más angosto el título envuelve solo a 3-4 líneas
+   naturalmente, leyéndose de arriba hacia abajo dentro de esa columna. */
 @media (min-width: 1025px) {
-  .eph-landing2 section.hero { display: flex; align-items: center; }
-  .eph-landing2 .hero-content h1 { max-width: 34ch; }
+  .eph-landing2 section.hero { display: block; }
+  .eph-landing2 .hero-content { padding-left: clamp(48px, 10vw, 160px); padding-top: clamp(140px, 35vh, 340px); }
+  .eph-landing2 .hero-content h1,
+  .eph-landing2 .hero-content .lead { max-width: 36vw; }
+  .eph-landing2 .hero-h1-break { display: none; }
 }
 @media (max-width: 1024px) {
   .eph-landing2 .hero-h1-break { display: none; }
