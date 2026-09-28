@@ -14,6 +14,7 @@ import { LeadModal } from './LeadModal';
 import { ChatWidget } from './ChatWidget';
 import { ExecutiveScoreModal } from './ExecutiveScoreModal';
 import { ScrollReveal } from './ScrollReveal';
+import { RevealKicker } from './RevealKicker';
 import { CostosMobileCarousel } from './CostosMobileCarousel';
 import { COACH_WHATSAPP_NUMBER } from '@/lib/constants';
 
@@ -188,7 +189,7 @@ export function LandingPage({ initialScoreOpen = false }: { initialScoreOpen?: b
         <section className="contexto" id="contexto">
           <div className="contexto-wrap">
             <ScrollReveal className="contexto-fila">
-              <span className="eyebrow contexto-eyebrow">EL COSTO DE NO ACTUAR</span>
+              <RevealKicker className="eyebrow contexto-eyebrow">EL COSTO DE NO ACTUAR</RevealKicker>
               <h2 className="contexto-titulo">Lo que sientes tú, ya se lo estás cobrando a tu <em>empresa</em>.</h2>
             </ScrollReveal>
 
@@ -211,7 +212,7 @@ export function LandingPage({ initialScoreOpen = false }: { initialScoreOpen?: b
         <section className="senales" id="senales">
           <div className="senales-wrap">
             <ScrollReveal className="senales-head">
-              <span className="eyebrow senales-eyebrow">EL ENEMIGO INVISIBLE</span>
+              <RevealKicker className="eyebrow senales-eyebrow">EL ENEMIGO INVISIBLE</RevealKicker>
               <h2 className="senales-titulo">Los síntomas aparecen tarde. <em>Las señales no.</em></h2>
             </ScrollReveal>
             <ScrollReveal className="senales-card-col">
@@ -230,7 +231,7 @@ export function LandingPage({ initialScoreOpen = false }: { initialScoreOpen?: b
           <section className="cambia-section">
             <div className="cambia-wrap">
               <ScrollReveal className="cambia-head">
-                <span className="eyebrow">LO QUE CAMBIA</span>
+                <RevealKicker className="eyebrow">LO QUE CAMBIA</RevealKicker>
                 <h2>El control que creías haber perdido, <em>vuelve</em>.</h2>
               </ScrollReveal>
               <div className="shifts-list">
@@ -246,7 +247,7 @@ export function LandingPage({ initialScoreOpen = false }: { initialScoreOpen?: b
                 ))}
               </div>
               <div className="beneficios-bloque">
-                <span className="eyebrow beneficios-kicker">Y ESO SE TRADUCE EN:</span>
+                <RevealKicker className="eyebrow beneficios-kicker">Y ESO SE TRADUCE EN:</RevealKicker>
                 <ScrollReveal className="beneficios-grid">
                   {BENEFICIOS.map((b) => {
                     const open = beneficiosOpen.includes(b.titulo);
@@ -283,7 +284,7 @@ export function LandingPage({ initialScoreOpen = false }: { initialScoreOpen?: b
 
         <div className="medimos-intro">
           <ScrollReveal>
-            <span className="eyebrow">¿CÓMO LO MEDIMOS?</span>
+            <RevealKicker className="eyebrow">¿CÓMO LO MEDIMOS?</RevealKicker>
             <h2>No es una sensación. Es un registro.</h2>
           </ScrollReveal>
         </div>
@@ -294,7 +295,7 @@ export function LandingPage({ initialScoreOpen = false }: { initialScoreOpen?: b
         <section className="categoria" id="categoria">
           <div className="categoria-wrap">
             <ScrollReveal className="categoria-head">
-              <span className="eyebrow categoria-eyebrow">¿POR QUÉ EPHIROX?</span>
+              <RevealKicker className="eyebrow categoria-eyebrow">¿POR QUÉ EPHIROX?</RevealKicker>
               <h2 className="categoria-titulo">No reaccionamos al riesgo,<br />lo <em>anticipamos</em>.</h2>
             </ScrollReveal>
             <CategoriaTable />
@@ -338,14 +339,14 @@ export function LandingPage({ initialScoreOpen = false }: { initialScoreOpen?: b
           </div>
 
           <div className="footer-col">
-            <span className="eyebrow">PROGRAMA</span>
+            <RevealKicker className="eyebrow">PROGRAMA</RevealKicker>
             <a className="link-hover" href="#contexto" onClick={handleAnchorClick}>El costo de no verlo</a>
             <a className="link-hover" href="#categoria" onClick={handleAnchorClick}>¿Por qué Ephirox?</a>
             <a className="link-hover" href="#beneficios" onClick={handleAnchorClick}>Beneficios</a>
           </div>
 
           <div className="footer-col">
-            <span className="eyebrow">CONTACTO</span>
+            <RevealKicker className="eyebrow">CONTACTO</RevealKicker>
             <div className="footer-contact-item">
               <span className="label">Email</span>
               <a className="link-hover" href="mailto:contacto@ephirox.com">contacto@ephirox.com</a>

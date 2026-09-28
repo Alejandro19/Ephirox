@@ -68,6 +68,40 @@
   .eph-landing2 .reveal-on-scroll { opacity: 1; transform: none; transition: none; }
 }
 
+/* Efectos de aparición al hacer scroll — valores tomados de epix.ai/clinical-
+   trials (curva "outCirc" 0,0.55,0.45,1, distinta de la 0.16,1,0.3,1 que ya
+   usa .reveal-on-scroll arriba). .reveal-kicker: todos los kickers/eyebrow
+   del sitio (baja + escala). .reveal-block: bloques de contenido de "¿Cómo
+   lo medimos?" (solo baja); .reveal-paragraph es una variante de retraso
+   para sus párrafos. Disparados por useRevealOnScroll.ts, no por
+   ScrollReveal.tsx (que ya envuelve estos mismos kickers para el título de
+   su sección — acá se les da a los kickers, además, su propio efecto). */
+.eph-landing2 .reveal-kicker {
+  opacity: 0;
+  transform: translateY(40%) scale(0.8);
+  transition: opacity 500ms cubic-bezier(0, 0.55, 0.45, 1), transform 500ms cubic-bezier(0, 0.55, 0.45, 1);
+  transition-delay: 400ms;
+}
+.eph-landing2 .reveal-kicker.is-revealed { opacity: 1; transform: translateY(0%) scale(1); }
+
+.eph-landing2 .reveal-block {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 500ms cubic-bezier(0, 0.55, 0.45, 1), transform 500ms cubic-bezier(0, 0.55, 0.45, 1);
+  transition-delay: 200ms;
+}
+.eph-landing2 .reveal-block.reveal-paragraph { transition-delay: 800ms; }
+.eph-landing2 .reveal-block.is-revealed { opacity: 1; transform: translateY(0px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .eph-landing2 .reveal-kicker,
+  .eph-landing2 .reveal-block {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
 .eph-landing2 .link-hover { transition: color 200ms ease-out, border-color 200ms ease-out, background 200ms ease-out; }
 .eph-landing2 .link-hover:hover { color: var(--gold-light) !important; border-color: var(--gold) !important; }
 .eph-landing2 .pill-hover:hover { background: rgba(201,166,107,0.14) !important; }
