@@ -195,7 +195,7 @@ export function generateExecutivePdf(input: {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(10.5);
   doc.setTextColor('#17130E');
-  doc.text('Solicitar revisión ejecutiva', MARGIN + 6, y + 7.8);
+  doc.text('Agendar sesión estratégica', MARGIN + 6, y + 7.8);
   y += 24;
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8.5);

@@ -1,9 +1,9 @@
-import nodemailer from 'nodemailer';
 import { desc, eq } from 'drizzle-orm';
 import { computeExecutiveResult, programFor, type EnterpriseLeadInput, type EnterpriseLeadEstadoUpdate } from '@latribu/shared-types';
 import { db } from '../db/index.js';
 import { enterpriseLeads, adminNotifications, type EnterpriseLeadRow } from '../models/schema.js';
 import { renderEmailHtml } from './email-template.js';
+import { sendTransactionalEmail } from './mailer.js';
 
 export async function createEnterpriseLead(input: EnterpriseLeadInput): Promise<EnterpriseLeadRow> {
   const { evaluacion, ...contacto } = input;
@@ -63,16 +63,13 @@ async function createAdminAlert(lead: EnterpriseLeadRow): Promise<void> {
   });
 }
 
-// Mismo transporter/no-op que sendPasswordResetEmail (password-reset.service.ts)
-// si no hay SMTP real configurado — el lead ya quedó guardado en la base aunque
-// el correo no salga.
+// Por HTTP (Resend), no SMTP — Railway bloquea la salida por los puertos
+// SMTP clásicos (confirmado en logs de producción con la verificación de
+// leads: ETIMEDOUT en 465 y 587 por igual). Sin RESEND_API_KEY, sendTransactionalEmail
+// ya se encarga de no-opear en dev/test y de fallar cerrado en producción —
+// pero acá el lead ya quedó guardado en la base aunque el correo no salga,
+// así que se atrapa el error para no tumbar la creación del lead por eso.
 async function notifyEnterpriseLead(lead: EnterpriseLeadRow): Promise<void> {
-  const EMAIL_HOST = process.env.EMAIL_HOST;
-  const EMAIL_PORT = process.env.EMAIL_PORT;
-  const EMAIL_SECURE = process.env.EMAIL_SECURE === 'true';
-  const EMAIL_USER = process.env.EMAIL_USER;
-  const EMAIL_PASS = process.env.EMAIL_PASS;
-  const EMAIL_FROM = process.env.NOTIFICATION_FROM || 'no-reply@ephirox.com';
   const NOTIFY_TO = process.env.ENTERPRISE_LEADS_NOTIFY_EMAIL || 'contacto@ephirox.com';
   const NOTIFY_CC = process.env.ENTERPRISE_LEADS_NOTIFY_CC || 'g619alejandro@gmail.com';
 
@@ -94,19 +91,8 @@ ${lead.score != null ? `<p style="margin:0 0 6px;"><strong>Executive Performance
 ${lead.quien ? `<p style="margin:0;"><strong>Quién más debería estar:</strong> ${lead.quien}</p>` : ''}`,
   });
 
-  if (!EMAIL_HOST || !EMAIL_PORT || !EMAIL_USER || !EMAIL_PASS) {
-    console.log('notifyEnterpriseLead: email config no disponible, se omite el envío.', lead);
-    return;
-  }
-
   try {
-    const transporter = nodemailer.createTransport({
-      host: EMAIL_HOST,
-      port: Number(EMAIL_PORT),
-      secure: EMAIL_SECURE,
-      auth: { user: EMAIL_USER, pass: EMAIL_PASS },
-    });
-    await transporter.sendMail({ from: EMAIL_FROM, to: NOTIFY_TO, cc: NOTIFY_CC, subject, html });
+    await sendTransactionalEmail({ to: NOTIFY_TO, cc: NOTIFY_CC, subject, html });
   } catch (e) {
     console.error('notifyEnterpriseLead error', e);
   }
