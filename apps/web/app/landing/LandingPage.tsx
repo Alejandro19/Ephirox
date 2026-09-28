@@ -90,6 +90,10 @@ export function LandingPage({ initialScoreOpen = false }: { initialScoreOpen?: b
   const [chatOpen, setChatOpen] = useState(false);
   const [beneficiosOpen, setBeneficiosOpen] = useState<string[]>([]);
   const [scoreOpen, setScoreOpen] = useState(initialScoreOpen);
+  // Entradas "externas" (link del login, CTA final antes del footer) saltan
+  // la pantalla de "Comenzar evaluación" y van directo al cuestionario; el
+  // botón dentro de "El enemigo invisible" conserva la intro.
+  const [scoreSkipIntro, setScoreSkipIntro] = useState(initialScoreOpen);
   const [leadModal, setLeadModal] = useState<{ correo: string; celular: string } | null>(null);
 
   useEffect(() => {
@@ -220,7 +224,7 @@ export function LandingPage({ initialScoreOpen = false }: { initialScoreOpen?: b
             <ScrollReveal className="senales-cierre" >
               <div id="score" className="senales-cierre-inner">
                 <p>¿Cuáles de estas señales ya tienes? Evalúa en minutos tu energía, claridad mental, recuperación y resiliencia.</p>
-                <button type="button" className="score-section-cta" onClick={() => setScoreOpen(true)}>Solicitar Executive Score</button>
+                <button type="button" className="score-section-cta" onClick={() => { setScoreSkipIntro(false); setScoreOpen(true); }}>Solicitar Executive Score</button>
               </div>
             </ScrollReveal>
           </div>
@@ -314,7 +318,13 @@ export function LandingPage({ initialScoreOpen = false }: { initialScoreOpen?: b
           </div>
           <ScrollReveal className="score-final-wrap">
             <p className="score-final-texto">El primer paso no es un contrato. Es un diagnóstico de minutos.</p>
-            <a className="score-final-cta" href="#score" onClick={handleAnchorClick}>Solicitar Executive Score <span aria-hidden="true">→</span></a>
+            <a
+              className="score-final-cta"
+              href="#score"
+              onClick={(e) => { e.preventDefault(); setScoreSkipIntro(true); setScoreOpen(true); }}
+            >
+              Solicitar Executive Score <span aria-hidden="true">→</span>
+            </a>
           </ScrollReveal>
         </section>
       </main>
@@ -366,7 +376,7 @@ export function LandingPage({ initialScoreOpen = false }: { initialScoreOpen?: b
 
       <ChatWidget open={chatOpen} onToggle={setChatOpen} whatsappNumber={COACH_WHATSAPP_NUMBER} />
 
-      {scoreOpen && <ExecutiveScoreModal onClose={() => setScoreOpen(false)} />}
+      {scoreOpen && <ExecutiveScoreModal skipIntro={scoreSkipIntro} onClose={() => setScoreOpen(false)} />}
 
       {leadModal && <LeadModal correo={leadModal.correo} celular={leadModal.celular} onClose={() => setLeadModal(null)} />}
 

@@ -39,7 +39,7 @@ export function ChatWidget({ open, onToggle, whatsappNumber }: { open: boolean; 
             <button type="button" className="wa-panel-close" aria-label="Cerrar" onClick={() => onToggle(false)}>×</button>
           </div>
           <div className="wa-panel-body">
-            <p className="wa-greeting">Hola, elegí una opción y te llevamos directo a WhatsApp.</p>
+            <p className="wa-greeting">Hola, elige una opción y te llevamos directo a WhatsApp.</p>
             {OPTIONS.map((o) => (
               <a key={o.key} className="wa-option" href={link(o.text)} target="_blank" rel="noopener noreferrer">
                 <span className="wa-option-icon" aria-hidden="true">{o.icon}</span>

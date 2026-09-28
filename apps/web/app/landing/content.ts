@@ -86,7 +86,7 @@ export const COMPARACION: CompareRow[] = [
 
 export const SHIFTS = [
   { antes: 'Entreno si tengo tiempo, por intuición.', despues: 'Sé exactamente cómo y cuándo entrenar según mi estilo de vida y mis objetivos — con datos, no por intuición.' },
-  { antes: 'Como entre reuniones, improvisando lo que sea.', despues: 'Tengo un plan de alimentación que se adapta a mí, no una dieta genérica.' },
+  { antes: 'Como entre reuniones, improvisando lo que sea.', despues: 'Tengo un plan de alimentación que se adapta a mi estilo de vida, no una dieta genérica.' },
   { antes: 'Decido sin saber si estoy en mi mejor momento mental.', despues: 'Sueño, recuperación y estrés registrados: sé en qué estado tomé cada decisión crítica, y puedo repetirlo a voluntad.' },
   { antes: 'Mis datos están repartidos en cinco apps que no se hablan entre sí.', despues: 'Todo vive en un solo lugar — una plataforma que conoce mi contexto completo, no otra app más sin rumbo.' },
   { antes: 'Estoy solo en esto.', despues: 'Pertenezco a un círculo de pares que entienden esta presión.' },
