@@ -15,6 +15,7 @@ import {
 } from '@latribu/shared-types';
 import { COACH_WHATSAPP_NUMBER } from '@/lib/constants';
 import { LeadForm } from './LeadForm';
+import { generateExecutivePdf } from './executive-score-pdf';
 
 type Step = 'intro' | 'preguntas' | 'negocio' | 'contacto' | 'resultado';
 type Negocio = { personas: (typeof EXECUTIVE_PERSONAS)[number] | null; equipoDirectivo: boolean | null; evaluarEquipo: boolean | null };
@@ -30,6 +31,7 @@ export function ExecutiveScoreModal({ onClose }: { onClose: () => void }) {
   const [index, setIndex] = useState(0);
   const [respuestas, setRespuestas] = useState<number[]>([]);
   const [negocio, setNegocio] = useState<Negocio>({ personas: null, equipoDirectivo: null, evaluarEquipo: null });
+  const [contacto, setContacto] = useState<{ nombre: string; empresa: string } | null>(null);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -122,12 +124,17 @@ export function ExecutiveScoreModal({ onClose }: { onClose: () => void }) {
           <div className="score-contacto">
             <span className="score-kicker">Tu resultado está listo</span>
             <h2>Déjanos tus datos para mostrarte tu perfil ejecutivo.</h2>
-            <LeadForm compact evaluacion={evaluacion} submitLabel="Ver mi resultado" onSubmitted={() => setStep('resultado')} />
+            <LeadForm
+              compact
+              evaluacion={evaluacion}
+              submitLabel="Ver mi resultado"
+              onSubmitted={(info) => { setContacto(info); setStep('resultado'); }}
+            />
             <button type="button" className="score-back" onClick={back}>← Atrás</button>
           </div>
         )}
 
-        {step === 'resultado' && evaluacion && <Resultado evaluacion={evaluacion} />}
+        {step === 'resultado' && evaluacion && contacto && <Resultado evaluacion={evaluacion} contacto={contacto} />}
       </div>
     </div>
   );
@@ -145,16 +152,21 @@ function YesNo({ legend, value, onChange }: { legend: string; value: boolean | n
   );
 }
 
-function Resultado({ evaluacion }: { evaluacion: ExecutiveEvaluation }) {
+function Resultado({ evaluacion, contacto }: { evaluacion: ExecutiveEvaluation; contacto: { nombre: string; empresa: string } }) {
   const result = computeExecutiveResult(evaluacion.respuestas);
   const segmento = SEGMENTO_INFO[result.segmento];
   const fortaleza = FORTALEZAS[result.fortaleza];
   const riesgo = RIESGOS[result.riesgo];
   const whatsappUrl = `https://wa.me/${COACH_WHATSAPP_NUMBER}?text=${encodeURIComponent(`Hola, hice el Executive Performance Score (${result.score}/100) y quiero solicitar mi revisión ejecutiva.`)}`;
 
+  function handleDescargarInforme() {
+    generateExecutivePdf({ nombre: contacto.nombre, empresa: contacto.empresa, result, segmento, fortaleza, riesgo });
+  }
+
   return (
     <div className="score-result">
       <span className="score-kicker">Executive Performance Score™</span>
+      <span className="score-card-label score-riesgo-kicker">Riesgo ejecutivo</span>
       <div className="score-number" aria-label={`${result.score} de 100`}>
         <strong>{result.score}</strong><span>/100</span>
       </div>
@@ -193,6 +205,7 @@ function Resultado({ evaluacion }: { evaluacion: ExecutiveEvaluation }) {
         <p>Tus resultados sugieren que existen factores invisibles que podrían afectar tu energía, claridad mental y capacidad de liderazgo.</p>
         <p>Agenda una sesión estratégica para revisar tus resultados y determinar si calificas para el Executive Program.</p>
         <a className="score-primary score-link" href={whatsappUrl} target="_blank" rel="noopener noreferrer">Solicitar revisión ejecutiva</a>
+        <button type="button" className="score-secondary" onClick={handleDescargarInforme}>Recibir mi Informe Ejecutivo</button>
         <span className="score-disclaimer">Indicador orientativo de rendimiento ejecutivo; no constituye diagnóstico ni tratamiento médico.</span>
       </div>
     </div>

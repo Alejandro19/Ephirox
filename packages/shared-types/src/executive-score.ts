@@ -38,7 +38,7 @@ export const EXECUTIVE_QUESTIONS: readonly ExecutiveQuestion[] = [
 
 // Nombres cara al usuario: lenguaje ejecutivo, nunca "estrés 6/10" ni "sueño malo".
 export const EXECUTIVE_CATEGORY_LABELS: Record<ExecutiveCategory, string> = {
-  energia: 'Capacidad de energía',
+  energia: 'Energía estratégica',
   claridad: 'Rendimiento cognitivo',
   resiliencia: 'Resiliencia bajo presión',
   recuperacion: 'Recuperación',
@@ -61,30 +61,36 @@ export const FORTALEZAS: Record<ExecutiveCategory, { titulo: string; texto: stri
   riesgo: { titulo: 'Base preventiva', texto: 'Cuidas los hábitos y el seguimiento que sostienen tu rendimiento a largo plazo.' },
 };
 
+// La frase de cierre es la misma en las 5 categorías a propósito (punto B
+// del historial de decisiones del Executive Score): resume que el riesgo
+// principal es también la mayor palanca de mejora, sin repetir la lista de
+// "Impacto potencial" que ya cubre el detalle por categoría.
+const MAYOR_PALANCA = ' Es la variable de mayor impacto en tu rendimiento actual — mejorarla es la palanca con más retorno.';
+
 export const RIESGOS: Record<ExecutiveCategory, { titulo: string; texto: string; impactos: string[] }> = {
   energia: {
     titulo: 'Fatiga acumulativa',
-    texto: 'Tu perfil muestra señales compatibles con deterioro progresivo de recuperación y claridad mental.',
+    texto: `Tu perfil muestra señales compatibles con deterioro progresivo de recuperación y claridad mental.${MAYOR_PALANCA}`,
     impactos: ['Velocidad de decisión', 'Energía estratégica', 'Capacidad de liderazgo'],
   },
   claridad: {
     titulo: 'Pérdida de claridad',
-    texto: 'Tu perfil muestra señales de dispersión que pueden limitar la calidad de tus decisiones críticas.',
+    texto: `Tu perfil muestra señales de dispersión que pueden limitar la calidad de tus decisiones críticas.${MAYOR_PALANCA}`,
     impactos: ['Calidad de las decisiones', 'Foco estratégico', 'Capacidad de anticipación'],
   },
   resiliencia: {
     titulo: 'Desgaste bajo presión',
-    texto: 'Tu perfil sugiere una respuesta a la presión que puede erosionar tu criterio y tu liderazgo.',
+    texto: `Tu perfil sugiere una respuesta a la presión que puede erosionar tu criterio y tu liderazgo.${MAYOR_PALANCA}`,
     impactos: ['Consistencia de tu liderazgo', 'Clima de tu equipo', 'Criterio en momentos críticos'],
   },
   recuperacion: {
     titulo: 'Recuperación insuficiente',
-    texto: 'Tu perfil indica un descanso que podría no estar reponiendo tu capacidad de un día al siguiente.',
+    texto: `Tu perfil indica un descanso que podría no estar reponiendo tu capacidad de un día al siguiente.${MAYOR_PALANCA}`,
     impactos: ['Energía al iniciar el día', 'Foco sostenido', 'Resistencia a la carga'],
   },
   riesgo: {
     titulo: 'Exposición sin monitoreo',
-    texto: 'Tu perfil indica factores fisiológicos sin seguimiento que podrían afectar tu rendimiento a largo plazo.',
+    texto: `Tu perfil indica factores fisiológicos sin seguimiento que podrían afectar tu rendimiento a largo plazo.${MAYOR_PALANCA}`,
     impactos: ['Sostenibilidad de tu rendimiento', 'Continuidad de tu liderazgo', 'Decisiones preventivas tardías'],
   },
 };
@@ -103,7 +109,7 @@ export const SEGMENTO_INFO: Record<ExecutiveSegmento, { label: string; mensaje: 
   },
   riesgo_elevado: {
     label: 'Riesgo elevado',
-    mensaje: 'Tu perfil muestra factores asociados a pérdida significativa de rendimiento ejecutivo.',
+    mensaje: 'Tu perfil muestra factores asociados a pérdida significativa de rendimiento ejecutivo. Actualmente estás operando por debajo de tu capacidad potencial.',
   },
 };
 

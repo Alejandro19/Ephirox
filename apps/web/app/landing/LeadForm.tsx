@@ -26,8 +26,9 @@ export function LeadForm({
   compact?: boolean;
   evaluacion?: ExecutiveEvaluation;
   // Si se pasa, al guardar el lead se llama esto en vez de mostrar el
-  // "gracias" propio (el Executive Score sigue con su pantalla de resultado).
-  onSubmitted?: () => void;
+  // "gracias" propio (el Executive Score sigue con su pantalla de resultado,
+  // que necesita nombre/empresa para el PDF descargable).
+  onSubmitted?: (info: { nombre: string; empresa: string }) => void;
 } = {}) {
   const [enviado, setEnviado] = useState(false);
   const [nombre, setNombre] = useState('');
@@ -67,7 +68,7 @@ export function LeadForm({
       verificationToken: token,
       hp,
     });
-    if (onSubmitted) onSubmitted();
+    if (onSubmitted) onSubmitted({ nombre: compact ? nombre.trim() : empresaValue, empresa: empresaValue });
     else setEnviado(true);
   }
 
