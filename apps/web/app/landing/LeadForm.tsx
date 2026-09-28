@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createEnterpriseLead, requestLeadVerification, confirmLeadVerification } from '../../lib/enterprise-leads-client';
 import { EMPRESA_TAMANOS, LEAD_CODE_LENGTH, PHONE_ERROR, TEXT_ERROR, isCorporateEmail, isPlausiblePhone, isPlausibleText, type ExecutiveEvaluation } from '@latribu/shared-types';
 
@@ -17,6 +17,7 @@ export function LeadForm({
   compact = false,
   evaluacion,
   onSubmitted,
+  onCodeStepChange,
 }: {
   initialCorreo?: string;
   initialCelular?: string;
@@ -29,6 +30,10 @@ export function LeadForm({
   // "gracias" propio (el Executive Score sigue con su pantalla de resultado,
   // que necesita nombre/empresa para el PDF descargable).
   onSubmitted?: (info: { nombre: string; empresa: string }) => void;
+  // El paso de código de verificación trae su propia frase explicativa ("Te
+  // enviamos un código..."); el padre puede usar esto para ocultar un título
+  // suyo que solo tiene sentido antes de pedir el código (ver ExecutiveScoreModal).
+  onCodeStepChange?: (inCodeStep: boolean) => void;
 } = {}) {
   const [enviado, setEnviado] = useState(false);
   const [nombre, setNombre] = useState('');
@@ -45,6 +50,11 @@ export function LeadForm({
   const [hp, setHp] = useState('');
   const [verified, setVerified] = useState<{ correo: string; token: string } | null>(null);
   const [extra, setExtra] = useState<{ tamano?: string; sitioWeb?: string }>({});
+
+  useEffect(() => {
+    onCodeStepChange?.(codeStep);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [codeStep]);
 
   function validateCorreo(value: string): boolean {
     if (!value || !value.includes('@') || !isCorporateEmail(value)) {

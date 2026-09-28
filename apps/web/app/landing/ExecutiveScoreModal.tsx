@@ -32,6 +32,7 @@ export function ExecutiveScoreModal({ onClose }: { onClose: () => void }) {
   const [respuestas, setRespuestas] = useState<number[]>([]);
   const [negocio, setNegocio] = useState<Negocio>({ personas: null, equipoDirectivo: null, evaluarEquipo: null });
   const [contacto, setContacto] = useState<{ nombre: string; empresa: string } | null>(null);
+  const [pidiendoCodigo, setPidiendoCodigo] = useState(false);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -123,12 +124,13 @@ export function ExecutiveScoreModal({ onClose }: { onClose: () => void }) {
         {step === 'contacto' && evaluacion && (
           <div className="score-contacto">
             <span className="score-kicker">Tu resultado está listo</span>
-            <h2>Déjanos tus datos para mostrarte tu perfil ejecutivo.</h2>
+            {!pidiendoCodigo && <h2>Déjanos tus datos para mostrarte tu perfil ejecutivo.</h2>}
             <LeadForm
               compact
               evaluacion={evaluacion}
               submitLabel="Ver mi resultado"
               onSubmitted={(info) => { setContacto(info); setStep('resultado'); }}
+              onCodeStepChange={setPidiendoCodigo}
             />
             <button type="button" className="score-back" onClick={back}>← Atrás</button>
           </div>
