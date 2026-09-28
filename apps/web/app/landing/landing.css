@@ -374,7 +374,11 @@
     margin-right: -50vw;
   }
   .eph-landing2 .image-card-inner { border-radius: 0; border: 0; aspect-ratio: auto; height: clamp(220px, 34vw, 420px); }
-  .eph-landing2 .image-card-img { filter: saturate(0.85) contrast(1.02); }
+  /* La foto trae un margen claro pegado a su borde izquierdo (mismo motivo
+     que el ajuste ya hecho para mobile) — acá el recorte panorámico es más
+     ancho, pero igual alcanza a asomar en anchos intermedios (tablet /
+     laptop angosto) si el encuadre queda centrado en vez de correrse. */
+  .eph-landing2 .image-card-img { filter: saturate(0.85) contrast(1.02); object-position: 65% 42%; }
   .eph-landing2 .image-card-shade { background: rgba(11,10,8,0.32); }
 }
 
