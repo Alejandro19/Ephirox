@@ -161,29 +161,31 @@ export function LeadForm({
 
   if (codeStep) {
     return (
-      <div className="contact-form code-step">
-        <p className="field-full" style={{ margin: 0, fontSize: 14, lineHeight: 1.6 }}>
+      <div className="code-step">
+        <p className="code-step-intro">
           Te enviamos un código de {LEAD_CODE_LENGTH} dígitos a <strong>{correo.trim()}</strong>. Escríbelo para confirmar tu correo.
         </p>
-        <label className="field-full">
-          <span>Código de verificación</span>
-          <input
-            name="code"
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            maxLength={LEAD_CODE_LENGTH}
-            placeholder="000000"
-            value={code}
-            onChange={(e) => { setCode(e.target.value.replace(/\D/g, '')); if (error) setError(null); }}
-          />
-        </label>
-        {error && <p role="alert" className="field-full field-error">{error}</p>}
-        <button type="button" className="submit-btn field-full" disabled={saving || code.length !== LEAD_CODE_LENGTH} onClick={handleConfirmCode} style={{ opacity: saving || code.length !== LEAD_CODE_LENGTH ? 0.6 : 1 }}>
-          {saving ? 'Verificando…' : 'Verificar y continuar'}
-        </button>
-        <div className="field-full" style={{ display: 'flex', gap: 18, fontSize: 13 }}>
-          <button type="button" onClick={handleResend} disabled={saving} style={{ background: 'none', border: 0, color: 'inherit', textDecoration: 'underline', cursor: 'pointer', padding: 0 }}>Reenviar código</button>
-          <button type="button" onClick={() => { setCodeStep(false); setError(null); }} style={{ background: 'none', border: 0, color: 'inherit', textDecoration: 'underline', cursor: 'pointer', padding: 0 }}>Cambiar correo</button>
+        <div className="code-step-row">
+          <label className="code-step-input">
+            <span>Código de verificación</span>
+            <input
+              name="code"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              maxLength={LEAD_CODE_LENGTH}
+              placeholder="000000"
+              value={code}
+              onChange={(e) => { setCode(e.target.value.replace(/\D/g, '')); if (error) setError(null); }}
+            />
+          </label>
+          <button type="button" className="submit-btn" disabled={saving || code.length !== LEAD_CODE_LENGTH} onClick={handleConfirmCode} style={{ opacity: saving || code.length !== LEAD_CODE_LENGTH ? 0.6 : 1 }}>
+            {saving ? 'Verificando…' : 'Verificar y continuar'}
+          </button>
+        </div>
+        {error && <p role="alert" className="field-error">{error}</p>}
+        <div className="code-step-links">
+          <button type="button" onClick={handleResend} disabled={saving}>Reenviar código</button>
+          <button type="button" onClick={() => { setCodeStep(false); setError(null); }}>Cambiar correo</button>
         </div>
       </div>
     );

@@ -1147,6 +1147,35 @@
 .eph-landing2 .score-primary:disabled { opacity: 0.4; cursor: default; }
 .eph-landing2 .score-back { border: 0; background: none; color: rgba(245,241,232,0.55); font-family: 'Jost', sans-serif; font-size: 13px; cursor: pointer; padding: 6px 0; }
 .eph-landing2 .score-back:hover { color: var(--cream); }
+
+/* Contacto del Executive Score (kicker + h2/código + LeadForm + Atrás):
+   antes sin ningún ritmo propio, todo pegado uno con otro. */
+.eph-landing2 .score-contacto { display: grid; gap: 22px; }
+.eph-landing2 .score-contacto h2 { margin: 0; }
+
+/* Paso de código: antes un <div> con las clases del <form>, que no le
+   aplicaban (esos estilos exigen el selector `form.contact-form`) — quedaba
+   sin ningún diseño, apenas texto e inputs de navegador en flujo. Se le da
+   estructura propia: la frase de contacto hace de título (más presencia que
+   antes, ya que el h2 del modal se oculta en este paso), fila input+botón,
+   y los links de ayuda al final, cada bloque con su propio aire. */
+.eph-landing2 .code-step { display: grid; gap: 20px; }
+.eph-landing2 .code-step-intro { margin: 0; max-width: 44ch; font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: clamp(19px, 2.1vw, 23px); line-height: 1.4; color: var(--cream); }
+.eph-landing2 .code-step-intro strong { color: var(--gold-light); font-weight: 500; }
+.eph-landing2 .code-step-row { display: flex; align-items: flex-end; gap: 14px; flex-wrap: wrap; }
+.eph-landing2 .code-step-input { flex: 1 1 200px; display: grid; gap: 8px; }
+.eph-landing2 .code-step-input span { font-family: 'Jost', sans-serif; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(245,241,232,0.55); }
+.eph-landing2 .code-step-input input { height: 46px; padding: 0 4px; border: 0; border-bottom: 1px solid rgba(201,166,107,0.32); background: transparent; color: var(--cream); font-family: 'Jost', sans-serif; font-size: 20px; letter-spacing: 0.3em; }
+.eph-landing2 .code-step-input input:focus { border-bottom-color: var(--gold); outline: none; }
+.eph-landing2 .code-step-row .submit-btn { flex: 0 0 auto; }
+.eph-landing2 .code-step-links { display: flex; gap: 22px; font-size: 13px; }
+.eph-landing2 .code-step-links button { background: none; border: 0; padding: 0; color: rgba(245,241,232,0.7); text-decoration: underline; cursor: pointer; }
+.eph-landing2 .code-step-links button:hover:not(:disabled) { color: var(--cream); }
+.eph-landing2 .code-step-links button:disabled { opacity: 0.5; cursor: default; }
+@media (max-width: 480px) {
+  .eph-landing2 .code-step-row { flex-direction: column; align-items: stretch; }
+  .eph-landing2 .code-step-row .submit-btn { width: 100%; }
+}
 .eph-landing2 .score-progress { height: 2px; background: rgba(245,241,232,0.12); border-radius: 2px; margin: 0 36px 22px 0; overflow: hidden; }
 .eph-landing2 .score-progress div { height: 100%; background: var(--gold); transition: width 300ms ease-out; }
 .eph-landing2 .score-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 10px; margin: 8px 0 18px; }
