@@ -103,9 +103,15 @@ export async function callback(req: Request, res: Response) {
       await ouraService.sincronizarOura(clienteId);
     } else if (dispositivo === 'polar') {
       const tokenData = await polarService.intercambiarToken(code!);
+      // Sin esto, wearableTokens.polarUserId quedaba siempre null — el
+      // webhook de Polar (wearable-webhook.controller.ts) busca al cliente
+      // por ese id para decidir a quién re-sincronizar, así que nunca
+      // encontraba a nadie y el re-sync automático nunca disparaba.
+      const perfil = await polarService.getPerfil(tokenData.access_token);
       await wearableService.guardarToken({
         clienteId, dispositivo: 'polar', accessToken: tokenData.access_token,
         refreshToken: tokenData.refresh_token, expiresIn: tokenData.expires_in,
+        userId: perfil?.['polar-user-id']?.toString(),
       });
       await polarService.sincronizarPolar(clienteId);
     }
