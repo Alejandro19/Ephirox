@@ -177,6 +177,14 @@ export function LandingPage({ initialScoreOpen = false }: { initialScoreOpen?: b
             <p className="lead eph-a" style={{ animationDelay: '520ms' }}>
               Ephirox detecta las señales invisibles que afectan tu energía, claridad mental y capacidad de liderazgo antes de que te pasen factura.
             </p>
+            <button
+              type="button"
+              className="score-primary hero-score-cta eph-a"
+              style={{ animationDelay: '620ms' }}
+              onClick={() => setScoreOpen(true)}
+            >
+              Solicitar Executive Score
+            </button>
             {SHOW_HERO_DEMO_FORM && (
               <div className="eph-a" style={{ animationDelay: '620ms' }}>
                 <HeroDemoForm onContinue={(correo, celular) => setLeadModal({ correo, celular })} />
