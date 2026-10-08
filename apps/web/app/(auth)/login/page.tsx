@@ -555,7 +555,7 @@ export default function LoginPage(): React.ReactElement {
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    Contactar a Ephirox
+                    Contactar un Asesor
                   </a>
                 </p>
               </form>
