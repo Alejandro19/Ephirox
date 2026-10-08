@@ -33,7 +33,7 @@ export const EXECUTIVE_QUESTIONS: readonly ExecutiveQuestion[] = [
   { id: 'r3', category: 'recuperacion', texto: 'Mi descanso se mantiene aun en periodos de viaje o alta carga.' },
   { id: 'k1', category: 'riesgo', texto: 'Realizo actividad física estructurada al menos tres veces por semana.' },
   { id: 'k2', category: 'riesgo', texto: 'Conozco mis biomarcadores clave, medidos en los últimos 12 meses.' },
-  { id: 'k3', category: 'riesgo', texto: 'Mis antecedentes personales y familiares no me generan preocupación por mi rendimiento a largo plazo.' },
+  { id: 'k3', category: 'riesgo', texto: 'Mi historial médico personal y familiar no representa un riesgo conocido para mi salud a largo plazo.' },
 ];
 
 // Nombres cara al usuario: lenguaje ejecutivo, nunca "estrés 6/10" ni "sueño malo".
