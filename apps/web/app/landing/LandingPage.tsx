@@ -183,7 +183,7 @@ export function LandingPage({ initialScoreOpen = false }: { initialScoreOpen?: b
               style={{ animationDelay: '620ms' }}
               onClick={() => setScoreOpen(true)}
             >
-              Solicitar Executive Score
+              Descubre tu Executive Score
             </button>
             {SHOW_HERO_DEMO_FORM && (
               <div className="eph-a" style={{ animationDelay: '620ms' }}>
@@ -229,7 +229,7 @@ export function LandingPage({ initialScoreOpen = false }: { initialScoreOpen?: b
             <ScrollReveal className="senales-cierre" >
               <div id="score" className="senales-cierre-inner">
                 <p>¿Cuáles de estas señales ya tienes? Evalúa en minutos tu energía, claridad mental, recuperación y resiliencia.</p>
-                <button type="button" className="score-section-cta" onClick={() => setScoreOpen(true)}>Solicitar Executive Score</button>
+                <button type="button" className="score-section-cta" onClick={() => setScoreOpen(true)}>Descubre tu Executive Score</button>
               </div>
             </ScrollReveal>
           </div>
@@ -328,7 +328,7 @@ export function LandingPage({ initialScoreOpen = false }: { initialScoreOpen?: b
               href="#score"
               onClick={(e) => { e.preventDefault(); setScoreOpen(true); }}
             >
-              Solicitar Executive Score <span aria-hidden="true">→</span>
+              Descubre tu Executive Score <span aria-hidden="true">→</span>
             </a>
           </ScrollReveal>
         </section>

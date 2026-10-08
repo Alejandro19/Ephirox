@@ -9,6 +9,7 @@ import {
 } from '@/lib/api-client';
 import { getSafeRedirectTarget, getSetPasswordUrl } from '@/lib/login-redirect';
 import Isotipo from '@/components/ui/Isotipo';
+import { COACH_WHATSAPP_NUMBER } from '@/lib/constants';
 import '../../eph-login-shared.css';
 
 // "Recuérdame" solo guarda el email localmente (nunca la contraseña — un
@@ -547,7 +548,15 @@ export default function LoginPage(): React.ReactElement {
                 </div>
 
                 <p className="font-body" style={{ textAlign: 'center', margin: 0, fontSize: 14, fontWeight: 300, color: 'rgba(245,241,232,0.62)' }}>
-                  ¿Sin acceso todavía? <a href="https://ephirox.com/?executiveScore=1" className="eph-login-footer-link">Solicitar Executive Score</a>
+                  ¿Sin acceso todavía?{' '}
+                  <a
+                    href={`https://wa.me/${COACH_WHATSAPP_NUMBER}?text=${encodeURIComponent('Hola, no tengo acceso todavía y quiero más información sobre Ephirox.')}`}
+                    className="eph-login-footer-link"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Contactar a Ephirox
+                  </a>
                 </p>
               </form>
             )}
