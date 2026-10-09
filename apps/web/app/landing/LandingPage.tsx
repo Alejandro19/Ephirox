@@ -365,7 +365,7 @@ export function LandingPage({ initialScoreOpen = false }: { initialScoreOpen?: b
             </div>
             <div className="footer-contact-item">
               <span className="label">Instagram</span>
-              <a className="link-hover" href="https://instagram.com/ephirox_" target="_blank" rel="noopener">@ephirox_</a>
+              <a className="link-hover" href="https://instagram.com/ephirox.co" target="_blank" rel="noopener">@ephirox.co</a>
             </div>
           </div>
         </div>
